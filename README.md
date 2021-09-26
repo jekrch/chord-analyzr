@@ -3,6 +3,19 @@
 A Postgres driven solution for analyzing chord progressions and generating chord suggestions. 
 
 
+<hr>
+<h3>setup</h3> 
+Create postgres database named chordanalyzr and insert user and password details in flyway.conf. 
+<br>
+<br>
+To update schema, execute the following from the flyway directory:
+<br>
+<br>
+
+```
+flyway -configFiles="flyway.conf" migrate -X
+```
+
 
 <hr>
 <h3>chord_view</h3> 

@@ -10,8 +10,8 @@ SELECT
 	n.name AS note_name, 
 	ct.name AS chord_type,
 	n.name || ct.name as chord_name,
-	string_agg(chord_note.name, ', ') chord_note_names, 
-	string_agg(chord_note.note::text, ', ') chord_notes
+	string_agg(chord_note.name, ', '  order by ctn.note) chord_note_names, 
+	string_agg((ctn.note + n.note)::text, ', ' order by ctn.note) chord_notes
 FROM chord_type_note ctn 
 JOIN chord_type ct ON ct.id = ctn.chord_type_id
 JOIN note n ON true

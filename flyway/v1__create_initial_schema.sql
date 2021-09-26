@@ -1,4 +1,4 @@
-rollback; BEGIN; 
+
 CREATE TABLE IF NOT EXISTS public.note_type
 (
     id bigserial,

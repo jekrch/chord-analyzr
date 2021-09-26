@@ -15,9 +15,9 @@ Sample usage:
 SELECT cv.chord_name, cv.chord_note_names, cv.chord_notes
 FROM chord_view cv
 WHERE note_name = 'D' AND 
-	  chord_type = 'm7#9';
+      chord_type = 'm7#9';
 ```
 Returns:
 ```
-"Dm7#9",	"D, F, A, C, F",	"3, 6, 10, 1, 6"
+"Dm7#9", "D, F, A, C, F", "3, 6, 10, 1, 6"
 ```

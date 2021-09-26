@@ -17,7 +17,7 @@ FROM chord_view cv
 WHERE note_name = 'D' AND 
 	  chord_type = 'm7#9';
 ```
-RETURNS
+Returns:
 ```
 "Dm7#9",	"D, F, A, C, F",	"3, 6, 10, 1, 6"
 ```

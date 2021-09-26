@@ -14,10 +14,10 @@ Sample usage:
 ```
 SELECT cv.chord_name, cv.chord_note_names, cv.chord_notes
 FROM chord_view cv
-WHERE note_name = 'D' AND 
-      chord_type = 'm7#9';
+WHERE note_name = 'F' AND 
+      chord_type = '7sus4';
 ```
 Returns:
 ```
-"Dm7#9", "D, F, A, C, F", "3, 6, 10, 1, 6"
+"F7sus4", "F, A#, C, D#", "6, 11, 1, 4"
 ```

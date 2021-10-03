@@ -6,25 +6,29 @@ INSERT INTO public.note_type(id, name)
 	(3, 'sharp');
 
 
-INSERT INTO note(name, note, note_type_id)
+INSERT INTO note(letter, name, note, note_type_id)
   VALUES 
-	('C', 1, 1),
-	('C#', 2, 3),
-	('Db', 2, 2),
-	('D', 3, 1),
-	('D#', 4, 3),
-	('Eb', 4, 2),
-	('E', 5, 1),
-	('F', 6, 1),
-	('F#', 7, 3),
-	('Gb', 7, 2),
-	('G', 8, 1),
-	('G#', 9, 3),
-	('Ab', 9, 2),
-	('A', 10, 1),
-	('A#', 11, 3),
-	('Bb', 11, 2),
-	('B', 12, 1);
+    ('C', 'Cb', 12, 2),
+	('C', 'C', 1, 1),
+	('C', 'C#', 2, 3),
+	('D', 'Db', 2, 2),
+	('D', 'D', 3, 1),
+	('D', 'D#', 4, 3),
+	('E', 'Eb', 4, 2),
+	('E', 'E', 5, 1),
+	('E', 'E#', 6, 3),
+	('F', 'Fb', 5, 2),
+	('F', 'F', 6, 1),
+	('F', 'F#', 7, 3),
+	('G', 'Gb', 7, 2),
+	('G', 'G', 8, 1),
+	('G', 'G#', 9, 3),
+	('A', 'Ab', 9, 2),
+	('A', 'A', 10, 1),
+	('A', 'A#', 11, 3),
+	('B', 'Bb', 11, 2),
+	('B', 'B', 12, 1),
+	('B', 'B#', 1, 3);
 	
 
 -- Insert chord types via function 
@@ -94,7 +98,6 @@ BEGIN
   PERFORM fn_insert_chord_type_if_not_exists('7#5', '{0, 4, 8, 10}');
   PERFORM fn_insert_chord_type_if_not_exists('7b5', '{0, 4, 6, 10}');
   PERFORM fn_insert_chord_type_if_not_exists('7#11', '{0, 4, 7, 10, 18}');
-  PERFORM fn_insert_chord_type_if_not_exists('m7#9', '{0, 3, 7, 10, 15}');
   PERFORM fn_insert_chord_type_if_not_exists('m7b9', '{0, 3, 7, 10, 13}');
   PERFORM fn_insert_chord_type_if_not_exists('m7#5', '{0, 3, 8, 10}');
   PERFORM fn_insert_chord_type_if_not_exists('m7b5', '{0, 3, 6, 10}');

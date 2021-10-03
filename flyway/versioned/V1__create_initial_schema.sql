@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS public.note
 (
     id bigserial,
     name varchar NOT NULL,
+	letter varchar NOT NULL,
     note integer NOT NULL,
 	note_type_id bigint NOT NULL,
 		CONSTRAINT fk_note_note_type

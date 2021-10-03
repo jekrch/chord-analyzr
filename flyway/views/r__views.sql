@@ -84,3 +84,103 @@ SELECT mnv.mode,
 	   	string_agg(seq_note::text, ', ' order by mnv.note_ordinal) AS mode_notes
 FROM mode_note_view mnv
 GROUP BY mnv.mode, mnv.key_note, mnv.key_name;
+
+
+-- WIP views for listing correct note names given a certain key and mode 
+
+DROP VIEW IF EXISTS mode_key_note_view;
+DROP VIEW IF EXISTS scale_note_type_view; 
+
+CREATE OR REPLACE VIEW scale_note_type_view AS 
+SELECT  DISTINCT ON (key_name, mode) key_name, 
+	MODE, 
+	CASE WHEN key_type_id = 1 THEN type_id 
+	 ELSE key_type_id 
+	END AS type_id--, COUNT(DISTINCT scales.letter)   --, --COUNT(DISTINCT scales.letter) AS letter_count
+FROM ( 
+SELECT 3 AS type_id, n_with_sharps.note, key_name, key_type_id, mode, letter, note_ordinal
+FROM mode_base_note_view mbn
+JOIN note n_with_sharps ON n_with_sharps.name IN (
+			  SELECT n.name FROM note n WHERE
+			  n.note = mbn.note AND 	
+			  (
+			  		mbn.note_ordinal != 1 OR 
+					n.name = mbn.key_name
+			  ) AND
+			  (n.note_type_id = 1 OR 
+				n.note_type_id = 3)
+				ORDER BY n.note_type_id DESC LIMIT 1
+			)
+UNION 
+SELECT 2 AS type_id, n_with_flats.note, key_name, key_type_id, mode, letter, note_ordinal
+FROM mode_base_note_view mbn
+JOIN note n_with_flats ON n_with_flats.name IN (
+			  SELECT n.name FROM note n WHERE
+			  n.note = mbn.note AND 	
+			  (
+			  		mbn.note_ordinal != 1 OR 
+					n.name = mbn.key_name
+			  ) AND
+			  (n.note_type_id = 1 OR 
+				n.note_type_id = 2)
+				ORDER BY n.note_type_id ASC LIMIT 1
+			)
+) scales
+GROUP BY key_name, key_type_id, type_id, mode 
+ORDER BY key_name, MODE, COUNT(DISTINCT scales.letter) DESC, 
+			CASE WHEN key_type_id = 1 THEN type_id END DESC, 
+			CASE WHEN key_type_id != 1 THEN type_id END ASC;
+			
+			
+CREATE OR REPLACE VIEW mode_key_note_view AS 
+SELECT nt.name, 
+	    nt.note_type_id, 
+	    nt.letter,
+		 mbn.* 
+FROM mode_base_note_view mbn
+JOIN scale_note_type_view snt ON 
+					 snt.mode = mbn.mode AND 
+					 snt.key_name = mbn.key_name
+JOIN note nt ON nt.name in
+	(
+		SELECT n.name 
+		FROM note n
+		WHERE n.note = mbn.note AND 	
+			  (
+			  		mbn.note_ordinal != 1 OR 
+					n.name = mbn.key_name
+			  ) AND
+			  (
+			  		n.note_type_id = snt.type_id OR 
+					n.note_type_id = 1
+			  ) AND
+		      n.letter not in  
+				 (
+					 SELECT n2.letter
+					 FROM mode_base_note_view mbn2 
+					 JOIN note n2 ON n2.note = mbn2.note
+					 WHERE mbn2.note_ordinal < mbn.note_ordinal AND 
+						    mbn2.mode = mbn.mode AND 
+							 mbn2.key_name = mbn.key_name AND 	
+			  				(
+							  mbn2.note_ordinal != 1 OR 
+							  n2.name = mbn2.key_name
+							) AND
+			  				( 
+							  n2.note_type_id = snt.type_id OR 
+							  n2.note_type_id = 1) AND
+			  				(
+							  n2.note_type_id = 1 OR 
+							  n2.note_type_id = mbn2.key_type_id 
+							) 
+				 ) AND 
+				 (
+				 	 n.note_type_id = mbn.key_type_id OR 
+					 n.note_type_id = snt.type_id OR 
+					 n.note_type_id = 1
+				 )
+		
+				ORDER BY snt.type_id = n.note_type_id LIMIT 1
+	);
+	
+	

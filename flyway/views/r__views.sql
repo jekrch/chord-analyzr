@@ -77,13 +77,14 @@ JOIN note n ON n.note =
 -- and displays aggregated csv of the containing notes 
 
 CREATE OR REPLACE VIEW mode_view AS
-SELECT mnv.mode, 
-	   mnv.key_note, 
-	   mnv.key_name,
-	   string_agg(mnv.note_name, ', '  order by mnv.note_ordinal) AS mode_note_names, 
-	   	string_agg(seq_note::text, ', ' order by mnv.note_ordinal) AS mode_notes
-FROM mode_note_view mnv
-GROUP BY mnv.mode, mnv.key_note, mnv.key_name;
+SELECT 
+	   msn.mode, 
+	   msn.key_note, 
+	   msn.key_name,
+	   string_agg(msn.note_name, ', '  order by msn.note_ordinal) AS mode_note_names, 
+	   string_agg(seq_note::text, ', ' order by msn.note_ordinal) AS mode_notes
+FROM mode_scale_note_letter_view msn
+GROUP BY msn.mode, msn.key_note, msn.key_name;
 
 
 	

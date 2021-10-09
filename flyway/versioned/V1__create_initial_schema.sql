@@ -1,4 +1,18 @@
 
+
+CREATE TABLE IF NOT EXISTS public.letter
+(
+   id bigserial,
+	letter varchar NOT NULL,
+	letter_ordinal integer NOT NULL,
+   PRIMARY KEY (id)
+);
+
+
+CREATE UNIQUE INDEX IF NOT EXISTS letter_letter_uidx ON letter(letter);
+CREATE UNIQUE INDEX IF NOT EXISTS letter_letter_ordinal_uidx ON letter(letter_ordinal);
+CREATE UNIQUE INDEX IF NOT EXISTS letter_letter_ordinal_letter_uidx ON letter(letter, letter_ordinal);
+
 CREATE TABLE IF NOT EXISTS public.note_type
 (
     id bigserial,
@@ -6,7 +20,7 @@ CREATE TABLE IF NOT EXISTS public.note_type
     PRIMARY KEY (id)
 );
 
-CREATE INDEX IF NOT EXISTS note_type_name_idx ON note_type(name);
+CREATE UNIQUE INDEX IF NOT EXISTS note_type_name_idx ON note_type(name);
 
 CREATE TABLE IF NOT EXISTS public.note
 (
@@ -23,7 +37,13 @@ CREATE TABLE IF NOT EXISTS public.note
 
 CREATE INDEX IF NOT EXISTS note_note_idx ON note(note);
 CREATE INDEX IF NOT EXISTS note_name_idx ON note(name);
+CREATE INDEX IF NOT EXISTS note_letter_idx ON note(letter);
 CREATE INDEX IF NOT EXISTS note_note_type_id_idx ON note(note_type_id);
+CREATE INDEX IF NOT EXISTS note_letter_idx ON note(letter);
+CREATE UNIQUE INDEX IF NOT EXISTS note_note_letter_uidx ON note(note, letter);
+
+CREATE INDEX IF NOT EXISTS note_letter_incl_idx ON note(letter) INCLUDE(note, note_type_id, name);
+CREATE INDEX IF NOT EXISTS note_note_incl_idx ON note(note) INCLUDE(letter, note_type_id, name);
 
 CREATE TABLE IF NOT EXISTS public.chord_type
 (

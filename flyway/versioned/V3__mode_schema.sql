@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS public.mode_note
 CREATE INDEX IF NOT EXISTS mode_note_mode_id_idx ON mode_note(mode_id);
 CREATE INDEX IF NOT EXISTS mode_note_note_idx ON mode_note(note);
 CREATE INDEX IF NOT EXISTS mode_note_note_ordinal_idx ON mode_note(note_ordinal);
+CREATE UNIQUE INDEX IF NOT EXISTS mode_note_mode_note_uidx ON mode_note(mode_id, note);
 
 
 -- If the provided mode doesn't exist, create it and 

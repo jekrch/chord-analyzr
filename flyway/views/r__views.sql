@@ -86,101 +86,85 @@ FROM mode_note_view mnv
 GROUP BY mnv.mode, mnv.key_note, mnv.key_name;
 
 
--- WIP views for listing correct note names given a certain key and mode 
-
-DROP VIEW IF EXISTS mode_key_note_view;
-DROP VIEW IF EXISTS scale_note_type_view; 
-
-CREATE OR REPLACE VIEW scale_note_type_view AS 
-SELECT  DISTINCT ON (key_name, mode) key_name, 
-	MODE, 
-	CASE WHEN key_type_id = 1 THEN type_id 
-	 ELSE key_type_id 
-	END AS type_id--, COUNT(DISTINCT scales.letter)   --, --COUNT(DISTINCT scales.letter) AS letter_count
-FROM ( 
-SELECT 3 AS type_id, n_with_sharps.note, key_name, key_type_id, mode, letter, note_ordinal
-FROM mode_base_note_view mbn
-JOIN note n_with_sharps ON n_with_sharps.name IN (
-			  SELECT n.name FROM note n WHERE
-			  n.note = mbn.note AND 	
-			  (
-			  		mbn.note_ordinal != 1 OR 
-					n.name = mbn.key_name
-			  ) AND
-			  (n.note_type_id = 1 OR 
-				n.note_type_id = 3)
-				ORDER BY n.note_type_id DESC LIMIT 1
-			)
-UNION 
-SELECT 2 AS type_id, n_with_flats.note, key_name, key_type_id, mode, letter, note_ordinal
-FROM mode_base_note_view mbn
-JOIN note n_with_flats ON n_with_flats.name IN (
-			  SELECT n.name FROM note n WHERE
-			  n.note = mbn.note AND 	
-			  (
-			  		mbn.note_ordinal != 1 OR 
-					n.name = mbn.key_name
-			  ) AND
-			  (n.note_type_id = 1 OR 
-				n.note_type_id = 2)
-				ORDER BY n.note_type_id ASC LIMIT 1
-			)
-) scales
-GROUP BY key_name, key_type_id, type_id, mode 
-ORDER BY key_name, MODE, COUNT(DISTINCT scales.letter) DESC, 
-			CASE WHEN key_type_id = 1 THEN type_id END DESC, 
-			CASE WHEN key_type_id != 1 THEN type_id END ASC;
-			
-			
-CREATE OR REPLACE VIEW mode_key_note_view AS 
-SELECT nt.name, 
-	    nt.note_type_id, 
-	    nt.letter,
-		 mbn.* 
-FROM mode_base_note_view mbn
-JOIN scale_note_type_view snt ON 
-					 snt.mode = mbn.mode AND 
-					 snt.key_name = mbn.key_name
-JOIN note nt ON nt.name in
-	(
-		SELECT n.name 
-		FROM note n
-		WHERE n.note = mbn.note AND 	
-			  (
-			  		mbn.note_ordinal != 1 OR 
-					n.name = mbn.key_name
-			  ) AND
-			  (
-			  		n.note_type_id = snt.type_id OR 
-					n.note_type_id = 1
-			  ) AND
-		      n.letter not in  
-				 (
-					 SELECT n2.letter
-					 FROM mode_base_note_view mbn2 
-					 JOIN note n2 ON n2.note = mbn2.note
-					 WHERE mbn2.note_ordinal < mbn.note_ordinal AND 
-						    mbn2.mode = mbn.mode AND 
-							 mbn2.key_name = mbn.key_name AND 	
-			  				(
-							  mbn2.note_ordinal != 1 OR 
-							  n2.name = mbn2.key_name
-							) AND
-			  				( 
-							  n2.note_type_id = snt.type_id OR 
-							  n2.note_type_id = 1) AND
-			  				(
-							  n2.note_type_id = 1 OR 
-							  n2.note_type_id = mbn2.key_type_id 
-							) 
-				 ) AND 
-				 (
-				 	 n.note_type_id = mbn.key_type_id OR 
-					 n.note_type_id = snt.type_id OR 
-					 n.note_type_id = 1
-				 )
-		
-				ORDER BY snt.type_id = n.note_type_id LIMIT 1
-	);
 	
+	-- recursive view for getting order of note letters in continuous sequence
+CREATE OR REPLACE VIEW ordered_letter_view AS 
+WITH RECURSIVE letters AS (
+	SELECT letter_ordinal, letter  
+	FROM letter l
+	UNION ALL
+	SELECT l.letter_ordinal + 7, l2.letter 
+	FROM letter l2 
+	JOIN letters l ON l.letter = l2.letter
+)
+SELECT * FROM letters
+LIMIT 1000; -- courtesy limit 
+
+-- gets the letter proceeding and preceding each note letter 
+CREATE OR REPLACE VIEW adjacent_letter_view AS 
+SELECT l.letter_ordinal, 
+		 l.letter, 
+		 pre_l.letter AS antecedent_letter, 
+		 post_l.letter AS subsequent_letter 
+FROM letter l
+JOIN ordered_letter_view pre_l ON (l.letter_ordinal = 1 AND pre_l.letter_ordinal = 7) OR -- if A make the preceding letter G
+												(pre_l.letter_ordinal = l.letter_ordinal - 1) 
+JOIN ordered_letter_view post_l ON (post_l.letter_ordinal = l.letter_ordinal + 1) -- get the subsequent 
+ORDER BY l.letter_ordinal asc;
+
+
+
+-- get note numbers for every scale in every key 
+-- (excluding keys that have a tonic with two or more sharps or flats)
+CREATE OR REPLACE VIEW mode_scale_note_view AS 
+ SELECT 
+    m.id AS mode_id,
+    m.name AS mode,
+    root_note.note AS key_note,
+    root_note.name AS key_name,
+    root_note.letter AS key_letter,
+    root_note.note_type_id AS key_type_id,
+    mn.note + root_note.note AS seq_note, -- seq_note can go over 12, while note below stays within 1-12 
+        CASE
+            WHEN (mn.note + root_note.note) <= 12 
+				THEN mn.note + root_note.note
+            ELSE mn.note + root_note.note - 12
+        END AS note,
+    mn.note_ordinal,                      -- index from 1
+    (mn.note_ordinal - 1) AS note_index  -- add an index from 0 for calculations 
+   FROM mode m
+     JOIN mode_note mn ON mn.mode_id = m.id
+     JOIN note root_note ON TRUE AND    									
+	  						root_note.note_type_id NOT IN (4,5); -- exclude the double sharps flats
+     
+     
+
+CREATE OR REPLACE VIEW mode_scale_note_letter_view AS 
+SELECT msn.mode_id,
+		 msn.mode,
+		 msn.key_note, 
+		 msn.key_name,
+		 msn.note_ordinal,
+		 msn.note,
+		 nt.name AS note_name, 
+	    nt.note_type_id, 
+	    nt.letter AS note_letter,
+		 msn.key_letter,
+		 msn.key_type_id, 
+		 msn.seq_note
+FROM mode_scale_note_view msn
+JOIN note nt ON nt.name IN (
+	SELECT n.name 
+		FROM note n
+		JOIN ordered_letter_view olv_key_ordinal 
+				ON olv_key_ordinal.letter = msn.key_letter
+		JOIN ordered_letter_view olv_seq_letter     -- the letter of the preceding note should be the 
+				ON olv_seq_letter.letter_ordinal =    -- letter antecedent of the letter we want this note to have (e.g. if B then get C)
+											(olv_key_ordinal.letter_ordinal + msn.note_index) AND 
+				   olv_seq_letter.letter = n.letter
+		WHERE n.note = msn.note
+)
+ORDER BY msn.note_ordinal ASC;
+
+
 	

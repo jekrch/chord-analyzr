@@ -3,12 +3,14 @@ INSERT INTO public.note_type(id, name)
   VALUES
 	(1, 'natural'), 
 	(2, 'flat'), 
-	(3, 'sharp');
+	(3, 'sharp'),
+	(4, 'double sharp'),
+	(5, 'double flat');
 
 
 INSERT INTO note(letter, name, note, note_type_id)
   VALUES 
-    ('C', 'Cb', 12, 2),
+   ('C', 'Cb', 12, 2),
 	('C', 'C', 1, 1),
 	('C', 'C#', 2, 3),
 	('D', 'Db', 2, 2),
@@ -28,8 +30,36 @@ INSERT INTO note(letter, name, note, note_type_id)
 	('A', 'A#', 11, 3),
 	('B', 'Bb', 11, 2),
 	('B', 'B', 12, 1),
-	('B', 'B#', 1, 3);
+	('B', 'B#', 1, 3),
 	
+	-- double sharps
+	('C', 'C##', 3, 4),
+	('D', 'D##', 5, 4),
+	('E', 'E##', 7, 4),
+	('F', 'F##', 8, 4),
+	('G', 'G##', 10, 4),
+	('A', 'A##', 12, 4),
+	('B', 'B##', 2, 4),
+	
+	-- double flats
+	('C', 'Cbb', 11, 5),
+	('D', 'Dbb', 1, 5),
+	('E', 'Ebb', 3, 5),
+	('F', 'Fbb', 4, 5),
+	('G', 'Gbb', 6, 5),
+	('A', 'Abb', 8, 5),
+	('B', 'Bbb', 10, 5);
+	
+	
+INSERT INTO letter(letter, letter_ordinal)
+  VALUES
+	('A', 1), 
+	('B', 2),
+	('C', 3),
+	('D', 4),
+	('E', 5),
+	('F', 6),
+	('G', 7);	
 
 -- Insert chord types via function 
 

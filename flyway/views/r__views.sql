@@ -72,21 +72,6 @@ JOIN note n ON n.note =
 	)
 	AND n.note_type_id IN (1,3);
 
-
--- fetches all permutations of modes with keys
--- and displays aggregated csv of the containing notes 
-
-CREATE OR REPLACE VIEW mode_view AS
-SELECT 
-	   msn.mode, 
-	   msn.key_note, 
-	   msn.key_name,
-	   string_agg(msn.note_name, ', '  order by msn.note_ordinal) AS mode_note_names, 
-	   string_agg(seq_note::text, ', ' order by msn.note_ordinal) AS mode_notes
-FROM mode_scale_note_letter_view msn
-GROUP BY msn.mode, msn.key_note, msn.key_name;
-
-
 	
 	-- recursive view for getting order of note letters in continuous sequence
 CREATE OR REPLACE VIEW ordered_letter_view AS 
@@ -166,6 +151,22 @@ JOIN note nt ON nt.name IN (
 		WHERE n.note = msn.note
 )
 ORDER BY msn.note_ordinal ASC;
+
+
+
+
+-- fetches all permutations of modes with keys
+-- and displays aggregated csv of the containing notes 
+
+CREATE OR REPLACE VIEW mode_view AS
+SELECT 
+	   msn.mode, 
+	   msn.key_note, 
+	   msn.key_name,
+	   string_agg(msn.note_name, ', '  order by msn.note_ordinal) AS mode_note_names, 
+	   string_agg(seq_note::text, ', ' order by msn.note_ordinal) AS mode_notes
+FROM mode_scale_note_letter_view msn
+GROUP BY msn.mode, msn.key_note, msn.key_name;
 
 
 	

@@ -49,22 +49,23 @@ Sample usage:
 
 ```
 SELECT mv.mode, 
-       mv.key_note, 
        mv.key_name, 
        mv.mode_note_names, 
-       mv.mode_notes
+       mv.mode_notes, 
+       mv.mode_seq_notes
 FROM mode_view mv 
-WHERE key_name = 'C';
+WHERE key_name = 'A';
 ```
 Returns:
 ```
-"Aeolian"	 1	"C"	"C, D, D#, F, G, G#, A#"      "1, 3, 4, 6, 8, 9, 11"
-"Dorian"	 1	"C"	"C, D, D#, F, G, A, A#"       "1, 3, 4, 6, 8, 10, 11"
-"Ionian"	 1	"C"	"C, D, E, F, G, A, B"         "1, 3, 5, 6, 8, 10, 12"
-"Locrian"	 1	"C"	"C, C#, D#, F, F#, G#, A#"    "1, 2, 4, 6, 7, 9, 11"
-"Lydian"	 1	"C"	"C, D, E, F#, G, A, B"        "1, 3, 5, 7, 8, 10, 12"
-"Mixolydian"     1	"C"	"C, D, E, F, G, A, A#"        "1, 3, 5, 6, 8, 10, 11"
-"Phrygian"	 1	"C"	"C, C#, D#, F, G, G#, A#"     "1, 2, 4, 6, 8, 9, 11"
+"mode"        "key_name"    "mode_note_names"            "mode_notes"                "mode_seq_notes"
+"Aeolian"     "A"	    "A, B, C, D, E, F, G"        "10, 12, 1, 3, 5, 6, 8"     "10, 12, 13, 15, 17, 18, 20"
+"Dorian"      "A"	    "A, B, C, D, E, F#, G"       "10, 12, 1, 3, 5, 7, 8"     "10, 12, 13, 15, 17, 19, 20"
+"Ionian"      "A"	    "A, B, C#, D, E, F#, G#"     "10, 12, 2, 3, 5, 7, 9"     "10, 12, 14, 15, 17, 19, 21"
+"Locrian"     "A"	    "A, Bb, C, D, Eb, F, G"      "10, 11, 1, 3, 4, 6, 8"     "10, 11, 13, 15, 16, 18, 20"
+"Lydian"      "A"	    "A, B, C#, D#, E, F#, G#"    "10, 12, 2, 4, 5, 7, 9"     "10, 12, 14, 16, 17, 19, 21"
+"Mixolydian"  "A"	    "A, B, C#, D, E, F#, G"      "10, 12, 2, 3, 5, 7, 8"     "10, 12, 14, 15, 17, 19, 20"
+"Phrygian"    "A"	    "A, Bb, C, D, E, F, G"       "10, 11, 1, 3, 5, 6, 8"     "10, 11, 13, 15, 17, 18, 20"
 ```
 
 <br>

@@ -110,5 +110,3 @@ Returns:
 ```
 
 <br>
-
-To capture each note by row use ```mode_note_view```

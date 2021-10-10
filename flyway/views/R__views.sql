@@ -22,9 +22,12 @@ FROM chord_type_note ctn
 JOIN chord_type ct ON ct.id = ctn.chord_type_id
 JOIN note n ON true
 JOIN note chord_note ON chord_note.note = 
-    (CASE WHEN (ctn.note + n.note) <= 12 THEN (ctn.note + n.note)
-    ELSE (ctn.note + n.note) - 12 END)
-    AND chord_note.note_type_id IN (1,3);
+    (
+        CASE WHEN (ctn.note + n.note) = 12 
+            THEN 12
+        ELSE (ctn.note + n.note) % 12 END
+    ) AND 
+    chord_note.note_type_id IN (1,3);
     
     
 -- fetches all permutations of chord types with root notes 
@@ -59,9 +62,9 @@ SELECT m.id AS mode_id,
        n.name AS note_name,
        (mn.note + root_note.note) AS seq_note,
        (
-        CASE WHEN (mn.note + root_note.note) <= 12 
-           THEN (mn.note + root_note.note)
-        ELSE (mn.note + root_note.note) - 12 END
+           CASE WHEN (mn.note + root_note.note) = 12 
+             THEN 12
+           ELSE (mn.note + root_note.note) % 12 END
        ) AS note,
        mn.note_ordinal AS note_ordinal
 FROM mode m 
@@ -69,9 +72,9 @@ JOIN mode_note mn on mn.mode_id = m.id
 JOIN note root_note on true 
 JOIN note n ON n.note = 
     (
-        CASE WHEN (mn.note + root_note.note) <= 12 
-           THEN (mn.note + root_note.note)
-        ELSE (mn.note + root_note.note) - 12 END
+        CASE WHEN (mn.note + root_note.note) = 12 
+             THEN 12
+        ELSE (mn.note + root_note.note) % 12 END
     )
     AND n.note_type_id IN (1,3);
 
@@ -115,9 +118,9 @@ CREATE OR REPLACE VIEW mode_scale_note_view AS
     root_note.note_type_id AS key_type_id,
     mn.note + root_note.note AS seq_note,   -- seq_note can go over 12, while note below stays within 1-12 
         CASE
-            WHEN (mn.note + root_note.note) <= 12 
-                THEN mn.note + root_note.note
-            ELSE mn.note + root_note.note - 12
+            WHEN (mn.note + root_note.note) = 12 
+                THEN 12
+            ELSE (mn.note + root_note.note) % 12
         END AS note,
     mn.note_ordinal,                        -- index from 1
     (mn.note_ordinal - 1) AS note_index     -- add an index from 0 for calculations 
@@ -172,6 +175,11 @@ FROM mode_scale_note_letter_view msn
 GROUP BY msn.mode, msn.key_note, msn.key_name;
 
 
+
+--
+-- CHORD-SCALE RELATIONSHIPS --
+--
+
     
 -- fetches all chord-mode-key permutations with any distinct notes listed and counted. 
 -- this can be used to identify the affinity of chords to a given scale 
@@ -183,10 +191,16 @@ WITH chord_notes AS (
     cnv.chord_type_id,
     cnv.chord_type,
     cnv.chord_name,
-    array_agg(DISTINCT CASE WHEN cnv.chord_note = 12 THEN cnv.chord_note ELSE cnv.chord_note % 12 END) AS chord_notes,
+    array_agg(
+         DISTINCT 
+            CASE WHEN cnv.chord_note = 12 
+            THEN cnv.chord_note 
+            ELSE cnv.chord_note % 12 END
+    ) AS chord_notes,
     COUNT(cnv.chord_note) AS note_count
     FROM chord_note_view cnv
-    GROUP BY cnv.note, cnv.note_name, cnv.chord_type, cnv.chord_name, cnv.chord_type_id
+    GROUP BY cnv.note, cnv.note_name, cnv.chord_type, 
+             cnv.chord_name, cnv.chord_type_id
 ), mode_notes AS (
  SELECT   
    mnv.mode_id,  

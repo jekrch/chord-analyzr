@@ -71,3 +71,44 @@ Returns:
 <br>
 
 To capture each note by row use ```mode_note_view```
+
+<hr>
+<h3>mode chord views</h3> 
+
+```mode_scale_chord_relation_view``` displays all permutations of chord mode and key with any distinct notes listed and counted. This can be used for identifying chords that complement a given scale. 
+
+Sample usage: 
+
+The following query will return all chords that have a root note of A and whose comprising notes all fall within the C Ionian scale. 
+
+```
+SELECT mscv.mode, 
+       mscv.key_name, 
+       mscv.chord_name, 
+       mscv.chord_notes,  
+       mscv.mode_chord_note_diff, 
+       mscv.mode_chord_note_diff_count 
+FROM mode_scale_chord_relation_view mscv
+WHERE mscv.mode = 'Ionian' AND 
+      mscv.key_name = 'C' AND 
+      mscv.chord_note_name = 'A' AND
+      mscv.mode_chord_note_diff_count = 0
+```
+Returns:
+```
+"mode"      "key_name"  "chord_name"    "chord_notes"   "mode_chord_note_diff"  "mode_chord_note_diff_count"
+"Ionian"    "C"         "Am"            "{1,5,10}"      "{}"                     "0"
+"Ionian"    "C"         "Am7"           "{1,5,8,10}"    "{}"                     "0"
+"Ionian"    "C"         "Am9"           "{1,5,8,10}"    "{}"                     "0"
+"Ionian"    "C"         "A5"            "{5,10}"        "{}"                     "0"
+"Ionian"    "C"         "Asus2"         "{5,10,12}"     "{}"                     "0"
+"Ionian"    "C"         "Asus4"         "{3,5,10}"      "{}"                     "0"
+"Ionian"    "C"         "Am11"          "{1,3,5,8,10}"  "{}"                     "0"
+"Ionian"    "C"         "A7sus4"        "{3,5,8,10}"    "{}"                     "0"
+"Ionian"    "C"         "Am7#5"         "{1,6,8,10}"    "{}"                     "0"
+"Ionian"    "C"         "A9sus4"        "{3,5,8,10}"    "{}"                     "0"
+```
+
+<br>
+
+To capture each note by row use ```mode_note_view```

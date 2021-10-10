@@ -8,7 +8,7 @@ A Postgres driven solution for analyzing chord progressions and generating chord
 Create postgres database named chordanalyzr and insert user and password details in flyway.conf. 
 <br>
 <br>
-To update schema, execute the following from the flyway directory:
+To update schema, execute the following from the flyway directory using Flyway's <a href="https://flywaydb.org/documentation/usage/commandline/">command-line tool</a>:
 <br>
 <br>
 

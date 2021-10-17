@@ -69,5 +69,14 @@ BEGIN
   PERFORM fn_insert_mode_if_not_exists('Mixolydian', '{0,2,4,5,7,9,10}');
   PERFORM fn_insert_mode_if_not_exists('Aeolian', '{0,2,3,5,7,8,10}');
   PERFORM fn_insert_mode_if_not_exists('Locrian', '{0,1,3,5,6,8,10}');
+
+  -- melodic minor modes
+  PERFORM fn_insert_mode_if_not_exists('Melodic Minor', '{0,2,3,5,7,9,11}');
+  PERFORM fn_insert_mode_if_not_exists('Dorian b2', '{0,1,3,5,7,9,10}');
+  PERFORM fn_insert_mode_if_not_exists('Lydian Augmented', '{0,2,4,6,8,9,11}');
+  PERFORM fn_insert_mode_if_not_exists('Lydian Dominant', '{0,2,4,6,7,9,10}');
+  PERFORM fn_insert_mode_if_not_exists('Mixolydian b6', '{0,2,4,5,7,8,10}');
+  PERFORM fn_insert_mode_if_not_exists('Locrian #2', '{0,2,3,5,6,8,10}');
+  PERFORM fn_insert_mode_if_not_exists('Altered Scale', '{0,1,3,4,6,8,10}');
 END
 $$;

@@ -1,0 +1,19 @@
+version: '3'
+services:
+  flyway:
+    image: flyway/flyway:8.5.5
+    command: -configFiles=/flyway/conf/flyway.config -locations=filesystem:/flyway/sql -connectRetries=60 migrate
+    volumes:
+      - ./flyway/sql:/flyway/sql
+      - ./flyway/flyway.conf:/flyway/conf/flyway.config
+    depends_on:
+      - postgres
+  postgres:
+    image: postgres:15.1
+    restart: always
+    ports:
+    - "5432:5432"
+    environment:
+    - POSTGRES_USER=postgres
+    - POSTGRES_PASSWORD=pass
+    - POSTGRES_DB=chordanalyzr

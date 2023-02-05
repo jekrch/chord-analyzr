@@ -5,16 +5,8 @@ A Postgres driven solution for analyzing chord progressions and generating chord
 
 <hr>
 <h3>setup</h3> 
-Create postgres database named chordanalyzr and insert user and password details in flyway.conf. 
-<br>
-<br>
-To update schema, execute the following from the flyway directory using Flyway's <a href="https://flywaydb.org/documentation/usage/commandline/">command-line tool</a>:
-<br>
-<br>
 
-```
-flyway -configFiles="flyway.conf" migrate -X
-```
+Execute ```docker-compose up``` in the root dir to create a postgres database named chordanalyzr on ```localhost:5432``` with user credentials from ```flyway/flyway.conf```.
 
 <hr>
 <h3>chord views</h3> 
@@ -33,7 +25,7 @@ WHERE note_name = 'F' AND
 ```
 Returns:
 ```
-"F7sus4",   "F, A#, C, D#",   "6, 11, 13, 16"
+"F7sus4",   "F, Bb, C, D#",   "6, 11, 13, 16"
 ```
 
 <br>
@@ -51,23 +43,28 @@ Sample usage:
 SELECT mv.mode, 
        mv.key_name, 
        mv.mode_note_names, 
-       mv.mode_notes, 
-       mv.mode_seq_notes
+       mv.mode_notes
 FROM mode_view mv 
 WHERE key_name = 'A';
 ```
 Returns:
 ```
-"mode"        "key_name"    "mode_note_names"            "mode_notes"                "mode_seq_notes"
-"Aeolian"     "A"	    "A, B, C, D, E, F, G"        "10, 12, 1, 3, 5, 6, 8"     "10, 12, 13, 15, 17, 18, 20"
-"Dorian"      "A"	    "A, B, C, D, E, F#, G"       "10, 12, 1, 3, 5, 7, 8"     "10, 12, 13, 15, 17, 19, 20"
-"Ionian"      "A"	    "A, B, C#, D, E, F#, G#"     "10, 12, 2, 3, 5, 7, 9"     "10, 12, 14, 15, 17, 19, 21"
-"Locrian"     "A"	    "A, Bb, C, D, Eb, F, G"      "10, 11, 1, 3, 4, 6, 8"     "10, 11, 13, 15, 16, 18, 20"
-"Lydian"      "A"	    "A, B, C#, D#, E, F#, G#"    "10, 12, 2, 4, 5, 7, 9"     "10, 12, 14, 16, 17, 19, 21"
-"Mixolydian"  "A"	    "A, B, C#, D, E, F#, G"      "10, 12, 2, 3, 5, 7, 8"     "10, 12, 14, 15, 17, 19, 20"
-"Phrygian"    "A"	    "A, Bb, C, D, E, F, G"       "10, 11, 1, 3, 5, 6, 8"     "10, 11, 13, 15, 17, 18, 20"
+"mode",              "key_name",   "mode_note_names",          "mode_notes"
+Aeolian,             A,            "A, B, C, D, E, F, G",      "10, 12, 13, 15, 17, 18, 20"
+Altered Scale,       A,            "A, Bb, C, Db, Eb, F, G",   "10, 11, 13, 14, 16, 18, 20"
+Dorian,              A,            "A, B, C, D, E, F#, G",     "10, 12, 13, 15, 17, 19, 20"
+Dorian b2,           A,            "A, Bb, C, D, E, F#, G",    "10, 11, 13, 15, 17, 19, 20"
+Ionian,              A,            "A, B, C#, D, E, F#, G#",   "10, 12, 14, 15, 17, 19, 21"
+Locrian,             A,            "A, Bb, C, D, Eb, F, G",    "10, 11, 13, 15, 16, 18, 20"
+Locrian #2,          A,            "A, B, C, D, Eb, F, G",     "10, 12, 13, 15, 16, 18, 20"
+Lydian,              A,            "A, B, C#, D#, E, F#, G#",  "10, 12, 14, 16, 17, 19, 21"
+Lydian Augmented,    A,            "A, B, C#, D#, E#, F#, G#", "10, 12, 14, 16, 18, 19, 21"
+Lydian Dominant,     A,            "A, B, C#, D#, E, F#, G",   "10, 12, 14, 16, 17, 19, 20"
+Melodic Minor,       A,            "A, B, C, D, E, F#, G#",    "10, 12, 13, 15, 17, 19, 21"
+Mixolydian,          A,            "A, B, C#, D, E, F#, G",    "10, 12, 14, 15, 17, 19, 20"
+Mixolydian b6,       A,            "A, B, C#, D, E, F, G",     "10, 12, 14, 15, 17, 18, 20"
+Phrygian,            A,            "A, Bb, C, D, E, F, G",     "10, 11, 13, 15, 17, 18, 20"
 ```
-
 <br>
 
 To capture each note by row use ```mode_note_view```

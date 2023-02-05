@@ -6,7 +6,7 @@ A Postgres driven solution for analyzing chord progressions and generating chord
 <hr>
 <h3>setup</h3> 
 
-Execute ```docker-compose up``` in the root dir to create a postgres database named chordanalyzr on ```localhost:5432``` with user credentials from ```flyway/flyway.conf```.
+Execute ```docker-compose up``` to create a postgres database named chordanalyzr on ```localhost:5432``` with user credentials from ```flyway/flyway.conf```.
 
 <hr>
 <h3>chord views</h3> 

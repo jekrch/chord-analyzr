@@ -1,7 +1,7 @@
 version: '3'
 services:
   flyway:
-    image: flyway/flyway:8.5.5
+    image: flyway/flyway:10
     command: -configFiles=/flyway/conf/flyway.config -locations=filesystem:/flyway/sql -connectRetries=60 migrate
     volumes:
       - ./flyway/sql:/flyway/sql
@@ -9,7 +9,7 @@ services:
     depends_on:
       - postgres
   postgres:
-    image: postgres:15.1
+    image: postgres:16.1
     restart: always
     ports:
     - "5432:5432"

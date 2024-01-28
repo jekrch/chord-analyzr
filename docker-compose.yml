@@ -25,6 +25,7 @@ services:
       - "8080:8080"
     depends_on:
       - postgres
+      - flyway
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/chordanalyzr
       - SPRING_DATASOURCE_USERNAME=postgres
@@ -32,3 +33,9 @@ services:
       - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
       - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
       - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.PostgreSQLDialect
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"

@@ -1,6 +1,7 @@
 package com.chordanalyzr.api.controllers;
 
 import com.chordanalyzr.api.repositories.ModeScaleChordRelationRepository;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +16,10 @@ public class ChordController {
     ModeScaleChordRelationRepository modeScaleChordRelationRepository;
 
     @GetMapping
+    @Operation(
+            summary = "Get chords",
+            description = "Get chord data"
+    )
     public ResponseEntity<?> getChords() {
         return ResponseEntity.ok("tbd of chords");
     }

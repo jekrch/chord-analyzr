@@ -8,6 +8,7 @@ export { OpenAPI } from './core/OpenAPI';
 export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { ModeDto } from './models/ModeDto';
+export type { ModeScaleChordDto } from './models/ModeScaleChordDto';
 
 export { ChordControllerService } from './services/ChordControllerService';
 export { ModeControllerService } from './services/ModeControllerService';

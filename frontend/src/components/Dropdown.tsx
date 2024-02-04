@@ -90,7 +90,7 @@ const Dropdown: React.FC<DropdownProps> = ({ value, onChange, options, className
           style={{ maxHeight: `${menuPosition.maxHeight}px`, overflowY: 'auto' }}
           className="dropdown-menu absolute mt-2 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none custom-scrollbar w-auto"
          >
-          <div className="py-1 bg-slate-600 bg-opacity-96">
+          <div className="py-1 bg-[#444b59] bg-opacity-96">
             {showSearch &&
               <input
                 type="text"

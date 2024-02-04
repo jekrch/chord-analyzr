@@ -13,14 +13,12 @@ public interface ModeScaleChordRelationRepository extends JpaRepository<ModeScal
             FROM  com.chordanalyzr.api.entities.ModeScaleChordRelation m
             WHERE m.mode LIKE :mode AND
                   m.keyName = :keyName AND
-                  m.chordNoteName = :chordNoteName AND
-                  m.modeChordNoteDiffCount <= :modeChordNoteDiffCount
+                  m.modeChordNoteDiffCount <= :modeChordNoteDiffMaxCount
       """)
-    List<ModeScaleChordRelation> getChordsByValue(
+    List<ModeScaleChordRelation> getChordsByModeKeyAndDiffCount(
             String mode,
             String keyName,
-            String chordNoteName,
-            Integer modeChordNoteDiffCount
+            Integer modeChordNoteDiffMaxCount
     );
 
 }

@@ -72,7 +72,7 @@ To capture each note by row use ```mode_note_view```
 <hr>
 <h3>mode chord views</h3> 
 
-```mode_scale_chord_relation_view``` displays all permutations of chord mode and key with any distinct notes listed and counted. This can be used for identifying chords that complement a given scale. 
+```mode_scale_chord_relation_mv``` displays all permutations of chord mode and key with any distinct notes listed and counted. This can be used for identifying chords that complement a given scale. 
 
 Sample usage: 
 
@@ -85,7 +85,7 @@ SELECT mscv.mode,
        mscv.chord_notes,  
        mscv.mode_chord_note_diff, 
        mscv.mode_chord_note_diff_count 
-FROM mode_scale_chord_relation_view mscv
+FROM mode_scale_chord_relation_mv mscv
 WHERE mscv.mode = 'Ionian' AND 
       mscv.key_name = 'C' AND 
       mscv.chord_note_name = 'A' AND

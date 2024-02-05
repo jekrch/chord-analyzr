@@ -107,3 +107,9 @@ Returns:
 ```
 
 <br>
+
+## Frontend
+
+Initial progress is being made to build a spring-boot API and react frontend. Currently users can enter a key and mode, and see all chords that fall within the scale. Clicking on the chord name displays it on a piano component 
+
+<img width="457" alt="image" src="https://github.com/jekrch/chord-analyzr/assets/8173930/784c06a3-52cc-478f-8edf-3626191a9235">

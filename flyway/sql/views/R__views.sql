@@ -286,13 +286,14 @@ GROUP BY mcnv.key_name, mcnv.mode, mcnv.note,
 -- CHORD-SCALE RELATIONSHIPS --
 --
 
-    
+DROP MATERIALIZED VIEW IF EXISTS mode_scale_chord_relation_mv;
+
 -- fetches all chord-mode-key permutations with any distinct notes listed and counted. 
 -- this can be used to identify the affinity of chords to a given scale 
-CREATE OR REPLACE VIEW mode_scale_chord_relation_view AS
+CREATE MATERIALIZED VIEW IF NOT EXISTS mode_scale_chord_relation_mv AS
 WITH mode_notes AS (
  SELECT   
-   mnv.mode_id,  
+    mnv.mode_id,  
     mnv.mode,
     mnv.key_note,
     mnv.key_name,

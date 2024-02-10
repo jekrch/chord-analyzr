@@ -1,39 +1,121 @@
-import React, { Component } from 'react';
+import React from 'react';
 import Soundfont from 'soundfont-player';
-import { SoundfontProviderProps } from './SoundfontProviderProps';
+
+interface SoundfontProviderProps {
+  instrumentName: string;
+  hostname: string;
+  format?: 'mp3' | 'ogg';
+  soundfont?: 'MusyngKite' | 'FluidR3_GM';
+  audioContext: AudioContext;
+  onLoad?: (args: {
+    playNote: (midiNumber: number) => void;
+    stopNote: (midiNumber: number) => void;
+    stopAllNotes: () => void;
+  }) => void;
+  render?: (args: {
+    isLoading: boolean;
+    playNote: (midiNumber: number) => void;
+    stopNote: (midiNumber: number) => void;
+    stopAllNotes: () => void;
+  }) => JSX.Element | null;
+}
 
 interface SoundfontProviderState {
-  isLoading: boolean;
+  activeAudioNodes: { [key: number]: any };
   instrument: any | null;
 }
 
-export class SoundfontProvider extends Component<SoundfontProviderProps, SoundfontProviderState> {
-  state: SoundfontProviderState = {
-    isLoading: true,
-    instrument: null,
+export class SoundfontProvider extends React.Component<SoundfontProviderProps, SoundfontProviderState> {
+  static defaultProps = {
+    format: 'mp3',
+    soundfont: 'MusyngKite',
+    instrumentName: 'acoustic_grand_piano',
   };
 
-  componentDidMount() {
-    const { audioContext, instrumentName, hostname } = this.props;
-    Soundfont.instrument(audioContext, instrumentName, { soundfont: 'MusyngKite', nameToUrl: (name: any, soundfont: any, format: any) => `${hostname}/${soundfont}/${name}-${format}.js` })
-      .then(instrument => {
-        this.setState({ instrument, isLoading: false });
-      });
+  constructor(props: SoundfontProviderProps) {
+    super(props);
+    this.state = {
+      activeAudioNodes: {},
+      instrument: null,
+    };
   }
 
-  playNote = (midiNumber: any) => {
-    this.state.instrument?.play(midiNumber);
+  componentDidMount() {
+    this.loadInstrument(this.props.instrumentName);
+  }
+
+  componentDidUpdate(prevProps: SoundfontProviderProps) {
+    if (prevProps.instrumentName !== this.props.instrumentName) {
+      this.loadInstrument(this.props.instrumentName);
+    }
+  }
+
+  loadInstrument = (instrumentName: string) => {
+    this.setState({ instrument: null });
+    Soundfont.instrument(this.props.audioContext, instrumentName as any, {
+      format: this.props.format,
+      soundfont: this.props.soundfont,
+      nameToUrl: (name: string, soundfont: string, format: string) => {
+        return `${this.props.hostname}/${soundfont}/${name}-${format}.js`;
+      },
+    }).then((instrument) => {
+      this.setState({ instrument });
+      if (this.props.onLoad) {
+        this.props.onLoad({
+          playNote: this.playNote,
+          stopNote: this.stopNote,
+          stopAllNotes: this.stopAllNotes,
+        });
+      }
+    });
   };
 
-  stopNote = (midiNumber: any) => {
-    this.state.instrument?.stop(midiNumber);
+  playNote = (midiNumber: number) => {
+    this.resumeAudio().then(() => {
+      const audioNode = this.state.instrument.play(midiNumber);
+      this.setState({
+        activeAudioNodes: { ...this.state.activeAudioNodes, [midiNumber]: audioNode },
+      });
+    });
+  };
+
+  stopNote = (midiNumber: number) => {
+    this.resumeAudio().then(() => {
+      const audioNode = this.state.activeAudioNodes[midiNumber];
+      if (audioNode) {
+        audioNode.stop();
+        this.setState({
+          activeAudioNodes: { ...this.state.activeAudioNodes, [midiNumber]: null },
+        });
+      }
+    });
+  };
+
+  resumeAudio = () => {
+    if (this.props.audioContext.state === 'suspended') {
+      return this.props.audioContext.resume();
+    } else {
+      return Promise.resolve();
+    }
+  };
+
+  stopAllNotes = () => {
+    this.props.audioContext.resume().then(() => {
+      Object.values(this.state.activeAudioNodes).forEach((node) => {
+        if (node) node.stop();
+      });
+      this.setState({ activeAudioNodes: {} });
+    });
   };
 
   render() {
-    return this.props.render({
-      isLoading: this.state.isLoading,
+    return this.props.render ? this.props.render({
+      isLoading: !this.state.instrument,
       playNote: this.playNote,
       stopNote: this.stopNote,
-    });
+      stopAllNotes: this.stopAllNotes,
+    }) : null;
   }
 }
+
+export default SoundfontProvider;

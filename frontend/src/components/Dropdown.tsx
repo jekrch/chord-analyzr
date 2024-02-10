@@ -9,9 +9,9 @@ type DropdownProps = {
   menuClassName?: string;
   buttonClassName?: string;
   value: string;
-  onChange: (value: string) => void;
+  onChange: (value: any) => void;
   options: string[];
-  showSearch: boolean;
+  showSearch?: boolean;
 };
 
 const Dropdown: React.FC<DropdownProps> = ({ value, onChange, options, className, menuClassName, showSearch, buttonClassName }) => {

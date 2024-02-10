@@ -14,6 +14,9 @@ import { ModeScaleChordDto } from './api';
 import { SoundfontProvider } from './piano/SoundfontProvider';
 import { Piano, KeyboardShortcuts, MidiNumbers } from 'react-piano';
 import 'react-piano/dist/styles.css';
+import { getMidiNotes } from './util/ChordUtil';
+import InstrumentListProvider from './piano/InstrumentListProvider';
+import PianoConfig from './piano/PianoConfig';
 
 function App() {
   const [refresh, setRefresh] = useState(0);
@@ -24,14 +27,40 @@ function App() {
   const notationRef = useRef<HTMLDivElement>(null);
   const tabNotationRef = useRef<HTMLDivElement>(null);
   const [key, setKey] = useState('');
-
   const [activeNotes, setActiveNotes] = useState<number[]>([]);
   const audioContext = useRef(new (window.AudioContext || window.AudioContext)());
   const soundfontHostname = 'https://d1pzp51pvbm36p.cloudfront.net';
 
-  // Adjust these MIDI numbers based on the range of notes you want to display
-  const firstNote = MidiNumbers.fromNote('c3');
-  const lastNote = MidiNumbers.fromNote('c5');
+  const [pianoConfig, setPianoConfig] = useState<any>({
+    instrumentName: 'acoustic_grand_piano',
+    noteRange: {
+      first: MidiNumbers.fromNote('c3'),
+      last: MidiNumbers.fromNote('f5'),
+    },
+    keyboardShortcutOffset: 0,
+  }); 
+
+  /**
+   * this specifies the first note's octave
+   */
+  const startOctave = 4;
+
+  /**
+   * the last notes octave
+   */
+  const endOctave = 6;
+
+  /**
+   * first and last note letter
+   */
+  const anchorNote = 'c';
+
+  const firstNoteName = `${anchorNote}${startOctave}`;
+  const lastNoteName = `${anchorNote}${endOctave}`;
+
+  const firstNote = MidiNumbers.fromNote(firstNoteName);
+  const lastNote = MidiNumbers.fromNote(lastNoteName);
+
   const keyboardShortcuts = KeyboardShortcuts.create({
     firstNote: firstNote,
     lastNote: lastNote,
@@ -39,11 +68,17 @@ function App() {
   });
 
   const handleChordClick = (chordNoteNames: string) => {
-    const noteNames = chordNoteNames.split(', '); 
-    const midiNumbers = noteNames.map(note => MidiNumbers.fromNote(note + '3'));
-    setActiveNotes(midiNumbers);
-  };
+    // First, clear the active notes
+    setActiveNotes([]);
 
+    // Use setTimeout to ensure the state has been cleared before setting new notes
+    setTimeout(() => {
+      let midiNumbers = getMidiNotes(
+        startOctave, endOctave, chordNoteNames
+      );
+      setActiveNotes(midiNumbers);
+    }, 10); // A minimal delay
+  };
 
   useEffect(() => {
     ModeControllerService.getModes()
@@ -88,7 +123,6 @@ function App() {
 
       const formatter = new VF.Formatter().joinVoices([voice]).format([voice], 400);
       voice.draw(context, stave);
-
     }
   }, []);
 
@@ -114,7 +148,7 @@ function App() {
       <header className="App-header">
         <div className="mb-2">
           <TextInput
-            label="Key"
+            label="key"
             value={key}
             onChange={setKey}
           />
@@ -135,20 +169,48 @@ function App() {
         {/* Piano component */}
         <div className="mt-4">
           <SoundfontProvider
-            instrumentName="acoustic_grand_piano"
+            instrumentName={pianoConfig.instrumentName}
             audioContext={audioContext.current}
             hostname={soundfontHostname}
-            render={({ isLoading, playNote, stopNote }: { isLoading: any; playNote: any; stopNote: any }) => (
+            render={({ isLoading, playNote, stopNote, stopAllNotes }: { isLoading: any; playNote: any; stopNote: any, stopAllNotes: any }) => (
+              <>
               <Piano
-                noteRange={{ first: MidiNumbers.fromNote('c3'), last: MidiNumbers.fromNote('f4') }}
+                noteRange={{
+                  first: MidiNumbers.fromNote(firstNoteName),
+                  last: MidiNumbers.fromNote(lastNoteName)
+                }
+                }
                 playNote={playNote}
                 stopNote={stopNote}
+                disabled={isLoading}
                 width={500}
                 activeNotes={activeNotes}
-                keyboardShortcuts={KeyboardShortcuts.HOME_ROW}
+              //keyboardShortcuts={keyboardShortcuts}
               />
+              <div className="row mt-5">
+              <div className="col-lg-8 offset-lg-2">
+                <InstrumentListProvider
+                  hostname={soundfontHostname}
+                  render={(instrumentList) => (
+                    <PianoConfig
+                      config={pianoConfig}
+                      setConfig={(config) => {
+                        setPianoConfig(
+                          Object.assign({}, pianoConfig, config),
+                        );
+                        stopAllNotes?.();
+                      }}
+                      instrumentList={instrumentList || [pianoConfig.instrumentName]}
+                      keyboardShortcuts={keyboardShortcuts}
+                    />
+                  )}
+                />
+              </div>
+            </div>
+              </>
             )}
           />
+          
         </div>
         {/* <div className="mt-[2em]">
           <div className="rounded-xl bg-white shadow-sm shadow-slate-500" ref={notationRef} />
@@ -182,7 +244,9 @@ function App() {
                 {chords?.map((chord: ModeScaleChordDto, index: number) => (
                   <tr key={`chord-${index}`}>
                     <td
-                      onClick={() => handleChordClick(chord.chordNoteNames!)}
+                      onClick={() => {
+                        handleChordClick(chord.chordNoteNames!)
+                      }}
                       className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-200 text-left">{chord.chordName}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400 text-left">{chord.chordNoteNames}</td>
                   </tr>
@@ -191,8 +255,6 @@ function App() {
             </table>
           </div>
         </div>
-
-
       </header>
     </div>
   );

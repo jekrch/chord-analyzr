@@ -2,11 +2,14 @@
 
 A Postgres driven solution for analyzing chord progressions and generating chord suggestions. 
 
+<img width="420" alt="image" src="https://github.com/jekrch/chord-analyzr/assets/8173930/325d6463-d340-4c2a-bd86-e2a1022c1d0e">
 
 <hr>
-<h3>setup</h3> 
+<h3>Setup</h3> 
 
-Execute ```docker-compose up``` to create a postgres database named chordanalyzr on ```localhost:5432``` with user credentials from ```flyway/flyway.conf```.
+Execute ```docker-compose up``` to create a postgres database named chordanalyzr on ```localhost:5432``` with user credentials from ```flyway/flyway.conf```. 
+
+Services for a spring boot API and react frontend will also be started, with the frontend available at `localhost:3000`
 
 <hr>
 <h3>chord views</h3> 
@@ -111,5 +114,7 @@ Returns:
 ## Frontend
 
 Initial progress is being made to build a spring-boot API and react frontend. Currently users can enter a key and mode, and see all chords that fall within the scale. Clicking on the chord name displays it on a piano component 
+<p align="center">
+       <img width="371" alt="image" src="https://github.com/jekrch/chord-analyzr/assets/8173930/479bd3e3-ec42-48b7-96d6-f2975bdb1e60">
+</p>
 
-<img width="457" alt="image" src="https://github.com/jekrch/chord-analyzr/assets/8173930/784c06a3-52cc-478f-8edf-3626191a9235">

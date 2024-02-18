@@ -25,7 +25,7 @@ import { useModes } from './hooks/useModes';
 function App() {
   const [refresh, setRefresh] = useState(0);
   const [chords, setChords] = useState<ModeScaleChordDto[]>();
-  const [mode, setMode] = useState<string>('Dorian');
+  const [mode, setMode] = useState<string>('Ionian');
   // const [error, setError] = useState(null);
   const { modes, error } = useModes();
   const notationRef = useRef<HTMLDivElement>(null);

@@ -2,7 +2,7 @@
 
 A Postgres driven solution for analyzing chord progressions and generating chord suggestions. 
 
-<img width="420" alt="image" src="https://github.com/jekrch/chord-analyzr/assets/8173930/325d6463-d340-4c2a-bd86-e2a1022c1d0e">
+<img width="420" alt="image" src="https://github.com/jekrch/chord-analyzr/assets/8173930/8980216e-ee4e-42da-891f-cc4f8b57f644">
 
 <hr>
 <h3>Setup</h3> 
@@ -115,6 +115,7 @@ Returns:
 
 Initial progress is being made to build a spring-boot API and react frontend. Currently users can enter a key and mode, and see all chords that fall within the scale. Clicking on the chord name displays it on a piano component 
 <p align="center">
-       <img width="371" alt="image" src="https://github.com/jekrch/chord-analyzr/assets/8173930/479bd3e3-ec42-48b7-96d6-f2975bdb1e60">
+       <img width="371" alt="image" src="https://github.com/jekrch/chord-analyzr/assets/8173930/801346d4-bf6e-46aa-a908-777721bd0160">
+
 </p>
 

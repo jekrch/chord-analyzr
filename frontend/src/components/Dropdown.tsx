@@ -96,7 +96,7 @@ const Dropdown: React.FC<DropdownProps> = ({ value, onChange, options, className
                 type="text"
                 className="w-full text-slate-300 px-4 py-2 text-sm font-normal bg-slate-800"
                 placeholder="Search..."
-                value={filter}
+                value={filter}                
                 onChange={(e) => {
                   setFilter(e.target.value)
                 }}

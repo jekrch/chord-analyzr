@@ -97,6 +97,7 @@ class PianoConfig extends Component<PianoConfigProps> {
                         value={this.props.config.instrumentName || instrumentName}
                         onChange={this.onChangeInstrument}
                         options={this.props.instrumentList}
+                        showSearch={true}
                     />
                 </div>
             </div>

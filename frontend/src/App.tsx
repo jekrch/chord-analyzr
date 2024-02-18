@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import logo from './logo.svg';
 import './App.css';
 import { ChordControllerService } from './api/services/ChordControllerService';
@@ -10,35 +10,49 @@ import { Chord } from 'tonal'
 import { Scale } from '@tonaljs/tonal';
 import TextInput from './components/TextInput';
 import { Glyph } from 'vexflow';
-import { ModeScaleChordDto } from './api';
+import { ModeScaleChordDto, ScaleControllerService, ScaleNoteDto } from './api';
 import { SoundfontProvider } from './piano/SoundfontProvider';
 import { Piano, KeyboardShortcuts, MidiNumbers } from 'react-piano';
 import 'react-piano/dist/styles.css';
 import { getMidiNotes } from './util/ChordUtil';
 import InstrumentListProvider from './piano/InstrumentListProvider';
 import PianoConfig from './piano/PianoConfig';
+import { EyeIcon, PlayCircleIcon } from '@heroicons/react/20/solid';
+import classNames from 'classnames';
+import { normalizeNoteName, normalizeNoteWithOctave } from './util/NoteUtil';
+import { useModes } from './hooks/useModes';
 
 function App() {
   const [refresh, setRefresh] = useState(0);
   const [chords, setChords] = useState<ModeScaleChordDto[]>();
   const [mode, setMode] = useState<string>('Dorian');
-  const [error, setError] = useState(null);
-  const [modes, setModes] = useState<string[] | undefined>();
+  // const [error, setError] = useState(null);
+  const { modes, error } = useModes();
   const notationRef = useRef<HTMLDivElement>(null);
   const tabNotationRef = useRef<HTMLDivElement>(null);
   const [key, setKey] = useState('');
   const [activeNotes, setActiveNotes] = useState<number[]>([]);
+  const [scaleNotes, setScaleNotes] = useState<ScaleNoteDto[]>([]);
   const audioContext = useRef(new (window.AudioContext || window.AudioContext)());
   const soundfontHostname = 'https://d1pzp51pvbm36p.cloudfront.net';
+  const playNoteRef = useRef<(midiNumber: number) => void | null>(null);
+  const stopNoteRef = useRef<(midiNumber: number) => void | null>(null);
+  const stopAllNotesRef = useRef<() => void | null>(null);
 
+  const normalizedScaleNotes = useMemo(() => {
+    return scaleNotes.map(scaleNote => 
+      normalizeNoteName(scaleNote?.noteName)
+    );
+  }, [scaleNotes]);
+  
   const [pianoConfig, setPianoConfig] = useState<any>({
     instrumentName: 'acoustic_grand_piano',
     noteRange: {
-      first: MidiNumbers.fromNote('c3'),
-      last: MidiNumbers.fromNote('f5'),
+      first: MidiNumbers.fromNote('c4'),
+      last: MidiNumbers.fromNote('f6'),
     },
     keyboardShortcutOffset: 0,
-  }); 
+  });
 
   /**
    * this specifies the first note's octave
@@ -68,30 +82,85 @@ function App() {
   });
 
   const handleChordClick = (chordNoteNames: string) => {
-    // First, clear the active notes
     setActiveNotes([]);
-
-    // Use setTimeout to ensure the state has been cleared before setting new notes
-    setTimeout(() => {
-      let midiNumbers = getMidiNotes(
-        startOctave, endOctave, chordNoteNames
-      );
-      setActiveNotes(midiNumbers);
-    }, 10); // A minimal delay
+    const midiNumbers = getMidiNotes(
+      startOctave, endOctave, chordNoteNames
+    );
+    playNotes(midiNumbers);
   };
 
-  useEffect(() => {
-    ModeControllerService.getModes()
-      .then((response) => {
-        setModes(response.map(m => m.name!));
-        setRefresh(Math.random());
-        console.log(response);
-      })
-      .catch((err) => {
-        setError(err);
-        console.error('Error fetching modes:', err);
-      });
-  }, []);
+  const playNotes = (midiNumbers: number[]) => {
+    // clear prev active notes
+    setActiveNotes([]);
+    stopAllNotesRef?.current?.();
+    // Use setTimeout to ensure the state has been cleared before setting new notes
+    setTimeout(() => {
+      setActiveNotes(midiNumbers);
+    }, 2); // minimal delay
+  }
+
+
+  const playScaleNotes = () => {
+    if (!scaleNotes?.length) return;
+
+    const noteDuration = 300; // Duration of each note in milliseconds
+    let cumulativeDelay = 0;
+
+    let scaleNotesFull = [...scaleNotes, {
+      noteName: scaleNotes[0].noteName
+    }]
+
+    const startOctave = 4; // Starting octave for your keyboard range
+    let currentOctave = startOctave;
+    let lastOctaveIndex = 0;
+
+    scaleNotesFull.forEach((scaleNote, index) => {
+      setTimeout(() => {
+        if (playNoteRef.current && stopNoteRef.current) {
+          let noteName = scaleNote.noteName;
+          
+          noteName = normalizeNoteName(noteName);
+          
+          // increment the octave at every 'C', but not for the first note
+          if (
+            index > 0 && 
+            noteName?.startsWith('C') &&
+            (index - lastOctaveIndex) > 3  
+          ) {
+            lastOctaveIndex = index;
+            currentOctave++;
+          }
+  
+          noteName += currentOctave.toString();
+  
+          //noteName = normalizeNoteWithOctave(noteName);
+
+          //console.log(`Playing note: ${noteName}`);
+          let midiNumber = undefined;
+          
+          try{ 
+            midiNumber = MidiNumbers.fromNote(noteName);
+          } catch (ex) {
+            console.error(`failed on ${noteName}`)
+            return;
+          }
+          playNotes([midiNumber])
+          // audioContext.current.resume().then(() => {
+          //   (playNoteRef.current as any)?.(midiNumber);
+          //   // Stop the note after its duration
+          //   setTimeout(() => {
+          //     (stopNoteRef.current as any)?.(midiNumber);
+          //   }, noteDuration);
+          // });
+        }
+      }, cumulativeDelay);
+  
+      cumulativeDelay += noteDuration;
+    });
+  
+    // clear active notes after finishing the sequence
+    setTimeout(() => setActiveNotes([]), cumulativeDelay + noteDuration);
+  };
 
 
   const getChordNotes = (chordName: string) => {
@@ -137,23 +206,39 @@ function App() {
         setChords(response);
       })
       .catch((err) => {
-        setError(err);
         console.error('Error fetching chords:', err);
+      });
+
+    ScaleControllerService.getScaleNotes(key, mode)
+      .then((response) => {
+        setScaleNotes(response);
+      })
+      .catch((err) => {
+        console.error('Error fetching scale notes:', err);
       });
 
   }, [key, mode, notationRef]);
 
+  
   return (
     <div className="App">
       <header className="App-header">
-        <div className="mb-2">
-          <TextInput
-            label="key"
-            value={key}
-            onChange={setKey}
+        <span className="mb-2">
+          <span className="inline-block">
+            <TextInput
+              label="key"
+              value={key?.toUpperCase()}
+              onChange={setKey}
+            />
+          </span>
+
+          <PlayCircleIcon
+            onClick={playScaleNotes}
+            height={30}
+            className="inline-block ml-2 hover:text-slate-400 active:text-slate-500 cursor-pointer"
           />
 
-        </div>
+        </span>
 
         {modes &&
           <Dropdown
@@ -172,45 +257,77 @@ function App() {
             instrumentName={pianoConfig.instrumentName}
             audioContext={audioContext.current}
             hostname={soundfontHostname}
-            render={({ isLoading, playNote, stopNote, stopAllNotes }: { isLoading: any; playNote: any; stopNote: any, stopAllNotes: any }) => (
-              <>
-              <Piano
-                noteRange={{
-                  first: MidiNumbers.fromNote(firstNoteName),
-                  last: MidiNumbers.fromNote(lastNoteName)
-                }
-                }
-                playNote={playNote}
-                stopNote={stopNote}
-                disabled={isLoading}
-                width={500}
-                activeNotes={activeNotes}
-              //keyboardShortcuts={keyboardShortcuts}
-              />
-              <div className="row mt-5">
-              <div className="col-lg-8 offset-lg-2">
-                <InstrumentListProvider
-                  hostname={soundfontHostname}
-                  render={(instrumentList) => (
-                    <PianoConfig
-                      config={pianoConfig}
-                      setConfig={(config) => {
-                        setPianoConfig(
-                          Object.assign({}, pianoConfig, config),
+            render={({ isLoading, playNote, stopNote, stopAllNotes }: { isLoading: any; playNote: any; stopNote: any, stopAllNotes: any }) => {
+
+              (playNoteRef.current as any) = playNote;
+              (stopNoteRef.current as any) = stopNote;
+              (stopAllNotesRef.current as any) = stopAllNotes;
+
+              return (
+                <>
+                  <Piano
+                    noteRange={{
+                      first: MidiNumbers.fromNote(firstNoteName),
+                      last: MidiNumbers.fromNote(lastNoteName)
+                    }
+                    }
+                    playNote={playNote}
+                    stopNote={stopNote}
+                    disabled={isLoading}
+                    width={500}
+                    activeNotes={activeNotes}
+                    // renderNoteLabel={(key: any) => {
+                    //   console.log(key.midiNumber)
+                    //   return (
+                    //     <div className="mx-auto mb-2 w-2 bg-blue-400 h-2"/>
+                    //   )
+                    // }}
+                    renderNoteLabel={({ midiNumber, isAccidental }: { midiNumber: number; isAccidental: boolean }) => {
+                      // convert the midiNumber to a note name without the octave
+                      const noteNameWithoutOctave = MidiNumbers.getAttributes(midiNumber).note.slice(0, -1);
+                    
+                      // check if this note (without considering the octave) is in the scale
+                      const isScaleNote = normalizedScaleNotes.includes(
+                        normalizeNoteName(noteNameWithoutOctave)
+                      );
+                                        
+                      // conditionally render your label with a visual indicator for scale notes
+                      if (isScaleNote) {
+                        return (
+                          <div className={`mx-auto mb-2 w-2 h-2 rounded-full ${isAccidental ? 'bg-blue-200' : 'bg-blue-400'}`} />
                         );
-                        stopAllNotes?.();
-                      }}
-                      instrumentList={instrumentList || [pianoConfig.instrumentName]}
-                      keyboardShortcuts={keyboardShortcuts}
-                    />
-                  )}
-                />
-              </div>
-            </div>
-              </>
-            )}
+                      }
+                    
+                      // Optionally, handle rendering for non-scale notes
+                      return null; // or any other default rendering for non-scale notes
+                    }}
+                  //keyboardShortcuts={keyboardShortcuts}
+                  />
+                  <div className="row mt-5">
+                    <div className="col-lg-8 offset-lg-2">
+                      <InstrumentListProvider
+                        hostname={soundfontHostname}
+                        render={(instrumentList) => (
+                          <PianoConfig
+                            config={pianoConfig}
+                            setConfig={(config) => {
+                              setPianoConfig(
+                                Object.assign({}, pianoConfig, config),
+                              );
+                              stopAllNotes?.();
+                            }}
+                            instrumentList={instrumentList || [pianoConfig.instrumentName]}
+                            keyboardShortcuts={keyboardShortcuts}
+                          />
+                        )}
+                      />
+                    </div>
+                  </div>
+                </>
+              )
+            }}
           />
-          
+
         </div>
         {/* <div className="mt-[2em]">
           <div className="rounded-xl bg-white shadow-sm shadow-slate-500" ref={notationRef} />
@@ -225,13 +342,18 @@ function App() {
               <tr>
                 <th
                   scope="col"
-                  className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-slate-200 uppercase tracking-wider z-10 bg-[#3d434f]"
+                  className="sticky top-0 px-2 py-3 text-left text-xs font-medium text-slate-200 uppercase tracking-wider z-10 bg-[#3d434f]"
+                >
+                </th>
+                <th
+                  scope="col"
+                  className="sticky top-0 pl-7 py-3 text-left text-xs font-medium text-slate-200 uppercase tracking-wider z-10 bg-[#3d434f]"
                 >
                   Name
                 </th>
                 <th
                   scope="col"
-                  className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-slate-200 uppercase tracking-wider z-10 bg-[#3d434f]"
+                  className="sticky top-0 pl-0 py-3 text-left text-xs font-medium text-slate-200 uppercase tracking-wider z-10 bg-[#3d434f]"
                 >
                   Notes
                 </th>
@@ -247,7 +369,16 @@ function App() {
                       onClick={() => {
                         handleChordClick(chord.chordNoteNames!)
                       }}
-                      className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-200 text-left">{chord.chordName}</td>
+                      className="px-2 py-4 whitespace-nowrap text-sm font-medium text-slate-200 text-left">
+                      <span>
+                        <PlayCircleIcon height={30} className="inline-block ml-2 hover:text-slate-400 active:text-slate-500 cursor-pointer" />
+
+                      </span>
+                    </td>
+                    <td
+                      className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-200 text-left">
+                      {chord.chordName}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400 text-left">{chord.chordNoteNames}</td>
                   </tr>
                 ))}

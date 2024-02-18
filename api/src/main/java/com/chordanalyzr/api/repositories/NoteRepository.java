@@ -17,7 +17,7 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
             FROM mode_scale_note_letter_view 
             WHERE
                 mode = :mode AND
-                key_name = :keyName
+                key_name ilike :keyName
             ORDER BY seq_note asc;    
         """,
         nativeQuery = true

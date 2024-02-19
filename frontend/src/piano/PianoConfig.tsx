@@ -38,6 +38,7 @@ class PianoConfig extends Component<PianoConfigProps> {
 
     handleKeyDown = (event: KeyboardEvent) => {
         const { noteRange, keyboardShortcutOffset } = this.props.config;
+        if (!noteRange) return;
         const numNotes = noteRange.last - noteRange.first + 1;
         const minOffset = 0;
         const maxOffset = numNotes - this.props.keyboardShortcuts.length;

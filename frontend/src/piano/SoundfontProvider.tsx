@@ -100,11 +100,17 @@ export class SoundfontProvider extends React.Component<SoundfontProviderProps, S
   };
 
   stopAllNotes = () => {
+
     this.props.audioContext.resume().then(() => {
-      Object.values(this.state.activeAudioNodes).forEach((node) => {
-        if (node) node.stop();
+      const activeAudioNodes = Object.values(this.state.activeAudioNodes);
+      activeAudioNodes.forEach((node) => {
+        if (node) {
+          node.stop();
+        }
       });
-      this.setState({ activeAudioNodes: {} });
+      this.setState({
+        activeAudioNodes: {},
+      });
     });
   };
 

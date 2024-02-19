@@ -1,19 +1,17 @@
 import React, { Component } from 'react';
 
-// Define a type for the component's props
 type InstrumentListProviderProps = {
   hostname: string;
   soundfont: 'MusyngKite' | 'FluidR3_GM';
   render: (instrumentList: string[] | null) => JSX.Element;
 };
 
-// Define a type for the component's state
 type InstrumentListProviderState = {
   instrumentList: string[] | null;
 };
 
 class InstrumentListProvider extends Component<InstrumentListProviderProps, InstrumentListProviderState> {
-  // Set default props using static defaultProps
+
   static defaultProps: Partial<InstrumentListProviderProps> = {
     soundfont: 'MusyngKite',
   };

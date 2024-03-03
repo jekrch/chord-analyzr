@@ -8,9 +8,20 @@ COPY src /usr/api/build/src
 
 RUN mvn package -Dmaven.test.skip=true
 
-FROM openjdk:17
+FROM openjdk:17-buster
 
+# install pg client for init.sh
+RUN apt-get update && \
+    apt-get install -y postgresql-client && \
+    rm -rf /var/lib/apt/lists/*
+
+# copy jar from the build stage
 COPY --from=BUILD /usr/api/build/target/api-0.0.1-SNAPSHOT.jar /usr/src/app/api.jar
 
+# copy the init.sh script into the final image
+COPY init.sh /usr/src/app/init.sh
+RUN chmod +x /usr/src/app/init.sh
+
 EXPOSE 8080
-ENTRYPOINT ["java","-Xverify:none","-jar", "/usr/src/app/api.jar"]
+
+ENTRYPOINT ["/usr/src/app/init.sh"]

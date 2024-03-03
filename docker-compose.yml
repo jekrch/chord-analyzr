@@ -28,6 +28,8 @@ services:
       - flyway
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/chordanalyzr
+      - SPRING_DATASOURCE_DB=chordanalyzr
+      - SPRING_DATASOURCE_PORT=5432
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=pass
       - SPRING_JPA_HIBERNATE_DDL_AUTO=validate

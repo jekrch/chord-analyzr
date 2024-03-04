@@ -15,6 +15,12 @@ import { useModes } from './hooks/useModes';
 import ChordTable from './components/ChordTable';
 import PianoControl, { endOctave, startOctave } from './components/piano/PianoControl';
 import StaffVisualizer from './components/StaffVisualizer';
+import classNames from 'classnames';
+
+interface AddedChord {
+  name: string;
+  notes: string;
+}
 
 function App() {
   const [chords, setChords] = useState<ModeScaleChordDto[]>();
@@ -23,6 +29,8 @@ function App() {
   const [key, setKey] = useState('C');
   const [activeNotes, setActiveNotes] = useState<number[]>([]);
   const [scaleNotes, setScaleNotes] = useState<ScaleNoteDto[]>([]);
+  const [addedChords, setAddedChords] = useState<AddedChord[]>([]);
+  const [activeChordIndex, setActiveChordIndex] = useState<number | null>(null);
 
   const normalizedScaleNotes: string[] = useMemo(() => {
     if (!scaleNotes.length) {
@@ -32,6 +40,10 @@ function App() {
       normalizeNoteName(scaleNote?.noteName)!
     );
   }, [scaleNotes]);
+
+  const addChordClick = (chordName: string, chordNotes: string) => {
+    setAddedChords(current => [...current, { name: chordName, notes: chordNotes }]);
+  };
 
   const handleChordClick = (chordNoteNames: string) => {
     //setActiveNotes([]);
@@ -61,7 +73,7 @@ function App() {
     }]
 
     // start octave for keyboard range
-    const startOctave = 4; 
+    const startOctave = 4;
     let currentOctave = startOctave;
 
     let lastMidiNumber = 0;
@@ -128,6 +140,35 @@ function App() {
 
   }, [key, mode]);
 
+  const handleKeyPress = (event: KeyboardEvent) => {
+    const keyMapIndex = event.key === '0' ? 9 : parseInt(event.key, 10) - 1;
+    if (keyMapIndex >= 0 && keyMapIndex < addedChords.length) {
+      
+      // mark the chord as active
+      setActiveChordIndex(keyMapIndex);
+      const chordToPlay = addedChords[keyMapIndex];
+      
+      if (chordToPlay) {
+        //console.log(`Playing chord: ${chordToPlay.name}`);
+        handleChordClick(chordToPlay.notes);
+  
+        // reset active chord index after playing
+        setTimeout(() => {
+          setActiveChordIndex(null);
+        }, 200); 
+      }
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyPress);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [addedChords, handleChordClick]); 
+
+
   return (
     <div className="App">
       <div className="App-body">
@@ -170,9 +211,40 @@ function App() {
           notes={chordNotes} 
         /> */}
 
-        <ChordTable 
-          chords={chords} 
-          onChordClick={handleChordClick} 
+        {/* added chords */}
+        <div className={classNames({'mt-6' : addedChords?.length})}>
+          {addedChords.map((chord, index) => (
+            <button
+              key={index}
+              className={`mr-2 mb-2 py-2 px-4 rounded-full text-white font-bold text-[0.7em] ${
+                index === activeChordIndex ? 'bg-cyan-500' : 'bg-cyan-700 hover:bg-cyan-600'
+              }`}
+              onClick={() => {
+                setActiveChordIndex(index);
+                handleChordClick(chord.notes);
+                setTimeout(() => {
+                  setActiveChordIndex(null);
+                }, 200); // Reset active chord index
+              }}
+            >
+              {chord.name}
+            </button>
+          ))}
+          {addedChords?.length != 0 &&
+              <button
+              key={'clear'}
+              className="mr-2 mb-2 bg-gray-500 hover:bg-gray-700 text-white text-[0.7em] font-bold py-2 px-3 rounded-full"
+              onClick={() => setAddedChords([])}
+            >
+              clear
+            </button>
+          }
+        </div>
+
+        <ChordTable
+          chords={chords}
+          onChordClick={handleChordClick}
+          addChordClick={addChordClick}
         />
       </div>
     </div>

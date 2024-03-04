@@ -113,7 +113,8 @@ Returns:
 
 ## Frontend
 
-Initial progress is being made to build a spring-boot API and react frontend. Currently users can enter a key and mode, and see all chords that fall within the scale. Clicking on the chord name displays it on a piano component 
+Initial progress is being made to build a spring-boot API and react frontend. Currently users can enter a key and mode, and see all chords that fall within the scale. Clicking on the chord play button plays displays it on a piano component. A chord can be added to a progression which maps to the number keys on the users keyboard. 
+
 <p align="center">
      
 <img width="371" alt="image" src="https://github.com/jekrch/chord-analyzr/assets/8173930/a9c20d02-187e-4422-b634-cb174b27d1a0">

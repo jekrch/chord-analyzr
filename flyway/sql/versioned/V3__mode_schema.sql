@@ -78,5 +78,11 @@ BEGIN
   PERFORM fn_insert_mode_if_not_exists('Mixolydian b6', '{0,2,4,5,7,8,10}');
   PERFORM fn_insert_mode_if_not_exists('Locrian #2', '{0,2,3,5,6,8,10}');
   PERFORM fn_insert_mode_if_not_exists('Altered Scale', '{0,1,3,4,6,8,10}');
+
+  PERFORM fn_insert_mode_if_not_exists('Minor Blues', '{0,3,5,6,7,10}');
+  PERFORM fn_insert_mode_if_not_exists('Major Blues', '{0,2,3,4,7,9}');
+  PERFORM fn_insert_mode_if_not_exists('Minor Pentatonic', '{0,3,5,7,10}');
+  PERFORM fn_insert_mode_if_not_exists('Major Pentatonic', '{0,2,4,7,9}');
+  PERFORM fn_insert_mode_if_not_exists('Harmonic Minor', '{0,2,3,5,7,8,11}');
 END
 $$;

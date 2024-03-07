@@ -113,7 +113,7 @@ WITH mode_scale_note_letters AS (
 	        FROM note n
 	        JOIN ordered_letter_view olv_key_ordinal 
 	                ON olv_key_ordinal.letter = msn.key_letter
-	        JOIN ordered_letter_view olv_seq_letter       -- the letter of the preceding note should be the 
+	        JOIN ordered_letter_view olv_seq_letter       -- the letter of the preceding note should be alphabetically prior
 	                ON olv_seq_letter.letter_ordinal =    -- the index of the note within the scale should determine the letter 
 	                                            (olv_key_ordinal.letter_ordinal + msn.note_index) AND 
 	                   olv_seq_letter.letter = n.letter

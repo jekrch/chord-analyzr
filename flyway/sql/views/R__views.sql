@@ -92,31 +92,84 @@ CREATE OR REPLACE VIEW mode_scale_note_view AS
      
 
 CREATE OR REPLACE VIEW mode_scale_note_letter_view AS 
-SELECT msn.mode_id,
-       msn.mode,
-       msn.key_note, 
-       msn.key_name,
-       msn.note_ordinal,
-       msn.note,
-       nt.name AS note_name, 
-       nt.note_type_id, 
-       nt.letter AS note_letter,
-       msn.key_letter,
-       msn.key_type_id, 
-       msn.seq_note
-FROM mode_scale_note_view msn
-JOIN note nt ON nt.name IN (
-    SELECT n.name 
-        FROM note n
-        JOIN ordered_letter_view olv_key_ordinal 
-                ON olv_key_ordinal.letter = msn.key_letter
-        JOIN ordered_letter_view olv_seq_letter       -- the letter of the preceding note should be the 
-                ON olv_seq_letter.letter_ordinal =    -- the index of the note within the scale should determine the letter 
-                                            (olv_key_ordinal.letter_ordinal + msn.note_index) AND 
-                   olv_seq_letter.letter = n.letter
-        WHERE n.note = msn.note
+WITH mode_scale_note_letters AS (
+	-- complete modes
+	SELECT msn.mode_id,
+	       msn.mode,
+	       msn.key_note, 
+	       msn.key_name,
+	       msn.note_ordinal,
+	       msn.note,
+	       nt.name AS note_name, 
+	       nt.note_type_id, 
+	       nt.letter AS note_letter,
+	       msn.key_letter,
+	       msn.key_type_id, 
+	       msn.seq_note
+	FROM mode_scale_note_view msn
+	JOIN mode m ON m.id = msn.mode_id AND m.complete IS TRUE -- complete modes
+	JOIN note nt ON nt.name IN (
+	    SELECT n.name 
+	        FROM note n
+	        JOIN ordered_letter_view olv_key_ordinal 
+	                ON olv_key_ordinal.letter = msn.key_letter
+	        JOIN ordered_letter_view olv_seq_letter       -- the letter of the preceding note should be the 
+	                ON olv_seq_letter.letter_ordinal =    -- the index of the note within the scale should determine the letter 
+	                                            (olv_key_ordinal.letter_ordinal + msn.note_index) AND 
+	                   olv_seq_letter.letter = n.letter
+	        WHERE n.note = msn.note
+	)
+	UNION ALL 
+	-- gapped/incomplete modes
+	SELECT DISTINCT
+	    msn.mode_id,
+	    msn.mode,
+	    msn.key_note,
+	    msn.key_name,
+	    msn.note_ordinal,
+	    msn.note,
+	    COALESCE(pref_note.name, nt.name) AS note_name,
+	    COALESCE(pref_note.note_type_id, nt.note_type_id) AS note_type_id,
+	    COALESCE(pref_note.letter, nt.letter) AS note_letter,
+	    msn.key_letter,
+	    msn.key_type_id,
+	    msn.seq_note
+	FROM mode_scale_note_view msn
+	JOIN mode m ON m.id = msn.mode_id AND m.complete IS FALSE -- only cover gapped/incomplete modes here
+	JOIN note nt ON nt.note = msn.note
+	LEFT JOIN (
+	    SELECT
+	        mn.mode,
+	        mn.key_name,
+	        mn.note,
+	        n.name,
+	        n.note_type_id,
+	        n.letter,
+	        CASE -- we're picking the accidentals that match the key, are consistent and minimal relative to naturals
+	            WHEN root_note.note_type_id = 3 
+	            THEN ROW_NUMBER() OVER (
+	            	PARTITION BY mn.mode, mn.key_name, mn.note 
+	            	ORDER BY n.note_type_id DESC
+	        	)
+	            ELSE ROW_NUMBER() OVER (
+	            	PARTITION BY mn.mode, mn.key_name, mn.note 
+	            	ORDER BY n.note_type_id ASC
+	        	)
+	        END AS rn
+	    FROM mode_note_view mn
+	    JOIN mode m ON m.id = mn.mode_id AND m.complete IS FALSE -- only cover gapped/incomplete modes here
+	    JOIN note n ON n.note = mn.note
+	    JOIN note root_note ON root_note.name = mn.key_name
+	    WHERE n.note_type_id IN (1, 2, 3)  -- only consider natural, flat, and sharp notes
+	    ORDER BY mn.mode, mn.key_name, mn.note, n.note_type_id
+	) pref_note ON pref_note.mode = msn.mode
+	             AND pref_note.key_name = msn.key_name
+	             AND pref_note.note = msn.note
+	             AND pref_note.rn = 1  -- take the note with the preferred note_type_id
 )
-ORDER BY msn.note_ordinal ASC;
+SELECT *
+FROM mode_scale_note_letters 
+ORDER BY note_ordinal ASC;
 
 
 

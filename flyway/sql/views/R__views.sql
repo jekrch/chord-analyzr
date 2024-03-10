@@ -4,13 +4,13 @@
 --
 
 
-DROP VIEW IF EXISTS mode_scale_chord_relation_view;
-DROP VIEW IF EXISTS chord_view;
-DROP VIEW IF EXISTS chord_note_view;
-DROP VIEW IF EXISTS mode_chord_view;
-DROP VIEW IF EXISTS mode_chord_note_view;
-DROP VIEW IF EXISTS mode_view;
-DROP VIEW IF EXISTS mode_note_view;
+-- DROP VIEW IF EXISTS mode_scale_chord_relation_view;
+-- DROP VIEW IF EXISTS chord_view;
+-- DROP VIEW IF EXISTS chord_note_view;
+-- DROP VIEW IF EXISTS mode_chord_view;
+-- DROP VIEW IF EXISTS mode_chord_note_view;
+-- DROP VIEW IF EXISTS mode_view;
+-- DROP VIEW IF EXISTS mode_note_view;
 
 -- fetches all permutations of modes with keys
 
@@ -91,7 +91,7 @@ CREATE OR REPLACE VIEW mode_scale_note_view AS
      
      
 
-CREATE OR REPLACE VIEW mode_scale_note_letter_view AS 
+CREATE MATERIALIZED VIEW IF NOT EXISTS mode_scale_note_letter_mv AS 
 WITH mode_scale_note_letters AS (
 	-- complete modes
 	SELECT msn.mode_id,
@@ -171,6 +171,12 @@ SELECT *
 FROM mode_scale_note_letters 
 ORDER BY note_ordinal ASC;
 
+CREATE INDEX IF NOT EXISTS mode_scale_note_letter_mv_mode ON mode_scale_note_letter_mv(mode);
+CREATE INDEX IF NOT EXISTS mode_scale_note_letter_mv_mode_id ON mode_scale_note_letter_mv(mode_id);
+CREATE INDEX IF NOT EXISTS mode_scale_note_letter_mv_key_name ON mode_scale_note_letter_mv(key_name);
+CREATE INDEX IF NOT EXISTS mode_scale_note_letter_mv_note ON mode_scale_note_letter_mv(note);
+CREATE INDEX IF NOT EXISTS mode_scale_note_letter_mv_note_name ON mode_scale_note_letter_mv(note_name);
+CREATE UNIQUE INDEX IF NOT EXISTS mode_scale_note_letter_mv_incl_uidx ON mode_scale_note_letter_mv(mode_id, key_name, note, note_name) INCLUDE (note_name, mode);
 
 
 
@@ -184,9 +190,27 @@ SELECT
        msn.key_name,
        string_agg(msn.note_name, ', '  order by msn.note_ordinal) AS mode_note_names, 
        string_agg(seq_note::text, ', ' order by msn.note_ordinal) AS mode_notes
-FROM mode_scale_note_letter_view msn
+FROM mode_scale_note_letter_mv msn
 GROUP BY msn.mode, msn.key_note, msn.key_name;
 
+
+CREATE MATERIALIZED VIEW IF NOT EXISTS mode_notes_mv AS
+ SELECT   
+    mnv.mode_id,  
+    mnv.mode,
+    mnv.key_note,
+    mnv.key_name,
+    array_agg(DISTINCT mnv.note) AS mode_notes
+    FROM mode_note_view mnv 
+    GROUP BY mnv.key_note, mnv.key_name, mnv.mode, mnv.mode_id;
+   
+CREATE INDEX IF NOT EXISTS mode_notes_mv_mode_id ON mode_notes_mv(mode_id);   
+CREATE INDEX IF NOT EXISTS mode_notes_mv_mode ON mode_notes_mv(mode);
+CREATE INDEX IF NOT EXISTS mode_notes_mv_key_name ON mode_notes_mv(key_name);
+CREATE INDEX IF NOT EXISTS mode_notes_mv_note ON mode_notes_mv(mode_notes);
+CREATE INDEX IF NOT EXISTS mode_notes_mv_key_note ON mode_notes_mv(key_note);
+CREATE INDEX IF NOT EXISTS mode_notes_mv_mode_incl ON mode_notes_mv(key_name, mode_id)
+    INCLUDE(key_note, mode, mode_notes);   
 
 
 --
@@ -228,7 +252,7 @@ JOIN note chord_note ON chord_note.note =
             chord_note.note_type_id IN (1,3) 
         )
      ) 
-LEFT JOIN mode_scale_note_letter_view mcn ON 
+LEFT JOIN mode_scale_note_letter_mv mcn ON 
             mcn.key_name = n.name AND
             mcn.mode = 'Ionian' AND 
             mcn.note = chord_note.note;
@@ -268,6 +292,7 @@ GROUP BY cnv.note, cnv.note_name, cnv.chord_type_id,
 CREATE OR REPLACE VIEW mode_chord_note_view AS 
 SELECT DISTINCT
     key_note.name AS key_name, 
+    m.id AS mode_id, 
     m.name AS mode,
     n.note AS note,
     n.name AS note_name, 
@@ -299,7 +324,7 @@ JOIN note chord_note ON chord_note.note =
             chord_note.note_type_id IN (1,3) 
         )
      )         
-LEFT JOIN mode_scale_note_letter_view mcn ON 
+LEFT JOIN mode_scale_note_letter_mv mcn ON 
             mcn.mode = m.name AND 
             mcn.key_name = key_note.name AND
             mcn.note = chord_note.note; 
@@ -313,6 +338,7 @@ CREATE OR REPLACE VIEW mode_chord_view AS
 SELECT 
     mcnv.key_name, 
     mcnv.mode,
+    mcnv.mode_id,
     mcnv.note,
     mcnv.note_name, 
     mcnv.chord_type_id,
@@ -330,7 +356,7 @@ SELECT
             ORDER BY mcnv.chord_seq_note
      ) AS chord_notes
 FROM mode_chord_note_view mcnv 
-GROUP BY mcnv.key_name, mcnv.mode, mcnv.note, 
+GROUP BY mcnv.key_name, mcnv.mode, mcnv.mode_id, mcnv.note, 
             mcnv.note_name, mcnv.chord_type_id, 
             mcnv.chord_type, mcnv.chord_name;
 
@@ -339,21 +365,11 @@ GROUP BY mcnv.key_name, mcnv.mode, mcnv.note,
 -- CHORD-SCALE RELATIONSHIPS --
 --
 
-DROP MATERIALIZED VIEW IF EXISTS mode_scale_chord_relation_mv;
 
 -- fetches all chord-mode-key permutations with any distinct notes listed and counted. 
 -- this can be used to identify the affinity of chords to a given scale 
-CREATE MATERIALIZED VIEW IF NOT EXISTS mode_scale_chord_relation_mv AS
-WITH mode_notes AS (
- SELECT   
-    mnv.mode_id,  
-    mnv.mode,
-    mnv.key_note,
-    mnv.key_name,
-    array_agg(DISTINCT mnv.note) AS mode_notes
-    FROM mode_note_view mnv 
-    GROUP BY mnv.key_note, mnv.key_name, mnv.mode, mnv.mode_id
-), mode_chord_notes AS (
+CREATE OR REPLACE VIEW mode_scale_chord_relation_view AS
+WITH mode_chord_notes AS (
  SELECT 
     mn.mode_id,
     mn.mode, 
@@ -366,9 +382,9 @@ WITH mode_notes AS (
     cn.chord_notes,
     cn.chord_note_names,
     ARRAY(select unnest(cn.chord_note_array) EXCEPT select unnest(mn.mode_notes)) AS diff
-    FROM mode_notes mn 
+    FROM mode_notes_mv mn 
     JOIN mode_chord_view cn ON cn.key_name = mn.key_name AND 
-                               cn.mode = mn.mode 
+                               cn.mode_id = mn.mode_id 
 )
 SELECT DISTINCT
     mcn.mode_id,
@@ -386,8 +402,8 @@ SELECT DISTINCT
     COALESCE(array_length(mcn.diff, 1), 0) AS mode_chord_note_diff_count
 FROM mode_chord_notes mcn
 JOIN note n ON n.name = mcn.note_name                 
-LEFT JOIN mode_scale_note_letter_view msnlv ON    -- get the chord note's preferred 
-    msnlv.mode = mcn.mode AND                     -- mode scale name if one exists 
+LEFT JOIN mode_scale_note_letter_mv msnlv ON    -- get the chord note's preferred 
+    msnlv.mode_id = mcn.mode_id AND             -- mode scale name if one exists 
     msnlv.key_name = mcn.key_name AND 
     msnlv.note = n.note AND 
     mcn.note_name = msnlv.note_name         

@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.Immutable;
 import com.chordanalyzr.api.entities.keys.ModeScaleChordRelationKey;
 
-@Entity(name = "mode_scale_chord_relation_mv")
+@Entity(name = "mode_scale_chord_relation_view")
 @Immutable
 public class ModeScaleChordRelation {
 

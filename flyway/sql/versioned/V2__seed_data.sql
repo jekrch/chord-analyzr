@@ -113,10 +113,8 @@ BEGIN
   PERFORM fn_insert_chord_type_if_not_exists('7b5b9', '{0, 4, 6, 10, 13}');
   PERFORM fn_insert_chord_type_if_not_exists('7#5#9', '{0, 4, 8, 10, 15}');
   PERFORM fn_insert_chord_type_if_not_exists('7#5b9', '{0, 4, 8, 10, 13}');
-  PERFORM fn_insert_chord_type_if_not_exists('7#5b9', '{0, 4, 7, 10, 15}');
 	PERFORM fn_insert_chord_type_if_not_exists('7/6', '{0, 4, 7, 21, 22}');
   PERFORM fn_insert_chord_type_if_not_exists('7 add(4)', '{0, 4, 5, 7, 22}');
-  PERFORM fn_insert_chord_type_if_not_exists('7b9', '{0, 4, 7, 10, 13}');
   PERFORM fn_insert_chord_type_if_not_exists('7#9', '{0, 4, 7, 10, 15}');
   PERFORM fn_insert_chord_type_if_not_exists('7#11', '{0, 4, 7, 10, 18}');
   PERFORM fn_insert_chord_type_if_not_exists('7aug5', '{0, 4, 8, 10}');
@@ -139,8 +137,6 @@ BEGIN
   PERFORM fn_insert_chord_type_if_not_exists('maj7#11', '{0, 4, 7, 11, 18}');
   PERFORM fn_insert_chord_type_if_not_exists('maj7#5', '{0, 4, 8, 11}');
   PERFORM fn_insert_chord_type_if_not_exists('maj7b5', '{0, 4, 6, 11}');
-  PERFORM fn_insert_chord_type_if_not_exists('maj7b5', '{0, 4, 6, 11}');
-  PERFORM fn_insert_chord_type_if_not_exists('maj7#11', '{0, 4, 7, 11, 18}');
   PERFORM fn_insert_chord_type_if_not_exists('maj9', '{0, 4, 7, 11, 14}');
   PERFORM fn_insert_chord_type_if_not_exists('maj9#11', '{0, 4, 7, 14, 18, 23}');
   PERFORM fn_insert_chord_type_if_not_exists('maj11', '{0, 4, 7, 11, 14, 17}');
@@ -174,7 +170,6 @@ BEGIN
   PERFORM fn_insert_chord_type_if_not_exists('m/Maj13', '{0, 3, 7, 11, 14, 17, 21}');
   PERFORM fn_insert_chord_type_if_not_exists('m add(2)', '{0, 2, 3, 7}');
   PERFORM fn_insert_chord_type_if_not_exists('m add(2) add(4)', '{0, 2, 3, 5, 7}');
-  PERFORM fn_insert_chord_type_if_not_exists('m add(4)', '{0, 3, 5, 7}');
   PERFORM fn_insert_chord_type_if_not_exists('m add(4)', '{0, 3, 5, 7}');
   PERFORM fn_insert_chord_type_if_not_exists('m add(9)', '{0, 2, 3, 7}');
 

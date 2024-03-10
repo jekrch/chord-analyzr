@@ -10,7 +10,7 @@ interface ChordTableProps {
 
 const ChordTable: React.FC<ChordTableProps> = ({ chords, onChordClick, addChordClick }) => { // Include addChordClick in the props
   return (
-    <div className="mt-4 relative">
+    <div className=" mt-4 relative">
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-[#3d434f]">
           <tr>
@@ -39,8 +39,8 @@ const ChordTable: React.FC<ChordTableProps> = ({ chords, onChordClick, addChordC
           </tr>
         </thead>
       </table>
-      <div className="divide-y divide-gray-200 overflow-auto" style={{ maxHeight: '10em' }}>
-        <table className="min-w-full bg-[#444b59]">
+      <div className="divide-y divide-gray-200 overflow-auto min-h-[10em] max-h-[10em]">
+        <table className="min-h-[10em] min-w-full bg-[#444b59]">
           <tbody className="divide-y divide-gray-200">
             {chords?.map((chord: ModeScaleChordDto, index: number) => (
               <tr key={`chord-${index}`}>

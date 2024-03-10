@@ -11,8 +11,8 @@ public interface ModeScaleChordRelationRepository extends JpaRepository<ModeScal
     @Query("""
             SELECT m
             FROM  com.chordanalyzr.api.entities.ModeScaleChordRelation m
-            WHERE m.mode LIKE :mode AND
-                  UPPER(m.keyName) = UPPER(:keyName) AND
+            WHERE m.mode = :mode AND
+                  m.keyName = :keyName AND
                   m.modeChordNoteDiffCount <= :modeChordNoteDiffMaxCount
       """)
     List<ModeScaleChordRelation> getChordsByModeKeyAndDiffCount(

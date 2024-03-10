@@ -122,6 +122,8 @@ function App() {
       return;
     }
 
+    setChords([]);
+    
     ChordControllerService.getModeKeyChords(key, mode)
       .then((response) => {
         setChords(response);

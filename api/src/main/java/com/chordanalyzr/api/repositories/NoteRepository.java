@@ -14,7 +14,7 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
             SELECT 
                 seq_note AS "seqNote", 
                 note_name AS "noteName"
-            FROM mode_scale_note_letter_view 
+            FROM mode_scale_note_letter_mv 
             WHERE
                 mode = :mode AND
                 key_name ilike :keyName

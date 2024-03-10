@@ -39,7 +39,6 @@ CREATE INDEX IF NOT EXISTS note_note_idx ON note(note);
 CREATE INDEX IF NOT EXISTS note_name_idx ON note(name);
 CREATE INDEX IF NOT EXISTS note_letter_idx ON note(letter);
 CREATE INDEX IF NOT EXISTS note_note_type_id_idx ON note(note_type_id);
-CREATE INDEX IF NOT EXISTS note_letter_idx ON note(letter);
 CREATE UNIQUE INDEX IF NOT EXISTS note_note_letter_uidx ON note(note, letter);
 
 CREATE INDEX IF NOT EXISTS note_letter_incl_idx ON note(letter) INCLUDE(note, note_type_id, name);

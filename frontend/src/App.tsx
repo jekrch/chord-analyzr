@@ -27,6 +27,7 @@ function App() {
   const [mode, setMode] = useState<string>('Ionian');
   const { modes, error } = useModes();
   const [key, setKey] = useState('C');
+  const [loadingChords, setLoadingChords] = useState<boolean>(false);
   const [activeNotes, setActiveNotes] = useState<number[]>([]);
   const [scaleNotes, setScaleNotes] = useState<ScaleNoteDto[]>([]);
   const [addedChords, setAddedChords] = useState<AddedChord[]>([]);
@@ -122,6 +123,7 @@ function App() {
       return;
     }
 
+    setLoadingChords(true);
     setChords([]);
     
     ChordControllerService.getModeKeyChords(key, mode)
@@ -130,13 +132,17 @@ function App() {
       })
       .catch((err) => {
         console.error('Error fetching chords:', err);
+      }).then(() => {
+        setLoadingChords(false);
+      }).catch((err) => {
+        setLoadingChords(false);
+        console.error('Error fetching chords:', err);
       });
 
     ScaleControllerService.getScaleNotes(key, mode)
       .then((response) => {
         setScaleNotes(response);
-      })
-      .catch((err) => {
+      }).catch((err) => {
         console.error('Error fetching scale notes:', err);
       });
 
@@ -245,6 +251,7 @@ function App() {
 
         <ChordTable
           chords={chords}
+          loading={loadingChords}
           onChordClick={handleChordClick}
           addChordClick={addChordClick}
         />

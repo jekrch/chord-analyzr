@@ -19,10 +19,10 @@ public class ModeScaleChordService {
 
     public List<ModeScaleChordRelation> getChordsWithinModeKey(String modeName, String keyName) {
         keyName = sanitizeKeyName(keyName);
-        return this.modeScaleChordRelationRepo.getChordsByModeKeyAndDiffCount(
+
+        return this.modeScaleChordRelationRepo.getChordsByModeKey(
                 modeName,
-                keyName,
-                0
+                keyName
         );
     }
 

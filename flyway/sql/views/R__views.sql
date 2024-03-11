@@ -36,7 +36,8 @@ JOIN note n ON n.note =
              THEN 12
         ELSE (mn.note + root_note.note) % 12 END
     )
-    AND n.note_type_id IN (1,3);
+    AND n.note_type_id IN (1,3)
+WHERE root_note.note_type_id IN (1,2,3);
 
     
     -- recursive view for getting order of note letters in continuous sequence
@@ -90,7 +91,6 @@ CREATE OR REPLACE VIEW mode_scale_note_view AS
                               root_note.note_type_id NOT IN (4,5); -- exclude the double sharps flats
      
      
-
 CREATE MATERIALIZED VIEW IF NOT EXISTS mode_scale_note_letter_mv AS 
 WITH mode_scale_note_letters AS (
 	-- complete modes
@@ -119,6 +119,7 @@ WITH mode_scale_note_letters AS (
 	                   olv_seq_letter.letter = n.letter
 	        WHERE n.note = msn.note
 	)
+	WHERE msn.key_type_id IN (1,2,3) -- only allow natural or single sharp/flat keys
 	UNION ALL 
 	-- gapped/incomplete modes
 	SELECT DISTINCT
@@ -166,10 +167,12 @@ WITH mode_scale_note_letters AS (
 	             AND pref_note.key_name = msn.key_name
 	             AND pref_note.note = msn.note
 	             AND pref_note.rn = 1  -- take the note with the preferred note_type_id
+     WHERE msn.key_type_id IN (1,2,3)  -- only allow natural or single sharp/flat keys
 )
 SELECT *
 FROM mode_scale_note_letters 
 ORDER BY note_ordinal ASC;
+
 
 CREATE INDEX IF NOT EXISTS mode_scale_note_letter_mv_mode ON mode_scale_note_letter_mv(mode);
 CREATE INDEX IF NOT EXISTS mode_scale_note_letter_mv_mode_id ON mode_scale_note_letter_mv(mode_id);
@@ -288,20 +291,21 @@ GROUP BY cnv.note, cnv.note_name, cnv.chord_type_id,
 
 -- fetches all permutations of chord types with root notes, 
 -- paired with the mode and key which determines note names
-
+    
 CREATE OR REPLACE VIEW mode_chord_note_view AS 
-SELECT DISTINCT
+SELECT 
     key_note.name AS key_name, 
     m.id AS mode_id, 
     m.name AS mode,
     n.note AS note,
+    n.note_type_id,
     n.name AS note_name, 
     ct.name AS chord_type,
     ct.id AS chord_type_id,
     n.name || ct.name as chord_name,
     (ctn.note + n.note) as chord_seq_note,
     chord_note.note AS chord_note,
-    COALESCE(mcn.note_name, chord_note.name) as chord_note_name
+    COALESCE(mcn.note_name, min(chord_note.name)) as chord_note_name
 FROM chord_type_note ctn 
 JOIN chord_type ct ON ct.id = ctn.chord_type_id
 JOIN note n ON TRUE
@@ -327,7 +331,22 @@ JOIN note chord_note ON chord_note.note =
 LEFT JOIN mode_scale_note_letter_mv mcn ON 
             mcn.mode = m.name AND 
             mcn.key_name = key_note.name AND
-            mcn.note = chord_note.note; 
+            mcn.note = chord_note.note
+GROUP BY 
+    key_note.name,
+    m.id, 
+    m.name,
+    n.note,
+    n.note_type_id,
+    n.name, 
+    ct.name,
+    ct.id,
+    n.name,
+    ct.name,
+    ctn.note,
+    mcn.note_name,
+    chord_note.note;
+   
     
 
 -- fetches all permutations of chord types with root notes 
@@ -341,6 +360,7 @@ SELECT
     mcnv.mode_id,
     mcnv.note,
     mcnv.note_name, 
+    mcnv.note_type_id,
     mcnv.chord_type_id,
     mcnv.chord_type,
     mcnv.chord_name,
@@ -356,14 +376,16 @@ SELECT
             ORDER BY mcnv.chord_seq_note
      ) AS chord_notes
 FROM mode_chord_note_view mcnv 
-GROUP BY mcnv.key_name, mcnv.mode, mcnv.mode_id, mcnv.note, 
-            mcnv.note_name, mcnv.chord_type_id, 
-            mcnv.chord_type, mcnv.chord_name;
+GROUP BY 
+    mcnv.key_name, mcnv.mode, mcnv.mode_id, mcnv.note, 
+    mcnv.note_name, mcnv.note_type_id, mcnv.chord_type_id, 
+    mcnv.chord_type, mcnv.chord_name;
 
 
 --
 -- CHORD-SCALE RELATIONSHIPS --
 --
+
 
 
 -- fetches all chord-mode-key permutations with any distinct notes listed and counted. 
@@ -375,7 +397,9 @@ WITH mode_chord_notes AS (
     mn.mode, 
     mn.key_note, 
     mn.key_name, 
+    cn.note,
     cn.note_name,
+    cn.note_type_id,
     cn.chord_type_id,
     cn.chord_name, 
     mn.mode_notes,
@@ -391,7 +415,7 @@ SELECT DISTINCT
     mcn.mode, 
     mcn.key_note, 
     mcn.key_name, 
-    n.note AS chord_note,
+    mcn.note AS chord_note,
     mcn.note_name chord_note_name,
     mcn.chord_type_id, 
     mcn.chord_name,
@@ -400,19 +424,18 @@ SELECT DISTINCT
     mcn.chord_note_names,
     diff AS mode_chord_note_diff, 
     COALESCE(array_length(mcn.diff, 1), 0) AS mode_chord_note_diff_count
-FROM mode_chord_notes mcn
-JOIN note n ON n.name = mcn.note_name                 
+FROM mode_chord_notes mcn               
 LEFT JOIN mode_scale_note_letter_mv msnlv ON    -- get the chord note's preferred 
     msnlv.mode_id = mcn.mode_id AND             -- mode scale name if one exists 
     msnlv.key_name = mcn.key_name AND 
-    msnlv.note = n.note AND 
+    msnlv.note_name = mcn.note_name  AND 
     mcn.note_name = msnlv.note_name         
 WHERE 
 (
-    NOT(n.note = ANY(mcn.mode_notes::BIGINT[])) OR -- if the chord note is within the selected 
-    msnlv.note_name = n.name                       -- mode scale, use the preferred note name
+    NOT(mcn.note = ANY(mcn.mode_notes::BIGINT[])) OR -- if the chord note is within the selected 
+    msnlv.note_name = mcn.note_name                       -- mode scale, use the preferred note name
 ) AND
 (                                                  -- only allow chord notes with double sharps/flats
     msnlv.note_name != NULL OR                     -- if they're within the selected mode scale
-    n.note_type_id NOT IN (4,5)
-);
+    mcn.note_type_id NOT IN (4,5)
+); 

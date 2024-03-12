@@ -387,7 +387,6 @@ GROUP BY
 --
 
 
-
 -- fetches all chord-mode-key permutations with any distinct notes listed and counted. 
 -- this can be used to identify the affinity of chords to a given scale 
 CREATE OR REPLACE VIEW mode_scale_chord_relation_view AS

@@ -88,5 +88,22 @@ BEGIN
   PERFORM fn_insert_mode_if_not_exists('Major Pentatonic', false, '{0,2,4,7,9}');
   PERFORM fn_insert_mode_if_not_exists('Harmonic Minor', false, '{0,2,3,5,7,8,11}');
 
+  -- bebop scales 
+
+  -- from Ionian
+  PERFORM fn_insert_mode_if_not_exists(
+      'Bebop Major', false, '{0,2,4,5,7,8,9,11}'
+  );
+  
+  -- from Mixolydian
+  PERFORM fn_insert_mode_if_not_exists(
+      'Bebop Dominant', false, '{0,2,4,5,7,9,10,11}'
+  );
+  
+  -- from Dorian 
+  PERFORM fn_insert_mode_if_not_exists(
+      'Bebop Minor', false, '{0,2,3,5,7,9,10,11}'
+  );
+
 END
 $$;

@@ -1,4 +1,4 @@
-# chord-analyzr
+# Chord Analyzr :musical_note:
 
 A Postgres driven solution for analyzing chord progressions and generating chord suggestions. 
 

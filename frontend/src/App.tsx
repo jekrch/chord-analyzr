@@ -15,6 +15,7 @@ import ChordTable from './components/ChordTable';
 import PianoControl, { endOctave, startOctave } from './components/piano/PianoControl';
 import StaffVisualizer from './components/StaffVisualizer';
 import classNames from 'classnames';
+import './App.css'; 
 
 interface AddedChord {
   name: string;

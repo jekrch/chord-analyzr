@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import './App.css';
 import { ChordControllerService } from './api/services/ChordControllerService';
 import Dropdown from './components/Dropdown';
 import Vex, { System } from 'vexflow';
@@ -178,10 +177,10 @@ function App() {
 
 
   return (
-    <div className="App">
+    <div className="App ">
       <div className="App-body">
         <span className="mb-2">
-          <span className="inline-block">
+          <span className="inline-block ">
             <TextInput
               label="key"
               value={key ? key.charAt(0).toUpperCase() + key.slice(1).toLowerCase() : ''}

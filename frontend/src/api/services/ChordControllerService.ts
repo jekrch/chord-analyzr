@@ -21,7 +21,7 @@ export class ChordControllerService {
     ): CancelablePromise<Array<ModeScaleChordDto>> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/chords',
+            url: '/api/chords',
             query: {
                 'key': key,
                 'mode': mode,

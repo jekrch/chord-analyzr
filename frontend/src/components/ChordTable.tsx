@@ -41,7 +41,7 @@ const ChordTable: React.FC<ChordTableProps> = ({ chords, loading, onChordClick, 
         </thead>
       </table>
       <div className="divide-y divide-gray-200 overflow-auto min-h-[10em] max-h-[10em]">
-        <table className="min-h-[10em] min-w-full bg-[#444b59]">
+       
           {loading ?
             <div className="">
               <div
@@ -50,6 +50,7 @@ const ChordTable: React.FC<ChordTableProps> = ({ chords, loading, onChordClick, 
               </div>
             </div>
             :
+             <table className="min-h-[10em] min-w-full bg-[#444b59]">
             <tbody className="divide-y divide-gray-200">
               {chords?.map((chord: ModeScaleChordDto, index: number) => (
                 <tr key={`chord-${index}`}>
@@ -78,8 +79,9 @@ const ChordTable: React.FC<ChordTableProps> = ({ chords, loading, onChordClick, 
                 </tr>
               ))}
             </tbody>
+                 </table>
           }
-        </table>
+   
       </div>
     </div>
   );

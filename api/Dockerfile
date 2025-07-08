@@ -20,6 +20,10 @@ COPY --from=BUILD /usr/api/build/target/api-0.0.1-SNAPSHOT.jar /usr/src/app/api.
 
 # copy the init.sh script into the final image
 COPY init.sh /usr/src/app/init.sh
+
+# Fix Windows line endings
+RUN sed -i 's/\r$//' /usr/src/app/init.sh
+
 RUN chmod +x /usr/src/app/init.sh
 
 EXPOSE 8080

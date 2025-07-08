@@ -16,7 +16,7 @@ export class ModeControllerService {
     public static getModes(): CancelablePromise<Array<ModeDto>> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/modes',
+            url: '/api/modes',
         });
     }
 }

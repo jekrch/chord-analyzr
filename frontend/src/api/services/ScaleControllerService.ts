@@ -21,7 +21,7 @@ export class ScaleControllerService {
     ): CancelablePromise<Array<ScaleNoteDto>> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/scales',
+            url: '/api/scales',
             query: {
                 'key': key,
                 'mode': mode,

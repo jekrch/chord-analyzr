@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/chords")
+@RequestMapping("/api/chords")
 public class ChordController {
 
     private final ModeScaleChordService modeScaleChordService;

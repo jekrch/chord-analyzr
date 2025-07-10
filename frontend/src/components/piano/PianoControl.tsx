@@ -38,33 +38,21 @@ const PianoControl: React.FC<PianoProps> = ({
   const [octaveOffset, setOctaveOffset] = useState(0);
   const [reverbLevel, setReverbLevel] = useState(0.0);
 
-  // --- Recalculate piano range based on octave offset ---
-  const { firstNote, lastNote, keyboardShortcuts } = useMemo(() => {
-    const currentStartOctave = startOctave + octaveOffset;
-    const currentEndOctave = endOctave + octaveOffset;
+  // --- Keep visual piano range fixed, but calculate MIDI offset ---
+  const { firstNote, lastNote, keyboardShortcuts, midiOffset } = useMemo(() => {
     const anchorNote = 'c';
     
-    // Prevent invalid octave ranges
-    if (currentStartOctave < 1 || currentEndOctave > 8 || currentStartOctave >= currentEndOctave) {
-        return {
-            firstNote: MidiNumbers.fromNote(`${anchorNote}${startOctave}`),
-            lastNote: MidiNumbers.fromNote(`${anchorNote}${endOctave}`),
-            keyboardShortcuts: KeyboardShortcuts.create({
-                firstNote: MidiNumbers.fromNote(`${anchorNote}${startOctave}`),
-                lastNote: MidiNumbers.fromNote(`${anchorNote}${endOctave}`),
-                keyboardConfig: KeyboardShortcuts.HOME_ROW,
-            })
-        };
-    }
+    // Visual piano always shows the same range
+    const firstNote = MidiNumbers.fromNote(`${anchorNote}${startOctave}`);
+    const lastNote = MidiNumbers.fromNote(`${anchorNote}${endOctave}`);
     
-    const firstNoteName = `${anchorNote}${currentStartOctave}`;
-    const lastNoteName = `${anchorNote}${currentEndOctave}`;
-    const firstNote = MidiNumbers.fromNote(firstNoteName);
-    const lastNote = MidiNumbers.fromNote(lastNoteName);
+    // Calculate MIDI offset for actual note playing (12 semitones per octave)
+    const midiOffset = octaveOffset * 12;
 
     return {
       firstNote,
       lastNote,
+      midiOffset,
       keyboardShortcuts: KeyboardShortcuts.create({
         firstNote,
         lastNote,
@@ -78,16 +66,33 @@ const PianoControl: React.FC<PianoProps> = ({
   });
 
   useEffect(() => {
+    // Only stop previous notes if the setting is enabled
     if (cutOffPreviousNotes && stopAllNotesRef.current) {
         stopAllNotesRef.current();
     }
+    
+    // Keep visual notes in the same position (no offset for display)
     setActivePianoNotes(activeNotes);
-  }, [activeNotes]);
+  }, [activeNotes, cutOffPreviousNotes]);
 
   const handleEqChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setEq(prevEq => ({ ...prevEq, [name]: parseFloat(value) }));
   };
+
+  // Custom play/stop functions that apply octave offset
+  const playNoteWithOffset = (playNote: (midiNumber: number) => void) => 
+    (midiNumber: number) => {
+      if (cutOffPreviousNotes && stopAllNotesRef.current) {
+        stopAllNotesRef.current();
+      }
+      playNote(midiNumber + midiOffset);
+    };
+
+  const stopNoteWithOffset = (stopNote: (midiNumber: number) => void) => 
+    (midiNumber: number) => {
+      stopNote(midiNumber + midiOffset);
+    };
 
   return (
     <SoundfontProvider
@@ -103,8 +108,8 @@ const PianoControl: React.FC<PianoProps> = ({
           <div className="relative">
             <Piano
               noteRange={{ first: firstNote, last: lastNote }}
-              playNote={playNote}
-              stopNote={stopNote}
+              playNote={playNoteWithOffset(playNote)}
+              stopNote={stopNoteWithOffset(stopNote)}
               disabled={isLoading}
               width={500}
               activeNotes={activePianoNotes}
@@ -123,8 +128,8 @@ const PianoControl: React.FC<PianoProps> = ({
                     onClick={() => setSettingsOpen(!settingsOpen)}
                     className={`w-8 h-8 flex items-center justify-center rounded-lg border transition-all duration-200 ${
                       settingsOpen 
-                        ? 'bg-gray-600 border-gray-500 text-gray-200' 
-                        : 'bg-gray-700 border-gray-600 text-gray-400 hover:bg-gray-600 hover:border-gray-500 hover:text-gray-200'
+                        ? 'bg-[#4a5262] border-gray-600 text-slate-200' 
+                        : 'bg-[#3d434f] border-gray-600 text-slate-400 hover:bg-[#4a5262] hover:border-gray-500 hover:text-slate-200'
                     }`}
                     aria-label="Sound Settings"
                     aria-expanded={settingsOpen}
@@ -156,93 +161,103 @@ const PianoControl: React.FC<PianoProps> = ({
           <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
             settingsOpen ? 'max-h-[600px] opacity-100 mt-4' : 'max-h-0 opacity-0'
           }`}>
-            <div className="bg-black-700 border border-gray-700 rounded-lg p-4 w-[400px] mx-auto">
-              <div className="space-y-4">
-                
-                {/* Octave Control */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-300 mb-2">Octave</label>
-                  <div className="flex items-center justify-between bg-gray-700 border border-gray-600 rounded-md p-1.5">
-                    <button 
-                      onClick={() => setOctaveOffset(o => Math.max(-2, o - 1))} 
-                      className="w-6 h-6 flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-600 rounded transition-colors"
-                      disabled={octaveOffset <= -2}
-                    >
-                      −
-                    </button>
-                    <span className="font-mono text-xs text-gray-200 px-2">
-                      C{startOctave + octaveOffset} to C{endOctave + octaveOffset}
-                    </span>
-                    <button 
-                      onClick={() => setOctaveOffset(o => Math.min(2, o + 1))} 
-                      className="w-6 h-6 flex items-center justify-center text-gray-300 hover:text-white hover:bg-gray-600 rounded transition-colors"
-                      disabled={octaveOffset >= 2}
-                    >
-                      +
-                    </button>
+            <div className="bg-[#3d434f] border border-gray-600 rounded-lg overflow-hidden w-[400px] mx-auto">
+              {/* Header */}
+              <div className="px-4 py-3 border-b border-gray-600">
+                <h3 className="text-sm font-medium text-slate-200 uppercase tracking-wider">
+                  Piano Settings
+                </h3>
+              </div>
+              
+              {/* Content */}
+              <div className="p-4 bg-[#444b59]">
+                <div className="space-y-4">
+                  
+                  {/* Octave Control */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-200 mb-2">Octave Shift</label>
+                    <div className="flex items-center justify-between bg-[#3d434f] border border-gray-600 rounded-md p-1.5">
+                      <button 
+                        onClick={() => setOctaveOffset(o => Math.max(-3, o - 1))} 
+                        className="w-6 h-6 flex items-center justify-center text-slate-300 hover:text-slate-200 hover:bg-[#4a5262] rounded transition-colors"
+                        disabled={octaveOffset <= -3}
+                      >
+                        −
+                      </button>
+                      <span className="font-mono text-xs text-slate-200 px-2">
+                        {octaveOffset === 0 ? 'Normal' : `${octaveOffset > 0 ? '+' : ''}${octaveOffset} octave${Math.abs(octaveOffset) > 1 ? 's' : ''}`}
+                      </span>
+                      <button 
+                        onClick={() => setOctaveOffset(o => Math.min(3, o + 1))} 
+                        className="w-6 h-6 flex items-center justify-center text-slate-300 hover:text-slate-200 hover:bg-[#4a5262] rounded transition-colors"
+                        disabled={octaveOffset >= 3}
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
-                </div>
 
-                {/* Reverb Control */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-300 mb-2">
-                    Reverb
-                    <span className="text-xs text-gray-400 ml-2">({Math.round(reverbLevel * 100)}%)</span>
-                  </label>
-                  <div className="relative">
-                    <input 
-                      type="range" 
-                      min="0" 
-                      max="0.7" 
-                      step="0.05" 
-                      value={reverbLevel} 
-                      onChange={(e) => setReverbLevel(parseFloat(e.target.value))}
-                      className="w-full h-1.5 bg-gray-700 rounded appearance-none cursor-pointer slider-thumb"
-                    />
+                  {/* Reverb Control */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-200 mb-2">
+                      Reverb
+                      <span className="text-xs text-slate-400 ml-2">({Math.round(reverbLevel * 100)}%)</span>
+                    </label>
+                    <div className="relative">
+                      <input 
+                        type="range" 
+                        min="0" 
+                        max="1.0" 
+                        step="0.05" 
+                        value={reverbLevel} 
+                        onChange={(e) => setReverbLevel(parseFloat(e.target.value))}
+                        className="w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb"
+                      />
+                    </div>
                   </div>
-                </div>
 
-                {/* Note Cutoff */}
-                <div>
-                  <label className="flex items-center cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      className="w-3.5 h-3.5 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-1" 
-                      checked={cutOffPreviousNotes} 
-                      onChange={(e) => setCutOffPreviousNotes(e.target.checked)} 
-                    />
-                    <span className="ml-2 text-xs text-gray-300">Stop notes on new input</span>
-                  </label>
-                </div>
+                  {/* Note Cutoff */}
+                  <div>
+                    <label className="flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        className="w-3.5 h-3.5 text-blue-600 bg-[#3d434f] border-gray-600 rounded focus:ring-blue-500 focus:ring-1" 
+                        checked={!cutOffPreviousNotes} 
+                        onChange={(e) => setCutOffPreviousNotes(!e.target.checked)} 
+                      />
+                      <span className="ml-2 text-xs text-slate-300">Stop notes on new input</span>
+                    </label>
+                  </div>
 
-                {/* Equalizer */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-300 mb-2">Equalizer</label>
-                  <div className="space-y-3">
-                    {[
-                      { label: 'Bass', key: 'bass' as keyof EqSettings },
-                      { label: 'Mid', key: 'mid' as keyof EqSettings },
-                      { label: 'Treble', key: 'treble' as keyof EqSettings }
-                    ].map(({ label, key }) => (
-                      <div key={key}>
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="text-xs text-gray-400">{label}</span>
-                          <span className="text-xs text-gray-400 font-mono">
-                            {eq[key] > 0 ? '+' : ''}{eq[key].toFixed(1)}dB
-                          </span>
+                  {/* Equalizer */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-200 mb-2">Equalizer</label>
+                    <div className="space-y-3">
+                      {[
+                        { label: 'Bass', key: 'bass' as keyof EqSettings },
+                        { label: 'Mid', key: 'mid' as keyof EqSettings },
+                        { label: 'Treble', key: 'treble' as keyof EqSettings }
+                      ].map(({ label, key }) => (
+                        <div key={key}>
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-xs text-slate-400">{label}</span>
+                            <span className="text-xs text-slate-400 font-mono">
+                              {eq[key] > 0 ? '+' : ''}{eq[key].toFixed(1)}dB
+                            </span>
+                          </div>
+                          <input 
+                            type="range" 
+                            name={key}
+                            min="-24" 
+                            max="24" 
+                            step="0.5" 
+                            value={eq[key]} 
+                            onChange={handleEqChange}
+                            className="w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb"
+                          />
                         </div>
-                        <input 
-                          type="range" 
-                          name={key}
-                          min="-24" 
-                          max="24" 
-                          step="0.5" 
-                          value={eq[key]} 
-                          onChange={handleEqChange}
-                          className="w-full h-1.5 bg-gray-700 rounded appearance-none cursor-pointer slider-thumb"
-                        />
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>

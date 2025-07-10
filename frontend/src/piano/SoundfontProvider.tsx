@@ -85,14 +85,26 @@ export class SoundfontProvider extends React.Component<SoundfontProviderProps, S
 
   private generateImpulseResponse = (audioContext: AudioContext): AudioBuffer => {
     const sampleRate = audioContext.sampleRate;
-    const duration = 1.5;
-    const decay = 2.0;
+    const duration = 3.0; // Increased duration for longer reverb tail
+    const decay = 1.5; // Adjusted decay for more pronounced effect
     const impulse = audioContext.createBuffer(2, duration * sampleRate, sampleRate);
 
     for (let channel = 0; channel < 2; channel++) {
         const channelData = impulse.getChannelData(channel);
         for (let i = 0; i < impulse.length; i++) {
-            channelData[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / impulse.length, decay);
+            const t = i / impulse.length;
+            // Create a more complex impulse response with multiple reflections
+            const earlyReflections = Math.sin(t * Math.PI * 20) * Math.exp(-t * 3);
+            const lateReverb = (Math.random() * 2 - 1) * Math.pow(1 - t, decay);
+            const diffusion = Math.sin(t * Math.PI * 100) * 0.1 * Math.exp(-t * 8);
+            
+            // Combine early reflections, late reverb, and diffusion
+            channelData[i] = (earlyReflections * 0.3 + lateReverb * 0.6 + diffusion * 0.1) * 1.5;
+            
+            // Add slight stereo width by modulating one channel differently
+            if (channel === 1) {
+                channelData[i] *= 1 + Math.sin(t * Math.PI * 7) * 0.2;
+            }
         }
     }
     return impulse;
@@ -100,8 +112,12 @@ export class SoundfontProvider extends React.Component<SoundfontProviderProps, S
   
   private updateReverbMix = (level: number) => {
     if (this.dryGainNode && this.wetGainNode) {
-        this.dryGainNode.gain.setValueAtTime(1 - level, this.props.audioContext.currentTime);
-        this.wetGainNode.gain.setValueAtTime(level, this.props.audioContext.currentTime);
+        // Use a more aggressive curve for wet/dry mix
+        const wetLevel = Math.pow(level, 0.7) * 1.2; // Boost the wet signal
+        const dryLevel = 1 - (level * 0.6); // Keep more dry signal present
+        
+        this.dryGainNode.gain.setValueAtTime(dryLevel, this.props.audioContext.currentTime);
+        this.wetGainNode.gain.setValueAtTime(wetLevel, this.props.audioContext.currentTime);
     }
   }
 

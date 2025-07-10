@@ -54,30 +54,30 @@ const ChordTable: React.FC<ChordTableProps> = ({ chords, loading, onChordClick, 
   const dropdownOptions = ['All Notes', ...rootNotes];
 
   return (
-    <div className="mt-4 flex gap-6">
+    <div className="mt-4 flex gap-6 w-full max-w-[30em] mx-auto">
       {/* Left side - Root Note Filter */}
-      <div className="flex-shrink-0 w-48">
-        <div className="bg-[#3d434f] rounded-lg overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-600">
-            <h3 className="text-sm font-medium text-slate-200 uppercase tracking-wider">
+      <div className="flex-shrink-0 w-32">
+        <div className="bg-[#3d434f] rounded-lg overflow-hidden h-80">
+          <div className="px-3 py-3 border-b border-gray-600">
+            <h3 className="text-xs font-medium text-slate-200 uppercase tracking-wider">
               Filter by Root
             </h3>
           </div>
           
-          <div className="p-3">
+          <div className="p-2">
             <Dropdown
               value={selectedRootNote}
               onChange={setSelectedRootNote}
               options={dropdownOptions}
-              className="w-full mb-3"
+              className="w-full mb-2"
               buttonClassName="w-full bg-[#444b59] text-slate-200 border-gray-600"
             />
           </div>
 
           {/* Root Notes List */}
-          <div className="max-h-64 overflow-y-auto">
+          <div className="overflow-y-auto" style={{ height: 'calc(100% - 100px)' }}>
             <div 
-              className={`px-4 py-2 cursor-pointer transition-colors border-l-3 ${
+              className={`px-3 py-2 cursor-pointer transition-colors border-l-3 ${
                 selectedRootNote === 'All Notes' 
                   ? 'bg-[#4a5262] border-l-blue-500 text-slate-100' 
                   : 'hover:bg-[#444b59] border-l-transparent text-slate-300'
@@ -85,7 +85,7 @@ const ChordTable: React.FC<ChordTableProps> = ({ chords, loading, onChordClick, 
               onClick={() => setSelectedRootNote('All Notes')}
             >
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">All Notes</span>
+                <span className="text-xs font-medium">All Notes</span>
                 <span className="text-xs text-slate-400">
                   {chords?.length || 0}
                 </span>
@@ -95,7 +95,7 @@ const ChordTable: React.FC<ChordTableProps> = ({ chords, loading, onChordClick, 
             {rootNotes.map(note => (
               <div 
                 key={note}
-                className={`px-4 py-2 cursor-pointer transition-colors border-l-3 ${
+                className={`px-3 py-2 cursor-pointer transition-colors border-l-3 ${
                   selectedRootNote === note 
                     ? 'bg-[#4a5262] border-l-blue-500 text-slate-100' 
                     : 'hover:bg-[#444b59] border-l-transparent text-slate-300'
@@ -103,7 +103,7 @@ const ChordTable: React.FC<ChordTableProps> = ({ chords, loading, onChordClick, 
                 onClick={() => setSelectedRootNote(note)}
               >
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">{note}</span>
+                  <span className="text-xs font-medium">{note}</span>
                   <span className="text-xs text-slate-400">
                     {chordCounts[note] || 0}
                   </span>
@@ -115,83 +115,77 @@ const ChordTable: React.FC<ChordTableProps> = ({ chords, loading, onChordClick, 
       </div>
 
       {/* Right side - Chords Table */}
-      <div className="flex-1 relative">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-[#3d434f]">
-            <tr>
-              <th
-                scope="col"
-                className="sticky top-0 w-[10em] mr-2 pl-6 py-3 text-left text-xs font-medium text-slate-200 uppercase tracking-wider z-10 bg-[#3d434f]"
-              >
-                Play/Add
-              </th>
-              <th
-                scope="col"
-                className="w-[13em] sticky top-0 pl-0 py-3 text-left text-xs font-medium text-slate-200 uppercase tracking-wider z-10 bg-[#3d434f]"
-              >
-                Name
-              </th>
-              <th
-                scope="col"
-                className="sticky top-0 pl-0 py-3 text-left text-xs font-medium text-slate-200 uppercase tracking-wider z-10 bg-[#3d434f]"
-              >
-                Notes
-              </th>
-              <th
-                scope="col"
-                className="sticky top-0 px-6 py-3 text-left text-xs font-medium text-slate-200 uppercase tracking-wider z-10 bg-[#3d434f]"
-              >
-              </th>
-            </tr>
-          </thead>
-        </table>
-        
-        <div className="divide-y divide-gray-200 overflow-auto min-h-[10em] max-h-[10em]">
-          {loading ? (
-            <div className="">
-              <div
-                className="mt-[2em] z-100 inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
-                role="status"
-              />
+      <div className="flex-1" style={{ minWidth: '328px', width: '100%' }}>
+        <div className="bg-[#3d434f] rounded-lg overflow-hidden h-80" style={{ width: '100%' }}>
+          {/* Table Header */}
+          <div className="bg-[#3d434f] border-b border-gray-600">
+            <div className="flex w-full" style={{ minWidth: '328px' }}>
+              <div className="w-24 flex-shrink-0 px-4 py-3">
+                <span className="text-xs font-medium text-slate-200 uppercase tracking-wider">
+                  Play/Add
+                </span>
+              </div>
+              <div className="w-16 flex-shrink-0 px-4 py-3">
+                <span className="text-xs font-medium text-slate-200 uppercase tracking-wider">
+                  Name
+                </span>
+              </div>
+              <div className="flex-1 px-4 py-3" style={{ width: '168px' }}>
+                <span className="text-xs font-medium text-slate-200 uppercase tracking-wider">
+                  Notes
+                </span>
+              </div>
             </div>
-          ) : (
-            <table className="min-h-[10em] min-w-full bg-[#444b59]">
-              <tbody className="divide-y divide-gray-200">
+          </div>
+          
+          {/* Table Content */}
+          <div className="bg-[#444b59] overflow-y-auto w-full" style={{ height: 'calc(100% - 57px)', minWidth: '328px' }}>
+            {loading ? (
+              <div className="flex justify-center items-center h-32">
+                <div
+                  className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
+                  role="status"
+                />
+              </div>
+            ) : (
+              <>
                 {filteredChords?.length ? (
                   filteredChords.map((chord: ModeScaleChordDto, index: number) => (
-                    <tr key={`chord-${index}`} className="hover:bg-[#4a5262] transition-colors">
-                      <td className="px-2 py-4 whitespace-nowrap text-sm font-medium text-slate-200 text-left">
-                        <span>
-                          <PlayCircleIcon
-                            height={30}
-                            className="inline-block ml-2 hover:text-slate-400 active:text-slate-500 cursor-pointer transition-colors"
-                            onClick={() => onChordClick(chord.chordNoteNames!)}
-                          />
-                          <PlusCircleIcon
-                            height={30}
-                            className="inline-block ml-2 hover:text-slate-400 active:text-slate-500 cursor-pointer transition-colors"
-                            onClick={() => addChordClick?.(chord.chordName!, chord.chordNoteNames!)}
-                          />
+                    <div key={`chord-${index}`} className="flex border-b border-gray-200 hover:bg-[#4a5262] transition-colors" style={{ minWidth: '328px' }}>
+                      <div className="w-24 flex-shrink-0 px-4 py-4 flex items-center">
+                        <PlayCircleIcon
+                          height={24}
+                          className="hover:text-slate-400 active:text-slate-500 cursor-pointer transition-colors text-slate-200"
+                          onClick={() => onChordClick(chord.chordNoteNames!)}
+                        />
+                        <PlusCircleIcon
+                          height={24}
+                          className="ml-1 hover:text-slate-400 active:text-slate-500 cursor-pointer transition-colors text-slate-200"
+                          onClick={() => addChordClick?.(chord.chordName!, chord.chordNoteNames!)}
+                        />
+                      </div>
+                      <div className="w-40 flex-shrink-0 px-4 py-4 flex items-center">
+                        <span className="text-sm font-medium text-slate-200 truncate">
+                          {chord.chordName}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-200 text-left">
-                        {chord.chordName}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400 text-left">
-                        {chord.chordNoteNames}
-                      </td>
-                    </tr>
+                      </div>
+                      <div className="px-4 py-4 flex items-center overflow-hidden" style={{ width: '168px' }}>
+                        <span className="text-sm text-slate-400 truncate w-full">
+                          {chord.chordNoteNames}
+                        </span>
+                      </div>
+                    </div>
                   ))
                 ) : (
-                  <tr>
-                    <td colSpan={3} className="px-6 py-8 text-center text-sm text-slate-400">
+                  <div className="flex justify-center items-center h-32" style={{ minWidth: '328px' }}>
+                    <span className="text-sm text-slate-400">
                       {selectedRootNote === 'All Notes' ? 'No chords available' : `No chords found for root note "${selectedRootNote}"`}
-                    </td>
-                  </tr>
+                    </span>
+                  </div>
                 )}
-              </tbody>
-            </table>
-          )}
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>

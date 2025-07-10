@@ -57,13 +57,13 @@ const Dropdown: React.FC<DropdownProps> = ({ value, onChange, options, className
           }}
           className={classNames(
             "inline-flex w-full justify-center gap-x-1.5 rounded-md",
-            "bg-gray-700 bg-opacity-10 px-3 py-[0.2em] h-6 text-sm font-bold",
-            "text-gray-400 shadow-sm ring-1 ring-inset ring-gray-400 hover:bg-opacity-30",
-            "h-[2em] items-center", 
+            "bg-[#3d434f] px-3 py-[0.2em] h-6 text-sm font-bold",
+            "text-slate-200 shadow-sm ring-1 ring-inset ring-gray-600 hover:bg-[#4a5262]",
+            "h-[2em] items-center transition-colors !p-4", 
             buttonClassName
           )}>
           {value}
-          <ChevronDownIcon className="-mr-1 h-5 w-5 text-gray-400" aria-hidden="true" />
+          <ChevronDownIcon className="-mr-1 h-5 w-5 text-slate-400" aria-hidden="true" />
         </Menu.Button>
       </div>
 
@@ -88,21 +88,23 @@ const Dropdown: React.FC<DropdownProps> = ({ value, onChange, options, className
         <Menu.Items 
           as="div" 
           style={{ maxHeight: `${menuPosition.maxHeight}px`, overflowY: 'auto' }}
-          className="dropdown-menu absolute mt-2 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none custom-scrollbar w-auto"
+          className="dropdown-menu absolute mt-2 rounded-md shadow-lg ring-1 ring-gray-600 ring-opacity-5 focus:outline-none custom-scrollbar w-auto"
          >
-          <div className="py-1 bg-[#444b59] bg-opacity-96">
+          <div className="py-1 bg-[#3d434f] border border-gray-600 rounded-md overflow-hidden">
             {showSearch &&
-              <input
-                type="text"
-                className="w-full text-slate-300 px-4 py-2 text-sm font-normal bg-slate-800"
-                placeholder="Search..."
-                value={filter}                
-                onChange={(e) => {
-                  setFilter(e.target.value)
-                }}
-              />
+              <div className="p-2 border-b border-gray-600">
+                <input
+                  type="text"
+                  className="w-full text-slate-200 px-3 py-2 text-sm font-normal bg-[#444b59] border border-gray-600 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder-slate-400"
+                  placeholder="Search..."
+                  value={filter}                
+                  onChange={(e) => {
+                    setFilter(e.target.value)
+                  }}
+                />
+              </div>
             }
-            <div className={classNames("overflow-y-auto", menuClassName)}>
+            <div className={classNames("overflow-y-auto bg-[#444b59] ", menuClassName)}>
               {filteredOptions.map((option, index) => (
                 <Menu.Item key={index}>
                   {({ active }) => (
@@ -112,8 +114,8 @@ const Dropdown: React.FC<DropdownProps> = ({ value, onChange, options, className
                         setFilter('');
                       }}
                       className={classNames(
-                        active ? 'bg-slate-400 text-blue-100' : 'text-slate-300',
-                        'block w-full px-4 py-2 text-left text-sm'
+                        active ? 'bg-[#4a5262] text-slate-100' : 'text-slate-300',
+                        'block w-full px-4 py-2 text-left text-sm hover:bg-[#4a5262] hover:text-slate-100 transition-colors'
                       )}
                     >
                       {option}

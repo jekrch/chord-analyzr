@@ -9,7 +9,7 @@ services:
     depends_on:
       - postgres
   postgres:
-    image: postgres:16.1
+    image: postgres:17.5
     restart: always
     ports:
     - "5432:5432"
@@ -40,4 +40,4 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "3000:80"
+      - "5173:80"

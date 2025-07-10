@@ -59,7 +59,7 @@ function App() {
     // use setTimeout to ensure the state has been cleared before setting new notes
     setTimeout(() => {
       setActiveNotes(midiNumbers);
-    }, 2); // minimal delay
+    }, 1); // minimal delay
   }
 
   const playScaleNotes = () => {
@@ -178,8 +178,8 @@ function App() {
 
 
   return (
-    <div className="App ">
-      <div className="App-body">
+    <div className="text-center">
+      <div className="bg-[#282c34] min-h-screen flex flex-col items-center justify-center text-[calc(10px+2vmin)] text-white py-10">
         <span className="mb-2">
           <span className="inline-block ">
             <TextInput
@@ -250,7 +250,7 @@ function App() {
         </div>
 
         <ChordTable
-          chords={chords}
+          chords={chords as any}
           loading={loadingChords}
           onChordClick={handleChordClick}
           addChordClick={addChordClick}

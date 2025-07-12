@@ -15,7 +15,7 @@ interface ChordTableProps {
 }
 
 const ChordTable: React.FC<ChordTableProps> = ({ chords, loading, onChordClick, addChordClick }) => {
-  const [selectedRootNote, setSelectedRootNote] = useState<string>('All Notes');
+  const [selectedRootNote, setSelectedRootNote] = useState<string>('All');
 
   // Extract root note from chord name
   const extractRootNote = (chordName: string): string => {
@@ -36,7 +36,7 @@ const ChordTable: React.FC<ChordTableProps> = ({ chords, loading, onChordClick, 
 
   // Filter chords based on selected root note
   const filteredChords = useMemo(() => {
-    if (!chords || selectedRootNote === 'All Notes') return chords;
+    if (!chords || selectedRootNote === 'All') return chords;
     return chords.filter(chord => extractRootNote(chord.chordName) === selectedRootNote);
   }, [chords, selectedRootNote]);
 
@@ -78,14 +78,14 @@ const ChordTable: React.FC<ChordTableProps> = ({ chords, loading, onChordClick, 
           <div className="overflow-y-auto" style={{ height: 'calc(100% - 100px)' }}>
             <div 
               className={`px-3 py-2 cursor-pointer transition-colors border-l-3 ${
-                selectedRootNote === 'All Notes' 
+                selectedRootNote === 'All' 
                   ? 'bg-[#4a5262] border-l-blue-500 text-slate-100' 
                   : 'hover:bg-[#444b59] border-l-transparent text-slate-300'
               }`}
-              onClick={() => setSelectedRootNote('All Notes')}
+              onClick={() => setSelectedRootNote('All')}
             >
               <div className="flex justify-between items-center">
-                <span className="text-xs font-medium">All Notes</span>
+                <span className="text-xs font-medium">All</span>
                 <span className="text-xs text-slate-400">
                   {chords?.length || 0}
                 </span>
@@ -130,7 +130,7 @@ const ChordTable: React.FC<ChordTableProps> = ({ chords, loading, onChordClick, 
                   Name
                 </span>
               </div>
-              <div className="flex-1 px-4 py-3" style={{ width: '168px' }}>
+              <div className="flex-1 px-4 pl-28 py-3 text-left" style={{ width: '168px' }}>
                 <span className="text-xs font-medium text-slate-200 uppercase tracking-wider">
                   Notes
                 </span>
@@ -169,7 +169,7 @@ const ChordTable: React.FC<ChordTableProps> = ({ chords, loading, onChordClick, 
                           {chord.chordName}
                         </span>
                       </div>
-                      <div className="px-4 py-4 flex items-center overflow-hidden" style={{ width: '168px' }}>
+                      <div className="px-4 py-4 flex items-center overflow-hidden text-left" style={{ width: '168px' }}>
                         <span className="text-sm text-slate-400 truncate w-full">
                           {chord.chordNoteNames}
                         </span>
@@ -179,7 +179,7 @@ const ChordTable: React.FC<ChordTableProps> = ({ chords, loading, onChordClick, 
                 ) : (
                   <div className="flex justify-center items-center h-32" style={{ minWidth: '328px' }}>
                     <span className="text-sm text-slate-400">
-                      {selectedRootNote === 'All Notes' ? 'No chords available' : `No chords found for root note "${selectedRootNote}"`}
+                      {selectedRootNote === 'All' ? 'No chords available' : `No chords found for root note "${selectedRootNote}"`}
                     </span>
                   </div>
                 )}

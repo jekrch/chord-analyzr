@@ -56,3 +56,102 @@
   cursor: pointer;
   border: 2px solid #1e293b;
 }
+
+/* Add this to your App.css or global CSS file */
+
+/* Consistent slider styling for range inputs */
+.slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  background: #2a2f3a;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.slider-thumb::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  border: 2px solid #1e40af;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.slider-thumb::-webkit-slider-thumb:hover {
+  background: #2563eb;
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.slider-thumb::-moz-range-thumb {
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  border: 2px solid #1e40af;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.slider-thumb::-moz-range-thumb:hover {
+  background: #2563eb;
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Remove default focus outline and add custom one */
+.slider-thumb:focus {
+  outline: none;
+}
+
+.slider-thumb:focus::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+.slider-thumb:focus::-moz-range-thumb {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* Pattern system specific styling */
+.pattern-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .pattern-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Consistent button transitions */
+.pattern-button {
+  transition: all 0.2s ease;
+}
+
+.pattern-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.pattern-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Piano key animation */
+.piano-key-indicator {
+  animation: pulse-scale 0.3s ease-in-out;
+}
+
+@keyframes pulse-scale {
+  0% { transform: scale(0.8); opacity: 0.5; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}

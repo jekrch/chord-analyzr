@@ -59,7 +59,7 @@ const Dropdown: React.FC<DropdownProps> = ({ value, onChange, options, className
             "inline-flex w-full justify-center gap-x-1.5 rounded-md",
             "bg-[#3d434f] px-3 py-[0.2em] h-6 text-sm font-bold",
             "text-slate-200 shadow-sm ring-1 ring-inset ring-gray-600 hover:bg-[#4a5262]",
-            "h-[2em] items-center transition-colors !p-4", 
+            "h-[2.5em] items-center transition-colors !p-4", 
             buttonClassName
           )}>
           {value}

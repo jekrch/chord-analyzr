@@ -1,40 +1,52 @@
 import { MidiNumbers } from 'react-piano';
-import { normalizeNoteName, normalizeNoteWithOctave } from './NoteUtil';
+import { normalizeNoteName } from './NoteUtil';
 
-// the order of notes within an octave
-const noteOrder = ['C', 'D', 'E', 'F', 'G', 'A', 'B']; 
+// The order of natural notes within an octave
+const noteOrder = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
 
+/**
+ * Converts a string of comma-separated chord notes into an array of note objects,
+ * each with a note name and a calculated octave.
+ * This ensures the notes form a smooth ascending sequence.
+ *
+ * @param {number} startOctave - The starting octave for the first note of the chord.
+ * @param {number} endOctave - The maximum octave allowed.
+ * @param {string} chordNoteNames - A string of comma-separated note names (e.g., "C, E, G").
+ * @returns {{note: string, octave: number}[]} An array of note objects.
+ */
 export const getMidiNotes = (
-    startOctave: number, 
-    endOctave: number,
-    chordNoteNames: string
-): number[] => {
-    
-    const noteNames = chordNoteNames.split(', ');
-    
-    // index of the first note in noteOrder
-    let previousNoteIndex = noteOrder.indexOf(noteNames[0][0]); 
+  startOctave: number,
+  endOctave: number,
+  chordNoteNames: string
+): { note: string; octave: number }[] => {
+  
+  const noteNames = chordNoteNames.split(', ');
 
-    return noteNames.map((noteName, index) => {
+  // Index of the first note in noteOrder to track note progression
+  let previousNoteIndex = noteOrder.indexOf(normalizeNoteName(noteNames[0])![0]);
+  let currentOctave = startOctave;
 
-      noteName = normalizeNoteName(noteName)!;
-      
-      // determine the order of the current note within an octave cycle
-      let noteIndex = noteOrder.indexOf(noteName[0]);
+  return noteNames.map((noteName, index) => {
+    const normalizedNote = normalizeNoteName(noteName)!;
 
-      // if the current note is before the previous in the natural note order and it's not the first note, increment octave
-      if (noteIndex < previousNoteIndex && index > 0) {
-        startOctave++;
-      }
+    // Determine the position of the current note within a C-to-B octave cycle
+    const noteIndex = noteOrder.indexOf(normalizedNote[0]);
 
-      // adjust the octave back down if it exceeds endOctave
-      if (startOctave > endOctave) startOctave = endOctave;
+    // If the current note is lower than the previous one (e.g., moving from G to C),
+    // and it's not the very first note, we've crossed into the next octave.
+    if (noteIndex < previousNoteIndex && index > 0) {
+      currentOctave++;
+    }
 
-      previousNoteIndex = noteIndex;
+    // Ensure the octave does not exceed the specified maximum
+    if (currentOctave > endOctave) {
+      currentOctave = endOctave;
+    }
 
-      // construct the full note name with octave for MIDI number conversion
-      let fullNoteName = noteName + startOctave;
-      
-      return MidiNumbers.fromNote(fullNoteName);
-    });
-  };
+    // Update the previous note index for the next iteration
+    previousNoteIndex = noteIndex;
+
+    // Return the note object with its name and calculated octave
+    return { note: normalizedNote, octave: currentOctave };
+  });
+};

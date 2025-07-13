@@ -192,7 +192,7 @@ const PianoControl: React.FC<PianoProps> = ({
         
         const midiNote = MidiNumbers.fromNote(`${note}${finalOctave}`);
         
-        if (cutOffPreviousNotes && stopAllNotesRef.current) {
+        if (!cutOffPreviousNotes && stopAllNotesRef.current) {
           stopAllNotesRef.current();
         }
         
@@ -233,7 +233,7 @@ const PianoControl: React.FC<PianoProps> = ({
 
   const playNoteWithOffset = (playNote: (midiNumber: number) => void) =>
     (midiNumber: number) => {
-      if (cutOffPreviousNotes && stopAllNotesRef.current) {
+      if (!cutOffPreviousNotes && stopAllNotesRef.current) {
         stopAllNotesRef.current();
       }
       playNote(midiNumber + midiOffset);
@@ -279,7 +279,7 @@ const PianoControl: React.FC<PianoProps> = ({
             />
             
             {globalPatternState.isPlaying && (
-              <div className="absolute -top-12 left-1/2 transform -translate-x-1/2">
+              <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 z-50">
                 <div className="flex items-center space-x-3 bg-green-900 bg-opacity-95 px-4 py-2 rounded-full border border-green-600 shadow-lg">
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                   <span className="text-xs text-green-300 font-medium">

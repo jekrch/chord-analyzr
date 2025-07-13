@@ -155,3 +155,162 @@
   50% { transform: scale(1.2); opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
 }
+
+/* Add these styles to your App.css file */
+
+/* Ensure the body has proper padding for fixed bottom nav */
+body {
+  padding-bottom: 0;
+}
+
+/* Smooth scrolling for the chord sequence */
+.chord-sequence-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #4a5568 #2d3748;
+}
+
+.chord-sequence-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.chord-sequence-scroll::-webkit-scrollbar-track {
+  background: #2d3748;
+  border-radius: 2px;
+}
+
+.chord-sequence-scroll::-webkit-scrollbar-thumb {
+  background: #4a5568;
+  border-radius: 2px;
+}
+
+.chord-sequence-scroll::-webkit-scrollbar-thumb:hover {
+  background: #5a6578;
+}
+
+/* Better button hover effects for bottom nav */
+.bottom-nav-button {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.bottom-nav-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.6s;
+}
+
+.bottom-nav-button:hover::before {
+  left: 100%;
+}
+
+/* Better focus states for accessibility */
+.chord-button:focus {
+  outline: none;
+  ring: 2px;
+  ring-color: rgba(59, 130, 246, 0.5);
+  ring-offset: 2px;
+  ring-offset-color: #1e2329;
+}
+
+/* Improved slider styling */
+.slider {
+  background: linear-gradient(to right, #3b82f6 0%, #3b82f6 var(--value, 0%), #2a2f3a var(--value, 0%), #2a2f3a 100%);
+}
+
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #3b82f6;
+  border: 2px solid #1e2329;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.slider::-webkit-slider-thumb:hover {
+  background: #2563eb;
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #3b82f6;
+  border: 2px solid #1e2329;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.slider::-moz-range-thumb:hover {
+  background: #2563eb;
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Loading animation improvements */
+.loading-spinner {
+  background: conic-gradient(from 0deg, transparent, #3b82f6, transparent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  position: relative;
+}
+
+.loading-spinner::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  background: #3d434f;
+  border-radius: 50%;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Better mobile responsiveness for bottom nav */
+@media (max-width: 768px) {
+  .chord-sequence-scroll {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .bottom-nav-button {
+    min-width: 60px;
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .bottom-nav-button .text-xs {
+    font-size: 0.625rem;
+  }
+}
+
+/* Dark mode enhancements */
+@media (prefers-color-scheme: dark) {
+  .chord-sequence-scroll::-webkit-scrollbar-track {
+    background: #1a1d23;
+  }
+  
+  .chord-sequence-scroll::-webkit-scrollbar-thumb {
+    background: #374151;
+  }
+  
+  .chord-sequence-scroll::-webkit-scrollbar-thumb:hover {
+    background: #4b5563;
+  }
+}

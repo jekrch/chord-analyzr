@@ -1,19 +1,61 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { MidiNumbers } from 'react-piano';
+import React, { useState, useMemo, useEffect } from 'react';
 import { PlayCircleIcon, PauseIcon, ArrowPathIcon, Cog6ToothIcon, XMarkIcon } from '@heroicons/react/20/solid';
 
 // Pattern presets with rests
 const PATTERN_PRESETS = [
+  // Basic patterns
   { name: 'Ascending', pattern: ['1', '2', '3', '4'], icon: '↗️', desc: 'Simple up' },
   { name: 'Descending', pattern: ['4', '3', '2', '1'], icon: '↘️', desc: 'Simple down' },
   { name: 'Up-Down', pattern: ['1', '2', '3', '4', '3', '2'], icon: '↗️↘️', desc: 'Peak wave' },
+  { name: 'Down-Up', pattern: ['4', '3', '2', '1', '2', '3'], icon: '↘️↗️', desc: 'Valley wave' },
+  
+  // Classical patterns
   { name: 'Alberti Bass', pattern: ['1', '3', '2', '3'], icon: '🎼', desc: 'Classical' },
+  { name: 'Waltz Bass', pattern: ['1', '3', '3'], icon: '🎭', desc: '3/4 time' },
   { name: 'Broken Chord', pattern: ['1', '3', '5', '3'], icon: '🎵', desc: 'Arpeggiated' },
+  { name: 'Rolled Chord', pattern: ['1', '2', '3', '4', 'x', 'x'], icon: '🌊', desc: 'Quick roll' },
+  
+  // Rhythmic patterns
   { name: 'Syncopated', pattern: ['1', 'x', '3', 'x', '2', '4'], icon: '⚡', desc: 'Off-beat' },
+  { name: 'Latin Rhythm', pattern: ['1', 'x', '1', '3', 'x', '2'], icon: '💃', desc: 'Clave feel' },
+  { name: 'Reggae Skank', pattern: ['x', '2', 'x', '3'], icon: '🏝️', desc: 'Upstroke' },
+  { name: 'Swing Feel', pattern: ['1', 'x', '3', '1', 'x', '2'], icon: '🎷', desc: 'Jazz swing' },
+  
+  // Sparse/Minimal
   { name: 'Minimal', pattern: ['1', 'x', 'x', '3', 'x', 'x'], icon: '◾', desc: 'Sparse' },
+  { name: 'Half Time', pattern: ['1', 'x', '3', 'x'], icon: '⏱️', desc: 'Slower feel' },
+  { name: 'Dotted', pattern: ['1', 'x', 'x', '2', 'x', 'x', '3', 'x'], icon: '⭕', desc: 'Dotted notes' },
+  { name: 'Meditation', pattern: ['1', 'x', 'x', 'x', 'x', 'x'], icon: '🧘', desc: 'Very sparse' },
+  
+  // Heavy/Driving
   { name: 'Bass Heavy', pattern: ['1', '1', 'x', '2', '1', 'x'], icon: '🔊', desc: 'Low focus' },
+  { name: 'Driving 8ths', pattern: ['1', '2', '1', '3', '1', '2', '1', '4'], icon: '🚗', desc: 'Constant motion' },
+  { name: 'Power Chord', pattern: ['1', '1', '1', 'x', '1', '1', '1', 'x'], icon: '⚡', desc: 'Rock rhythm' },
+  { name: 'Gallop', pattern: ['1', '1', '2', '1', '1', '3'], icon: '🐎', desc: 'Triple feel' },
+  
+  // Octave patterns
   { name: 'Octaves', pattern: ['1', '1+', '3', '3+'], icon: '🎹', desc: 'High/low' },
-  { name: 'Polyrhythm', pattern: ['1', '3', 'x', '2', '4', 'x', '1', 'x'], icon: '🌀', desc: 'Complex' }
+  { name: 'Bass Walk', pattern: ['1', '2', '3', '4+'], icon: '🚶', desc: 'Walking bass' },
+  { name: 'High Focus', pattern: ['2+', '3+', '4+', '3+'], icon: '⬆️', desc: 'Upper register' },
+  { name: 'Octave Jump', pattern: ['1', '4+', '1', '3+'], icon: '🦘', desc: 'Wide leaps' },
+  
+  // Complex/Polyrhythmic
+  { name: 'Polyrhythm', pattern: ['1', '3', 'x', '2', '4', 'x', '1', 'x'], icon: '🌀', desc: 'Complex' },
+  { name: 'Hemiola', pattern: ['1', 'x', '2', '1', 'x', '3'], icon: '🔄', desc: '3 against 2' },
+  { name: 'Cascading', pattern: ['4', '3', '2', '1', '4+', '3+', '2+', '1+'], icon: '💧', desc: 'Waterfall' },
+  { name: 'Interlocking', pattern: ['1', '3', '2', '4', '3', '1', '4', '2'], icon: '🔗', desc: 'Weaving' },
+  
+  // Genre-specific
+  { name: 'Bossa Nova', pattern: ['1', 'x', '2', '3', 'x', '2'], icon: '🇧🇷', desc: 'Brazilian' },
+  { name: 'Celtic Roll', pattern: ['1', '2', '3', '2', '1', '3', '2', '3'], icon: '🍀', desc: 'Irish feel' },
+  { name: 'Gospel Chops', pattern: ['1', '2', '1', '3', '1', '4', '1', '3'], icon: '⛪', desc: 'Churchy' },
+  { name: 'Flamenco', pattern: ['1', 'x', '1', '2', 'x', '3'], icon: '💃', desc: 'Spanish' },
+  
+  // Experimental
+  { name: 'Random Walk', pattern: ['1', '4', '2', '3', '1', '4'], icon: '🎲', desc: 'Unpredictable' },
+  { name: 'Pendulum', pattern: ['1', '2', '3', '4', '3', '2', '1', '2'], icon: '⏰', desc: 'Back and forth' },
+  { name: 'Spiral', pattern: ['1', '2', '2+', '3+', '4+', '3', '2', '1'], icon: '🌪️', desc: 'Expanding' },
+  { name: 'Morse Code', pattern: ['1', 'x', '1', 'x', 'x', '1', 'x'], icon: '📡', desc: 'Dots and dashes' }
 ];
 
 const SUBDIVISIONS = [
@@ -35,6 +77,7 @@ interface PatternSystemProps {
   normalizedScaleNotes: string[];
   addedChords: { name: string; notes: string }[];
   activeChordIndex: number | null;
+  getCurrentPattern: () => string[];
   onPatternChange?: (newPatternState: Partial<{
     defaultPattern: string[];
     chordPatterns: { [chordIndex: number]: ChordPattern };
@@ -66,70 +109,18 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
   normalizedScaleNotes,
   addedChords,
   activeChordIndex,
+  getCurrentPattern,
   onPatternChange,
   globalPatternState
 }) => {
+  // ========== LOCAL STATE ==========
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [editingChord, setEditingChord] = useState<number | null>(null);
   const [customPattern, setCustomPattern] = useState<string>('1,2,3,4');
 
-  // Sequencer timing - this runs even when component is collapsed
-  const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
-  const globalClockRef = React.useRef<number>(0);
-
-  // Calculate timing
-  const stepDuration = useMemo(() => {
-    const quarterNoteDuration = 60000 / globalPatternState.bpm;
-    return quarterNoteDuration * globalPatternState.subdivision;
-  }, [globalPatternState.bpm, globalPatternState.subdivision]);
-
-  const getSwingDuration = useCallback((stepIndex: number) => {
-    if (globalPatternState.swing === 0) return stepDuration;
-    const isOffBeat = stepIndex % 2 === 1;
-    const swingRatio = 1 + (globalPatternState.swing / 100);
-    return isOffBeat ? stepDuration * swingRatio : stepDuration / swingRatio;
-  }, [stepDuration, globalPatternState.swing]);
-
-  // Global sequencer clock - this runs independently and keeps the sequencer working when collapsed
-  useEffect(() => {
-    if (globalPatternState.isPlaying) {
-      if (!intervalRef.current) {
-        // Initialize global clock
-        globalClockRef.current = 0;
-        onPatternChange?.({ globalClockStartTime: Date.now() });
-        
-        const tick = () => {
-          // Update current step
-          onPatternChange?.({ currentStep: globalClockRef.current });
-          
-          // Advance global clock
-          globalClockRef.current++;
-          const nextStepDuration = getSwingDuration(globalClockRef.current);
-          intervalRef.current = setTimeout(tick, nextStepDuration);
-        };
-
-        // Start the clock immediately
-        tick();
-      }
-    } else {
-      // Stop the clock
-      if (intervalRef.current) {
-        clearTimeout(intervalRef.current);
-        intervalRef.current = null;
-      }
-      globalClockRef.current = 0;
-    }
-
-    return () => {
-      if (intervalRef.current) {
-        clearTimeout(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
-  }, [globalPatternState.isPlaying, globalPatternState.bpm, globalPatternState.subdivision, 
-      globalPatternState.swing, getSwingDuration, onPatternChange]);
-
-  // Get the current active pattern - this determines what's displayed
+  // ========== PATTERN MANAGEMENT ==========
+  
+  // Get the current active pattern for editing
   const currentPattern = useMemo(() => {
     if (editingChord !== null) {
       // If editing a specific chord, show that chord's pattern
@@ -145,21 +136,18 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
 
   // Update custom pattern input when current pattern changes
   useEffect(() => {
-    setCustomPattern(currentPattern.join(','));
+    if (currentPattern) {
+      setCustomPattern(currentPattern.join(','));
+    }
   }, [currentPattern]);
 
-  // Control functions
+  // ========== CONTROL FUNCTIONS ==========
+  
   const togglePlayback = () => {
-    if (globalPatternState.isPlaying) {
-      // Stop completely
-      onPatternChange?.({ isPlaying: false });
-    } else {
-      // Start playback
-      onPatternChange?.({ 
-        isPlaying: true,
-        globalClockStartTime: Date.now()
-      });
-    }
+    const newIsPlaying = !globalPatternState.isPlaying;
+    onPatternChange?.({ 
+      isPlaying: newIsPlaying
+    });
   };
 
   const resetPattern = () => {
@@ -213,13 +201,19 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
     }
   };
 
-  // Visual step sequencer with persistent dropdowns
+  // ========== STEP SEQUENCER COMPONENT ==========
+  
   const StepSequencer: React.FC<{ 
     pattern: string[], 
     onPatternChange: (pattern: string[]) => void,
     maxNotes: number 
   }> = ({ pattern, onPatternChange: onChange, maxNotes }) => {
     const [steps, setSteps] = useState(pattern.length);
+
+    // Update steps when pattern changes from outside (like presets)
+    useEffect(() => {
+      setSteps(pattern.length);
+    }, [pattern.length]);
 
     const updateStep = (stepIndex: number, value: string) => {
       const newPattern = [...pattern];
@@ -251,12 +245,12 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
             <button 
               onClick={removeStep} 
               disabled={steps <= 1}
-              className="w-6 h-6 bg-[#4a5262] hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-xs rounded"
+              className="w-6 h-6 bg-[#4a5262] hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-xs rounded transition-colors"
             >-</button>
             <button 
               onClick={addStep} 
               disabled={steps >= 16}
-              className="w-6 h-6 bg-[#4a5262] hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-xs rounded"
+              className="w-6 h-6 bg-[#4a5262] hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-xs rounded transition-colors"
             >+</button>
           </div>
         </div>
@@ -271,8 +265,8 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
                 <select
                   value={step}
                   onChange={(e) => updateStep(index, e.target.value)}
-                  onMouseDown={(e) => e.stopPropagation()} // Prevent blur on click
-                  onFocus={(e) => e.stopPropagation()} // Prevent blur
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onFocus={(e) => e.stopPropagation()}
                   className={`w-full h-8 text-xs bg-[#2a2f3a] border rounded text-center appearance-none cursor-pointer transition-all ${
                     isCurrentStep
                       ? 'border-blue-500 bg-blue-900 text-blue-200 shadow-lg scale-105'
@@ -300,6 +294,8 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
     );
   };
 
+  // ========== RENDER ==========
+
   return (
     <div className="w-full max-w-7xl mx-auto p-4 bg-[#3d434f] rounded-lg shadow-2xl">
       {/* Header */}
@@ -307,7 +303,7 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
         <div className="flex items-center space-x-4">
           <h2 className="text-lg font-bold text-white">Pattern Sequencer</h2>
           <div className="text-xs text-gray-400">
-            {currentPattern.join('-')} | {activeNotes.length} notes
+            {getCurrentPattern().join('-')} | {activeNotes.length} notes
             {activeChordIndex !== null && globalPatternState.chordPatterns[activeChordIndex]?.enabled && 
               <span className="ml-2 text-purple-300">• Using {addedChords[activeChordIndex]?.name} pattern</span>
             }
@@ -322,7 +318,11 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="p-2 bg-[#4a5262] hover:bg-[#5a6272] text-white rounded-lg transition-colors"
+            className={`p-2 rounded-lg transition-colors ${
+              showAdvanced 
+                ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                : 'bg-[#4a5262] hover:bg-[#5a6272] text-white'
+            }`}
           >
             <Cog6ToothIcon className="w-4 h-4" />
           </button>
@@ -343,6 +343,7 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
           <button
             onClick={resetPattern}
             className="p-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+            title="Reset pattern"
           >
             <ArrowPathIcon className="w-4 h-4" />
           </button>
@@ -350,8 +351,8 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
       </div>
 
       {/* Main Pattern Display */}
-      <div className="mb-4 p-3 bg-[#2a2f3a] rounded-lg">
-        <div className="flex items-center justify-between mb-2">
+      <div className="mb-4 p-4 bg-[#2a2f3a] rounded-lg">
+        <div className="flex items-center justify-between mb-3">
           <div className="text-xs text-gray-300 uppercase tracking-wide">
             {editingChord !== null 
               ? `Editing Chord ${editingChord + 1} Pattern: "${addedChords[editingChord]?.name}"`
@@ -365,7 +366,7 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
           {editingChord !== null && (
             <button
               onClick={() => setEditingChord(null)}
-              className="text-xs text-gray-400 hover:text-white flex items-center"
+              className="text-xs text-gray-400 hover:text-white flex items-center transition-colors"
             >
               <XMarkIcon className="w-4 h-4 mr-1" />
               Exit Edit
@@ -374,7 +375,7 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
           {editingChord === null && activeChordIndex !== null && globalPatternState.chordPatterns[activeChordIndex]?.enabled && (
             <button
               onClick={() => setEditingChord(activeChordIndex)}
-              className="text-xs text-yellow-400 hover:text-yellow-300 flex items-center"
+              className="text-xs text-yellow-400 hover:text-yellow-300 flex items-center transition-colors"
             >
               ✎ Edit Pattern
             </button>
@@ -385,7 +386,7 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
                 toggleChordPattern(activeChordIndex);
                 setEditingChord(activeChordIndex);
               }}
-              className="text-xs text-blue-400 hover:text-blue-300 flex items-center"
+              className="text-xs text-blue-400 hover:text-blue-300 flex items-center transition-colors"
             >
               + Create Custom Pattern
             </button>
@@ -394,23 +395,22 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
         
         <StepSequencer 
           pattern={currentPattern}
-          onPatternChange={(pattern) => {
+          onPatternChange={(newPattern) => {
             if (editingChord !== null) {
-              setChordPattern(editingChord, pattern);
+              setChordPattern(editingChord, newPattern);
             } else if (activeChordIndex !== null && globalPatternState.chordPatterns[activeChordIndex]?.enabled) {
-              // If we're viewing a chord's custom pattern, edit that chord's pattern
-              setChordPattern(activeChordIndex, pattern);
+              setChordPattern(activeChordIndex, newPattern);
             } else {
-              setDefaultPattern(pattern);
+              setDefaultPattern(newPattern);
             }
           }}
-          maxNotes={activeNotes.length}
+          maxNotes={Math.max(4, activeNotes.length)}
         />
       </div>
 
       {/* Chord Patterns */}
       {addedChords.length > 0 && (
-        <div className="mb-4 p-3 bg-[#2a2f3a] rounded-lg">
+        <div className="mb-4 p-4 bg-[#2a2f3a] rounded-lg">
           <div className="text-xs text-gray-300 uppercase tracking-wide mb-3">
             Chord Overrides 
             <span className="text-gray-500 ml-2 normal-case">(Click to enable/disable, yellow dot = has custom pattern)</span>
@@ -439,7 +439,7 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
                         e.stopPropagation();
                         setEditingChord(isEditing ? null : index);
                       }}
-                      className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-500 hover:bg-yellow-600 text-black rounded-full text-xs flex items-center justify-center"
+                      className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-500 hover:bg-yellow-600 text-black rounded-full text-xs flex items-center justify-center transition-colors"
                       title="Edit pattern"
                     >
                       ✎
@@ -455,28 +455,32 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
       {/* Advanced Controls */}
       {showAdvanced && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Timing */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-medium text-gray-300 uppercase tracking-wide">Timing</h3>
+          {/* Timing Controls */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium text-gray-300 uppercase tracking-wide">Timing</h3>
             
             <div>
-              <label className="block text-xs text-gray-400 mb-1">BPM: {globalPatternState.bpm}</label>
+              <label className="block text-xs text-gray-400 mb-2">BPM: {globalPatternState.bpm}</label>
               <input
                 type="range"
                 min="60"
                 max="200"
                 value={globalPatternState.bpm}
                 onChange={(e) => onPatternChange?.({ bpm: parseInt(e.target.value) })}
-                className="w-full h-2 bg-[#2a2f3a] rounded-lg appearance-none cursor-pointer"
+                className="w-full h-2 bg-[#2a2f3a] rounded-lg appearance-none cursor-pointer slider"
               />
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>60</span>
+                <span>200</span>
+              </div>
             </div>
 
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Subdivision</label>
+              <label className="block text-xs text-gray-400 mb-2">Subdivision</label>
               <select
                 value={globalPatternState.subdivision}
                 onChange={(e) => onPatternChange?.({ subdivision: parseFloat(e.target.value) })}
-                className="w-full p-2 bg-[#2a2f3a] border border-gray-600 rounded text-white text-xs"
+                className="w-full p-2 bg-[#2a2f3a] border border-gray-600 rounded text-white text-xs focus:border-blue-500 transition-colors"
               >
                 {SUBDIVISIONS.map(sub => (
                   <option key={sub.value} value={sub.value}>
@@ -487,22 +491,27 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Swing: {globalPatternState.swing}%</label>
+              <label className="block text-xs text-gray-400 mb-2">Swing: {globalPatternState.swing}%</label>
               <input
                 type="range"
                 min="0"
                 max="50"
                 value={globalPatternState.swing}
                 onChange={(e) => onPatternChange?.({ swing: parseInt(e.target.value) })}
-                className="w-full h-2 bg-[#2a2f3a] rounded-lg appearance-none cursor-pointer"
+                className="w-full h-2 bg-[#2a2f3a] rounded-lg appearance-none cursor-pointer slider"
+                style={{ '--value': `${(globalPatternState.swing / 50) * 100}%` } as any}
               />
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>0%</span>
+                <span>50%</span>
+              </div>
             </div>
           </div>
 
           {/* Pattern Presets */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-medium text-gray-300 uppercase tracking-wide">Presets</h3>
-            <div className="grid grid-cols-1 gap-1 max-h-48 overflow-y-auto">
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium text-gray-300 uppercase tracking-wide">Presets</h3>
+            <div className="grid grid-cols-1 gap-2 max-h-80 overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin' }}>
               {PATTERN_PRESETS.map((preset, index) => (
                 <button
                   key={index}
@@ -510,43 +519,45 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
                     if (editingChord !== null) {
                       setChordPattern(editingChord, preset.pattern);
                     } else if (activeChordIndex !== null && globalPatternState.chordPatterns[activeChordIndex]?.enabled) {
-                      // If viewing a chord's custom pattern, apply to that chord
                       setChordPattern(activeChordIndex, preset.pattern);
                     } else {
                       setDefaultPattern(preset.pattern);
                     }
                   }}
-                  className="p-2 rounded text-xs font-medium transition-colors text-left bg-[#2a2f3a] text-gray-300 hover:bg-[#343a47] hover:text-white"
+                  className="p-3 rounded text-xs font-medium transition-colors text-left bg-[#2a2f3a] text-gray-300 hover:bg-[#343a47] hover:text-white border border-transparent hover:border-gray-600"
                 >
-                  <div className="flex items-center justify-between">
-                    <span>{preset.name}</span>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-medium">{preset.name}</span>
                     <span>{preset.icon}</span>
                   </div>
-                  <div className="text-xs opacity-75 font-mono">
+                  <div className="text-xs opacity-75 font-mono text-gray-400">
                     {preset.pattern.join('-')}
+                  </div>
+                  <div className="text-xs opacity-60 text-gray-500 mt-1">
+                    {preset.desc}
                   </div>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Custom Input */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-medium text-gray-300 uppercase tracking-wide">Custom</h3>
+          {/* Custom Pattern Input */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium text-gray-300 uppercase tracking-wide">Custom</h3>
             
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Pattern (comma-separated)</label>
+              <label className="block text-xs text-gray-400 mb-2">Pattern (comma-separated)</label>
               <input
                 type="text"
                 value={customPattern}
                 onChange={(e) => setCustomPattern(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && applyCustomPattern()}
                 placeholder="1,x,3,2+"
-                className="w-full p-2 bg-[#2a2f3a] border border-gray-600 rounded text-white text-xs"
+                className="w-full p-2 bg-[#2a2f3a] border border-gray-600 rounded text-white text-xs focus:border-blue-500 transition-colors"
               />
               <button
                 onClick={applyCustomPattern}
-                className="mt-1 w-full px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors"
+                className="mt-2 w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors"
               >
                 Apply {editingChord !== null 
                   ? `to ${addedChords[editingChord]?.name}` 
@@ -557,10 +568,12 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
               </button>
             </div>
 
-            <div className="text-xs text-gray-500 space-y-1">
-              <div><strong>x</strong> = rest</div>
+            <div className="text-xs text-gray-500 space-y-1 p-2 bg-[#2a2f3a] rounded">
+              <div className="font-medium text-gray-400 mb-2">Notation:</div>
+              <div><strong>x</strong> = rest (silence)</div>
               <div><strong>1+</strong> = octave up</div>
               <div><strong>1-8</strong> = note index</div>
+              <div className="text-gray-600 mt-2">Example: 1,x,3,2+ plays note 1, rest, note 3, note 2 up an octave</div>
             </div>
           </div>
         </div>

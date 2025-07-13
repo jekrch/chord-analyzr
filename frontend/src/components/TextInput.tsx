@@ -1,16 +1,18 @@
 import React from 'react';
 import InputLabel from './InputLabel';
+import classNames from 'classnames';
 
 interface TextInputProps {
   label: string;
+  className?: string;
   value: string;
   placeholder?: string;
   onChange: (value: string) => void;
 }
 
-const TextInput: React.FC<TextInputProps> = ({ label, value, placeholder, onChange }) => {
+const TextInput: React.FC<TextInputProps> = ({ label, value, placeholder, onChange, className }) => {
   return (
-    <div className="flex items-center justify-end mb-4">
+    <div className={classNames("flex items-center justify-end", className)}>
       <InputLabel
         value={label}
       />

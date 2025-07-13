@@ -27,8 +27,14 @@ export interface ActiveNoteInfo {
     octave: number;
 }
 
+interface ChordPattern {
+    pattern: string[];
+    enabled: boolean;
+}
+
 interface GlobalPatternState {
-    pattern: number[];
+    defaultPattern: string[];
+    chordPatterns: { [chordIndex: number]: ChordPattern };
     isPlaying: boolean;
     bpm: number;
     subdivision: number;
@@ -36,6 +42,7 @@ interface GlobalPatternState {
     currentStep: number;
     repeat: boolean;
     lastChordChangeTime: number;
+    globalClockStartTime: number;
 }
 
 function App() {
@@ -48,10 +55,13 @@ function App() {
     const [scaleNotes, setScaleNotes] = useState<ScaleNoteDto[]>([]);
     const [addedChords, setAddedChords] = useState<AddedChord[]>([]);
     const [activeChordIndex, setActiveChordIndex] = useState<number | null>(null);
+    const [highlightedChordIndex, setHighlightedChordIndex] = useState<number | null>(null);
     const [isDeleteMode, setIsDeleteMode] = useState<boolean>(false);
+    const [isPlayingScale, setIsPlayingScale] = useState<boolean>(false);
 
     const [globalPatternState, setGlobalPatternState] = useState<GlobalPatternState>({
-        pattern: [1, 2, 3, 4],
+        defaultPattern: ['1', '2', '3', '4'],
+        chordPatterns: {},
         isPlaying: false,
         bpm: 120,
         subdivision: 1,
@@ -59,6 +69,7 @@ function App() {
         currentStep: 0,
         repeat: true,
         lastChordChangeTime: 0,
+        globalClockStartTime: 0,
     });
 
     const [showPatternSystem, setShowPatternSystem] = useState(false);
@@ -76,11 +87,33 @@ function App() {
 
     const removeChord = (indexToRemove: number) => {
         setAddedChords(current => current.filter((_, index) => index !== indexToRemove));
+        
+        // Clean up chord patterns when chord is removed
+        const newChordPatterns = { ...globalPatternState.chordPatterns };
+        delete newChordPatterns[indexToRemove];
+        
+        // Reindex remaining patterns
+        const reindexedPatterns: { [key: number]: ChordPattern } = {};
+        Object.entries(newChordPatterns).forEach(([key, value]) => {
+            const oldIndex = parseInt(key);
+            if (oldIndex > indexToRemove) {
+                reindexedPatterns[oldIndex - 1] = value;
+            } else {
+                reindexedPatterns[oldIndex] = value;
+            }
+        });
+        
+        setGlobalPatternState(prev => ({
+            ...prev,
+            chordPatterns: reindexedPatterns
+        }));
     };
 
     const playNotes = useCallback((notes: ActiveNoteInfo[]) => {
+        // First clear any existing notes
         setActiveNotes([]);
-        setTimeout(() => setActiveNotes(notes), 1);
+        // Then set the new notes after a small delay to ensure the effect triggers
+        setTimeout(() => setActiveNotes(notes), 10);
     }, []);
 
     const handleChordClick = useCallback((chordNoteNames: string, chordIndex?: number) => {
@@ -93,69 +126,98 @@ function App() {
             START_OCTAVE, END_OCTAVE, chordNoteNames
         );
 
+        // Always update activeNotes so pattern system knows which chord to play
+        playNotes(notesWithOctaves as ActiveNoteInfo[]);
+
+        // Don't disrupt timing when changing chords during playback
         if (globalPatternState.isPlaying) {
             setGlobalPatternState(prev => ({
                 ...prev,
-                lastChordChangeTime: Date.now(),
+                lastChordChangeTime: Date.now()
+                // DON'T reset currentStep - keep the global clock running
             }));
         }
 
-        setActiveChordIndex(chordIndex ?? null);
-        playNotes(notesWithOctaves as ActiveNoteInfo[]);
-
-        // Only highlight if it's a button from the added chords list
+        // Update active chord for pattern system (persistent)
+        // Only set activeChordIndex if this is from the added chords list
         if (chordIndex !== undefined) {
-           setTimeout(() => setActiveChordIndex(null), 150);
+            setActiveChordIndex(chordIndex);
+        } else {
+            // If clicking from chord table, reset to no specific chord (use default pattern)
+            setActiveChordIndex(null);
+        }
+        
+        // Update highlighted chord for visual feedback (temporary)
+        if (chordIndex !== undefined) {
+            setHighlightedChordIndex(chordIndex);
+            setTimeout(() => setHighlightedChordIndex(null), 150);
         }
     }, [playNotes, globalPatternState.isPlaying, isDeleteMode]);
 
-    const playScaleNotes = () => {
-        if (!scaleNotes?.length || !scaleNotes[0]?.noteName) {
-            return;
-        }
+    // const playScaleNotes = useCallback(() => {
+    //     if (!scaleNotes?.length || isPlayingScale) {
+    //         return;
+    //     }
 
-        const wasPlaying = globalPatternState.isPlaying;
-        if (wasPlaying) {
-            setGlobalPatternState(prev => ({ ...prev, isPlaying: false }));
-        }
+    //     console.log('Playing scale notes:', scaleNotes); // Debug log
 
-        const noteDuration = 300;
-        let cumulativeDelay = 0;
-        let currentOctave = 4;
-        let lastMidiNumber = 0;
+    //     setIsPlayingScale(true);
 
-        const scaleNotesWithTonic = [...scaleNotes, { noteName: scaleNotes[0].noteName }];
+    //     // Stop sequencer if it's running
+    //     const wasPlaying = globalPatternState.isPlaying;
+    //     if (wasPlaying) {
+    //         setGlobalPatternState(prev => ({ ...prev, isPlaying: false }));
+    //     }
 
-        scaleNotesWithTonic.forEach((scaleNote) => {
-            if (!scaleNote.noteName) return;
+    //     const noteDuration = 400;
+    //     let cumulativeDelay = 0;
+    //     let currentOctave = 4;
+    //     let lastMidiNumber = 0;
 
-            setTimeout(() => {
-                let noteName = normalizeNoteName(scaleNote.noteName);
-                let midiNumber = MidiNumbers.fromNote(noteName! + currentOctave);
+    //     // Create scale with tonic at the end
+    //     const scaleNotesWithTonic = [...scaleNotes];
+    //     if (scaleNotes[0]?.noteName) {
+    //         scaleNotesWithTonic.push({ noteName: scaleNotes[0].noteName });
+    //     }
 
-                if (midiNumber < lastMidiNumber) {
-                    currentOctave++;
-                    midiNumber += 12;
-                }
+    //     console.log('Scale notes with tonic:', scaleNotesWithTonic); // Debug log
 
-                lastMidiNumber = midiNumber;
-                const noteDetails = MidiNumbers.getAttributes(midiNumber);
-                const note = noteDetails.note.slice(0, -1);
-                const octave = parseInt(noteDetails.note.slice(-1), 10);
+    //     scaleNotesWithTonic.forEach((scaleNote, index) => {
+    //         if (!scaleNote.noteName) return;
 
-                playNotes([{ note, octave }]);
-            }, cumulativeDelay);
+    //         setTimeout(() => {
+    //             const noteName = normalizeNoteName(scaleNote.noteName);
+    //             if (!noteName) return;
 
-            cumulativeDelay += noteDuration;
-        });
+    //             let midiNumber = MidiNumbers.fromNote(noteName + currentOctave);
 
-        setTimeout(() => {
-            setActiveNotes([]);
-            if (wasPlaying) {
-                setGlobalPatternState(prev => ({ ...prev, isPlaying: true }));
-            }
-        }, cumulativeDelay + noteDuration);
-    };
+    //             // If this note is lower than the previous, move to next octave
+    //             if (index > 0 && midiNumber <= lastMidiNumber) {
+    //                 currentOctave++;
+    //                 midiNumber = MidiNumbers.fromNote(noteName + currentOctave);
+    //             }
+
+    //             lastMidiNumber = midiNumber;
+    //             const noteDetails = MidiNumbers.getAttributes(midiNumber);
+    //             const note = noteDetails.note.slice(0, -1);
+    //             const octave = parseInt(noteDetails.note.slice(-1), 10);
+
+    //             console.log(`Playing note ${index + 1}:`, { note, octave, noteName }); // Debug log
+    //             playNotes([{ note, octave }]);
+    //         }, cumulativeDelay);
+
+    //         cumulativeDelay += noteDuration;
+    //     });
+
+    //     // Clear notes and restore sequencer state after scale finishes
+    //     setTimeout(() => {
+    //         setActiveNotes([]);
+    //         setIsPlayingScale(false);
+    //         if (wasPlaying) {
+    //             setGlobalPatternState(prev => ({ ...prev, isPlaying: true }));
+    //         }
+    //     }, cumulativeDelay + noteDuration);
+    // }, [scaleNotes, globalPatternState.isPlaying, playNotes, isPlayingScale]);
 
     const handleKeyPress = useCallback((event: KeyboardEvent) => {
         if (event.target instanceof HTMLInputElement) return;
@@ -170,6 +232,7 @@ function App() {
             setGlobalPatternState(prev => ({
                 ...prev,
                 isPlaying: !prev.isPlaying,
+                // Don't reset step when toggling - maintain global clock sync
                 lastChordChangeTime: Date.now(),
             }));
             return;
@@ -192,6 +255,82 @@ function App() {
         }));
     }, []);
 
+    // Get current active pattern for display
+    const getCurrentPattern = useCallback(() => {
+        if (activeChordIndex !== null && globalPatternState.chordPatterns[activeChordIndex]?.enabled) {
+            return globalPatternState.chordPatterns[activeChordIndex].pattern;
+        }
+        return globalPatternState.defaultPattern;
+    }, [activeChordIndex, globalPatternState.chordPatterns, globalPatternState.defaultPattern]);
+
+    const playScaleNotes = useCallback(() => {
+        if (!scaleNotes?.length || isPlayingScale) {
+            return;
+        }
+
+        console.log('Playing scale notes:', scaleNotes); // Debug log
+
+        setIsPlayingScale(true);
+
+        // Stop sequencer if it's running
+        const wasPlaying = globalPatternState.isPlaying;
+        if (wasPlaying) {
+            setGlobalPatternState(prev => ({ ...prev, isPlaying: false }));
+        }
+
+        // Clear any active notes first
+        setActiveNotes([]);
+
+        const noteDuration = 400;
+        let cumulativeDelay = 100; // Small initial delay
+        let currentOctave = 4;
+        let lastMidiNumber = 0;
+
+        // Create scale with tonic at the end
+        const scaleNotesWithTonic = [...scaleNotes];
+        if (scaleNotes[0]?.noteName) {
+            scaleNotesWithTonic.push({ noteName: scaleNotes[0].noteName });
+        }
+
+        console.log('Scale notes with tonic:', scaleNotesWithTonic); // Debug log
+
+        scaleNotesWithTonic.forEach((scaleNote, index) => {
+            if (!scaleNote.noteName) return;
+
+            setTimeout(() => {
+                const noteName = normalizeNoteName(scaleNote.noteName);
+                if (!noteName) return;
+
+                let midiNumber = MidiNumbers.fromNote(noteName + currentOctave);
+
+                // If this note is lower than the previous, move to next octave
+                if (index > 0 && midiNumber <= lastMidiNumber) {
+                    currentOctave++;
+                    midiNumber = MidiNumbers.fromNote(noteName + currentOctave);
+                }
+
+                lastMidiNumber = midiNumber;
+                const noteDetails = MidiNumbers.getAttributes(midiNumber);
+                const note = noteDetails.note.slice(0, -1);
+                const octave = parseInt(noteDetails.note.slice(-1), 10);
+
+                console.log(`Playing note ${index + 1}:`, { note, octave, noteName }); // Debug log
+                setActiveNotes([{ note, octave }]);
+            }, cumulativeDelay);
+
+            cumulativeDelay += noteDuration;
+        });
+
+        // Clear notes and restore sequencer state after scale finishes
+        setTimeout(() => {
+            setActiveNotes([]);
+            setIsPlayingScale(false);
+            if (wasPlaying) {
+                setGlobalPatternState(prev => ({ ...prev, isPlaying: true }));
+            }
+        }, cumulativeDelay + noteDuration);
+    }, [scaleNotes, globalPatternState.isPlaying, isPlayingScale]);
+
     useEffect(() => {
         if (!key) return;
         setLoadingChords(true);
@@ -203,7 +342,10 @@ function App() {
             .finally(() => setLoadingChords(false));
 
         ScaleControllerService.getScaleNotes(key, mode)
-            .then(setScaleNotes)
+            .then((notes) => {
+                console.log('Fetched scale notes:', notes); // Debug log
+                setScaleNotes(notes);
+            })
             .catch(err => console.error('Error fetching scale notes:', err));
     }, [key, mode]);
 
@@ -213,35 +355,11 @@ function App() {
     }, [handleKeyPress]);
 
     return (
-        <div className="text-center">
-            <div className="bg-[#282c34] min-h-screen flex flex-col items-center justify-center text-[calc(10px+2vmin)] text-white p-10">
-                <div className="mb-4 flex items-center space-x-4">
-                    <div className="flex items-center">
-                        <TextInput
-                            label="Key"
-                            value={key}
-                            onChange={setKey}
-                        />
-                        <PlayCircleIcon
-                            onClick={playScaleNotes}
-                            height={30}
-                            className="inline-block ml-2 hover:text-slate-400 active:text-slate-500 cursor-pointer"
-                        />
-                    </div>
-
-                    {modes && (
-                        <Dropdown
-                            value={mode}
-                            className='w-auto min-w-[10em]'
-                            menuClassName='min-w-[10em]'
-                            onChange={setMode}
-                            showSearch={true}
-                            options={modes}
-                        />
-                    )}
-                </div>
+        <div className="text-center bg-[#282c34] min-h-screen">
+            <div className="flex flex-col items-center justify-start text-[calc(10px+2vmin)] text-white p-4 space-y-6">
                 
-                <div className="mb-6 flex items-center justify-center space-x-6">
+                {/* Pattern Toggle & Info */}
+                <div className="flex items-center justify-center space-x-6 pt-6">
                     <button
                         onClick={() => setShowPatternSystem(!showPatternSystem)}
                         className={`px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
@@ -250,59 +368,76 @@ function App() {
                                 : 'bg-gray-600 hover:bg-gray-700 text-white'
                         }`}
                     >
-                        {showPatternSystem ? 'Hide' : 'Show'} Pattern System
+                        {showPatternSystem ? 'Hide' : 'Show'} Pattern Sequencer
                     </button>
                     
                     <div className="text-xs text-gray-400 text-center">
                         <div>Press 'P' to toggle | Space to play/pause</div>
-                        <div>1-9 for chords | Fixed clock timing</div>
+                        <div>1-9 for chords | Colored border = active chord | Purple = custom pattern</div>
                     </div>
                 </div>
 
-                <div className="mb-6">
+                {/* Piano */}
+                <div className="w-full max-w-4xl">
                     <PianoControl
                         activeNotes={activeNotes}
                         normalizedScaleNotes={normalizedScaleNotes}
                         globalPatternState={globalPatternState as any}
                         onPatternStateChange={handlePatternChange}
+                        activeChordIndex={activeChordIndex}
+                        addedChords={addedChords}
                     />
                 </div>
 
+                {/* Pattern System */}
                 {showPatternSystem && (
-                    <div className="mb-6 w-full max-w-6xl">
+                    <div className="w-full">
                         <PatternSystem
                             activeNotes={activeNotes}
                             normalizedScaleNotes={normalizedScaleNotes}
+                            addedChords={addedChords}
+                            activeChordIndex={activeChordIndex}
                             onPatternChange={handlePatternChange}
-                            globalPatternState={globalPatternState as any}
+                            globalPatternState={globalPatternState}
                         />
                     </div>
                 )}
 
-                <div className={classNames('mb-6', { 'hidden': addedChords.length === 0 })}>
-                    <div className="flex flex-wrap justify-center gap-2 max-w-4xl">
-                        {addedChords.map((chord, index) => (
-                            <button
-                                key={index}
-                                className={classNames('py-2 px-4 rounded-lg font-medium text-sm transition-all duration-150 relative group', {
-                                    'bg-cyan-500 shadow-md text-white': index === activeChordIndex && !isDeleteMode,
-                                    'bg-cyan-700 hover:bg-cyan-600 text-white': index !== activeChordIndex && !isDeleteMode,
-                                    'bg-red-700 hover:bg-red-600 text-white shadow-md': isDeleteMode,
-                                })}
-                                onClick={() => handleChordClick(chord.notes, index)}
-                            >
-                                {isDeleteMode && (
-                                    <XCircleIcon className="absolute -top-1 -right-1 h-5 w-5 text-white bg-red-500 rounded-full" />
-                                )}
-                                <span className="text-xs text-cyan-200 mr-1 font-bold">{index + 1}</span>
-                                {chord.name}
-                            </button>
-                        ))}
+                {/* Added Chords */}
+                <div className={classNames('w-full max-w-6xl', { 'hidden': addedChords.length === 0 })}>
+                    <div className="flex flex-wrap justify-center gap-2">
+                        {addedChords.map((chord, index) => {
+                            const hasCustomPattern = globalPatternState.chordPatterns[index]?.enabled;
+                            return (
+                                <button
+                                    key={index}
+                                    className={classNames('py-2 px-4 rounded-lg font-medium text-sm transition-all duration-150 relative group', {
+                                        'bg-cyan-500 shadow-md text-white': index === activeChordIndex && !isDeleteMode,
+                                        'bg-cyan-700 hover:bg-cyan-600 text-white': index !== activeChordIndex && !isDeleteMode && !hasCustomPattern,
+                                        'bg-purple-700 hover:bg-purple-600 text-white': index !== activeChordIndex && !isDeleteMode && hasCustomPattern,
+                                        'bg-red-700 hover:bg-red-600 text-white shadow-md': isDeleteMode,
+                                    })}
+                                    onClick={() => handleChordClick(chord.notes, index)}
+                                >
+                                    {isDeleteMode && (
+                                        <XCircleIcon className="absolute -top-1 -right-1 h-5 w-5 text-white bg-red-500 rounded-full" />
+                                    )}
+                                    {hasCustomPattern && !isDeleteMode && (
+                                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full"></div>
+                                    )}
+                                    <span className="text-xs text-cyan-200 mr-1 font-bold">{index + 1}</span>
+                                    {chord.name}
+                                </button>
+                            );
+                        })}
                     </div>
                     <div className="mt-4 flex justify-center items-center gap-4">
                         <button
                             className="bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors"
-                            onClick={() => setAddedChords([])}
+                            onClick={() => {
+                                setAddedChords([]);
+                                setGlobalPatternState(prev => ({ ...prev, chordPatterns: {} }));
+                            }}
                         >
                             Clear All
                         </button>
@@ -319,28 +454,70 @@ function App() {
                     </div>
                 </div>
                 
+                {/* Playback Status */}
                 {globalPatternState.isPlaying && (
-                    <div className="mb-6 px-4 py-3 bg-green-900 bg-opacity-50 rounded-lg border border-green-700">
+                    <div className="px-6 py-3 bg-green-900 bg-opacity-50 rounded-lg border border-green-700">
                         <div className="text-sm text-green-300 flex items-center justify-center space-x-4">
                             <div className="flex items-center">
                                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-2"></div>
-                                <span className="font-medium">Pattern Playing</span>
+                                <span className="font-medium">Sequencer Active</span>
                             </div>
                             <div className="text-xs opacity-80">
-                                {globalPatternState.pattern.join('-')} | 
+                                Pattern: {getCurrentPattern().join('-')} | 
                                 {globalPatternState.bpm} BPM | 
-                                Step {(globalPatternState.currentStep % globalPatternState.pattern.length) + 1}/{globalPatternState.pattern.length}
+                                Step {(globalPatternState.currentStep % getCurrentPattern().length) + 1}/{getCurrentPattern().length}
+                                {activeChordIndex !== null && globalPatternState.chordPatterns[activeChordIndex]?.enabled && 
+                                    <span className="ml-2 text-purple-300">• {addedChords[activeChordIndex]?.name}</span>
+                                }
+                                {activeChordIndex !== null && !globalPatternState.chordPatterns[activeChordIndex]?.enabled &&
+                                    <span className="ml-2 text-cyan-300">• {addedChords[activeChordIndex]?.name}</span>
+                                }
                             </div>
                         </div>
                     </div>
                 )}
+
+                {/* Key/Mode Controls - Moved to be just above chord table */}
+                <div className="flex items-center space-x-4">
+                    <div className="flex items-center">
+                        <TextInput
+                            label="Key"
+                            value={key}
+                            onChange={setKey}
+                        />
+                        <PlayCircleIcon
+                            onClick={playScaleNotes}
+                            height={30}
+                            className={`inline-block ml-2 cursor-pointer transition-colors ${
+                                isPlayingScale 
+                                    ? 'text-green-400 animate-pulse cursor-not-allowed' 
+                                    : 'hover:text-slate-400 active:text-slate-500'
+                            }`}
+                            title={isPlayingScale ? 'Playing scale...' : 'Play scale'}
+                        />
+                    </div>
+
+                    {modes && (
+                        <Dropdown
+                            value={mode}
+                            className='w-auto min-w-[10em]'
+                            menuClassName='min-w-[10em]'
+                            onChange={setMode}
+                            showSearch={true}
+                            options={modes}
+                        />
+                    )}
+                </div>
                 
-                <ChordTable
-                    chords={chords?.filter(c => !!c.chordName && !!c.chordNoteNames) as any}
-                    loading={loadingChords}
-                    onChordClick={handleChordClick}
-                    addChordClick={addChordClick}
-                />
+                {/* Chord Table */}
+                <div className="w-full max-w-6xl">
+                    <ChordTable
+                        chords={chords?.filter(c => !!c.chordName && !!c.chordNoteNames) as any}
+                        loading={loadingChords}
+                        onChordClick={handleChordClick}
+                        addChordClick={addChordClick}
+                    />
+                </div>
             </div>
         </div>
     );

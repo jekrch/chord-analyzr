@@ -11,11 +11,19 @@ import { normalizeNoteName } from '../../util/NoteUtil';
 // This ensures the same instance is reused across re-renders and prevents exceeding the browser limit.
 const audioContext = typeof window !== 'undefined' ? new (window.AudioContext || (window as any).webkitAudioContext)() : null;
 
+interface ChordPattern {
+  pattern: string[];
+  enabled: boolean;
+}
+
 interface PianoProps {
   activeNotes: { note: string; octave?: number }[];
   normalizedScaleNotes: string[];
+  activeChordIndex: number | null;
+  addedChords: { name: string; notes: string }[];
   globalPatternState: {
-    pattern: number[];
+    defaultPattern: string[];
+    chordPatterns: { [chordIndex: number]: ChordPattern };
     isPlaying: boolean;
     bpm: number;
     subdivision: number;
@@ -23,9 +31,11 @@ interface PianoProps {
     currentStep: number;
     repeat: boolean;
     lastChordChangeTime: number;
+    globalClockStartTime: number;
   };
   onPatternStateChange: (updates: Partial<{
-    pattern: number[];
+    defaultPattern: string[];
+    chordPatterns: { [chordIndex: number]: ChordPattern };
     isPlaying: boolean;
     bpm: number;
     subdivision: number;
@@ -33,6 +43,7 @@ interface PianoProps {
     currentStep: number;
     repeat: boolean;
     lastChordChangeTime: number;
+    globalClockStartTime: number;
   }>) => void;
 }
 
@@ -48,16 +59,16 @@ export const endOctave = 7;
 const PianoControl: React.FC<PianoProps> = ({
   activeNotes,
   normalizedScaleNotes,
+  activeChordIndex,
+  addedChords,
   globalPatternState,
   onPatternStateChange
 }) => {
-  // The problematic useRef line that created a new AudioContext has been removed.
-  // We will now use the singleton `audioContext` instance created above.
-
   const soundfontHostname = 'https://d1pzp51pvbm36p.cloudfront.net';
   const stopAllNotesRef = useRef<(() => void) | null>(null);
   const [activePianoNotes, setActivePianoNotes] = useState<number[]>([]);
   const lastStepRef = useRef<number>(-1);
+  const chordSustainTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Settings State
   const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
@@ -89,25 +100,97 @@ const PianoControl: React.FC<PianoProps> = ({
     instrumentName: 'acoustic_grand_piano',
   });
 
+  // Simple chord playing when sequencer is OFF
+  useEffect(() => {
+    // Clear any existing timeout
+    if (chordSustainTimeoutRef.current) {
+      clearTimeout(chordSustainTimeoutRef.current);
+      chordSustainTimeoutRef.current = null;
+    }
+
+    if (!globalPatternState.isPlaying && activeNotes.length > 0) {
+      // Play all notes as a chord
+      const chordMidiNotes = activeNotes.map(({ note, octave = 4 }) =>
+        MidiNumbers.fromNote(`${note}${octave}`)
+      );
+      setActivePianoNotes(chordMidiNotes);
+      
+      // Auto-release after 2 seconds
+      chordSustainTimeoutRef.current = setTimeout(() => {
+        if (!globalPatternState.isPlaying) {
+          setActivePianoNotes([]);
+        }
+      }, 2000);
+    } else if (!globalPatternState.isPlaying && activeNotes.length === 0) {
+      setActivePianoNotes([]);
+    }
+
+    return () => {
+      if (chordSustainTimeoutRef.current) {
+        clearTimeout(chordSustainTimeoutRef.current);
+        chordSustainTimeoutRef.current = null;
+      }
+    };
+  }, [activeNotes, globalPatternState.isPlaying]);
+
+  // Get current active pattern (default or chord-specific)
+  const getCurrentPattern = useCallback(() => {
+    if (activeChordIndex !== null && globalPatternState.chordPatterns[activeChordIndex]?.enabled) {
+      return globalPatternState.chordPatterns[activeChordIndex].pattern;
+    }
+    return globalPatternState.defaultPattern;
+  }, [activeChordIndex, globalPatternState.chordPatterns, globalPatternState.defaultPattern]);
+
+  // Parse pattern step (handle rests and octave notation)
+  const parsePatternStep = useCallback((step: string, noteCount: number) => {
+    if (step === 'x' || step === 'X') return null; // Rest
+    
+    const isOctaveUp = step.includes('+');
+    const isOctaveDown = step.includes('-');
+    const noteIndex = parseInt(step.replace(/[+-]/g, '')) - 1;
+    
+    if (noteIndex >= 0 && noteIndex < noteCount) {
+      return { 
+        noteIndex, 
+        octaveUp: isOctaveUp,
+        octaveDown: isOctaveDown 
+      };
+    }
+    return null;
+  }, []);
+
   const getStepDuration = useCallback(() => {
     const quarterNoteDuration = 60000 / globalPatternState.bpm;
     return quarterNoteDuration * globalPatternState.subdivision;
   }, [globalPatternState.bpm, globalPatternState.subdivision]);
 
+  // Handle pattern playback when sequencer is ON
   useEffect(() => {
+    const currentPattern = getCurrentPattern();
+    
     if (globalPatternState.isPlaying && 
         activeNotes.length > 0 && 
-        globalPatternState.pattern.length > 0 &&
+        currentPattern.length > 0 &&
         globalPatternState.currentStep !== lastStepRef.current) {
       
       lastStepRef.current = globalPatternState.currentStep;
       
-      const currentPatternIndex = globalPatternState.currentStep % globalPatternState.pattern.length;
-      const noteIndex = globalPatternState.pattern[currentPatternIndex] - 1;
+      const currentPatternIndex = globalPatternState.currentStep % currentPattern.length;
+      const stepValue = currentPattern[currentPatternIndex];
+      const parsedStep = parsePatternStep(stepValue, activeNotes.length);
       
-      if (noteIndex >= 0 && noteIndex < activeNotes.length) {
+      if (parsedStep) {
+        const { noteIndex, octaveUp, octaveDown } = parsedStep;
         const { note, octave = 4 } = activeNotes[noteIndex];
-        const midiNote = MidiNumbers.fromNote(`${note}${octave}`);
+        let finalOctave = octave;
+        
+        if (octaveUp) finalOctave += 1;
+        if (octaveDown) finalOctave -= 1;
+        
+        // Ensure octave stays within reasonable bounds
+        finalOctave = Math.max(1, Math.min(8, finalOctave));
+        
+        const midiNote = MidiNumbers.fromNote(`${note}${finalOctave}`);
         
         if (cutOffPreviousNotes && stopAllNotesRef.current) {
           stopAllNotesRef.current();
@@ -121,23 +204,26 @@ const PianoControl: React.FC<PianoProps> = ({
         setTimeout(() => {
           setActivePianoNotes([]);
         }, sustainDuration);
+      } else {
+        // Rest - clear any active notes
+        setActivePianoNotes([]);
       }
-    } else if (!globalPatternState.isPlaying && activeNotes.length > 0) {
-      const chordMidiNotes = activeNotes.map(({ note, octave = 4 }) =>
-        MidiNumbers.fromNote(`${note}${octave}`)
-      );
-      setActivePianoNotes(chordMidiNotes);
     } else if (!globalPatternState.isPlaying) {
-      setActivePianoNotes([]);
+      // When pattern stops, clear sequencer notes but let chord playing handle the rest
+      if (lastStepRef.current !== -1) {
+        setActivePianoNotes([]);
+        lastStepRef.current = -1;
+      }
     }
   }, [
     globalPatternState.currentStep,
     globalPatternState.isPlaying,
-    globalPatternState.pattern,
     activeNotes,
     cutOffPreviousNotes,
     noteDuration,
-    getStepDuration
+    getStepDuration,
+    getCurrentPattern,
+    parsePatternStep
   ]);
 
   const handleEqChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -171,6 +257,7 @@ const PianoControl: React.FC<PianoProps> = ({
       reverbLevel={reverbLevel}
       render={({ isLoading, playNote, stopNote, stopAllNotes }) => {
         stopAllNotesRef.current = stopAllNotes;
+        const currentPattern = getCurrentPattern();
 
         return (<>
           <div className="relative w-max mx-auto">
@@ -192,12 +279,20 @@ const PianoControl: React.FC<PianoProps> = ({
             />
             
             {globalPatternState.isPlaying && (
-              <div className="absolute -top-10 left-1/2 transform -translate-x-1/2">
-                <div className="flex items-center space-x-2 bg-green-900 bg-opacity-90 px-4 py-2 rounded-full border border-green-600">
+              <div className="absolute -top-12 left-1/2 transform -translate-x-1/2">
+                <div className="flex items-center space-x-3 bg-green-900 bg-opacity-95 px-4 py-2 rounded-full border border-green-600 shadow-lg">
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                   <span className="text-xs text-green-300 font-medium">
-                    Pattern: Step {(globalPatternState.currentStep % globalPatternState.pattern.length) + 1}/{globalPatternState.pattern.length}
+                    Step {(globalPatternState.currentStep % currentPattern.length) + 1}/{currentPattern.length}
                   </span>
+                  <span className="text-xs text-green-400 font-mono">
+                    {currentPattern.join('-')}
+                  </span>
+                  {activeChordIndex !== null && (
+                    <span className="text-xs text-green-200">
+                      {addedChords[activeChordIndex]?.name}
+                    </span>
+                  )}
                   <span className="text-xs text-green-400 font-mono">
                     {globalPatternState.bpm} BPM
                   </span>
@@ -291,8 +386,8 @@ const PianoControl: React.FC<PianoProps> = ({
                         <input 
                           type="checkbox" 
                           className="w-3.5 h-3.5 text-blue-600 bg-[#3d434f] border-gray-600 rounded focus:ring-blue-500 focus:ring-1" 
-                          checked={!cutOffPreviousNotes} 
-                          onChange={(e) => setCutOffPreviousNotes(!e.target.checked)} 
+                          checked={cutOffPreviousNotes} 
+                          onChange={(e) => setCutOffPreviousNotes(e.target.checked)} 
                         />
                         <span className="ml-2 text-xs text-slate-300 uppercase tracking-wide">Cut off previous notes</span>
                       </label>
@@ -329,7 +424,7 @@ const PianoControl: React.FC<PianoProps> = ({
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Pattern Quick Controls</label>
+                      <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Sequencer Quick Controls</label>
                       <div className="space-y-2">
                         <button
                           onClick={() => onPatternStateChange({
@@ -342,7 +437,7 @@ const PianoControl: React.FC<PianoProps> = ({
                               : 'bg-green-600 hover:bg-green-700 text-white'
                           }`}
                         >
-                          {globalPatternState.isPlaying ? 'Pause Pattern' : 'Play Pattern'}
+                          {globalPatternState.isPlaying ? 'Stop Sequencer' : 'Start Sequencer'}
                         </button>
                         <button
                           onClick={() => onPatternStateChange({
@@ -353,6 +448,14 @@ const PianoControl: React.FC<PianoProps> = ({
                           Reset to Step 1
                         </button>
                       </div>
+                    </div>
+
+                    <div className="text-xs text-gray-500 space-y-1 pt-4 border-t border-gray-600">
+                      <div className="font-medium text-gray-400 uppercase tracking-wide mb-2">Pattern Notation</div>
+                      <div><strong>x</strong> = rest/silence</div>
+                      <div><strong>1+</strong> = note 1 octave up</div>
+                      <div><strong>2-</strong> = note 2 octave down</div>
+                      <div><strong>1-8</strong> = chord note index</div>
                     </div>
                   </div>
                 </div>

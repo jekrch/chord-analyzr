@@ -423,7 +423,7 @@ const PianoControl: React.FC<PianoProps> = ({
                       </div>
                     </div>
 
-                    <div>
+                    {/* <div>
                       <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Sequencer Quick Controls</label>
                       <div className="space-y-2">
                         <button
@@ -448,15 +448,15 @@ const PianoControl: React.FC<PianoProps> = ({
                           Reset to Step 1
                         </button>
                       </div>
-                    </div>
+                    </div> */}
 
-                    <div className="text-xs text-gray-500 space-y-1 pt-4 border-t border-gray-600">
+                    {/* <div className="text-xs text-gray-500 space-y-1 pt-4 border-t border-gray-600">
                       <div className="font-medium text-gray-400 uppercase tracking-wide mb-2">Pattern Notation</div>
                       <div><strong>x</strong> = rest/silence</div>
                       <div><strong>1+</strong> = note 1 octave up</div>
                       <div><strong>2-</strong> = note 2 octave down</div>
                       <div><strong>1-8</strong> = chord note index</div>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </div>

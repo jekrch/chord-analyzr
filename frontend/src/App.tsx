@@ -2,8 +2,8 @@ import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { PlayCircleIcon, TrashIcon, XCircleIcon } from '@heroicons/react/20/solid';
 import { MidiNumbers } from 'react-piano';
 import classNames from 'classnames';
-import { ModeScaleChordDto, ScaleControllerService, ScaleNoteDto } from './api';
-import { ChordControllerService } from './api/services/ChordControllerService';
+import { ModeScaleChordDto, ScaleNoteDto } from './api';
+import { dataService } from './services/DataService';
 import { useModes } from './hooks/useModes';
 import { getMidiNotes } from './util/ChordUtil';
 import { normalizeNoteName } from './util/NoteUtil';
@@ -388,8 +388,8 @@ function App() {
         setChords([]);
 
         Promise.all([
-            ChordControllerService.getModeKeyChords(key, mode),
-            ScaleControllerService.getScaleNotes(key, mode)
+            dataService.getModeKeyChords(key, mode),
+            dataService.getScaleNotes(key, mode)
         ])
         .then(([chordsData, scaleData]) => {
             setChords(chordsData);

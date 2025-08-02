@@ -1,0 +1,144 @@
+{
+  "generatedAt": "2025-08-02 21:16:57 UTC",
+  "modes": [
+    {
+      "id": 1,
+      "name": "Ionian"
+    },
+    {
+      "id": 2,
+      "name": "Dorian"
+    },
+    {
+      "id": 3,
+      "name": "Phrygian"
+    },
+    {
+      "id": 4,
+      "name": "Lydian"
+    },
+    {
+      "id": 5,
+      "name": "Mixolydian"
+    },
+    {
+      "id": 6,
+      "name": "Aeolian"
+    },
+    {
+      "id": 7,
+      "name": "Locrian"
+    },
+    {
+      "id": 8,
+      "name": "Melodic Minor"
+    },
+    {
+      "id": 9,
+      "name": "Dorian b2"
+    },
+    {
+      "id": 10,
+      "name": "Lydian Augmented"
+    },
+    {
+      "id": 11,
+      "name": "Lydian Dominant"
+    },
+    {
+      "id": 12,
+      "name": "Mixolydian b6"
+    },
+    {
+      "id": 13,
+      "name": "Locrian #2"
+    },
+    {
+      "id": 14,
+      "name": "Altered Scale"
+    },
+    {
+      "id": 15,
+      "name": "Minor Blues"
+    },
+    {
+      "id": 16,
+      "name": "Major Blues"
+    },
+    {
+      "id": 17,
+      "name": "Minor Pentatonic"
+    },
+    {
+      "id": 18,
+      "name": "Major Pentatonic"
+    },
+    {
+      "id": 19,
+      "name": "Harmonic Minor"
+    },
+    {
+      "id": 20,
+      "name": "Bebop Major"
+    },
+    {
+      "id": 21,
+      "name": "Bebop Dominant"
+    },
+    {
+      "id": 22,
+      "name": "Bebop Minor"
+    }
+  ],
+  "availableFiles": {
+    "modes": "modes.json",
+    "chordsByMode": [
+      "chords-mode-1.json",
+      "chords-mode-2.json",
+      "chords-mode-3.json",
+      "chords-mode-4.json",
+      "chords-mode-5.json",
+      "chords-mode-6.json",
+      "chords-mode-7.json",
+      "chords-mode-8.json",
+      "chords-mode-9.json",
+      "chords-mode-10.json",
+      "chords-mode-11.json",
+      "chords-mode-12.json",
+      "chords-mode-13.json",
+      "chords-mode-14.json",
+      "chords-mode-15.json",
+      "chords-mode-16.json",
+      "chords-mode-17.json",
+      "chords-mode-18.json",
+      "chords-mode-19.json",
+      "chords-mode-20.json",
+      "chords-mode-21.json",
+      "chords-mode-22.json"
+    ],
+    "scalesByMode": [
+      "scales-mode-1.json",
+      "scales-mode-2.json",
+      "scales-mode-3.json",
+      "scales-mode-4.json",
+      "scales-mode-5.json",
+      "scales-mode-6.json",
+      "scales-mode-7.json",
+      "scales-mode-8.json",
+      "scales-mode-9.json",
+      "scales-mode-10.json",
+      "scales-mode-11.json",
+      "scales-mode-12.json",
+      "scales-mode-13.json",
+      "scales-mode-14.json",
+      "scales-mode-15.json",
+      "scales-mode-16.json",
+      "scales-mode-17.json",
+      "scales-mode-18.json",
+      "scales-mode-19.json",
+      "scales-mode-20.json",
+      "scales-mode-21.json",
+      "scales-mode-22.json"
+    ]
+  }
+}

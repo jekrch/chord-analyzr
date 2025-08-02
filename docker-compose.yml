@@ -8,6 +8,7 @@ services:
       - ./flyway/flyway.conf:/flyway/conf/flyway.config
     depends_on:
       - postgres
+
   postgres:
     image: postgres:17.5
     restart: always
@@ -17,6 +18,24 @@ services:
     - POSTGRES_USER=postgres
     - POSTGRES_PASSWORD=pass
     - POSTGRES_DB=chordanalyzr
+
+  data-generator:
+    build:
+      context: ./data-generator
+      dockerfile: Dockerfile
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=chordanalyzr
+      - DB_USER=postgres
+      - DB_PASSWORD=pass
+      - OUTPUT_DIR=/output
+    volumes:
+      - ./frontend/public/data:/output
+    depends_on:
+      - flyway
+    restart: "no"  # Run once and exit
+
   api:
     build:
       context: ./api
@@ -35,9 +54,15 @@ services:
       - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
       - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
       - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.PostgreSQLDialect
+
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
       - "5173:80"
+    depends_on:
+      - data-generator  # Ensure data is generated before frontend starts
+    environment:
+      - VITE_USE_STATIC_DATA=true  # Flag to use static data by default
+      - VITE_API_BASE_URL=http://localhost:8080

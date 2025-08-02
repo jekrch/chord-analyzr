@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ModeControllerService } from "../api";
+import { dataService } from "../services/DataService";
 
 export function useModes() {
     const [modes, setModes] = useState<string[] | undefined>();
@@ -8,7 +9,7 @@ export function useModes() {
     useEffect(() => {
       const fetchModes = async () => {
         try {
-          const response = await ModeControllerService.getModes();
+          const response = await dataService.getModes();
           setModes(response.map(m => m.name!));
         } catch (err) {
           setError(err as any);

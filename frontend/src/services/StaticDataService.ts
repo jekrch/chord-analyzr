@@ -73,6 +73,7 @@ class StaticDataService {
    */
   async getModeKeyChords(key: string, mode: string): Promise<ModeScaleChordDto[]> {
     try {
+      key = key.toUpperCase().trim();
       // First, get the index to find available modes
       const index = await this.loadIndex();
       

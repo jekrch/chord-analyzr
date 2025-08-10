@@ -276,29 +276,7 @@ const PianoControl: React.FC<PianoProps> = ({
                 }
                 return null;
               }}
-            />
-            
-            {globalPatternState.isPlaying && (
-              <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 z-50">
-                <div className="flex items-center space-x-3 bg-green-900 bg-opacity-95 px-4 py-2 rounded-full border border-green-600 shadow-lg">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span className="text-xs text-green-300 font-medium">
-                    Step {(globalPatternState.currentStep % currentPattern.length) + 1}/{currentPattern.length}
-                  </span>
-                  <span className="text-xs text-green-400 font-mono">
-                    {currentPattern.join('-')}
-                  </span>
-                  {activeChordIndex !== null && (
-                    <span className="text-xs text-green-200">
-                      {addedChords[activeChordIndex]?.name}
-                    </span>
-                  )}
-                  <span className="text-xs text-green-400 font-mono">
-                    {globalPatternState.bpm} BPM
-                  </span>
-                </div>
-              </div>
-            )}
+            />  
 
             <div className="absolute top-2 right-0 -mr-12">
                 <button

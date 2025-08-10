@@ -1,72 +1,6 @@
 import React, { useState, useMemo, useEffect, memo, useCallback } from 'react';
 import { PlayCircleIcon, PauseIcon, ArrowPathIcon, Cog6ToothIcon } from '@heroicons/react/20/solid';
-
-// Pattern presets with rests
-const PATTERN_PRESETS = [
-  // Basic patterns
-  { name: 'Ascending', pattern: ['1', '2', '3', '4'], icon: '↗️', desc: 'Simple up' },
-  { name: 'Descending', pattern: ['4', '3', '2', '1'], icon: '↘️', desc: 'Simple down' },
-  { name: 'Up-Down', pattern: ['1', '2', '3', '4', '3', '2'], icon: '↗️↘️', desc: 'Peak wave' },
-  { name: 'Down-Up', pattern: ['4', '3', '2', '1', '2', '3'], icon: '↘️↗️', desc: 'Valley wave' },
-  
-  // Classical patterns
-  { name: 'Alberti Bass', pattern: ['1', '3', '2', '3'], icon: '🎼', desc: 'Classical' },
-  { name: 'Waltz Bass', pattern: ['1', '3', '3'], icon: '🎭', desc: '3/4 time' },
-  { name: 'Broken Chord', pattern: ['1', '3', '5', '3'], icon: '🎵', desc: 'Arpeggiated' },
-  { name: 'Rolled Chord', pattern: ['1', '2', '3', '4', 'x', 'x'], icon: '🌊', desc: 'Quick roll' },
-  
-  // Rhythmic patterns
-  { name: 'Syncopated', pattern: ['1', 'x', '3', 'x', '2', '4'], icon: '⚡', desc: 'Off-beat' },
-  { name: 'Latin Rhythm', pattern: ['1', 'x', '1', '3', 'x', '2'], icon: '💃', desc: 'Clave feel' },
-  { name: 'Reggae Skank', pattern: ['x', '2', 'x', '3'], icon: '🏝️', desc: 'Upstroke' },
-  { name: 'Swing Feel', pattern: ['1', 'x', '3', '1', 'x', '2'], icon: '🎷', desc: 'Jazz swing' },
-  
-  // Sparse/Minimal
-  { name: 'Minimal', pattern: ['1', 'x', 'x', '3', 'x', 'x'], icon: '◾', desc: 'Sparse' },
-  { name: 'Half Time', pattern: ['1', 'x', '3', 'x'], icon: '⏱️', desc: 'Slower feel' },
-  { name: 'Dotted', pattern: ['1', 'x', 'x', '2', 'x', 'x', '3', 'x'], icon: '⭕', desc: 'Dotted notes' },
-  { name: 'Meditation', pattern: ['1', 'x', 'x', 'x', 'x', 'x'], icon: '🧘', desc: 'Very sparse' },
-  
-  // Heavy/Driving
-  { name: 'Bass Heavy', pattern: ['1', '1', 'x', '2', '1', 'x'], icon: '🔊', desc: 'Low focus' },
-  { name: 'Driving 8ths', pattern: ['1', '2', '1', '3', '1', '2', '1', '4'], icon: '🚗', desc: 'Constant motion' },
-  { name: 'Power Chord', pattern: ['1', '1', '1', 'x', '1', '1', '1', 'x'], icon: '⚡', desc: 'Rock rhythm' },
-  { name: 'Gallop', pattern: ['1', '1', '2', '1', '1', '3'], icon: '🐎', desc: 'Triple feel' },
-  
-  // Octave patterns
-  { name: 'Octaves', pattern: ['1', '1+', '3', '3+'], icon: '🎹', desc: 'High/low' },
-  { name: 'Bass Walk', pattern: ['1', '2', '3', '4+'], icon: '🚶', desc: 'Walking bass' },
-  { name: 'High Focus', pattern: ['2+', '3+', '4+', '3+'], icon: '⬆️', desc: 'Upper register' },
-  { name: 'Octave Jump', pattern: ['1', '4+', '1', '3+'], icon: '🦘', desc: 'Wide leaps' },
-  
-  // Complex/Polyrhythmic
-  { name: 'Polyrhythm', pattern: ['1', '3', 'x', '2', '4', 'x', '1', 'x'], icon: '🌀', desc: 'Complex' },
-  { name: 'Hemiola', pattern: ['1', 'x', '2', '1', 'x', '3'], icon: '🔄', desc: '3 against 2' },
-  { name: 'Cascading', pattern: ['4', '3', '2', '1', '4+', '3+', '2+', '1+'], icon: '💧', desc: 'Waterfall' },
-  { name: 'Interlocking', pattern: ['1', '3', '2', '4', '3', '1', '4', '2'], icon: '🔗', desc: 'Weaving' },
-
-   // Genre-specific
-  { name: 'Bossa Nova', pattern: ['1', 'x', '2', '3', 'x', '2'], icon: '🇧🇷', desc: 'Brazilian' },
-  { name: 'Celtic Roll', pattern: ['1', '2', '3', '2', '1', '3', '2', '3'], icon: '🍀', desc: 'Irish feel' },
-  { name: 'Gospel Chops', pattern: ['1', '2', '1', '3', '1', '4', '1', '3'], icon: '⛪', desc: 'Churchy' },
-  { name: 'Flamenco', pattern: ['1', 'x', '1', '2', 'x', '3'], icon: '💃', desc: 'Spanish' },
-  
-  // Experimental
-  { name: 'Random Walk', pattern: ['1', '4', '2', '3', '1', '4'], icon: '🎲', desc: 'Unpredictable' },
-  { name: 'Pendulum', pattern: ['1', '2', '3', '4', '3', '2', '1', '2'], icon: '⏰', desc: 'Back and forth' },
-  { name: 'Spiral', pattern: ['1', '2', '2+', '3+', '4+', '3', '2', '1'], icon: '🌪️', desc: 'Expanding' },
-  { name: 'Morse Code', pattern: ['1', 'x', '1', 'x', 'x', '1', 'x'], icon: '📡', desc: 'Dots and dashes' }
-];
-
-const SUBDIVISIONS = [
-  { name: 'Whole', value: 4, symbol: '𝅝' },
-  { name: 'Half', value: 2, symbol: '𝅗𝅥' },
-  { name: 'Quarter', value: 1, symbol: '♩' },
-  { name: 'Eighth', value: 0.5, symbol: '♫' },
-  { name: 'Sixteenth', value: 0.25, symbol: '𝅘𝅥𝅯' },
-  { name: 'Triplet', value: 0.333, symbol: '♪3' }
-  
-];
+import { PATTERN_PRESETS, SUBDIVISIONS } from '../util/Pattern';
 
 interface ChordPattern {
   pattern: string[];
@@ -110,14 +44,12 @@ const StepEditor = memo(({
   stepIndex, 
   stepValue, 
   maxNotes, 
-  onStepChange,
-  isHighlighted 
+  onStepChange
 }: { 
   stepIndex: number;
   stepValue: string;
   maxNotes: number;
   onStepChange: (index: number, value: string) => void;
-  isHighlighted: boolean;
 }) => {
   return (
     <div className="relative">
@@ -130,18 +62,11 @@ const StepEditor = memo(({
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
         onFocus={(e) => e.stopPropagation()}
-        className={`w-full h-8 text-xs bg-[#2a2f3a] border rounded text-center appearance-none cursor-pointer transition-all ${
+        className={`w-full h-8 text-xs bg-[#2a2f3a] border rounded text-center appearance-none cursor-pointer ${
           stepValue === 'x' 
             ? 'border-gray-700 text-gray-500'
             : 'border-gray-600 text-white hover:border-gray-500'
         }`}
-        style={{
-          backgroundColor: isHighlighted ? '#1e40af' : undefined,
-          borderColor: isHighlighted ? '#3b82f6' : undefined,
-          color: isHighlighted ? '#bfdbfe' : undefined,
-          transform: isHighlighted ? 'scale(1.05)' : undefined,
-          boxShadow: isHighlighted ? '0 10px 15px -3px rgba(0, 0, 0, 0.1)' : undefined
-        }}
       >
         <option value="x">—</option>
         {Array.from({ length: Math.min(maxNotes, 8) }, (_, i) => (
@@ -353,17 +278,18 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
               stepValue={step}
               maxNotes={Math.max(4, activeNotes.length)}
               onStepChange={handleStepChange}
-              isHighlighted={currentStepIndex === index}
             />
           ))}
         </div>
 
-        {/* Step Indicator Dots */}
-        <div className="grid grid-cols-8 gap-1 mt-1">
+        {/* Step Indicator - More prominent */}
+        <div className="grid grid-cols-8 gap-1 mt-2">
           {currentPattern.map((_, index) => (
             <div key={index} className="flex justify-center">
-              <div className={`w-1 h-1 rounded-full transition-all ${
-                currentStepIndex === index ? 'bg-blue-400 opacity-100' : 'bg-blue-400 opacity-30'
+              <div className={`transition-all ${
+                currentStepIndex === index 
+                  ? 'w-full h-1 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50' 
+                  : 'w-full h-1 bg-gray-600 rounded-full'
               }`}></div>
             </div>
           ))}

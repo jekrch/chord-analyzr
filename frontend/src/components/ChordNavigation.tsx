@@ -106,7 +106,11 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                             <>
                                 <button
                                     className="text-xs bg-gray-600 hover:bg-gray-700 text-white font-medium py-1 px-3 rounded transition-colors"
-                                    onClick={onClearAll}
+                                    onClick={() => {
+                                        if (isLiveMode)
+                                            onToggleLiveMode();
+                                        onClearAll(); 
+                                    }}
                                 >
                                     Clear All
                                 </button>

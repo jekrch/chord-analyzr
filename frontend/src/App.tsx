@@ -249,7 +249,14 @@ function App() {
     }, []);
 
     const removeChord = useCallback((indexToRemove: number) => {
-        setAddedChords(current => current.filter((_, index) => index !== indexToRemove));
+        setAddedChords(current => {
+            const newChords = current.filter((_, index) => index !== indexToRemove);
+            // Exit expanded mode if this was the last chord
+            if (newChords.length === 0 && isLiveMode) {
+                setIsLiveMode(false);
+            }
+            return newChords;
+        });
 
         // Clean up chord patterns when chord is removed
         const newChordPatterns = { ...globalPatternState.chordPatterns };
@@ -277,13 +284,14 @@ function App() {
         } else if (activeChordIndex !== null && activeChordIndex > indexToRemove) {
             setActiveChordIndex(activeChordIndex - 1);
         }
-    }, [globalPatternState.chordPatterns, activeChordIndex]);
+    }, [globalPatternState.chordPatterns, activeChordIndex, isLiveMode]);
 
     const clearAllChords = useCallback(() => {
         setAddedChords([]);
         setGlobalPatternState(prev => ({ ...prev, chordPatterns: {}, isPlaying: false }));
         setActiveChordIndex(null);
         setTemporaryChord(null);
+        setIsLiveMode(false); // Exit expanded mode when clearing all chords
     }, []);
 
     const playScaleNotes = useCallback(() => {
@@ -468,8 +476,8 @@ function App() {
                     </button>
 
                     <div className="text-xs text-gray-400 text-center">
-                        <div>Press 'P' to toggle | 'L' for live mode | Space to play/pause</div>
-                        <div>1-9 for chords | Colored border = active chord | Purple = custom pattern</div>
+                        <div>Press 'P' to toggle | 'L' to expand | Space to play/pause</div>
+                        <div>1-9 for chords | Colored border = active | Purple = custom pattern</div>
                     </div>
                 </div>
 

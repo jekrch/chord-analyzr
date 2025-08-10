@@ -260,45 +260,54 @@ const PianoControl: React.FC<PianoProps> = ({
         const currentPattern = getCurrentPattern();
 
         return (<>
-          <div className="relative w-max mx-auto">
-            <Piano
-              noteRange={{ first: firstNote, last: lastNote }}
-              playNote={playNoteWithOffset(playNote)}
-              stopNote={stopNoteWithOffset(stopNote)}
-              disabled={isLoading}
-              width={500}
-              activeNotes={activePianoNotes}
-              renderNoteLabel={({ midiNumber, isAccidental }:any) => {
-                const noteNameWithoutOctave = MidiNumbers.getAttributes(midiNumber).note.slice(0, -1);
-                const isScaleNote = normalizedScaleNotes.includes(normalizeNoteName(noteNameWithoutOctave)!);
-                if (isScaleNote) {
-                  return <div className={`mx-auto mb-2 w-2 h-2 rounded-full ${isAccidental ? 'bg-blue-200' : 'bg-blue-400'}`} />;
-                }
-                return null;
-              }}
-            />  
+          <div className="relative w-full">
+            {/* Piano Container with Horizontal Scroll - Width reduced to avoid cog overlap */}
+            <div 
+              className="overflow-x-auto" 
+              style={{ width: 'calc(100% - 48px)' }} // Reserve 48px for cog button
+            >
+              <div className="mx-auto" style={{ minWidth: '500px', width: 'max-content' }}>
+                <Piano
+                  noteRange={{ first: firstNote, last: lastNote }}
+                  playNote={playNoteWithOffset(playNote)}
+                  stopNote={stopNoteWithOffset(stopNote)}
+                  disabled={isLoading}
+                  width={500}
+                  activeNotes={activePianoNotes}
+                  renderNoteLabel={({ midiNumber, isAccidental }:any) => {
+                    const noteNameWithoutOctave = MidiNumbers.getAttributes(midiNumber).note.slice(0, -1);
+                    const isScaleNote = normalizedScaleNotes.includes(normalizeNoteName(noteNameWithoutOctave)!);
+                    if (isScaleNote) {
+                      return <div className={`mx-auto mb-2 w-2 h-2 rounded-full ${isAccidental ? 'bg-blue-200' : 'bg-blue-400'}`} />;
+                    }
+                    return null;
+                  }}
+                />  
+              </div>
+            </div>
 
-            <div className="absolute top-2 right-0 -mr-12">
-                <button
-                  onClick={() => setSettingsOpen(!settingsOpen)}
-                  className={`w-8 h-8 flex items-center justify-center rounded-lg border transition-all duration-200 ${
-                    settingsOpen
-                      ? 'bg-[#4a5262] border-gray-600 text-slate-200'
-                      : 'bg-[#3d434f] border-gray-600 text-slate-400 hover:bg-[#4a5262] hover:border-gray-500 hover:text-slate-200'
-                  }`}
-                  aria-label="Sound Settings"
-                  aria-expanded={settingsOpen}
+            {/* Settings Button - Positioned in the reserved space */}
+            <div className="absolute top-2 right-2 z-10">
+              <button
+                onClick={() => setSettingsOpen(!settingsOpen)}
+                className={`w-8 h-8 flex items-center justify-center rounded-lg border transition-all duration-200 ${
+                  settingsOpen
+                    ? 'bg-[#4a5262] border-gray-600 text-slate-200'
+                    : 'bg-[#3d434f] border-gray-600 text-slate-400 hover:bg-[#4a5262] hover:border-gray-500 hover:text-slate-200'
+                }`}
+                aria-label="Sound Settings"
+                aria-expanded={settingsOpen}
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </button>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
             </div>
           </div>
 

@@ -203,11 +203,11 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
         <div className="flex items-center space-x-4">
           <h2 className="text-lg font-bold text-white">Pattern Sequencer</h2>
           <div className="text-xs text-gray-400">
-            {activeChordIndex !== null ? (
+            {/* {activeChordIndex !== null ? (
               <>Playing: {addedChords[activeChordIndex]?.name} | Pattern: {currentPattern.join('-')}</>
             ) : (
               <>No chord selected | Default: {currentPattern.join('-')}</>
-            )}
+            )} */}
           </div>
         </div>
         <div className="flex items-center space-x-2">

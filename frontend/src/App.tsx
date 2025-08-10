@@ -21,6 +21,7 @@ const END_OCTAVE = 7;
 interface AddedChord {
     name: string;
     notes: string;
+    creationPattern: string[]; // Pattern when the chord was first added - IMMUTABLE
 }
 
 export interface ActiveNoteInfo {
@@ -34,8 +35,8 @@ interface ChordPattern {
 }
 
 interface GlobalPatternState {
-    defaultPattern: string[];
-    chordPatterns: { [chordIndex: number]: ChordPattern };
+    defaultPattern: string[]; // Used for table chords and as template for new chords
+    chordPatterns: { [chordIndex: number]: ChordPattern }; // Custom overrides for specific chords
     isPlaying: boolean;
     bpm: number;
     subdivision: number;
@@ -45,6 +46,46 @@ interface GlobalPatternState {
     lastChordChangeTime: number;
     globalClockStartTime: number;
 }
+
+// Helper function to check if current pattern step should play
+const shouldPlayAtCurrentStep = (pattern: string[], stepIndex: number): boolean => {
+    if (!pattern || pattern.length === 0) return true;
+    
+    const currentStepValue = pattern[stepIndex % pattern.length];
+    
+    // Only play if the step is not a rest ('x' or 'X')
+    return currentStepValue !== 'x' && currentStepValue !== 'X';
+};
+
+// FIXED: Explicit pattern resolution function to avoid closure issues
+const resolvePatternForPlayback = (
+    temporaryChord: { name: string; notes: string } | null,
+    activeChordIndex: number | null,
+    addedChords: AddedChord[],
+    chordPatterns: { [chordIndex: number]: ChordPattern },
+    defaultPattern: string[]
+): string[] => {
+    // CASE 1: Table chord (temporary) - ALWAYS use default pattern
+    if (temporaryChord) {
+        return defaultPattern;
+    }
+    
+    // CASE 2: Sequence chord (bottom nav)
+    if (activeChordIndex !== null && addedChords[activeChordIndex]) {
+        const chord = addedChords[activeChordIndex];
+        
+        // Check for custom override first
+        if (chordPatterns[activeChordIndex]?.enabled) {
+            return chordPatterns[activeChordIndex].pattern;
+        }
+        
+        // Use the chord's IMMUTABLE creation pattern
+        return chord.creationPattern;
+    }
+    
+    // CASE 3: Fallback
+    return defaultPattern;
+};
 
 function App() {
     // ========== STATE MANAGEMENT ==========
@@ -105,13 +146,16 @@ function App() {
         return isOffBeat ? stepDuration * swingRatio : stepDuration / swingRatio;
     }, [stepDuration, globalPatternState.swing]);
 
-    // Get current active pattern
+    // FIXED: Use explicit pattern resolution for UI display
     const getCurrentPattern = useCallback(() => {
-        if (activeChordIndex !== null && globalPatternState.chordPatterns[activeChordIndex]?.enabled) {
-            return globalPatternState.chordPatterns[activeChordIndex].pattern;
-        }
-        return globalPatternState.defaultPattern;
-    }, [activeChordIndex, globalPatternState.chordPatterns, globalPatternState.defaultPattern]);
+        return resolvePatternForPlayback(
+            temporaryChord,
+            activeChordIndex,
+            addedChords,
+            globalPatternState.chordPatterns,
+            globalPatternState.defaultPattern
+        );
+    }, [temporaryChord, activeChordIndex, addedChords, globalPatternState.chordPatterns, globalPatternState.defaultPattern]);
 
     // Steady global clock - NEVER resets when changing chords
     useEffect(() => {
@@ -169,7 +213,7 @@ function App() {
         };
     }, [globalPatternState.isPlaying, stepDuration]);
 
-    // Keep activeNotes in sync with sequencer
+    // FIXED: Keep activeNotes in sync with sequencer using explicit pattern resolution
     useEffect(() => {
         if (globalPatternState.isPlaying) {
             let currentChord = null;
@@ -182,11 +226,50 @@ function App() {
             }
             
             if (currentChord) {
-                const notesWithOctaves = getMidiNotes(START_OCTAVE, END_OCTAVE, currentChord.notes);
-                setActiveNotes(notesWithOctaves as ActiveNoteInfo[]);
+                // FIXED: Use explicit pattern resolution to avoid state timing issues
+                const currentPattern = resolvePatternForPlayback(
+                    temporaryChord,
+                    activeChordIndex,
+                    addedChords,
+                    globalPatternState.chordPatterns,
+                    globalPatternState.defaultPattern
+                );
+                
+                const currentStepIndex = globalPatternState.currentStep % currentPattern.length;
+                
+                // Debug logging for troubleshooting
+                console.log('Sequencer Debug:', {
+                    step: globalPatternState.currentStep,
+                    stepInPattern: currentStepIndex + 1,
+                    patternLength: currentPattern.length,
+                    pattern: currentPattern.join('-'),
+                    chordName: currentChord.name,
+                    isTemporary: !!temporaryChord,
+                    activeChordIndex,
+                    hasCustomOverride: activeChordIndex !== null && globalPatternState.chordPatterns[activeChordIndex]?.enabled,
+                    chordCreationPattern: activeChordIndex !== null && addedChords[activeChordIndex] ? addedChords[activeChordIndex].creationPattern.join('-') : 'N/A'
+                });
+                
+                // Check if we should play at this step
+                if (shouldPlayAtCurrentStep(currentPattern, currentStepIndex)) {
+                    // Play the entire chord
+                    const notesWithOctaves = getMidiNotes(START_OCTAVE, END_OCTAVE, currentChord.notes);
+                    setActiveNotes(notesWithOctaves as ActiveNoteInfo[]);
+                } else {
+                    // Rest step - silence
+                    setActiveNotes([]);
+                }
             }
         }
-    }, [globalPatternState.isPlaying, activeChordIndex, addedChords, temporaryChord]);
+    }, [
+        globalPatternState.isPlaying, 
+        globalPatternState.currentStep, 
+        temporaryChord, 
+        activeChordIndex, 
+        addedChords, 
+        globalPatternState.chordPatterns, 
+        globalPatternState.defaultPattern
+    ]);
 
     // ========== COMPUTED VALUES ==========
 
@@ -244,9 +327,14 @@ function App() {
         }
     }, [playNotes, globalPatternState.isPlaying, isDeleteMode]);
 
+    // FIXED: Capture pattern with deep copy to prevent reference issues
     const addChordClick = useCallback((chordName: string, chordNotes: string) => {
-        setAddedChords(current => [...current, { name: chordName, notes: chordNotes }]);
-    }, []);
+        setAddedChords(current => [...current, { 
+            name: chordName, 
+            notes: chordNotes,
+            creationPattern: JSON.parse(JSON.stringify(globalPatternState.defaultPattern)) // Deep copy to prevent reference issues
+        }]);
+    }, [globalPatternState.defaultPattern]);
 
     const removeChord = useCallback((indexToRemove: number) => {
         setAddedChords(current => {
@@ -521,13 +609,13 @@ function App() {
                                 {globalPatternState.bpm} BPM |
                                 Step {(globalPatternState.currentStep % getCurrentPattern().length) + 1}/{getCurrentPattern().length}
                                 {temporaryChord && 
-                                    <span className="ml-2 text-yellow-300">• {temporaryChord.name} (temporary)</span>
+                                    <span className="ml-2 text-yellow-300">• {temporaryChord.name} (table→default)</span>
                                 }
                                 {!temporaryChord && activeChordIndex !== null && globalPatternState.chordPatterns[activeChordIndex]?.enabled && 
-                                    <span className="ml-2 text-purple-300">• {addedChords[activeChordIndex]?.name}</span>
+                                    <span className="ml-2 text-purple-300">• {addedChords[activeChordIndex]?.name} (custom)</span>
                                 }
                                 {!temporaryChord && activeChordIndex !== null && !globalPatternState.chordPatterns[activeChordIndex]?.enabled &&
-                                    <span className="ml-2 text-cyan-300">• {addedChords[activeChordIndex]?.name}</span>
+                                    <span className="ml-2 text-cyan-300">• {addedChords[activeChordIndex]?.name} (creation)</span>
                                 }
                             </div>
                         </div>

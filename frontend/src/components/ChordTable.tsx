@@ -195,7 +195,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
               </div>
             </div>
           ) : filteredChords?.length ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 sm:gap-3">
               {filteredChords.map((chord: ModeScaleChordDto, index: number) => {
                 const isExpanded = expandedChords.has(index);
                 return (

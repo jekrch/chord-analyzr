@@ -79,7 +79,7 @@ class PianoConfig extends Component<PianoConfigProps> {
 
     onChangeInstrument = (value: any) => {
         this.props.setConfig({
-            instrumentName: value,
+            instrumentName: value.replaceAll(' ', '_'),
         });
     };
 
@@ -95,9 +95,9 @@ class PianoConfig extends Component<PianoConfigProps> {
                     />
                     <Dropdown
                         className="form-control"
-                        value={this.props.config.instrumentName || instrumentName}
+                        value={this.props.config.instrumentName.replaceAll('_', ' ') || instrumentName.replaceAll('_', ' ')}
                         onChange={this.onChangeInstrument}
-                        options={this.props.instrumentList}
+                        options={this.props.instrumentList.map((name) => name.replaceAll('_', ' '))}
                         showSearch={true}
                     />
                 </div>

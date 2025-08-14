@@ -220,10 +220,10 @@ const ChordTable: React.FC<ChordTableProps> = ({
                               e.stopPropagation();
                               addChordClick?.(chord.chordName!, chord.chordNoteNames!);
                             }}
-                            className="p-1.5 sm:p-2 rounded-md hover:bg-green-600 text-gray-400 hover:text-white transition-colors"
+                            className="p-1 sm:p-2 rounded-md hover:bg-green-600 text-gray-400 hover:text-white transition-colors"
                             title="Add to sequence"
                           >
-                            <PlusCircleIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            <PlusCircleIcon className="h-5 w-5 sm:h-4 sm:w-4" />
                           </button>
                           <button
                             onClick={(e) => {

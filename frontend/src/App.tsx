@@ -564,8 +564,8 @@ function App() {
                     </button>
 
                     <div className="text-xs text-gray-400 text-center">
-                        <div>Press 'P' to toggle | 'L' to expand | Space to play/pause</div>
-                        <div>1-9 for chords | Colored border = active | Purple = custom pattern</div>
+                        <div>Press 'P' to toggle | 'L' to expand </div>
+                        <div>Space to play/pause | 1-9 for chords </div>
                     </div>
                 </div>
 
@@ -581,20 +581,20 @@ function App() {
                     />
                 </div>
 
-                {/* Pattern System - Conditional Rendering */}
-                {showPatternSystem && (
-                    <div className="w-full">
-                        <PatternSystem
-                            activeNotes={activeNotes}
-                            normalizedScaleNotes={normalizedScaleNotes}
-                            addedChords={addedChords}
-                            activeChordIndex={activeChordIndex}
-                            onPatternChange={handlePatternChange}
-                            globalPatternState={globalPatternState}
-                            getCurrentPattern={getCurrentPattern}
-                        />
-                    </div>
-                )}
+                {/* Pattern System with smooth animation */}
+                <div className={`w-full transition-all duration-300 ease-in-out overflow-hidden ${
+                    showPatternSystem ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+                }`}>
+                    <PatternSystem
+                        activeNotes={activeNotes}
+                        normalizedScaleNotes={normalizedScaleNotes}
+                        addedChords={addedChords}
+                        activeChordIndex={activeChordIndex}
+                        onPatternChange={handlePatternChange}
+                        globalPatternState={globalPatternState}
+                        getCurrentPattern={getCurrentPattern}
+                    />
+                </div>
 
                 {/* Playback Status */}
                 {globalPatternState.isPlaying && (

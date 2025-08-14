@@ -1,8 +1,8 @@
 package com.chordanalyzr.api.dtos;
 
-import com.chordanalyzr.api.entities.ModeScaleChordRelation;
-
 import java.util.Arrays;
+
+import com.chordanalyzr.api.entities.ModeScaleChordRelation;
 
 public class ModeScaleChordDto {
     private Long modeId;

@@ -583,7 +583,7 @@ function App() {
 
                 {/* Pattern System with smooth animation */}
                 <div className={`w-full transition-all duration-300 ease-in-out overflow-hidden ${
-                    showPatternSystem ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+                    showPatternSystem ? 'opacity-100' : 'max-h-0 opacity-0'
                 }`}>
                     <PatternSystem
                         activeNotes={activeNotes}

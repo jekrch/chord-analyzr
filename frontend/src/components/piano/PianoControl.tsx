@@ -69,14 +69,70 @@ const PianoControl: React.FC<PianoProps> = ({
   const [activePianoNotes, setActivePianoNotes] = useState<number[]>([]);
   const lastStepRef = useRef<number>(-1);
   const chordSustainTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Container ref for measuring width
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState<number>(500);
 
-  // Settings State
-  const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
+  // Settings State - moved from the original component
   const [cutOffPreviousNotes, setCutOffPreviousNotes] = useState<boolean>(true);
   const [eq, setEq] = useState<EqSettings>({ bass: 0, mid: 0, treble: 0 });
   const [octaveOffset, setOctaveOffset] = useState<number>(0);
   const [reverbLevel, setReverbLevel] = useState<number>(0.0);
   const [noteDuration, setNoteDuration] = useState<number>(0.8);
+
+  // Responsive width calculation
+  const pianoWidth = useMemo(() => {
+    
+    const availableWidth = containerWidth;
+    
+    // Define responsive breakpoints and widths
+    if (availableWidth < 400) {
+      // Mobile: use most of available space
+      return Math.max(320, availableWidth - 40);
+    } else if (availableWidth < 768) {
+      // Tablet: moderate scaling
+      return Math.min(600, availableWidth - 60);
+    } else if (availableWidth < 1200) {
+      // Small desktop: good balance
+      return Math.min(800, availableWidth - 80);
+    } else {
+      // Large desktop: generous but not excessive
+      return Math.min(1000, availableWidth - 100);
+    }
+  }, [containerWidth]);
+
+  // Measure container width and set up resize observer
+  useEffect(() => {
+    const measureWidth = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.offsetWidth);
+      }
+    };
+
+    // Initial measurement
+    measureWidth();
+
+    // Set up ResizeObserver for dynamic updates
+    const resizeObserver = new ResizeObserver(() => {
+      measureWidth();
+    });
+
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    // Fallback: window resize listener
+    const handleResize = () => {
+      measureWidth();
+    };
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   const { firstNote, lastNote, keyboardShortcuts, midiOffset } = useMemo(() => {
     const anchorNote = 'c';
@@ -97,7 +153,7 @@ const PianoControl: React.FC<PianoProps> = ({
   }, [octaveOffset]);
 
   const [pianoConfig, setPianoConfig] = useState<any>({
-    instrumentName: 'acoustic_grand_piano',
+    instrumentName: 'electric_piano_1',
   });
 
   // Simple chord playing when sequencer is OFF
@@ -226,11 +282,6 @@ const PianoControl: React.FC<PianoProps> = ({
     parsePatternStep
   ]);
 
-  const handleEqChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setEq(prevEq => ({ ...prevEq, [name]: parseFloat(value) }));
-  };
-
   const playNoteWithOffset = (playNote: (midiNumber: number) => void) =>
     (midiNumber: number) => {
       if (!cutOffPreviousNotes && stopAllNotesRef.current) {
@@ -260,193 +311,27 @@ const PianoControl: React.FC<PianoProps> = ({
         const currentPattern = getCurrentPattern();
 
         return (<>
-          <div className="relative w-full">
-            {/* Piano Container with Horizontal Scroll - Width reduced to avoid cog overlap */}
-            <div 
-              className="overflow-x-auto" 
-              style={{ width: 'calc(100% - 48px)' }} // Reserve 48px for cog button
-            >
-              <div className="mx-auto" style={{ minWidth: '500px', width: 'max-content' }}>
-                <Piano
-                  noteRange={{ first: firstNote, last: lastNote }}
-                  playNote={playNoteWithOffset(playNote)}
-                  stopNote={stopNoteWithOffset(stopNote)}
-                  disabled={isLoading}
-                  width={500}
-                  activeNotes={activePianoNotes}
-                  renderNoteLabel={({ midiNumber, isAccidental }:any) => {
-                    const noteNameWithoutOctave = MidiNumbers.getAttributes(midiNumber).note.slice(0, -1);
-                    const isScaleNote = normalizedScaleNotes.includes(normalizeNoteName(noteNameWithoutOctave)!);
-                    if (isScaleNote) {
-                      return <div className={`mx-auto mb-2 w-2 h-2 rounded-full ${isAccidental ? 'bg-blue-200' : 'bg-blue-400'}`} />;
-                    }
-                    return null;
-                  }}
-                />  
-              </div>
-            </div>
-
-            {/* Settings Button - Positioned in the reserved space */}
-            <div className="absolute top-2 right-2 z-10">
-              <button
-                onClick={() => setSettingsOpen(!settingsOpen)}
-                className={`w-8 h-8 flex items-center justify-center rounded-lg border transition-all duration-200 ${
-                  settingsOpen
-                    ? 'bg-[#4a5262] border-gray-600 text-slate-200'
-                    : 'bg-[#3d434f] border-gray-600 text-slate-400 hover:bg-[#4a5262] hover:border-gray-500 hover:text-slate-200'
-                }`}
-                aria-label="Sound Settings"
-                aria-expanded={settingsOpen}
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
-            settingsOpen ? 'max-h-[600px] opacity-100 mt-6' : 'max-h-0 opacity-0'
-          } mx-4`}>
-            <div className="bg-[#3d434f] border border-gray-600 rounded-lg overflow-hidden w-[600px]x mx-auto">
-              <div className="px-4 py-3 border-b border-gray-600">
-                <h3 className="text-sm font-medium text-slate-200 uppercase tracking-wider">
-                  Piano Settings
-                </h3>
-              </div>
-
-              <div className="p-6 bg-[#444b59]">
-                <div className="grid grid-cols-2 gap-x-8">
-
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Octave Shift</label>
-                      <div className="flex items-center justify-between bg-[#3d434f] border border-gray-600 rounded-md p-1.5">
-                        <button onClick={() => setOctaveOffset(o => Math.max(-3, o - 1))} className="w-6 h-6 flex items-center justify-center text-slate-300 hover:text-slate-200 hover:bg-[#4a5262] rounded transition-colors" disabled={octaveOffset <= -3}>−</button>
-                        <span className="font-mono text-xs text-slate-200 px-2">{octaveOffset === 0 ? 'Normal' : `${octaveOffset > 0 ? '+' : ''}${octaveOffset} octave${Math.abs(octaveOffset) > 1 ? 's' : ''}`}</span>
-                        <button onClick={() => setOctaveOffset(o => Math.min(3, o + 1))} className="w-6 h-6 flex items-center justify-center text-slate-300 hover:text-slate-200 hover:bg-[#4a5262] rounded transition-colors" disabled={octaveOffset >= 3}>+</button>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">
-                        Reverb<span className="text-xs text-slate-400 ml-2 normal-case">({Math.round(reverbLevel * 100)}%)</span>
-                      </label>
-                      <div className="relative">
-                        <input 
-                          type="range" 
-                          min="0" 
-                          max="1.0" 
-                          step="0.05" 
-                          value={reverbLevel} 
-                          onChange={(e) => setReverbLevel(parseFloat(e.target.value))} 
-                          className="w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb" 
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">
-                        Note Duration<span className="text-xs text-slate-400 ml-2 normal-case">({Math.round(noteDuration * 100)}%)</span>
-                      </label>
-                      <div className="relative">
-                        <input 
-                          type="range" 
-                          min="0.1" 
-                          max="1.0" 
-                          step="0.05" 
-                          value={noteDuration} 
-                          onChange={(e) => setNoteDuration(parseFloat(e.target.value))} 
-                          className="w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb" 
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="flex items-center cursor-pointer">
-                        <input 
-                          type="checkbox" 
-                          className="w-3.5 h-3.5 text-blue-600 bg-[#3d434f] border-gray-600 rounded focus:ring-blue-500 focus:ring-1" 
-                          checked={cutOffPreviousNotes} 
-                          onChange={(e) => setCutOffPreviousNotes(e.target.checked)} 
-                        />
-                        <span className="ml-2 text-xs text-slate-300 uppercase tracking-wide">Cut off previous notes</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Equalizer</label>
-                      <div className="space-y-3">
-                        {[
-                          { label: 'Bass', key: 'bass' as keyof EqSettings },
-                          { label: 'Mid', key: 'mid' as keyof EqSettings },
-                          { label: 'Treble', key: 'treble' as keyof EqSettings }
-                        ].map(({ label, key }) => (
-                          <div key={key}>
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="text-xs text-slate-400 uppercase tracking-wide">{label}</span>
-                              <span className="text-xs text-slate-400 font-mono">{eq[key] > 0 ? '+' : ''}{eq[key].toFixed(1)}dB</span>
-                            </div>
-                            <input 
-                              type="range" 
-                              name={key} 
-                              min="-24" 
-                              max="24" 
-                              step="0.5" 
-                              value={eq[key]} 
-                              onChange={handleEqChange} 
-                              className="w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb" 
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* <div>
-                      <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Sequencer Quick Controls</label>
-                      <div className="space-y-2">
-                        <button
-                          onClick={() => onPatternStateChange({
-                            isPlaying: !globalPatternState.isPlaying,
-                            lastChordChangeTime: Date.now()
-                          })}
-                          className={`w-full py-2 px-3 rounded text-xs font-medium transition-colors uppercase tracking-wide ${
-                            globalPatternState.isPlaying
-                              ? 'bg-red-600 hover:bg-red-700 text-white'
-                              : 'bg-green-600 hover:bg-green-700 text-white'
-                          }`}
-                        >
-                          {globalPatternState.isPlaying ? 'Stop Sequencer' : 'Start Sequencer'}
-                        </button>
-                        <button
-                          onClick={() => onPatternStateChange({
-                            currentStep: 0
-                          })}
-                          className="w-full py-2 px-3 bg-gray-600 hover:bg-gray-700 text-white rounded text-xs font-medium uppercase tracking-wide transition-colors"
-                        >
-                          Reset to Step 1
-                        </button>
-                      </div>
-                    </div> */}
-
-                    {/* <div className="text-xs text-gray-500 space-y-1 pt-4 border-t border-gray-600">
-                      <div className="font-medium text-gray-400 uppercase tracking-wide mb-2">Pattern Notation</div>
-                      <div><strong>x</strong> = rest/silence</div>
-                      <div><strong>1+</strong> = note 1 octave up</div>
-                      <div><strong>2-</strong> = note 2 octave down</div>
-                      <div><strong>1-8</strong> = chord note index</div>
-                    </div> */}
-                  </div>
-                </div>
-              </div>
+          <div ref={containerRef} className="relative w-full">
+            {/* Piano Container - Properly centered */}
+            <div className="w-full flex justify-center overflow-x-auto">
+              <Piano
+                noteRange={{ first: firstNote, last: lastNote }}
+                playNote={playNoteWithOffset(playNote)}
+                stopNote={stopNoteWithOffset(stopNote)}
+                disabled={isLoading}
+                width={pianoWidth}
+                className={"mx-auto w-full"}
+                activeNotes={activePianoNotes}
+                renderNoteLabel={({ midiNumber, isAccidental }:any) => {
+                  const noteNameWithoutOctave = MidiNumbers.getAttributes(midiNumber).note.slice(0, -1);
+                  const isScaleNote = normalizedScaleNotes.includes(normalizeNoteName(noteNameWithoutOctave)!);
+                  if (isScaleNote) {
+                    return <div className={`mx-auto mb-2 w-2 h-2 rounded-full ${isAccidental ? 'bg-blue-200' : 'bg-blue-400'}`} />;
+                  }
+                  return null;
+                }
+                }
+              />
             </div>
           </div>
 
@@ -459,6 +344,17 @@ const PianoControl: React.FC<PianoProps> = ({
                   setConfig={setPianoConfig}
                   instrumentList={instrumentList || [pianoConfig.instrumentName]}
                   keyboardShortcuts={keyboardShortcuts}
+                  // Pass settings props to PianoConfig
+                  cutOffPreviousNotes={cutOffPreviousNotes}
+                  setCutOffPreviousNotes={setCutOffPreviousNotes}
+                  eq={eq}
+                  setEq={setEq}
+                  octaveOffset={octaveOffset}
+                  setOctaveOffset={setOctaveOffset}
+                  reverbLevel={reverbLevel}
+                  setReverbLevel={setReverbLevel}
+                  noteDuration={noteDuration}
+                  setNoteDuration={setNoteDuration}
                 />
               )}
             />

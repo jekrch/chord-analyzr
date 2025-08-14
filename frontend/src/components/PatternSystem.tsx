@@ -442,9 +442,9 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
       )}
 
 
-      {/* Advanced Controls  */}
+      {/* Advanced Controls with smooth animation */}
       <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
-        showAdvanced ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'
+        showAdvanced ? ' opacity-100' : 'max-h-0 opacity-0'
       }`}>
         <div className="bg-[#3d434f] border border-gray-600 rounded-lg overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-600">

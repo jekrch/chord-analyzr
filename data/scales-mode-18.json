@@ -1,0 +1,354 @@
+{
+  "A": [
+    {
+      "seqNote": 10,
+      "noteName": "A"
+    },
+    {
+      "seqNote": 12,
+      "noteName": "B"
+    },
+    {
+      "seqNote": 14,
+      "noteName": "Db"
+    },
+    {
+      "seqNote": 17,
+      "noteName": "E"
+    },
+    {
+      "seqNote": 19,
+      "noteName": "Gb"
+    }
+  ],
+  "A#": [
+    {
+      "seqNote": 11,
+      "noteName": "A#"
+    },
+    {
+      "seqNote": 13,
+      "noteName": "B#"
+    },
+    {
+      "seqNote": 15,
+      "noteName": "D"
+    },
+    {
+      "seqNote": 18,
+      "noteName": "E#"
+    },
+    {
+      "seqNote": 20,
+      "noteName": "G"
+    }
+  ],
+  "Ab": [
+    {
+      "seqNote": 9,
+      "noteName": "Ab"
+    },
+    {
+      "seqNote": 11,
+      "noteName": "Bb"
+    },
+    {
+      "seqNote": 13,
+      "noteName": "C"
+    },
+    {
+      "seqNote": 16,
+      "noteName": "Eb"
+    },
+    {
+      "seqNote": 18,
+      "noteName": "F"
+    }
+  ],
+  "B": [
+    {
+      "seqNote": 12,
+      "noteName": "B"
+    },
+    {
+      "seqNote": 14,
+      "noteName": "Db"
+    },
+    {
+      "seqNote": 16,
+      "noteName": "Eb"
+    },
+    {
+      "seqNote": 19,
+      "noteName": "Gb"
+    },
+    {
+      "seqNote": 21,
+      "noteName": "Ab"
+    }
+  ],
+  "C": [
+    {
+      "seqNote": 1,
+      "noteName": "C"
+    },
+    {
+      "seqNote": 3,
+      "noteName": "D"
+    },
+    {
+      "seqNote": 5,
+      "noteName": "E"
+    },
+    {
+      "seqNote": 8,
+      "noteName": "G"
+    },
+    {
+      "seqNote": 10,
+      "noteName": "A"
+    }
+  ],
+  "C#": [
+    {
+      "seqNote": 2,
+      "noteName": "C#"
+    },
+    {
+      "seqNote": 4,
+      "noteName": "D#"
+    },
+    {
+      "seqNote": 6,
+      "noteName": "E#"
+    },
+    {
+      "seqNote": 9,
+      "noteName": "G#"
+    },
+    {
+      "seqNote": 11,
+      "noteName": "A#"
+    }
+  ],
+  "D": [
+    {
+      "seqNote": 3,
+      "noteName": "D"
+    },
+    {
+      "seqNote": 5,
+      "noteName": "E"
+    },
+    {
+      "seqNote": 7,
+      "noteName": "Gb"
+    },
+    {
+      "seqNote": 10,
+      "noteName": "A"
+    },
+    {
+      "seqNote": 12,
+      "noteName": "B"
+    }
+  ],
+  "D#": [
+    {
+      "seqNote": 4,
+      "noteName": "D#"
+    },
+    {
+      "seqNote": 6,
+      "noteName": "E#"
+    },
+    {
+      "seqNote": 8,
+      "noteName": "G"
+    },
+    {
+      "seqNote": 11,
+      "noteName": "A#"
+    },
+    {
+      "seqNote": 13,
+      "noteName": "B#"
+    }
+  ],
+  "Db": [
+    {
+      "seqNote": 2,
+      "noteName": "Db"
+    },
+    {
+      "seqNote": 4,
+      "noteName": "Eb"
+    },
+    {
+      "seqNote": 6,
+      "noteName": "F"
+    },
+    {
+      "seqNote": 9,
+      "noteName": "Ab"
+    },
+    {
+      "seqNote": 11,
+      "noteName": "Bb"
+    }
+  ],
+  "E": [
+    {
+      "seqNote": 5,
+      "noteName": "E"
+    },
+    {
+      "seqNote": 7,
+      "noteName": "Gb"
+    },
+    {
+      "seqNote": 9,
+      "noteName": "Ab"
+    },
+    {
+      "seqNote": 12,
+      "noteName": "B"
+    },
+    {
+      "seqNote": 14,
+      "noteName": "Db"
+    }
+  ],
+  "Eb": [
+    {
+      "seqNote": 4,
+      "noteName": "Eb"
+    },
+    {
+      "seqNote": 6,
+      "noteName": "F"
+    },
+    {
+      "seqNote": 8,
+      "noteName": "G"
+    },
+    {
+      "seqNote": 11,
+      "noteName": "Bb"
+    },
+    {
+      "seqNote": 13,
+      "noteName": "C"
+    }
+  ],
+  "F": [
+    {
+      "seqNote": 6,
+      "noteName": "F"
+    },
+    {
+      "seqNote": 8,
+      "noteName": "G"
+    },
+    {
+      "seqNote": 10,
+      "noteName": "A"
+    },
+    {
+      "seqNote": 13,
+      "noteName": "C"
+    },
+    {
+      "seqNote": 15,
+      "noteName": "D"
+    }
+  ],
+  "F#": [
+    {
+      "seqNote": 7,
+      "noteName": "F#"
+    },
+    {
+      "seqNote": 9,
+      "noteName": "G#"
+    },
+    {
+      "seqNote": 11,
+      "noteName": "A#"
+    },
+    {
+      "seqNote": 14,
+      "noteName": "C#"
+    },
+    {
+      "seqNote": 16,
+      "noteName": "D#"
+    }
+  ],
+  "G": [
+    {
+      "seqNote": 8,
+      "noteName": "G"
+    },
+    {
+      "seqNote": 10,
+      "noteName": "A"
+    },
+    {
+      "seqNote": 12,
+      "noteName": "B"
+    },
+    {
+      "seqNote": 15,
+      "noteName": "D"
+    },
+    {
+      "seqNote": 17,
+      "noteName": "E"
+    }
+  ],
+  "G#": [
+    {
+      "seqNote": 9,
+      "noteName": "G#"
+    },
+    {
+      "seqNote": 11,
+      "noteName": "A#"
+    },
+    {
+      "seqNote": 13,
+      "noteName": "B#"
+    },
+    {
+      "seqNote": 16,
+      "noteName": "D#"
+    },
+    {
+      "seqNote": 18,
+      "noteName": "E#"
+    }
+  ],
+  "Gb": [
+    {
+      "seqNote": 7,
+      "noteName": "Gb"
+    },
+    {
+      "seqNote": 9,
+      "noteName": "Ab"
+    },
+    {
+      "seqNote": 11,
+      "noteName": "Bb"
+    },
+    {
+      "seqNote": 14,
+      "noteName": "Db"
+    },
+    {
+      "seqNote": 16,
+      "noteName": "Eb"
+    }
+  ]
+}

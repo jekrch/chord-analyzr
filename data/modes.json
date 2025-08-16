@@ -1,0 +1,90 @@
+[
+  {
+    "id": 1,
+    "name": "Ionian"
+  },
+  {
+    "id": 2,
+    "name": "Dorian"
+  },
+  {
+    "id": 3,
+    "name": "Phrygian"
+  },
+  {
+    "id": 4,
+    "name": "Lydian"
+  },
+  {
+    "id": 5,
+    "name": "Mixolydian"
+  },
+  {
+    "id": 6,
+    "name": "Aeolian"
+  },
+  {
+    "id": 7,
+    "name": "Locrian"
+  },
+  {
+    "id": 8,
+    "name": "Melodic Minor"
+  },
+  {
+    "id": 9,
+    "name": "Dorian b2"
+  },
+  {
+    "id": 10,
+    "name": "Lydian Augmented"
+  },
+  {
+    "id": 11,
+    "name": "Lydian Dominant"
+  },
+  {
+    "id": 12,
+    "name": "Mixolydian b6"
+  },
+  {
+    "id": 13,
+    "name": "Locrian #2"
+  },
+  {
+    "id": 14,
+    "name": "Altered Scale"
+  },
+  {
+    "id": 15,
+    "name": "Minor Blues"
+  },
+  {
+    "id": 16,
+    "name": "Major Blues"
+  },
+  {
+    "id": 17,
+    "name": "Minor Pentatonic"
+  },
+  {
+    "id": 18,
+    "name": "Major Pentatonic"
+  },
+  {
+    "id": 19,
+    "name": "Harmonic Minor"
+  },
+  {
+    "id": 20,
+    "name": "Bebop Major"
+  },
+  {
+    "id": 21,
+    "name": "Bebop Dominant"
+  },
+  {
+    "id": 22,
+    "name": "Bebop Minor"
+  }
+]

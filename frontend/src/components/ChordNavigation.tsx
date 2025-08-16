@@ -150,7 +150,7 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
             </div>
 
             {/* Chord Buttons */}
-            <div className={`flex-1 max-w-7xl mx-auto px-4 w-full ${isLiveMode ? 'pb-8 overflow-y-auto' : 'pb-2'}`}>
+            <div className={`flex-1 max-w-7xl mx-auto px-4 w-full ${isLiveMode ? 'pb-8 overflow-y-auto pt-2' : 'pb-2'}`}>
                 <div className={
                     isLiveMode 
                         ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 auto-rows-max"
@@ -192,16 +192,16 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                                 <div className={`text-cyan-200 font-bold ${isLiveMode ? 'text-xl mb-2' : 'text-xs mb-1'}`}>
                                     {index + 1}
                                 </div>
-                                <div className={`leading-tight ${isLiveMode ? 'text-base text-center' : 'text-xs'}`}>
+                                <div className={`leading-tight ${isLiveMode ? 'text-base text-center text-white ' : 'text-xs'}`}>
                                     {chord.name}
                                 </div>
                                 
                                 {isLiveMode && (
                                     <>
-                                        <div className="text-xs text-gray-400 mt-1 text-center">
+                                        <div className="text-xs text-gray-300 mt-4 text-center">
                                             {chord.notes.replace(/,/g, ' • ')}
                                         </div>
-                                        <div className="text-xs text-gray-500 mt-1 text-center font-mono">
+                                        <div className="text-xs text-gray-300 mt-1 text-center font-mono">
                                             {chord.pattern.join('-')}
                                         </div>
                                     </>

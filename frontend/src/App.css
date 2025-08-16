@@ -1,7 +1,7 @@
-.App {
+/* .App {
   text-align: center;
-}
-
+} */
+/* 
 .App-logo {
   height: 40vmin;
   pointer-events: none;
@@ -26,7 +26,7 @@
 
 .App-link {
   color: #61dafb;
-}
+} */
 
 @keyframes App-logo-spin {
   from {
@@ -155,8 +155,6 @@
   50% { transform: scale(1.2); opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
 }
-
-/* Add these styles to your App.css file */
 
 /* Ensure the body has proper padding for fixed bottom nav */
 body {

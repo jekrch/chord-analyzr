@@ -27,6 +27,18 @@ class StaticDataService {
   private scalesCache: Map<string, ScalesByKey> = new Map();
 
   /**
+   * Normalizes a musical key string to have the first letter capitalized
+   * and the rest in lowercase. e.g., "c# ", "F#", "ab" -> "C#", "F#", "Ab"
+   */
+  public normalizeKey(key: string): string {
+    const trimmedKey = key.trim();
+    if (trimmedKey.length === 0) {
+      return '';
+    }
+    return trimmedKey.charAt(0).toUpperCase() + trimmedKey.slice(1).toLowerCase();
+  }
+
+  /**
    * Load and cache the index file
    */
   private async loadIndex(): Promise<StaticDataIndex> {
@@ -73,7 +85,8 @@ class StaticDataService {
    */
   async getModeKeyChords(key: string, mode: string): Promise<ModeScaleChordDto[]> {
     try {
-      key = key.toUpperCase().trim();
+      const normalizedKey = this.normalizeKey(key);
+
       // First, get the index to find available modes
       const index = await this.loadIndex();
       
@@ -85,12 +98,11 @@ class StaticDataService {
       }
 
       const modeId = modeData.id.toString();
-      const cacheKey = `${modeId}-${key}`;
-
-      // Check cache first
-      if (this.chordsCache.has(cacheKey)) {
-        const cached = this.chordsCache.get(cacheKey)!;
-        return cached.filter(chord => chord.keyName === key);
+      
+      // Check cache for the entire mode's chord data first
+      if (this.chordsCache.has(modeId)) {
+        const allChordsForMode = this.chordsCache.get(modeId)!;
+        return allChordsForMode.filter(chord => chord.keyName === normalizedKey);
       }
 
       // Load chords for this mode
@@ -102,7 +114,7 @@ class StaticDataService {
       this.chordsCache.set(modeId, allChords);
 
       // Filter by key
-      return allChords.filter(chord => chord.keyName === key);
+      return allChords.filter(chord => chord.keyName === normalizedKey);
     } catch (error) {
       console.error('Error loading chords from static data:', error);
       throw error;
@@ -114,6 +126,8 @@ class StaticDataService {
    */
   async getScaleNotes(key: string, mode: string): Promise<ScaleNoteDto[]> {
     try {
+      const normalizedKey = this.normalizeKey(key);
+
       // First, get the index to find available modes
       const index = await this.loadIndex();
       
@@ -128,7 +142,7 @@ class StaticDataService {
       // Check cache first
       if (this.scalesCache.has(modeId)) {
         const cached = this.scalesCache.get(modeId)!;
-        return cached[key] || [];
+        return cached[normalizedKey] || [];
       }
 
       // Load scales for this mode
@@ -140,7 +154,7 @@ class StaticDataService {
       const scalesByKey: ScalesByKey = await response.json();
       this.scalesCache.set(modeId, scalesByKey);
 
-      return scalesByKey[key] || [];
+      return scalesByKey[normalizedKey] || [];
     } catch (error) {
       console.error('Error loading scale notes from static data:', error);
       throw error;

@@ -44,9 +44,9 @@ interface GlobalPatternState {
 // Helper function to check if current pattern step should play
 const shouldPlayAtCurrentStep = (pattern: string[], stepIndex: number): boolean => {
     if (!pattern || pattern.length === 0) return true;
-    
+
     const currentStepValue = pattern[stepIndex % pattern.length];
-    
+
     // Only play if the step is not a rest ('x' or 'X')
     return currentStepValue !== 'x' && currentStepValue !== 'X';
 };
@@ -62,12 +62,12 @@ const resolvePatternForPlayback = (
     if (temporaryChord) {
         return currentlyActivePattern;
     }
-    
+
     // CASE 2: Added chord from sequence - use its stored pattern
     if (activeChordIndex !== null && addedChords[activeChordIndex]) {
         return addedChords[activeChordIndex].pattern;
     }
-    
+
     // CASE 3: Fallback to currently active pattern
     return currentlyActivePattern;
 };
@@ -214,14 +214,14 @@ function App() {
     useEffect(() => {
         if (globalPatternState.isPlaying) {
             let currentChord = null;
-            
+
             // Use temporary chord if it exists, otherwise use chord from sequence
             if (temporaryChord) {
                 currentChord = temporaryChord;
             } else if (activeChordIndex !== null && addedChords[activeChordIndex]) {
                 currentChord = addedChords[activeChordIndex];
             }
-            
+
             if (currentChord) {
                 const currentPattern = resolvePatternForPlayback(
                     temporaryChord,
@@ -229,21 +229,9 @@ function App() {
                     addedChords,
                     currentlyActivePattern
                 );
-                
+
                 const currentStepIndex = globalPatternState.currentStep % currentPattern.length;
-                
-                // Debug logging for troubleshooting
-                // console.log('Sequencer Debug:', {
-                //     step: globalPatternState.currentStep,
-                //     stepInPattern: currentStepIndex + 1,
-                //     patternLength: currentPattern.length,
-                //     pattern: currentPattern.join('-'),
-                //     chordName: currentChord.name,
-                //     isTemporary: !!temporaryChord,
-                //     activeChordIndex,
-                //     currentlyActivePattern: currentlyActivePattern.join('-')
-                // });
-                
+
                 // Check if we should play at this step
                 if (shouldPlayAtCurrentStep(currentPattern, currentStepIndex)) {
                     // Play the entire chord
@@ -256,11 +244,11 @@ function App() {
             }
         }
     }, [
-        globalPatternState.isPlaying, 
-        globalPatternState.currentStep, 
-        temporaryChord, 
-        activeChordIndex, 
-        addedChords, 
+        globalPatternState.isPlaying,
+        globalPatternState.currentStep,
+        temporaryChord,
+        activeChordIndex,
+        addedChords,
         currentlyActivePattern // Updated dependency
     ]);
 
@@ -297,12 +285,12 @@ function App() {
             // Clear any temporary chord when clicking from bottom nav
             setTemporaryChord(null);
             setActiveChordIndex(chordIndex);
-            
+
             // If sequencer is not playing, play the chord immediately
             if (!globalPatternState.isPlaying) {
                 playNotes(notesWithOctaves as ActiveNoteInfo[]);
             }
-            
+
             // Update highlighted chord for visual feedback
             setHighlightedChordIndex(chordIndex);
             setTimeout(() => setHighlightedChordIndex(null), 150);
@@ -310,9 +298,8 @@ function App() {
             // Clicked from chord table - use as temporary chord for sequencer
             if (chordName) {
                 setTemporaryChord({ name: chordName, notes: chordNoteNames });
-                //; // Clear active chord index since we're using temporary
             }
-            
+
             // If sequencer is not playing, play the chord immediately
             if (!globalPatternState.isPlaying) {
                 playNotes(notesWithOctaves as ActiveNoteInfo[]);
@@ -322,8 +309,8 @@ function App() {
 
     // Capture currently active pattern when adding chords
     const addChordClick = useCallback((chordName: string, chordNotes: string) => {
-        setAddedChords(current => [...current, { 
-            name: chordName, 
+        setAddedChords(current => [...current, {
+            name: chordName,
             notes: chordNotes,
             pattern: [...currentlyActivePattern] // Deep copy currently active pattern
         }]);
@@ -453,7 +440,7 @@ function App() {
             ...prev,
             isPlaying: newIsPlaying,
         }));
-        
+
         // Reset timing when starting
         if (newIsPlaying) {
             globalStepRef.current = 0;
@@ -481,7 +468,7 @@ function App() {
                 ...prev,
                 isPlaying: newIsPlaying,
             }));
-            
+
             // Reset timing when starting
             if (newIsPlaying) {
                 globalStepRef.current = 0;
@@ -565,9 +552,8 @@ function App() {
                 </div>
 
                 {/* Pattern System with smooth animation */}
-                <div className={`w-full transition-all duration-300 ease-in-out overflow-hidden ${
-                    showPatternSystem ? 'opacity-100' : 'max-h-0 opacity-0'
-                }`}>
+                <div className={`w-full transition-all duration-300 ease-in-out overflow-hidden ${showPatternSystem ? 'opacity-100' : 'max-h-0 opacity-0'
+                    }`}>
                     <PatternSystem
                         activeNotes={activeNotes}
                         normalizedScaleNotes={normalizedScaleNotes}
@@ -593,13 +579,13 @@ function App() {
                                 Pattern: {getCurrentPattern().join('-')} |
                                 {globalPatternState.bpm} BPM |
                                 Step {(globalPatternState.currentStep % getCurrentPattern().length) + 1}/{getCurrentPattern().length}
-                                {temporaryChord && 
+                                {temporaryChord &&
                                     <span className="ml-2 text-yellow-300">• {temporaryChord.name} (table chord)</span>
                                 }
-                                {!temporaryChord && activeChordIndex !== null && 
+                                {!temporaryChord && activeChordIndex !== null &&
                                     <span className="ml-2 text-purple-300">• {addedChords[activeChordIndex]?.name} (selected chord)</span>
                                 }
-                                {!temporaryChord && activeChordIndex === null && 
+                                {!temporaryChord && activeChordIndex === null &&
                                     <span className="ml-2 text-cyan-300">• Global pattern</span>
                                 }
                             </div>
@@ -608,34 +594,67 @@ function App() {
                 )}
 
                 {/* Key/Mode Controls */}
-                <div className="flex items-center space-x-4">
-                    <div className="flex items-center">
-                        <TextInput
-                            label="Key"
-                            value={key}
-                            onChange={setKey}
-                        />
-                        <PlayCircleIcon
-                            onClick={playScaleNotes}
-                            height={30}
-                            className={`inline-block ml-2 cursor-pointer transition-colors ${isPlayingScale
-                                    ? 'text-green-400 animate-pulse cursor-not-allowed'
-                                    : 'hover:text-slate-400 active:text-slate-500'
-                                }`}
-                            title={isPlayingScale ? 'Playing scale...' : 'Play scale'}
-                        />
-                    </div>
+                <div className="flex justify-center -mt-2 ">
+                    <div className="bg-[#3d434f] bg-opacity-50 border border-gray-600 rounded-xl px-6 py-4 backdrop-blur-sm w-full max-w-7xl mx-auto px-2">
+                        <div className="inline-grid grid-cols-[auto_1fr] gap-x-4 gap-y-4 items-center">
+                            {/* Key Row */}
+                            <div className="text-right">
+                                <span className="text-sm text-slate-300 font-medium">Key:</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <Dropdown
+                                    value={key}
+                                    className='w-[5rem]'
+                                    buttonClassName='px-3 py-2 text-center font-medium'
+                                    menuClassName='min-w-[5rem]'
+                                    onChange={setKey}
+                                    showSearch={false}
+                                    options={['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']}
+                                />
+                                <button
+                                    onClick={playScaleNotes}
+                                    disabled={isPlayingScale}
+                                    className={`
+                                        flex items-center justify-center w-9 h-9 rounded-lg
+                                        transition-all duration-200 ease-in-out
+                                        ${isPlayingScale
+                                            ? 'bg-green-900 bg-opacity-50 border border-green-700 cursor-not-allowed'
+                                            : 'bg-[#4a5262] border border-gray-500 hover:bg-[#525a6b] hover:border-gray-400 hover:shadow-md active:scale-95'
+                                        }
+                                        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#282c34]
+                                        group
+                                    `}
+                                    title={isPlayingScale ? 'Playing scale...' : 'Play scale'}
+                                >
+                                    <PlayCircleIcon
+                                        className={`w-5 h-5 transition-colors duration-200 ${
+                                            isPlayingScale
+                                                ? 'text-green-400 animate-pulse'
+                                                : 'text-slate-300 group-hover:text-slate-100'
+                                        }`}
+                                    />
+                                </button>
+                            </div>
 
-                    {modes && (
-                        <Dropdown
-                            value={mode}
-                            className='w-auto min-w-[10em]'
-                            menuClassName='min-w-[10em]'
-                            onChange={setMode}
-                            showSearch={true}
-                            options={modes}
-                        />
-                    )}
+                            {/* Mode Row */}
+                            <div className="text-right">
+                                <span className="text-sm text-slate-300 font-medium">Mode:</span>
+                            </div>
+                            <div className="flex items-center">
+                                {modes && (
+                                    <Dropdown
+                                        value={mode}
+                                        className='w-[11rem]'
+                                        buttonClassName='px-3 py-2 text-left font-medium'
+                                        menuClassName='min-w-[11rem]'
+                                        onChange={setMode}
+                                        showSearch={true}
+                                        options={modes}
+                                    />
+                                )}
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Chord Table */}

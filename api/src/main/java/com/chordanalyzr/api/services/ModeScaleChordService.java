@@ -1,10 +1,11 @@
 package com.chordanalyzr.api.services;
 
-import com.chordanalyzr.api.entities.ModeScaleChordRelation;
-import com.chordanalyzr.api.repositories.ModeScaleChordRelationRepository;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import com.chordanalyzr.api.entities.ModeScaleChordRelation;
+import com.chordanalyzr.api.repositories.ModeScaleChordRelationRepository;
 
 @Service
 public class ModeScaleChordService {

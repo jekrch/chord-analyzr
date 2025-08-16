@@ -1,7 +1,8 @@
 package com.chordanalyzr.api.entities.keys;
 
-import jakarta.persistence.Embeddable;
 import java.io.Serializable;
+
+import jakarta.persistence.Embeddable;
 
 @Embeddable
 public class ModeScaleChordRelationKey implements Serializable {

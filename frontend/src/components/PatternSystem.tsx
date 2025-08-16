@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, memo, useCallback } from 'react';
 import { PlayCircleIcon, PauseIcon, ArrowPathIcon, Cog6ToothIcon } from '@heroicons/react/20/solid';
-import { PATTERN_PRESETS, SUBDIVISIONS } from '../util/Pattern';
+import { PATTERN_PRESETS, SUBDIVISIONS, PATTERN_CATEGORIES } from '../util/Pattern';
 import Dropdown from './Dropdown'; 
 import PatternNotationHelpModal from './PatternNotationHelpModal';
 
@@ -35,6 +35,20 @@ interface PatternSystemProps {
     globalClockStartTime: number;
   };
 }
+
+// Helper function to count distinct notes in a pattern
+const countDistinctNotesInPattern = (pattern: string[]): number => {
+  const distinctNotes = new Set(
+    pattern
+      .filter(step => step !== 'x') // Exclude rest steps
+      .map(step => {
+        const noteNum = parseInt(step.replace('+', ''));
+        return isNaN(noteNum) ? null : noteNum;
+      })
+      .filter(noteNum => noteNum !== null)
+  );
+  return distinctNotes.size;
+};
 
 // Memoized Step Editor with updated styling and custom dropdown
 const StepEditor = memo(({ 
@@ -117,7 +131,11 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
   // ========== LOCAL STATE ==========
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [customPattern, setCustomPattern] = useState<string>('1,2,3,4');
-  const [matchChordNoteCount, setMatchChordNoteCount] = useState(false);
+  const [hideFewerNotePatterns, setHideFewerNotePatterns] = useState(false);
+  
+  // New filter states
+  const [selectedStepCount, setSelectedStepCount] = useState<string>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   // ========== PATTERN MANAGEMENT ==========
   
@@ -146,11 +164,8 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
     }
   }, [activeChordIndex, addedChords, globalPatternState.currentPattern]);
 
-  // Calculate maximum notes based on chord definition (NOT currently playing notes)
-  const maxAvailableNotes = useMemo(() => {
-    let chordNoteCount = 4; // Default fallback
-    
-    // Get note count from the actual chord definition, not currently playing notes
+  // Calculate chord note count (number of distinct notes in the chord)
+  const chordNoteCount = useMemo(() => {
     if (activeChordIndex !== null && addedChords[activeChordIndex]) {
       const chord = addedChords[activeChordIndex];
       // Parse the chord notes and count DISTINCT notes (ignoring octave)
@@ -159,26 +174,42 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
         // Remove octave numbers to get just the note name (C4 -> C, Bb3 -> Bb)
         return note.replace(/\d+$/, '');
       }));
-      chordNoteCount = distinctNotes.size;
-    } else {
-      // For global pattern, use a reasonable default
-      chordNoteCount = 4;
+      return distinctNotes.size;
     }
-    
-    if (matchChordNoteCount) {
-      // When matching chord note count, use exactly the number of distinct notes in the chord
-      return Math.max(1, chordNoteCount);
-    } else {
-      // When not matching, allow up to the chord's note count (never exceed it)
-      // But maintain a minimum of 4 for usability, unless the chord has fewer notes
-      const minNotes = Math.min(4, chordNoteCount);
-      return Math.max(minNotes, chordNoteCount);
-    }
-  }, [activeChordIndex, addedChords, matchChordNoteCount]); // NO activeNotes dependency
+    // For global pattern, use a reasonable default
+    return 4;
+  }, [activeChordIndex, addedChords]);
 
-  // Filter pattern presets based on available notes - completely stable
+  // Calculate maximum notes based on chord definition
+  const maxAvailableNotes = useMemo(() => {
+    // Always allow access up to the chord's note count
+    // But maintain a minimum of 4 for usability, unless the chord has fewer notes
+    const minNotes = Math.min(4, chordNoteCount);
+    return Math.max(minNotes, chordNoteCount);
+  }, [chordNoteCount]);
+
+  // Get unique step counts for filter options
+  const availableStepCounts = useMemo(() => {
+    const stepCounts = new Set(PATTERN_PRESETS.map(preset => preset.pattern.length));
+    return Array.from(stepCounts).sort((a, b) => a - b);
+  }, []);
+
+  // Filter pattern presets based on all constraints
   const filteredPresets = useMemo(() => {
     return PATTERN_PRESETS.filter(preset => {
+      const distinctNotesInPattern = countDistinctNotesInPattern(preset.pattern);
+      
+      // Always exclude patterns that use more distinct notes than the chord has
+      if (distinctNotesInPattern > chordNoteCount) {
+        return false;
+      }
+      
+      // If checkbox is checked, also exclude patterns with fewer distinct notes
+      if (hideFewerNotePatterns && distinctNotesInPattern < chordNoteCount) {
+        return false;
+      }
+      
+      // Also check that the maximum note number doesn't exceed available notes
       const maxNoteInPattern = Math.max(
         ...preset.pattern
           .filter(step => step !== 'x') // Exclude rest steps
@@ -187,9 +218,24 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
             return isNaN(noteNum) ? 0 : noteNum;
           })
       );
-      return maxNoteInPattern <= maxAvailableNotes;
+      
+      if (maxNoteInPattern > maxAvailableNotes) {
+        return false;
+      }
+
+      // Filter by step count
+      if (selectedStepCount !== 'all' && preset.pattern.length !== parseInt(selectedStepCount)) {
+        return false;
+      }
+
+      // Filter by category
+      if (selectedCategory !== 'all' && preset.category !== selectedCategory) {
+        return false;
+      }
+      
+      return true;
     });
-  }, [maxAvailableNotes]); // Single stable dependency
+  }, [chordNoteCount, hideFewerNotePatterns, maxAvailableNotes, selectedStepCount, selectedCategory]);
 
   // Update custom pattern input when current pattern changes
   useEffect(() => {
@@ -268,6 +314,10 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
   // Subdivision options for dropdown
   const subdivisionOptions = SUBDIVISIONS.map(sub => `${sub.symbol} ${sub.name}`);
   const currentSubdivisionDisplay = SUBDIVISIONS.find(sub => sub.value === globalPatternState.subdivision)?.symbol + ' ' + SUBDIVISIONS.find(sub => sub.value === globalPatternState.subdivision)?.name || '';
+
+  // Filter options
+  const stepCountOptions = ['All Steps', ...availableStepCounts.map(count => `${count} Steps`)];
+  const categoryOptions = ['All Categories', 'Basic', 'Rhythmic', 'Advanced', 'Genre'];
 
   // ========== RENDER ==========
 
@@ -526,47 +576,80 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
 
                 {/* Pattern Constraints */}
                 <div>
-                  <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Pattern Constraints</label>
+                  <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Pattern Presets</label>
                   <label className="flex items-center space-x-2 cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={matchChordNoteCount}
-                      onChange={(e) => setMatchChordNoteCount(e.target.checked)}
+                      checked={hideFewerNotePatterns}
+                      onChange={(e) => setHideFewerNotePatterns(e.target.checked)}
                       className="w-3 h-3 rounded border-gray-600 bg-[#3d434f] text-blue-600 focus:ring-blue-500 focus:ring-1"
                     />
-                    <span className="text-xs text-slate-200">Match chord note count</span>
+                    <span className="text-xs text-slate-200">Hide patterns with fewer notes</span>
                   </label>
                 </div>
               </div>
 
               {/* Pattern Presets */}
               <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Presets</label>
+                {/* Compact Filter Controls */}
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Dropdown
+                    value={stepCountOptions[selectedStepCount === 'all' ? 0 : stepCountOptions.findIndex(opt => opt === `${selectedStepCount} Steps`)]}
+                    onChange={(value) => {
+                      if (value === 'All Steps') {
+                        setSelectedStepCount('all');
+                      } else {
+                        const stepCount = value.replace(' Steps', '');
+                        setSelectedStepCount(stepCount);
+                      }
+                    }}
+                    options={stepCountOptions}
+                    className="flex-1"
+                    buttonClassName="w-full p-2 bg-[#3d434f] border border-gray-600 rounded text-slate-200 text-xs transition-colors hover:bg-[#4a5262]"
+                  />
+                  <Dropdown
+                    value={categoryOptions[selectedCategory === 'all' ? 0 : categoryOptions.findIndex(opt => opt.toLowerCase() === selectedCategory)]}
+                    onChange={(value) => {
+                      if (value === 'All Categories') {
+                        setSelectedCategory('all');
+                      } else {
+                        setSelectedCategory(value.toLowerCase());
+                      }
+                    }}
+                    options={categoryOptions}
+                    className="flex-1"
+                    buttonClassName="w-full p-2 bg-[#3d434f] border border-gray-600 rounded text-slate-200 text-xs transition-colors hover:bg-[#4a5262]"
+                  />
                 </div>
+
                 <div className="grid grid-cols-1 gap-2 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
                   {filteredPresets.length > 0 ? (
-                    filteredPresets.map((preset, index) => (
-                      <button
-                        key={index}
-                        onClick={() => applyPreset(preset)}
-                        className="p-3 rounded text-xs font-medium transition-colors text-left bg-[#3d434f] text-slate-300 hover:bg-[#4a5262] hover:text-slate-200 border border-gray-600 hover:border-gray-500"
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-medium uppercase tracking-wide">{preset.name}</span>
-                          <span>{preset.icon}</span>
-                        </div>
-                        <div className="text-xs opacity-75 font-mono text-slate-400">
-                          {preset.pattern.join('-')}
-                        </div>
-                        <div className="text-xs opacity-60 text-slate-500 mt-1">
-                          {preset.desc}
-                        </div>
-                      </button>
-                    ))
+                    filteredPresets.map((preset, index) => {
+                      const distinctNotes = countDistinctNotesInPattern(preset.pattern);
+                      return (
+                        <button
+                          key={index}
+                          onClick={() => applyPreset(preset)}
+                          className="p-2 rounded text-xs transition-colors text-left bg-[#3d434f] text-slate-300 hover:bg-[#4a5262] hover:text-slate-200 border border-gray-600 hover:border-gray-500"
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-medium uppercase tracking-wide">{preset.name}</span>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-xs text-slate-500">
+                                {distinctNotes}n • {preset.pattern.length}s
+                              </span>
+                              <span>{preset.icon}</span>
+                            </div>
+                          </div>
+                          <div className="text-xs opacity-60 text-slate-500">
+                            {preset.desc}
+                          </div>
+                        </button>
+                      );
+                    })
                   ) : (
                     <div className="p-3 text-xs text-slate-400 text-center">
-                      No presets available for {maxAvailableNotes} note{maxAvailableNotes !== 1 ? 's' : ''}
+                      No patterns found matching current filters
                     </div>
                   )}
                 </div>

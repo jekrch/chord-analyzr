@@ -110,63 +110,65 @@ class PianoConfig extends Component<PianoConfigProps, PianoConfigState> {
         });
     };
 
-    render() {
-        const { noteRange, instrumentName } = this.props.config;
+render() {
+    const { noteRange, instrumentName } = this.props.config;
 
-        return (
-            <div>
-                {/* Row 1: Centered dropdown and cog button */}
-                <div className="flex justify-center items-end">
-                    <div className="mr-2">
-                        <div className="flex items-center space-x-2">
-                            <InputLabel
-                                value={'voice'}
-                            />
+    return (
+        <div>
+            {/* Row 1: Centered dropdown and cog button */}
+            <div className="flex justify-center">
+                <div className="inline-flex items-baseline gap-2">
+                    <div className="inline-block align-top">
+                        <InputLabel
+                            value={'voice'}
+                        />
+                    </div>
 
-                            <Dropdown
-                                className="form-control mt-1"
-                                value={this.props.config.instrumentName.replaceAll('_', ' ') || instrumentName.replaceAll('_', ' ')}
-                                onChange={this.onChangeInstrument}
-                                options={this.props.instrumentList.map((name) => name.replaceAll('_', ' '))}
-                                showSearch={true}
-                            />
-                            <div className="mt-[0.2em]">
-                            <button
-                                onClick={() => this.setState({ settingsOpen: !this.state.settingsOpen })}
-                                className={`w-10 h-10 flex items-center justify-center rounded-lg border transition-all duration-200 ${this.state.settingsOpen
-                                        ? 'bg-[#4a5262] border-gray-600 text-slate-200'
-                                        : 'bg-[#3d434f] border-gray-600 text-slate-400 hover:bg-[#4a5262] hover:border-gray-500 hover:text-slate-200'
-                                    }`}
-                                aria-label="Sound Settings"
-                                aria-expanded={this.state.settingsOpen}
-                            >
-                                <Cog6ToothIcon className="w-4 h-4" />
-                            </button>
-                                            </div>
-
-                        </div>
+                    <div className="inline-block align-top">
+                        <Dropdown
+                            className="form-control h-10"
+                            value={this.props.config.instrumentName.replaceAll('_', ' ') || instrumentName.replaceAll('_', ' ')}
+                            onChange={this.onChangeInstrument}
+                            options={this.props.instrumentList.map((name) => name.replaceAll('_', ' '))}
+                            showSearch={true}
+                        />
+                    </div>
+                    
+                    <div className="inline-block align-top mt-0.5">
+                        <button
+                            onClick={() => this.setState({ settingsOpen: !this.state.settingsOpen })}
+                            className={`inline-flex justify-center items-center gap-x-2 rounded-lg bg-[#3d434f] px-4 text-sm font-medium h-10 py-[0.9em] text-slate-200 shadow-sm ring-1 ring-inset ring-gray-600 hover:bg-[#4a5262] hover:ring-gray-500 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#3d434f] transition-all duration-200 ease-in-out group ${this.state.settingsOpen
+                                    ? '!bg-[#4a5262] !ring-gray-600'
+                                    : ''
+                                }`}
+                            aria-label="Sound Settings"
+                            aria-expanded={this.state.settingsOpen}
+                        >
+                            <Cog6ToothIcon className="h-4 w-4 mb-[0.0em] -mt-[0.2em] text-slate-400 group-hover:text-slate-300 transition-colors duration-200 flex-shrink-0" />
+                        </button>
                     </div>
                 </div>
-
-                {/* Row 2: Centered settings panel */}
-                <div className="flexx justify-center">
-                    <PianoSettings
-                        isOpen={this.state.settingsOpen}
-                        cutOffPreviousNotes={this.props.cutOffPreviousNotes}
-                        setCutOffPreviousNotes={this.props.setCutOffPreviousNotes}
-                        eq={this.props.eq}
-                        setEq={this.props.setEq}
-                        octaveOffset={this.props.octaveOffset}
-                        setOctaveOffset={this.props.setOctaveOffset}
-                        reverbLevel={this.props.reverbLevel}
-                        setReverbLevel={this.props.setReverbLevel}
-                        noteDuration={this.props.noteDuration}
-                        setNoteDuration={this.props.setNoteDuration}
-                    />
-                </div>
             </div>
-        );
-    }
+
+            {/* Row 2: Centered settings panel */}
+            <div className="flex justify-center">
+                <PianoSettings
+                    isOpen={this.state.settingsOpen}
+                    cutOffPreviousNotes={this.props.cutOffPreviousNotes}
+                    setCutOffPreviousNotes={this.props.setCutOffPreviousNotes}
+                    eq={this.props.eq}
+                    setEq={this.props.setEq}
+                    octaveOffset={this.props.octaveOffset}
+                    setOctaveOffset={this.props.setOctaveOffset}
+                    reverbLevel={this.props.reverbLevel}
+                    setReverbLevel={this.props.setReverbLevel}
+                    noteDuration={this.props.noteDuration}
+                    setNoteDuration={this.props.setNoteDuration}
+                />
+            </div>
+        </div>
+    );
+}
 }
 
 export default PianoConfig;

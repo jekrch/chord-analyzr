@@ -6,24 +6,19 @@ import PianoConfig from '../../piano/PianoConfig';
 import { SoundfontProvider } from '../../piano/SoundfontProvider';
 import { normalizeNoteName } from '../../util/NoteUtil';
 
-// --- FIX ---
+
 // Create the AudioContext ONCE, outside the component.
 // This ensures the same instance is reused across re-renders and prevents exceeding the browser limit.
 const audioContext = typeof window !== 'undefined' ? new (window.AudioContext || (window as any).webkitAudioContext)() : null;
-
-interface ChordPattern {
-  pattern: string[];
-  enabled: boolean;
-}
 
 interface PianoProps {
   activeNotes: { note: string; octave?: number }[];
   normalizedScaleNotes: string[];
   activeChordIndex: number | null;
-  addedChords: { name: string; notes: string }[];
+  addedChords: { name: string; notes: string; pattern: string[] }[]; 
+  currentlyActivePattern: string[]; 
   globalPatternState: {
-    defaultPattern: string[];
-    chordPatterns: { [chordIndex: number]: ChordPattern };
+    currentPattern: string[]; 
     isPlaying: boolean;
     bpm: number;
     subdivision: number;
@@ -34,8 +29,7 @@ interface PianoProps {
     globalClockStartTime: number;
   };
   onPatternStateChange: (updates: Partial<{
-    defaultPattern: string[];
-    chordPatterns: { [chordIndex: number]: ChordPattern };
+    currentPattern: string[];
     isPlaying: boolean;
     bpm: number;
     subdivision: number;
@@ -61,6 +55,7 @@ const PianoControl: React.FC<PianoProps> = ({
   normalizedScaleNotes,
   activeChordIndex,
   addedChords,
+  currentlyActivePattern,
   globalPatternState,
   onPatternStateChange
 }) => {
@@ -189,13 +184,14 @@ const PianoControl: React.FC<PianoProps> = ({
     };
   }, [activeNotes, globalPatternState.isPlaying]);
 
-  // Get current active pattern (default or chord-specific)
+  // Get current active pattern (uses the same logic as App)
   const getCurrentPattern = useCallback(() => {
-    if (activeChordIndex !== null && globalPatternState.chordPatterns[activeChordIndex]?.enabled) {
-      return globalPatternState.chordPatterns[activeChordIndex].pattern;
+    // If a chord is selected, use its pattern; otherwise use currently active pattern
+    if (activeChordIndex !== null && addedChords[activeChordIndex]) {
+      return addedChords[activeChordIndex].pattern;
     }
-    return globalPatternState.defaultPattern;
-  }, [activeChordIndex, globalPatternState.chordPatterns, globalPatternState.defaultPattern]);
+    return currentlyActivePattern;
+  }, [activeChordIndex, addedChords, currentlyActivePattern]);
 
   // Parse pattern step (handle rests and octave notation)
   const parsePatternStep = useCallback((step: string, noteCount: number) => {
@@ -226,7 +222,7 @@ const PianoControl: React.FC<PianoProps> = ({
     
     if (globalPatternState.isPlaying && 
         activeNotes.length > 0 && 
-        currentPattern.length > 0 &&
+        currentPattern?.length > 0 &&  // Added optional chaining
         globalPatternState.currentStep !== lastStepRef.current) {
       
       lastStepRef.current = globalPatternState.currentStep;

@@ -17,11 +17,11 @@ import './App.css';
 const START_OCTAVE = 4;
 const END_OCTAVE = 7;
 
-// Types
+// types
 interface AddedChord {
     name: string;
     notes: string;
-    creationPattern: string[]; // Pattern when the chord was first added - IMMUTABLE
+    pattern: string[]; // The pattern this chord was created with (editable)
 }
 
 export interface ActiveNoteInfo {
@@ -29,14 +29,8 @@ export interface ActiveNoteInfo {
     octave: number;
 }
 
-interface ChordPattern {
-    pattern: string[];
-    enabled: boolean;
-}
-
 interface GlobalPatternState {
-    defaultPattern: string[]; // Used for table chords and as template for new chords
-    chordPatterns: { [chordIndex: number]: ChordPattern }; // Custom overrides for specific chords
+    currentPattern: string[]; // The pattern currently active (used for table chords and new chord creation)
     isPlaying: boolean;
     bpm: number;
     subdivision: number;
@@ -57,34 +51,25 @@ const shouldPlayAtCurrentStep = (pattern: string[], stepIndex: number): boolean 
     return currentStepValue !== 'x' && currentStepValue !== 'X';
 };
 
-// FIXED: Explicit pattern resolution function to avoid closure issues
+
 const resolvePatternForPlayback = (
     temporaryChord: { name: string; notes: string } | null,
     activeChordIndex: number | null,
     addedChords: AddedChord[],
-    chordPatterns: { [chordIndex: number]: ChordPattern },
-    defaultPattern: string[]
+    currentlyActivePattern: string[]
 ): string[] => {
-    // CASE 1: Table chord (temporary) - ALWAYS use default pattern
+    // CASE 1: Table chord (temporary) - use currently active pattern
     if (temporaryChord) {
-        return defaultPattern;
+        return currentlyActivePattern;
     }
     
-    // CASE 2: Sequence chord (bottom nav)
+    // CASE 2: Added chord from sequence - use its stored pattern
     if (activeChordIndex !== null && addedChords[activeChordIndex]) {
-        const chord = addedChords[activeChordIndex];
-        
-        // Check for custom override first
-        if (chordPatterns[activeChordIndex]?.enabled) {
-            return chordPatterns[activeChordIndex].pattern;
-        }
-        
-        // Use the chord's IMMUTABLE creation pattern
-        return chord.creationPattern;
+        return addedChords[activeChordIndex].pattern;
     }
     
-    // CASE 3: Fallback
-    return defaultPattern;
+    // CASE 3: Fallback to currently active pattern
+    return currentlyActivePattern;
 };
 
 function App() {
@@ -112,8 +97,7 @@ function App() {
 
     // Pattern sequencer state
     const [globalPatternState, setGlobalPatternState] = useState<GlobalPatternState>({
-        defaultPattern: ['1', '2', '3', '4'],
-        chordPatterns: {},
+        currentPattern: ['1', '2', '3', '4'], // Just one pattern - the current one
         isPlaying: false,
         bpm: 120,
         subdivision: 0.25, // 16th notes by default
@@ -123,6 +107,9 @@ function App() {
         lastChordChangeTime: 0,
         globalClockStartTime: 0,
     });
+
+    // Track the currently active pattern separately from chord selection
+    const [currentlyActivePattern, setCurrentlyActivePattern] = useState<string[]>(['1', '2', '3', '4']);
 
     // Temporary chord state for sequencer
     const [temporaryChord, setTemporaryChord] = useState<{ name: string; notes: string } | null>(null);
@@ -146,16 +133,15 @@ function App() {
         return isOffBeat ? stepDuration * swingRatio : stepDuration / swingRatio;
     }, [stepDuration, globalPatternState.swing]);
 
-    // FIXED: Use explicit pattern resolution for UI display
+    // Use pattern resolution for UI display
     const getCurrentPattern = useCallback(() => {
         return resolvePatternForPlayback(
             temporaryChord,
             activeChordIndex,
             addedChords,
-            globalPatternState.chordPatterns,
-            globalPatternState.defaultPattern
+            currentlyActivePattern
         );
-    }, [temporaryChord, activeChordIndex, addedChords, globalPatternState.chordPatterns, globalPatternState.defaultPattern]);
+    }, [temporaryChord, activeChordIndex, addedChords, currentlyActivePattern]);
 
     // Steady global clock - NEVER resets when changing chords
     useEffect(() => {
@@ -213,7 +199,18 @@ function App() {
         };
     }, [globalPatternState.isPlaying, stepDuration]);
 
-    // FIXED: Keep activeNotes in sync with sequencer using explicit pattern resolution
+    // Update currently active pattern when chord selection or global pattern changes
+    useEffect(() => {
+        if (activeChordIndex !== null && addedChords[activeChordIndex]) {
+            // Use the selected chord's pattern
+            setCurrentlyActivePattern([...addedChords[activeChordIndex].pattern]);
+        } else {
+            // Use the global current pattern
+            setCurrentlyActivePattern([...globalPatternState.currentPattern]);
+        }
+    }, [activeChordIndex, addedChords, globalPatternState.currentPattern]);
+
+    // Keep activeNotes in sync with sequencer using pattern resolution
     useEffect(() => {
         if (globalPatternState.isPlaying) {
             let currentChord = null;
@@ -226,29 +223,26 @@ function App() {
             }
             
             if (currentChord) {
-                // FIXED: Use explicit pattern resolution to avoid state timing issues
                 const currentPattern = resolvePatternForPlayback(
                     temporaryChord,
                     activeChordIndex,
                     addedChords,
-                    globalPatternState.chordPatterns,
-                    globalPatternState.defaultPattern
+                    currentlyActivePattern
                 );
                 
                 const currentStepIndex = globalPatternState.currentStep % currentPattern.length;
                 
                 // Debug logging for troubleshooting
-                console.log('Sequencer Debug:', {
-                    step: globalPatternState.currentStep,
-                    stepInPattern: currentStepIndex + 1,
-                    patternLength: currentPattern.length,
-                    pattern: currentPattern.join('-'),
-                    chordName: currentChord.name,
-                    isTemporary: !!temporaryChord,
-                    activeChordIndex,
-                    hasCustomOverride: activeChordIndex !== null && globalPatternState.chordPatterns[activeChordIndex]?.enabled,
-                    chordCreationPattern: activeChordIndex !== null && addedChords[activeChordIndex] ? addedChords[activeChordIndex].creationPattern.join('-') : 'N/A'
-                });
+                // console.log('Sequencer Debug:', {
+                //     step: globalPatternState.currentStep,
+                //     stepInPattern: currentStepIndex + 1,
+                //     patternLength: currentPattern.length,
+                //     pattern: currentPattern.join('-'),
+                //     chordName: currentChord.name,
+                //     isTemporary: !!temporaryChord,
+                //     activeChordIndex,
+                //     currentlyActivePattern: currentlyActivePattern.join('-')
+                // });
                 
                 // Check if we should play at this step
                 if (shouldPlayAtCurrentStep(currentPattern, currentStepIndex)) {
@@ -267,8 +261,7 @@ function App() {
         temporaryChord, 
         activeChordIndex, 
         addedChords, 
-        globalPatternState.chordPatterns, 
-        globalPatternState.defaultPattern
+        currentlyActivePattern // Updated dependency
     ]);
 
     // ========== COMPUTED VALUES ==========
@@ -317,7 +310,7 @@ function App() {
             // Clicked from chord table - use as temporary chord for sequencer
             if (chordName) {
                 setTemporaryChord({ name: chordName, notes: chordNoteNames });
-                setActiveChordIndex(null); // Clear active chord index since we're using temporary
+                //; // Clear active chord index since we're using temporary
             }
             
             // If sequencer is not playing, play the chord immediately
@@ -327,14 +320,14 @@ function App() {
         }
     }, [playNotes, globalPatternState.isPlaying, isDeleteMode]);
 
-    // FIXED: Capture pattern with deep copy to prevent reference issues
+    // Capture currently active pattern when adding chords
     const addChordClick = useCallback((chordName: string, chordNotes: string) => {
         setAddedChords(current => [...current, { 
             name: chordName, 
             notes: chordNotes,
-            creationPattern: JSON.parse(JSON.stringify(globalPatternState.defaultPattern)) // Deep copy to prevent reference issues
+            pattern: [...currentlyActivePattern] // Deep copy currently active pattern
         }]);
-    }, [globalPatternState.defaultPattern]);
+    }, [currentlyActivePattern]);
 
     const removeChord = useCallback((indexToRemove: number) => {
         setAddedChords(current => {
@@ -346,40 +339,29 @@ function App() {
             return newChords;
         });
 
-        // Clean up chord patterns when chord is removed
-        const newChordPatterns = { ...globalPatternState.chordPatterns };
-        delete newChordPatterns[indexToRemove];
-
-        // Reindex remaining patterns
-        const reindexedPatterns: { [key: number]: ChordPattern } = {};
-        Object.entries(newChordPatterns).forEach(([key, value]) => {
-            const oldIndex = parseInt(key);
-            if (oldIndex > indexToRemove) {
-                reindexedPatterns[oldIndex - 1] = value;
-            } else {
-                reindexedPatterns[oldIndex] = value;
-            }
-        });
-
-        setGlobalPatternState(prev => ({
-            ...prev,
-            chordPatterns: reindexedPatterns
-        }));
-
         // Reset active chord if it was removed
         if (activeChordIndex === indexToRemove) {
             setActiveChordIndex(null);
         } else if (activeChordIndex !== null && activeChordIndex > indexToRemove) {
             setActiveChordIndex(activeChordIndex - 1);
         }
-    }, [globalPatternState.chordPatterns, activeChordIndex, isLiveMode]);
+    }, [activeChordIndex, isLiveMode]);
 
     const clearAllChords = useCallback(() => {
         setAddedChords([]);
-        setGlobalPatternState(prev => ({ ...prev, chordPatterns: {}, isPlaying: false }));
+        setGlobalPatternState(prev => ({ ...prev, isPlaying: false }));
         setActiveChordIndex(null);
         setTemporaryChord(null);
-        setIsLiveMode(false); // Exit expanded mode when clearing all chords
+        setIsLiveMode(false);
+    }, []);
+
+    // Callback to update individual chord patterns
+    const updateChordPattern = useCallback((chordIndex: number, newPattern: string[]) => {
+        setAddedChords(current => {
+            const updated = [...current];
+            updated[chordIndex] = { ...updated[chordIndex], pattern: [...newPattern] };
+            return updated;
+        });
     }, []);
 
     const playScaleNotes = useCallback(() => {
@@ -574,10 +556,11 @@ function App() {
                     <PianoControl
                         activeNotes={activeNotes}
                         normalizedScaleNotes={normalizedScaleNotes}
-                        globalPatternState={globalPatternState as any}
+                        globalPatternState={globalPatternState}
                         onPatternStateChange={handlePatternChange}
                         activeChordIndex={activeChordIndex}
                         addedChords={addedChords}
+                        currentlyActivePattern={currentlyActivePattern}
                     />
                 </div>
 
@@ -591,7 +574,9 @@ function App() {
                         addedChords={addedChords}
                         activeChordIndex={activeChordIndex}
                         onPatternChange={handlePatternChange}
+                        onUpdateChordPattern={updateChordPattern}
                         globalPatternState={globalPatternState}
+                        currentlyActivePattern={currentlyActivePattern}
                         getCurrentPattern={getCurrentPattern}
                     />
                 </div>
@@ -609,13 +594,13 @@ function App() {
                                 {globalPatternState.bpm} BPM |
                                 Step {(globalPatternState.currentStep % getCurrentPattern().length) + 1}/{getCurrentPattern().length}
                                 {temporaryChord && 
-                                    <span className="ml-2 text-yellow-300">• {temporaryChord.name} (table→default)</span>
+                                    <span className="ml-2 text-yellow-300">• {temporaryChord.name} (table chord)</span>
                                 }
-                                {!temporaryChord && activeChordIndex !== null && globalPatternState.chordPatterns[activeChordIndex]?.enabled && 
-                                    <span className="ml-2 text-purple-300">• {addedChords[activeChordIndex]?.name} (custom)</span>
+                                {!temporaryChord && activeChordIndex !== null && 
+                                    <span className="ml-2 text-purple-300">• {addedChords[activeChordIndex]?.name} (selected chord)</span>
                                 }
-                                {!temporaryChord && activeChordIndex !== null && !globalPatternState.chordPatterns[activeChordIndex]?.enabled &&
-                                    <span className="ml-2 text-cyan-300">• {addedChords[activeChordIndex]?.name} (creation)</span>
+                                {!temporaryChord && activeChordIndex === null && 
+                                    <span className="ml-2 text-cyan-300">• Global pattern</span>
                                 }
                             </div>
                         </div>

@@ -5,11 +5,19 @@ import classNames from 'classnames';
 interface AddedChord {
     name: string;
     notes: string;
+    pattern: string[]; 
 }
 
 interface GlobalPatternState {
-    chordPatterns: { [chordIndex: number]: { enabled: boolean } };
+    currentPattern: string[]; 
     isPlaying: boolean;
+    bpm: number;
+    subdivision: number;
+    swing: number;
+    currentStep: number;
+    repeat: boolean;
+    lastChordChangeTime: number;
+    globalClockStartTime: number;
 }
 
 interface ChordNavigationProps {
@@ -134,10 +142,8 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                     <div className="text-center text-gray-400 text-sm mb-4">
                         <div>Use 1-{Math.min(addedChords.length, 9)} or click chords</div>
                         <div className="text-xs mt-1">
-                            <span className="inline-block w-3 h-3 bg-yellow-400 rounded-full mr-1"></span>
-                            Custom • 
-                            <span className="inline-block w-3 h-3 bg-cyan-500 rounded-full mx-1"></span>
-                            Active
+                            <span className="inline-block w-3 h-3 bg-cyan-500 rounded-full mr-1"></span>
+                            Active Chord
                         </div>
                     </div>
                 )}
@@ -151,7 +157,6 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                         : "flex space-x-2 overflow-x-auto pb-2 chord-sequence-scroll"
                 }>
                     {addedChords.map((chord, index) => {
-                        const hasCustomPattern = globalPatternState.chordPatterns[index]?.enabled;
                         const isActive = index === activeChordIndex;
                         const isHighlighted = index === highlightedChordIndex;
 
@@ -167,25 +172,21 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                                         'flex-shrink-0 py-3 px-4 text-sm min-w-[85px] bottom-nav-button chord-button m-2': !isLiveMode,
                                         // Active state
                                         'bg-cyan-500 shadow-lg text-white ring-2 ring-cyan-300': isActive && !isDeleteMode,
-                                        // Inactive states
-                                        'bg-cyan-700 hover:bg-cyan-600 text-white': !isActive && !isDeleteMode && !hasCustomPattern,
-                                        'bg-purple-700 hover:bg-purple-600 text-white': !isActive && !isDeleteMode && hasCustomPattern,
+                                        // Inactive state
+                                        'bg-cyan-700 hover:bg-cyan-600 text-white': !isActive && !isDeleteMode,
                                         // Delete mode
                                         'bg-red-700 hover:bg-red-600 text-white shadow-md': isDeleteMode,
                                         // Highlight effect
                                         'transform': isHighlighted,
                                         // Live mode hover effects
-                                        '': isLiveMode && !isDeleteMode,
                                         'shadow-xl': isLiveMode,
                                     }
                                 )}
                                 onClick={() => onChordClick(chord.notes, index)}
+                                title={`Pattern: ${chord.pattern.join('-')}`}
                             >
                                 {isDeleteMode && (
                                     <XCircleIcon className={`absolute top-1 right-1 h-4 w-4 text-white bg-red-500 rounded-full shadow-sm ${isLiveMode ? 'h-6 w-6' : ''}`} />
-                                )}
-                                {hasCustomPattern && !isDeleteMode && (
-                                    <div className={`absolute top-1 right-1 bg-yellow-400 rounded-full shadow-sm ${isLiveMode ? 'w-4 h-4' : 'w-2.5 h-2.5'}`}></div>
                                 )}
                                 
                                 <div className={`text-cyan-200 font-bold ${isLiveMode ? 'text-xl mb-2' : 'text-xs mb-1'}`}>
@@ -196,9 +197,14 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                                 </div>
                                 
                                 {isLiveMode && (
-                                    <div className="text-xs text-gray-400 mt-1 text-center">
-                                        {chord.notes.replace(/,/g, ' • ')}
-                                    </div>
+                                    <>
+                                        <div className="text-xs text-gray-400 mt-1 text-center">
+                                            {chord.notes.replace(/,/g, ' • ')}
+                                        </div>
+                                        <div className="text-xs text-gray-500 mt-1 text-center font-mono">
+                                            {chord.pattern.join('-')}
+                                        </div>
+                                    </>
                                 )}
                             </button>
                         );

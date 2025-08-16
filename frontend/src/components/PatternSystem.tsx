@@ -1,22 +1,17 @@
 import React, { useState, useMemo, useEffect, memo, useCallback } from 'react';
 import { PlayCircleIcon, PauseIcon, ArrowPathIcon, Cog6ToothIcon } from '@heroicons/react/20/solid';
 import { PATTERN_PRESETS, SUBDIVISIONS } from '../util/Pattern';
-import Dropdown from './Dropdown'; // Import the custom dropdown
-
-interface ChordPattern {
-  pattern: string[];
-  enabled: boolean;
-}
+import Dropdown from './Dropdown'; 
 
 interface PatternSystemProps {
   activeNotes: { note: string; octave?: number }[];
   normalizedScaleNotes: string[];
-  addedChords: { name: string; notes: string; creationPattern: string[] }[];
+  addedChords: { name: string; notes: string; pattern: string[] }[]; 
   activeChordIndex: number | null;
+  currentlyActivePattern: string[]; 
   getCurrentPattern: () => string[];
   onPatternChange?: (newPatternState: Partial<{
-    defaultPattern: string[];
-    chordPatterns: { [chordIndex: number]: ChordPattern };
+    currentPattern: string[]; 
     bpm: number;
     subdivision: number;
     isPlaying: boolean;
@@ -26,9 +21,9 @@ interface PatternSystemProps {
     lastChordChangeTime: number;
     globalClockStartTime: number;
   }>) => void;
+  onUpdateChordPattern?: (chordIndex: number, newPattern: string[]) => void; // callback to update chord patterns
   globalPatternState: {
-    defaultPattern: string[];
-    chordPatterns: { [chordIndex: number]: ChordPattern };
+    currentPattern: string[]; 
     bpm: number;
     subdivision: number;
     isPlaying: boolean;
@@ -96,7 +91,9 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
   activeNotes,
   addedChords,
   activeChordIndex,
+  currentlyActivePattern,
   onPatternChange,
+  onUpdateChordPattern,
   globalPatternState
 }) => {
   // ========== LOCAL STATE ==========
@@ -105,48 +102,30 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
 
   // ========== PATTERN MANAGEMENT ==========
   
-  // Determine which pattern to show and edit with clear isolation
   const { currentPattern, editingContext } = useMemo(() => {
     if (activeChordIndex !== null && addedChords[activeChordIndex]) {
       const chord = addedChords[activeChordIndex];
-      const hasCustomOverride = globalPatternState.chordPatterns[activeChordIndex]?.enabled;
-      
-      if (hasCustomOverride) {
-        return {
-          currentPattern: globalPatternState.chordPatterns[activeChordIndex].pattern,
-          editingContext: {
-            type: 'custom' as const,
-            title: `Custom Pattern: "${chord.name}"`,
-            description: `Overriding creation pattern (${chord.creationPattern.join('-')})`,
-            chordName: chord.name,
-            canReset: true
-          }
-        };
-      } else {
-        return {
-          currentPattern: chord.creationPattern,
-          editingContext: {
-            type: 'creation' as const,
-            title: `Creation Pattern for "${chord.name}"`,
-            description: `Pattern from when this chord was added`,
-            chordName: chord.name,
-            canReset: false
-          }
-        };
-      }
+      return {
+        currentPattern: chord.pattern,
+        editingContext: {
+          type: 'chord' as const,
+          title: `Pattern for "${chord.name}"`,
+          description: `Editing pattern for this specific chord`,
+          chordName: chord.name
+        }
+      };
     } else {
       return {
-        currentPattern: globalPatternState.defaultPattern,
+        currentPattern: globalPatternState.currentPattern,
         editingContext: {
-          type: 'default' as const,
-          title: 'Default Pattern',
-          description: '',
-          chordName: null,
-          canReset: false
+          type: 'current' as const,
+          title: 'Global Pattern',
+          description: 'Base pattern - becomes active when no chord is selected',
+          chordName: null
         }
       };
     }
-  }, [activeChordIndex, addedChords, globalPatternState.chordPatterns, globalPatternState.defaultPattern]);
+  }, [activeChordIndex, addedChords, globalPatternState.currentPattern]);
 
   // Update custom pattern input when current pattern changes
   useEffect(() => {
@@ -172,24 +151,14 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
   }, [onPatternChange]);
 
   const updateCurrentPattern = useCallback((newPattern: string[]) => {
-    if (editingContext.type === 'default') {
-      onPatternChange?.({ defaultPattern: newPattern });
-    } else if (editingContext.type === 'creation') {
-      const newChordPatterns = { ...globalPatternState.chordPatterns };
-      newChordPatterns[activeChordIndex!] = { 
-        pattern: newPattern, 
-        enabled: true 
-      };
-      onPatternChange?.({ chordPatterns: newChordPatterns });
-    } else if (editingContext.type === 'custom') {
-      const newChordPatterns = { ...globalPatternState.chordPatterns };
-      newChordPatterns[activeChordIndex!] = { 
-        pattern: newPattern, 
-        enabled: true 
-      };
-      onPatternChange?.({ chordPatterns: newChordPatterns });
+    if (editingContext.type === 'current') {
+      // Update the global current pattern
+      onPatternChange?.({ currentPattern: newPattern });
+    } else if (editingContext.type === 'chord' && activeChordIndex !== null) {
+      // Update the specific chord's pattern
+      onUpdateChordPattern?.(activeChordIndex, newPattern);
     }
-  }, [editingContext.type, activeChordIndex, globalPatternState.chordPatterns, onPatternChange]);
+  }, [editingContext.type, activeChordIndex, onPatternChange, onUpdateChordPattern]);
 
   const handleStepChange = useCallback((stepIndex: number, value: string) => {
     const newPattern = [...currentPattern];
@@ -225,14 +194,6 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
   const applyPreset = useCallback((preset: typeof PATTERN_PRESETS[0]) => {
     updateCurrentPattern(preset.pattern);
   }, [updateCurrentPattern]);
-
-  const resetToCreationPattern = useCallback(() => {
-    if (activeChordIndex !== null && addedChords[activeChordIndex]) {
-      const newChordPatterns = { ...globalPatternState.chordPatterns };
-      delete newChordPatterns[activeChordIndex];
-      onPatternChange?.({ chordPatterns: newChordPatterns });
-    }
-  }, [activeChordIndex, addedChords, globalPatternState.chordPatterns, onPatternChange]);
 
   // Calculate which step is currently playing
   const currentStepIndex = useMemo(() => {
@@ -271,7 +232,7 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
             onClick={togglePlayback}
             className={`flex items-center px-4 py-2 rounded-lg font-medium transition-colors text-sm uppercase tracking-wide ${
               globalPatternState.isPlaying
-                ? 'bg-red-600 hover:bg-red-700 text-white'
+                ? 'bg-red-700 hover:bg-red-800 text-white'
                 : 'bg-green-600 hover:bg-green-700 text-white'
             }`}
           >
@@ -304,15 +265,6 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
               <div className="text-sm font-medium text-slate-200 uppercase tracking-wider">
                 {editingContext.title}
               </div>
-              {editingContext.canReset && (
-                <button
-                  onClick={resetToCreationPattern}
-                  className="px-2 py-1 text-xs bg-red-600 hover:bg-red-700 text-white rounded transition-colors uppercase tracking-wide"
-                  title="Remove custom override and use original creation pattern"
-                >
-                  Reset
-                </button>
-              )}
             </div>
             <div className="flex items-center space-x-2">
               <div className="text-xs text-slate-400 uppercase tracking-wide">Steps: {currentPattern.length}</div>
@@ -433,14 +385,21 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
       </div>
 
       {/* Context-Specific Info */}
-      {editingContext.type === 'default' && (
+      {editingContext.type === 'current' && (
         <div className="mb-4 px-4 py-3 bg-blue-900 bg-opacity-20 rounded-lg border border-blue-700">
           <div className="text-xs text-blue-300">
-            💡 <strong>Default Pattern:</strong> Used for table chord clicks. When you add chords to the sequence, they capture this pattern as their creation pattern.
+            💡 <strong>Global Pattern:</strong> Base pattern that becomes active when no chord is selected. Table chords and new chord creation use the currently active pattern.
           </div>
         </div>
       )}
 
+      {/* {editingContext.type === 'chord' && (
+        <div className="mb-4 px-4 py-3 bg-purple-900 bg-opacity-20 rounded-lg border border-purple-700">
+          <div className="text-xs text-purple-300">
+            🎵 <strong>Chord Pattern:</strong> This chord's pattern is currently active. Table chords and new chord creation will use this pattern: <span className="font-mono">{currentlyActivePattern.join('-')}</span>
+          </div>
+        </div>
+      )} */}
 
       {/* Advanced Controls with smooth animation */}
       <div className={`transition-all duration-300 ease-in-out overflow-hidden ${

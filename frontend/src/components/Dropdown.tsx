@@ -68,7 +68,7 @@ const Dropdown: React.FC<DropdownProps> = ({
             "hover:bg-[#4a5262] hover:ring-gray-500 hover:shadow-md",
             "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#3d434f]",
             "transition-all duration-200 ease-in-out",
-            "group",
+            "group h-10 ",
             buttonClassName
           )}
         >

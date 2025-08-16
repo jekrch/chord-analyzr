@@ -81,7 +81,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-2 sm:px-4">
+    <div className="w-full max-w-7xl mx-auto px-2 sm:px-0">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 gap-2">
         <h2 className="text-lg font-bold text-white">Chord Explorer</h2>

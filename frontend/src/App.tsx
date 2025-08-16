@@ -552,7 +552,7 @@ function App() {
                 </div>
 
                 {/* Piano */}
-                <div className="w-full max-w-4xl">
+                <div className="w-full max-w-7xl">
                     <PianoControl
                         activeNotes={activeNotes}
                         normalizedScaleNotes={normalizedScaleNotes}
@@ -639,7 +639,7 @@ function App() {
                 </div>
 
                 {/* Chord Table */}
-                <div className="w-full max-w-6xl mb-20">
+                <div className="w-full max-w-7xl mb-20">
                     <ChordTable
                         chords={chords?.filter(c => !!c.chordName && !!c.chordNoteNames) as any}
                         loading={loadingChords}

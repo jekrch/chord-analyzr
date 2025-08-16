@@ -22,6 +22,8 @@ jobs:
       - name: Build 🛠️
         run: npm run build
         working-directory: ./frontend
+        env:
+          VITE_USE_STATIC_DATA: 'true' # Explicitly set to use static data
 
       - name: Deploy 🚀
         uses: peaceiris/actions-gh-pages@v3

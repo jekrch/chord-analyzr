@@ -20,7 +20,7 @@ interface ScalesByKey {
 }
 
 class StaticDataService {
-  private baseUrl = '/data';
+  private baseUrl = `${import.meta.env.BASE_URL}data`;
   private indexCache: StaticDataIndex | null = null;
   private modesCache: ModeDto[] | null = null;
   private chordsCache: Map<string, ModeScaleChordDto[]> = new Map();
@@ -89,16 +89,16 @@ class StaticDataService {
 
       // First, get the index to find available modes
       const index = await this.loadIndex();
-      
+
       // Find the mode ID for the given mode name
       const modeData = index.modes.find(m => m.name === mode);
-      
+
       if (!modeData || !modeData.id) {
         throw new Error(`Mode "${mode}" not found`);
       }
 
       const modeId = modeData.id.toString();
-      
+
       // Check cache for the entire mode's chord data first
       if (this.chordsCache.has(modeId)) {
         const allChordsForMode = this.chordsCache.get(modeId)!;
@@ -130,7 +130,7 @@ class StaticDataService {
 
       // First, get the index to find available modes
       const index = await this.loadIndex();
-      
+
       // Find the mode ID for the given mode name
       const modeData = index.modes.find(m => m.name === mode);
       if (!modeData || !modeData.id) {
@@ -150,7 +150,7 @@ class StaticDataService {
       if (!response.ok) {
         throw new Error(`Failed to load scales for mode ${mode}: ${response.statusText}`);
       }
-      
+
       const scalesByKey: ScalesByKey = await response.json();
       this.scalesCache.set(modeId, scalesByKey);
 

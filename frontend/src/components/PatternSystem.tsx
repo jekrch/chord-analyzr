@@ -50,14 +50,29 @@ const StepEditor = memo(({
 }) => {
   const options = useMemo(() => {
     const opts = ['—']; // Rest option
-    for (let i = 1; i <= Math.min(maxNotes, 8); i++) {
+    for (let i = 1; i <= maxNotes; i++) {
       opts.push(String(i));
       opts.push(`${i}↑`);
     }
     return opts;
   }, [maxNotes]);
 
-  const displayValue = stepValue === 'x' ? '—' : stepValue.replace('+', '↑');
+  // Check if the current step value exceeds available notes
+  const getDisplayValue = () => {
+    if (stepValue === 'x') return '—';
+    
+    const noteNum = parseInt(stepValue.replace('+', ''));
+    if (!isNaN(noteNum) && noteNum > maxNotes) {
+      return '—'; // Show as rest if note number exceeds available notes
+    }
+    
+    return stepValue.replace('+', '↑');
+  };
+
+  const displayValue = getDisplayValue();
+  
+  // Check if we're showing a rest due to exceeding available notes
+  const isExceedingNotes = stepValue !== 'x' && displayValue === '—';
 
   const handleChange = (value: string) => {
     let convertedValue = value;
@@ -79,6 +94,8 @@ const StepEditor = memo(({
         buttonClassName={`w-full h-8 text-xs ${
           stepValue === 'x' 
             ? 'bg-[#3d434f] border-gray-700 text-slate-400'
+            : isExceedingNotes
+            ? 'bg-[#3d434f] border-gray-700 text-orange-400' // Different color for exceeded notes
             : 'bg-[#3d434f] border-gray-600 text-slate-200 hover:bg-[#4a5262]'
         } border rounded transition-all duration-200`}
       />
@@ -100,6 +117,7 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
   // ========== LOCAL STATE ==========
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [customPattern, setCustomPattern] = useState<string>('1,2,3,4');
+  const [matchChordNoteCount, setMatchChordNoteCount] = useState(false);
 
   // ========== PATTERN MANAGEMENT ==========
   
@@ -127,6 +145,51 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
       };
     }
   }, [activeChordIndex, addedChords, globalPatternState.currentPattern]);
+
+  // Calculate maximum notes based on chord definition (NOT currently playing notes)
+  const maxAvailableNotes = useMemo(() => {
+    let chordNoteCount = 4; // Default fallback
+    
+    // Get note count from the actual chord definition, not currently playing notes
+    if (activeChordIndex !== null && addedChords[activeChordIndex]) {
+      const chord = addedChords[activeChordIndex];
+      // Parse the chord notes and count DISTINCT notes (ignoring octave)
+      const notes = chord.notes.split(',').map(note => note.trim()).filter(note => note);
+      const distinctNotes = new Set(notes.map(note => {
+        // Remove octave numbers to get just the note name (C4 -> C, Bb3 -> Bb)
+        return note.replace(/\d+$/, '');
+      }));
+      chordNoteCount = distinctNotes.size;
+    } else {
+      // For global pattern, use a reasonable default
+      chordNoteCount = 4;
+    }
+    
+    if (matchChordNoteCount) {
+      // When matching chord note count, use exactly the number of distinct notes in the chord
+      return Math.max(1, chordNoteCount);
+    } else {
+      // When not matching, allow up to the chord's note count (never exceed it)
+      // But maintain a minimum of 4 for usability, unless the chord has fewer notes
+      const minNotes = Math.min(4, chordNoteCount);
+      return Math.max(minNotes, chordNoteCount);
+    }
+  }, [activeChordIndex, addedChords, matchChordNoteCount]); // NO activeNotes dependency
+
+  // Filter pattern presets based on available notes - completely stable
+  const filteredPresets = useMemo(() => {
+    return PATTERN_PRESETS.filter(preset => {
+      const maxNoteInPattern = Math.max(
+        ...preset.pattern
+          .filter(step => step !== 'x') // Exclude rest steps
+          .map(step => {
+            const noteNum = parseInt(step.replace('+', ''));
+            return isNaN(noteNum) ? 0 : noteNum;
+          })
+      );
+      return maxNoteInPattern <= maxAvailableNotes;
+    });
+  }, [maxAvailableNotes]); // Single stable dependency
 
   // Update custom pattern input when current pattern changes
   useEffect(() => {
@@ -302,7 +365,7 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
                           key={`pattern-${editingContext.type}-${activeChordIndex}-${globalIndex}`}
                           stepIndex={globalIndex}
                           stepValue={step}
-                          maxNotes={Math.max(4, activeNotes.length)}
+                          maxNotes={maxAvailableNotes}
                           onStepChange={handleStepChange}
                         />
                       );
@@ -351,7 +414,7 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
                           key={`pattern-${editingContext.type}-${activeChordIndex}-${globalIndex}`}
                           stepIndex={globalIndex}
                           stepValue={step}
-                          maxNotes={Math.max(4, activeNotes.length)}
+                          maxNotes={maxAvailableNotes}
                           onStepChange={handleStepChange}
                         />
                       );
@@ -384,15 +447,6 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
           </div>
         </div>
       </div>
-
-      {/* Context-Specific Info */}
-      {/* {editingContext.type === 'current' && (
-        <div className="mb-4 px-4 py-3 bg-blue-900 bg-opacity-20 rounded-lg border border-blue-700">
-          <div className="text-xs text-blue-300">
-            💡 <strong>Global Pattern:</strong> Base pattern that becomes active when no chord is selected. Table chords and new chord creation use the currently active pattern.
-          </div>
-        </div>
-      )} */}
 
       {/* Advanced Controls with smooth animation */}
       <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
@@ -469,6 +523,20 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
                     <span>50%</span>
                   </div>
                 </div>
+
+                {/* Pattern Constraints */}
+                <div>
+                  <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Pattern Constraints</label>
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={matchChordNoteCount}
+                      onChange={(e) => setMatchChordNoteCount(e.target.checked)}
+                      className="w-3 h-3 rounded border-gray-600 bg-[#3d434f] text-blue-600 focus:ring-blue-500 focus:ring-1"
+                    />
+                    <span className="text-xs text-slate-200">Match chord note count</span>
+                  </label>
+                </div>
               </div>
 
               {/* Pattern Presets */}
@@ -477,24 +545,30 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
                   <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Presets</label>
                 </div>
                 <div className="grid grid-cols-1 gap-2 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
-                  {PATTERN_PRESETS.map((preset, index) => (
-                    <button
-                      key={index}
-                      onClick={() => applyPreset(preset)}
-                      className="p-3 rounded text-xs font-medium transition-colors text-left bg-[#3d434f] text-slate-300 hover:bg-[#4a5262] hover:text-slate-200 border border-gray-600 hover:border-gray-500"
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium uppercase tracking-wide">{preset.name}</span>
-                        <span>{preset.icon}</span>
-                      </div>
-                      <div className="text-xs opacity-75 font-mono text-slate-400">
-                        {preset.pattern.join('-')}
-                      </div>
-                      <div className="text-xs opacity-60 text-slate-500 mt-1">
-                        {preset.desc}
-                      </div>
-                    </button>
-                  ))}
+                  {filteredPresets.length > 0 ? (
+                    filteredPresets.map((preset, index) => (
+                      <button
+                        key={index}
+                        onClick={() => applyPreset(preset)}
+                        className="p-3 rounded text-xs font-medium transition-colors text-left bg-[#3d434f] text-slate-300 hover:bg-[#4a5262] hover:text-slate-200 border border-gray-600 hover:border-gray-500"
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-medium uppercase tracking-wide">{preset.name}</span>
+                          <span>{preset.icon}</span>
+                        </div>
+                        <div className="text-xs opacity-75 font-mono text-slate-400">
+                          {preset.pattern.join('-')}
+                        </div>
+                        <div className="text-xs opacity-60 text-slate-500 mt-1">
+                          {preset.desc}
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="p-3 text-xs text-slate-400 text-center">
+                      No presets available for {maxAvailableNotes} note{maxAvailableNotes !== 1 ? 's' : ''}
+                    </div>
+                  )}
                 </div>
               </div>
 

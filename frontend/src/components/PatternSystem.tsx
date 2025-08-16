@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, memo, useCallback } from 'react';
 import { PlayCircleIcon, PauseIcon, ArrowPathIcon, Cog6ToothIcon } from '@heroicons/react/20/solid';
 import { PATTERN_PRESETS, SUBDIVISIONS } from '../util/Pattern';
 import Dropdown from './Dropdown'; 
+import PatternNotationHelpModal from './PatternNotationHelpModal';
 
 interface PatternSystemProps {
   activeNotes: { note: string; octave?: number }[];
@@ -208,7 +209,7 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
   // ========== RENDER ==========
 
   return (
-    <div className="w-full max-w-7xl mx-auto">
+    <div className="w-full max-w-7xl mx-auto px-2">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-4">
@@ -230,7 +231,7 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
           </button>
           <button
             onClick={togglePlayback}
-            className={`flex items-center px-4 py-2 rounded-lg font-medium transition-colors text-sm uppercase tracking-wide ${
+            className={`flex items-center px-4 py-2 rounded-lg font-medium transition-colors text-sm uppercase tracking-wide w-[7em] ${
               globalPatternState.isPlaying
                 ? 'bg-red-700 hover:bg-red-800 text-white'
                 : 'bg-green-600 hover:bg-green-700 text-white'
@@ -385,18 +386,10 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
       </div>
 
       {/* Context-Specific Info */}
-      {editingContext.type === 'current' && (
+      {/* {editingContext.type === 'current' && (
         <div className="mb-4 px-4 py-3 bg-blue-900 bg-opacity-20 rounded-lg border border-blue-700">
           <div className="text-xs text-blue-300">
             💡 <strong>Global Pattern:</strong> Base pattern that becomes active when no chord is selected. Table chords and new chord creation use the currently active pattern.
-          </div>
-        </div>
-      )}
-
-      {/* {editingContext.type === 'chord' && (
-        <div className="mb-4 px-4 py-3 bg-purple-900 bg-opacity-20 rounded-lg border border-purple-700">
-          <div className="text-xs text-purple-300">
-            🎵 <strong>Chord Pattern:</strong> This chord's pattern is currently active. Table chords and new chord creation will use this pattern: <span className="font-mono">{currentlyActivePattern.join('-')}</span>
           </div>
         </div>
       )} */}
@@ -505,14 +498,14 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
                 </div>
               </div>
 
-              {/* Custom Pattern Input */}
+              {/* Custom Pattern Input - Compact */}
               <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Custom</label>
+                <div className="flex items-center space-x-2">
+                  <label className="block text-xs font-medium text-slate-200 uppercase tracking-wide">Custom</label>
+                  <PatternNotationHelpModal />
                 </div>
                 
-                <div>
-                  <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Pattern (comma-separated)</label>
+                <div className="space-y-3">
                   <input
                     type="text"
                     value={customPattern}
@@ -523,18 +516,10 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
                   />
                   <button
                     onClick={applyCustomPattern}
-                    className="mt-2 w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors uppercase tracking-wide"
+                    className="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors uppercase tracking-wide"
                   >
                     Apply Pattern
                   </button>
-                </div>
-
-                <div className="text-xs text-slate-500 space-y-1 p-3 bg-[#3d434f] border border-gray-600 rounded">
-                  <div className="font-medium text-slate-400 mb-2 uppercase tracking-wide">Notation:</div>
-                  <div><strong>x</strong> = rest (silence)</div>
-                  <div><strong>1+</strong> = octave up</div>
-                  <div><strong>1-8</strong> = note index</div>
-                  <div className="text-slate-600 mt-2">Example: 1,x,3,2+ plays note 1, rest, note 3, note 2 up an octave</div>
                 </div>
               </div>
             </div>

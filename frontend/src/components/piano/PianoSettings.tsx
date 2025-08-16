@@ -39,7 +39,7 @@ const PianoSettings: React.FC<PianoSettingsProps> = ({
   };
 
   return (
-    <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
+    <div className={`transition-all duration-300 ease-in-out overflow-hidden px-2 ${
       isOpen ? 'max-h-[600px] opacity-100 mt-6' : 'max-h-0 opacity-0'
     }`}>
       <div className="bg-[#3d434f] border border-gray-600 rounded-lg overflow-hidden w-full max-w-7xl mx-auto">

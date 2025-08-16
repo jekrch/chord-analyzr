@@ -143,6 +143,45 @@ function App() {
         );
     }, [temporaryChord, activeChordIndex, addedChords, currentlyActivePattern]);
 
+    // this silent audio reference is used to prevent the mute function 
+    // on iOS devices from blocking tonejs audio
+    const silentAudioRef = useRef<HTMLAudioElement>(null)
+    const audioInitializedRef = useRef(false)
+
+    // audio initialization
+    const initializeAudio = async () => {
+        if (!audioInitializedRef.current) {
+            try {
+                // for ios, we need to play silent audio first
+                await silentAudioRef.current?.play()
+
+                audioInitializedRef.current = true
+
+                // cleanup listeners after successful initialization
+                document.removeEventListener('touchstart', initializeAudio)
+                document.removeEventListener('mousedown', initializeAudio)
+                document.removeEventListener('click', initializeAudio)
+            } catch (error) {
+                console.error('failed to initialize audio:', error)
+            }
+        }
+    }
+
+    useEffect(() => {
+        // event listeners for user interaction
+        document.addEventListener('touchstart', initializeAudio)
+        document.addEventListener('mousedown', initializeAudio)
+        document.addEventListener('click', initializeAudio)
+
+        // cleanup event listeners on unmount
+        return () => {
+            document.removeEventListener('touchstart', initializeAudio)
+            document.removeEventListener('mousedown', initializeAudio)
+            document.removeEventListener('click', initializeAudio)
+        }
+    }, [])
+
+
     // Steady global clock - NEVER resets when changing chords
     useEffect(() => {
         if (globalPatternState.isPlaying) {
@@ -525,8 +564,8 @@ function App() {
                     <button
                         onClick={() => setShowPatternSystem(!showPatternSystem)}
                         className={`px-4 py-2 rounded-lg font-medium transition-colors text-sm ${showPatternSystem
-                                ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                                : 'bg-gray-600 hover:bg-gray-700 text-white'
+                            ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                            : 'bg-gray-600 hover:bg-gray-700 text-white'
                             }`}
                     >
                         {showPatternSystem ? 'Hide' : 'Show'} Sequencer
@@ -627,11 +666,10 @@ function App() {
                                     title={isPlayingScale ? 'Playing scale...' : 'Play scale'}
                                 >
                                     <PlayCircleIcon
-                                        className={`w-5 h-5 transition-colors duration-200 ${
-                                            isPlayingScale
+                                        className={`w-5 h-5 transition-colors duration-200 ${isPlayingScale
                                                 ? 'text-green-400 animate-pulse'
                                                 : 'text-slate-300 group-hover:text-slate-100'
-                                        }`}
+                                            }`}
                                     />
                                 </button>
                             </div>

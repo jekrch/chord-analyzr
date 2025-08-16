@@ -60,7 +60,7 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-4">
                         <div className="text-xs text-gray-400 font-medium uppercase tracking-wide">
-                            Chord Sequence
+                            Chords
                         </div>
                         {isLiveMode && (
                             <button
@@ -120,7 +120,7 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                                         onClearAll(); 
                                     }}
                                 >
-                                    Clear All
+                                    Clear
                                 </button>
                                 <button
                                     onClick={onToggleDeleteMode}
@@ -224,7 +224,7 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                                 className="text-xs bg-gray-600 hover:bg-gray-700 text-white font-medium py-1 px-3 rounded transition-colors"
                                 onClick={onClearAll}
                             >
-                                Clear All
+                                Clear
                             </button>
                             <button
                                 onClick={onToggleDeleteMode}

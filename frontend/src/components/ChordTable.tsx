@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { PlayCircleIcon, PlusCircleIcon, MagnifyingGlassIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/20/solid';
 
 interface ModeScaleChordDto {
@@ -22,6 +22,27 @@ const ChordTable: React.FC<ChordTableProps> = ({
   const [selectedRootNote, setSelectedRootNote] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [expandedChords, setExpandedChords] = useState<Set<number>>(new Set());
+  const [playingChords, setPlayingChords] = useState<Set<number>>(new Set());
+  const [addingChords, setAddingChords] = useState<Set<number>>(new Set());
+  const [currentColumns, setCurrentColumns] = useState<number>(1);
+
+  // Track screen size to determine number of columns
+  useEffect(() => {
+    const updateColumns = () => {
+      const width = window.innerWidth;
+      if (width >= 1280) { // xl breakpoint
+        setCurrentColumns(3);
+      } else if (width >= 640) { // sm breakpoint
+        setCurrentColumns(2);
+      } else {
+        setCurrentColumns(1);
+      }
+    };
+
+    updateColumns();
+    window.addEventListener('resize', updateColumns);
+    return () => window.removeEventListener('resize', updateColumns);
+  }, []);
 
   // Extract root note from chord name
   const extractRootNote = (chordName: string): string => {
@@ -70,19 +91,74 @@ const ChordTable: React.FC<ChordTableProps> = ({
     return counts;
   }, [chords]);
 
-  const toggleChordExpansion = (index: number) => {
-    const newExpanded = new Set(expandedChords);
-    if (newExpanded.has(index)) {
-      newExpanded.delete(index);
-    } else {
-      newExpanded.add(index);
+  // Get indices of chords in the same row
+  const getChordsInSameRow = useCallback((index: number): number[] => {
+    const rowIndex = Math.floor(index / currentColumns);
+    const startIndex = rowIndex * currentColumns;
+    const endIndex = Math.min(startIndex + currentColumns, filteredChords.length);
+    
+    const rowIndices: number[] = [];
+    for (let i = startIndex; i < endIndex; i++) {
+      rowIndices.push(i);
     }
+    return rowIndices;
+  }, [currentColumns, filteredChords.length]);
+
+  const toggleChordExpansion = (index: number) => {
+    const rowIndices = getChordsInSameRow(index);
+    const newExpanded = new Set(expandedChords);
+    
+    // Check if the clicked chord is currently expanded
+    const isCurrentlyExpanded = newExpanded.has(index);
+    
+    if (isCurrentlyExpanded) {
+      // Collapse all chords in the row
+      rowIndices.forEach(i => newExpanded.delete(i));
+    } else {
+      // Expand all chords in the row
+      rowIndices.forEach(i => newExpanded.add(i));
+    }
+    
     setExpandedChords(newExpanded);
+  };
+
+  const handleChordPlay = (chordNoteNames: string, index: number, chordName: string) => {
+    // Trigger play animation
+    setPlayingChords(prev => new Set(prev).add(index));
+    
+    // Call the original function
+    onChordClick(chordNoteNames, undefined, chordName);
+    
+    // Remove animation after duration
+    setTimeout(() => {
+      setPlayingChords(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(index);
+        return newSet;
+      });
+    }, 800);
+  };
+
+  const handleChordAdd = (index: number, chordName: string, chordNotes: string) => {
+    // Trigger add animation
+    setAddingChords(prev => new Set(prev).add(index));
+    
+    // Call the original function
+    addChordClick?.(chordName, chordNotes);
+    
+    // Remove animation after duration
+    setTimeout(() => {
+      setAddingChords(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(index);
+        return newSet;
+      });
+    }, 600);
   };
 
   return (
     <div className="w-full max-w-7xl mx-auto px-2">
-      {/* Header */}
+     {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 gap-2">
         <h2 className="text-lg font-bold text-white">Chord Explorer</h2>
         <div className="text-sm text-gray-400">
@@ -198,19 +274,28 @@ const ChordTable: React.FC<ChordTableProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 sm:gap-3">
               {filteredChords.map((chord: ModeScaleChordDto, index: number) => {
                 const isExpanded = expandedChords.has(index);
+                const isPlaying = playingChords.has(index);
+                const isAdding = addingChords.has(index);
+                
                 return (
                   <div
                     key={`chord-${index}`}
-                    className="bg-[#3d434f] rounded-lg border border-gray-600 hover:border-blue-500 hover:bg-[#444b59] transition-all duration-200 overflow-hidden cursor-pointer group"
-                    onClick={() => onChordClick(chord.chordNoteNames!, undefined, chord.chordName!)}
+                    className={`bg-[#3d434f] rounded-lg border border-gray-600 hover:border-blue-500 hover:bg-[#444b59] transition-all duration-200 overflow-hidden cursor-pointer group ${
+                      isPlaying ? 'chord-playing' : ''
+                    } ${isAdding ? 'chord-adding' : ''}`}
+                    onClick={() => handleChordPlay(chord.chordNoteNames!, index, chord.chordName!)}
                   >
                     {/* Main content */}
                     <div className="p-3 sm:p-4">
                       {/* Chord name and buttons */}
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
-                          <PlayCircleIcon className="h-5 w-5 sm:h-6 sm:w-6 text-gray-400 group-hover:text-blue-300 transition-colors flex-shrink-0" />
-                          <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-blue-200 transition-colors truncate">
+                          <PlayCircleIcon className={`h-5 w-5 sm:h-6 sm:w-6 transition-colors flex-shrink-0 ${
+                            isPlaying ? 'text-blue-400' : 'text-gray-400 group-hover:text-blue-300'
+                          }`} />
+                          <h3 className={`text-base sm:text-lg font-bold transition-colors truncate ${
+                            isPlaying ? 'text-blue-200' : 'text-white group-hover:text-blue-200'
+                          }`}>
                             {chord.chordName}
                           </h3>
                         </div>
@@ -218,9 +303,13 @@ const ChordTable: React.FC<ChordTableProps> = ({
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              addChordClick?.(chord.chordName!, chord.chordNoteNames!);
+                              handleChordAdd(index, chord.chordName!, chord.chordNoteNames!);
                             }}
-                            className="p-1 sm:p-2 rounded-md hover:bg-green-600 text-gray-400 hover:text-white transition-colors"
+                            className={`p-1 sm:p-2 rounded-md transition-colors ${
+                              isAdding 
+                                ? 'bg-green-600 text-white' 
+                                : 'hover:bg-green-600 text-gray-400 hover:text-white'
+                            }`}
                             title="Add to sequence"
                           >
                             <PlusCircleIcon className="h-5 w-5 sm:h-4 sm:w-4" />
@@ -295,7 +384,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
               <div className="text-xs text-gray-400">
                 Tap any chord to play • 
                 <span className="text-gray-300 mx-1">+</span> to add to sequence • 
-                <ChevronDownIcon className="inline h-3 w-3 mx-1" /> to show notes
+                <ChevronDownIcon className="inline h-3 w-3 mx-1" /> to show notes (expands entire row)
               </div>
             </div>
           )}

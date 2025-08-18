@@ -142,7 +142,7 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                     <div className="text-center text-gray-400 text-sm mb-4">
                         <div>Use 1-{Math.min(addedChords.length, 9)} or click chords</div>
                         <div className="text-xs mt-1">
-                            <span className="inline-block w-3 h-3 bg-cyan-500 rounded-full mr-1"></span>
+                            <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-1"></span>
                             Active Chord
                         </div>
                     </div>
@@ -171,9 +171,9 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                                         // Normal mode styles  
                                         'flex-shrink-0 py-3 px-4 text-sm min-w-[85px] bottom-nav-button chord-button m-2': !isLiveMode,
                                         // Active state
-                                        'bg-cyan-500 shadow-lg text-white ring-2 ring-cyan-300': isActive && !isDeleteMode,
+                                        'bg-blue-500 shadow-lg text-white ring-2 ring-blue-300': isActive && !isDeleteMode,
                                         // Inactive state
-                                        'bg-cyan-700 hover:bg-cyan-600 text-white': !isActive && !isDeleteMode,
+                                        'bg-blue-700 hover:bg-blue-600 text-white': !isActive && !isDeleteMode,
                                         // Delete mode
                                         'bg-red-700 hover:bg-red-600 text-white shadow-md': isDeleteMode,
                                         // Highlight effect

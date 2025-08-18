@@ -4,10 +4,11 @@
 // '+' suffix (1+, 2+, etc.) = play note in higher octave
 
 export const SUBDIVISIONS = [
-  { name: "Quarter", symbol: "♩", value: 4 },
-  { name: "Eighth", symbol: "♫", value: 8 },
-  { name: "Sixteenth", symbol: "♬", value: 16 },
-  { name: "Triplets", symbol: "♪³", value: 12 },
+  { value: 0.125, symbol: '♬', name: '32nd notes' },
+  { value: 0.25, symbol: '♪', name: '16th notes' },
+  { value: 0.5, symbol: '♩', name: '8th notes' },
+  { value: 1.0, symbol: '♪', name: 'Quarter notes' },
+  { value: 2.0, symbol: '♪', name: 'Half notes' },
 ];
 
 export const PATTERN_CATEGORIES = {

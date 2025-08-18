@@ -1,18 +1,27 @@
 import React, { useState, useMemo, useEffect, memo, useCallback } from 'react';
 import { PlayCircleIcon, PauseIcon, ArrowPathIcon, Cog6ToothIcon } from '@heroicons/react/20/solid';
-import { PATTERN_PRESETS, SUBDIVISIONS, PATTERN_CATEGORIES } from '../util/Pattern';
-import Dropdown from './Dropdown'; 
+import { PATTERN_PRESETS, PATTERN_CATEGORIES } from '../util/Pattern';
+import Dropdown from './Dropdown';
 import PatternNotationHelpModal from './PatternNotationHelpModal';
+
+// FIXED: Define proper subdivisions with correct values and names
+const SUBDIVISIONS = [
+  { value: 0.125, symbol: '♬', name: '32nd notes' },
+  { value: 0.25, symbol: '♪', name: '16th notes' },
+  { value: 0.5, symbol: '♩', name: '8th notes' },
+  { value: 1.0, symbol: '♪', name: 'Quarter notes' },
+  { value: 2.0, symbol: '♪', name: 'Half notes' },
+];
 
 interface PatternSystemProps {
   activeNotes: { note: string; octave?: number }[];
   normalizedScaleNotes: string[];
-  addedChords: { name: string; notes: string; pattern: string[] }[]; 
+  addedChords: { name: string; notes: string; pattern: string[] }[];
   activeChordIndex: number | null;
-  currentlyActivePattern: string[]; 
+  currentlyActivePattern: string[];
   getCurrentPattern: () => string[];
   onPatternChange?: (newPatternState: Partial<{
-    currentPattern: string[]; 
+    currentPattern: string[];
     bpm: number;
     subdivision: number;
     isPlaying: boolean;
@@ -24,7 +33,7 @@ interface PatternSystemProps {
   }>) => void;
   onUpdateChordPattern?: (chordIndex: number, newPattern: string[]) => void; // callback to update chord patterns
   globalPatternState: {
-    currentPattern: string[]; 
+    currentPattern: string[];
     bpm: number;
     subdivision: number;
     isPlaying: boolean;
@@ -51,12 +60,12 @@ const countDistinctNotesInPattern = (pattern: string[]): number => {
 };
 
 // Memoized Step Editor with updated styling and custom dropdown
-const StepEditor = memo(({ 
-  stepIndex, 
-  stepValue, 
-  maxNotes, 
+const StepEditor = memo(({
+  stepIndex,
+  stepValue,
+  maxNotes,
   onStepChange
-}: { 
+}: {
   stepIndex: number;
   stepValue: string;
   maxNotes: number;
@@ -74,17 +83,17 @@ const StepEditor = memo(({
   // Check if the current step value exceeds available notes
   const getDisplayValue = () => {
     if (stepValue === 'x') return '—';
-    
+
     const noteNum = parseInt(stepValue.replace('+', ''));
     if (!isNaN(noteNum) && noteNum > maxNotes) {
       return '—'; // Show as rest if note number exceeds available notes
     }
-    
+
     return stepValue.replace('+', '↑');
   };
 
   const displayValue = getDisplayValue();
-  
+
   // Check if we're showing a rest due to exceeding available notes
   const isExceedingNotes = stepValue !== 'x' && displayValue === '—';
 
@@ -105,13 +114,12 @@ const StepEditor = memo(({
         onChange={handleChange}
         options={options}
         className="w-full"
-        buttonClassName={`w-full h-8 text-xs ${
-          stepValue === 'x' 
+        buttonClassName={`w-full h-8 text-xs ${stepValue === 'x'
             ? 'bg-[#3d434f] border-gray-700 text-slate-400'
             : isExceedingNotes
-            ? 'bg-[#3d434f] border-gray-700 text-orange-400' // Different color for exceeded notes
-            : 'bg-[#3d434f] border-gray-600 text-slate-200 hover:bg-[#4a5262]'
-        } border rounded transition-all duration-200`}
+              ? 'bg-[#3d434f] border-gray-700 text-orange-400' // Different color for exceeded notes
+              : 'bg-[#3d434f] border-gray-600 text-slate-200 hover:bg-[#4a5262]'
+          } border rounded transition-all duration-200`}
       />
     </div>
   );
@@ -132,13 +140,13 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [customPattern, setCustomPattern] = useState<string>('1,2,3,4');
   const [hideFewerNotePatterns, setHideFewerNotePatterns] = useState(false);
-  
+
   // New filter states
   const [selectedStepCount, setSelectedStepCount] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   // ========== PATTERN MANAGEMENT ==========
-  
+
   const { currentPattern, editingContext } = useMemo(() => {
     if (activeChordIndex !== null && addedChords[activeChordIndex]) {
       const chord = addedChords[activeChordIndex];
@@ -198,17 +206,17 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
   const filteredPresets = useMemo(() => {
     return PATTERN_PRESETS.filter(preset => {
       const distinctNotesInPattern = countDistinctNotesInPattern(preset.pattern);
-      
+
       // Always exclude patterns that use more distinct notes than the chord has
       if (distinctNotesInPattern > chordNoteCount) {
         return false;
       }
-      
+
       // If checkbox is checked, also exclude patterns with fewer distinct notes
       if (hideFewerNotePatterns && distinctNotesInPattern < chordNoteCount) {
         return false;
       }
-      
+
       // Also check that the maximum note number doesn't exceed available notes
       const maxNoteInPattern = Math.max(
         ...preset.pattern
@@ -218,7 +226,7 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
             return isNaN(noteNum) ? 0 : noteNum;
           })
       );
-      
+
       if (maxNoteInPattern > maxAvailableNotes) {
         return false;
       }
@@ -232,7 +240,7 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
       if (selectedCategory !== 'all' && preset.category !== selectedCategory) {
         return false;
       }
-      
+
       return true;
     });
   }, [chordNoteCount, hideFewerNotePatterns, maxAvailableNotes, selectedStepCount, selectedCategory]);
@@ -245,16 +253,16 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
   }, [currentPattern]);
 
   // ========== CONTROL FUNCTIONS ==========
-  
+
   const togglePlayback = useCallback(() => {
     const newIsPlaying = !globalPatternState.isPlaying;
-    onPatternChange?.({ 
+    onPatternChange?.({
       isPlaying: newIsPlaying
     });
   }, [globalPatternState.isPlaying, onPatternChange]);
 
   const resetPattern = useCallback(() => {
-    onPatternChange?.({ 
+    onPatternChange?.({
       isPlaying: false,
       currentStep: 0
     });
@@ -313,7 +321,10 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
 
   // Subdivision options for dropdown
   const subdivisionOptions = SUBDIVISIONS.map(sub => `${sub.symbol} ${sub.name}`);
-  const currentSubdivisionDisplay = SUBDIVISIONS.find(sub => sub.value === globalPatternState.subdivision)?.symbol + ' ' + SUBDIVISIONS.find(sub => sub.value === globalPatternState.subdivision)?.name || '';
+
+  // FIXED: Get current subdivision display - ensure it matches the actual value
+  const currentSubdivision = SUBDIVISIONS.find(sub => sub.value === globalPatternState.subdivision);
+  const currentSubdivisionDisplay = currentSubdivision ? `${currentSubdivision.symbol} ${currentSubdivision.name}` : `${SUBDIVISIONS[1].symbol} ${SUBDIVISIONS[1].name}`;
 
   // Filter options
   const stepCountOptions = ['All Steps', ...availableStepCounts.map(count => `${count} Steps`)];
@@ -334,26 +345,24 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className={`w-8 h-8 flex items-center justify-center rounded-lg border transition-all duration-200 ${
-              showAdvanced 
-                ? 'bg-[#4a5262] border-gray-600 text-slate-200' 
+            className={`w-8 h-8 flex items-center justify-center rounded-lg border transition-all duration-200 ${showAdvanced
+                ? 'bg-[#4a5262] border-gray-600 text-slate-200'
                 : 'bg-[#3d434f] border-gray-600 text-slate-400 hover:bg-[#4a5262] hover:border-gray-500 hover:text-slate-200'
-            }`}
+              }`}
           >
             <Cog6ToothIcon className="w-4 h-4" />
           </button>
           <button
             onClick={togglePlayback}
-            className={`flex items-center px-4 py-2 rounded-lg font-medium transition-colors text-sm uppercase tracking-wide w-[7em] ${
-              globalPatternState.isPlaying
+            className={`flex items-center px-4 py-2 rounded-lg font-medium transition-colors text-sm uppercase tracking-wide w-[7em] ${globalPatternState.isPlaying
                 ? 'bg-red-700 hover:bg-red-800 text-white'
                 : 'bg-green-600 hover:bg-green-700 text-white'
-            }`}
+              }`}
           >
             {globalPatternState.isPlaying ? (
               <><PauseIcon className="w-4 h-4 mr-2" />Stop</>
             ) : (
-              <><PlayCircleIcon className="w-4 h-4 mr-2" />Play</> 
+              <><PlayCircleIcon className="w-4 h-4 mr-2" />Play</>
             )}
           </button>
           <button
@@ -382,20 +391,20 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
             </div>
             <div className="flex items-center space-x-2">
               <div className="text-xs text-slate-400 uppercase tracking-wide">Steps: {currentPattern.length}</div>
-              <button 
-                onClick={removeStep} 
+              <button
+                onClick={removeStep}
                 disabled={currentPattern.length <= 1}
                 className="w-6 h-6 bg-[#4a5262] hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-xs rounded transition-colors text-slate-200"
               >-</button>
-              <button 
-                onClick={addStep} 
+              <button
+                onClick={addStep}
                 disabled={currentPattern.length >= 16}
                 className="w-6 h-6 bg-[#4a5262] hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-xs rounded transition-colors text-slate-200"
               >+</button>
             </div>
           </div>
         </div>
-        
+
         <div className="p-6 bg-[#444b59]">
           {/* Step Grid - Responsive: 4 columns on mobile, 8 on larger screens */}
           {/* Mobile Layout: 4 columns */}
@@ -404,7 +413,7 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
               const startIndex = rowIndex * 4;
               const endIndex = Math.min(startIndex + 4, currentPattern.length);
               const rowSteps = currentPattern.slice(startIndex, endIndex);
-              
+
               return (
                 <div key={`mobile-row-${rowIndex}`} className="mb-3 last:mb-0">
                   <div className="grid grid-cols-4 gap-1">
@@ -424,17 +433,16 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
                       <div key={`empty-${i}`} />
                     ))}
                   </div>
-                  
+
                   <div className="grid grid-cols-4 gap-1 mt-2">
                     {rowSteps.map((_, stepIndex) => {
                       const globalIndex = startIndex + stepIndex;
                       return (
                         <div key={`indicator-${globalIndex}`} className="flex justify-center">
-                          <div className={`transition-all duration-300 ${
-                            currentStepIndex === globalIndex 
-                              ? 'w-full h-1 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50' 
+                          <div className={`transition-all duration-300 ${currentStepIndex === globalIndex
+                              ? 'w-full h-1 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50'
                               : 'w-full h-1 bg-gray-600 rounded-full'
-                          }`}></div>
+                            }`}></div>
                         </div>
                       );
                     })}
@@ -453,7 +461,7 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
               const startIndex = rowIndex * 8;
               const endIndex = Math.min(startIndex + 8, currentPattern.length);
               const rowSteps = currentPattern.slice(startIndex, endIndex);
-              
+
               return (
                 <div key={`desktop-row-${rowIndex}`} className="mb-3 last:mb-0">
                   <div className="grid grid-cols-8 gap-1">
@@ -473,17 +481,16 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
                       <div key={`empty-${i}`} />
                     ))}
                   </div>
-                  
+
                   <div className="grid grid-cols-8 gap-1 mt-2">
                     {rowSteps.map((_, stepIndex) => {
                       const globalIndex = startIndex + stepIndex;
                       return (
                         <div key={`indicator-${globalIndex}`} className="flex justify-center">
-                          <div className={`transition-all duration-300 ${
-                            currentStepIndex === globalIndex 
-                              ? 'w-full h-1 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50' 
+                          <div className={`transition-all duration-300 ${currentStepIndex === globalIndex
+                              ? 'w-full h-1 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50'
                               : 'w-full h-1 bg-gray-600 rounded-full'
-                          }`}></div>
+                            }`}></div>
                         </div>
                       );
                     })}
@@ -499,9 +506,8 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
       </div>
 
       {/* Advanced Controls with smooth animation */}
-      <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
-        showAdvanced ? ' opacity-100' : 'max-h-0 opacity-0'
-      }`}>
+      <div className={`transition-all duration-300 ease-in-out overflow-hidden ${showAdvanced ? ' opacity-100' : 'max-h-0 opacity-0'
+        }`}>
         <div className="bg-[#3d434f] border border-gray-600 rounded-lg overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-600">
             <h3 className="text-sm font-medium text-slate-200 uppercase tracking-wider">
@@ -511,13 +517,13 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
 
           <div className="p-6 bg-[#444b59]">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-x-8 gap-y-6">
-              
+
               {/* Timing Controls */}
               <div className="space-y-6">
                 <div>
                   <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Timing</label>
                 </div>
-                
+
                 <div>
                   <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">
                     BPM<span className="text-xs text-slate-400 ml-2 normal-case">({globalPatternState.bpm})</span>
@@ -661,7 +667,7 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
                   <label className="block text-xs font-medium text-slate-200 uppercase tracking-wide">Custom</label>
                   <PatternNotationHelpModal />
                 </div>
-                
+
                 <div className="space-y-3">
                   <input
                     type="text"

@@ -5,7 +5,7 @@ import InstrumentListProvider from '../../piano/InstrumentListProvider';
 import PianoConfig from '../../piano/PianoConfig';
 import { SoundfontProvider } from '../../piano/SoundfontProvider';
 import { normalizeNoteName } from '../../util/NoteUtil';
-
+import { PianoSettings } from '../../util/urlStateEncoder';
 
 // Create the AudioContext ONCE, outside the component.
 // This ensures the same instance is reused across re-renders and prevents exceeding the browser limit.
@@ -39,12 +39,17 @@ interface PianoProps {
     lastChordChangeTime: number;
     globalClockStartTime: number;
   }>) => void;
-}
-
-interface EqSettings {
-    bass: number;
-    mid: number;
-    treble: number;
+  
+  // Piano settings props
+  pianoSettings: PianoSettings;
+  availableInstruments: string[];
+  onInstrumentChange: (instrumentName: string) => void;
+  onCutOffPreviousNotesChange: (cutOff: boolean) => void;
+  onEqChange: (eq: { bass: number; mid: number; treble: number }) => void;
+  onOctaveOffsetChange: (offset: number) => void;
+  onReverbLevelChange: (level: number) => void;
+  onNoteDurationChange: (duration: number) => void;
+  onAvailableInstrumentsChange: (instruments: string[]) => void;
 }
 
 export const startOctave = 4;
@@ -57,7 +62,16 @@ const PianoControl: React.FC<PianoProps> = ({
   addedChords,
   currentlyActivePattern,
   globalPatternState,
-  onPatternStateChange
+  onPatternStateChange,
+  pianoSettings,
+  availableInstruments,
+  onInstrumentChange,
+  onCutOffPreviousNotesChange,
+  onEqChange,
+  onOctaveOffsetChange,
+  onReverbLevelChange,
+  onNoteDurationChange,
+  onAvailableInstrumentsChange
 }) => {
   const soundfontHostname = 'https://d1pzp51pvbm36p.cloudfront.net';
   const stopAllNotesRef = useRef<(() => void) | null>(null);
@@ -69,16 +83,8 @@ const PianoControl: React.FC<PianoProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState<number>(500);
 
-  // Settings State - moved from the original component
-  const [cutOffPreviousNotes, setCutOffPreviousNotes] = useState<boolean>(true);
-  const [eq, setEq] = useState<EqSettings>({ bass: 0, mid: 0, treble: 0 });
-  const [octaveOffset, setOctaveOffset] = useState<number>(0);
-  const [reverbLevel, setReverbLevel] = useState<number>(0.0);
-  const [noteDuration, setNoteDuration] = useState<number>(0.8);
-
   // Responsive width calculation
   const pianoWidth = useMemo(() => {
-    
     const availableWidth = containerWidth;
     
     // Define responsive breakpoints and widths
@@ -133,7 +139,7 @@ const PianoControl: React.FC<PianoProps> = ({
     const anchorNote = 'c';
     const firstNote = MidiNumbers.fromNote(`${anchorNote}${startOctave}`);
     const lastNote = MidiNumbers.fromNote(`${anchorNote}${endOctave}`);
-    const midiOffset = octaveOffset * 12;
+    const midiOffset = pianoSettings.octaveOffset * 12;
 
     return {
       firstNote,
@@ -145,11 +151,19 @@ const PianoControl: React.FC<PianoProps> = ({
         keyboardConfig: KeyboardShortcuts.HOME_ROW,
       }),
     };
-  }, [octaveOffset]);
+  }, [pianoSettings.octaveOffset]);
 
   const [pianoConfig, setPianoConfig] = useState<any>({
-    instrumentName: 'electric_piano_1',
+    instrumentName: pianoSettings.instrumentName,
   });
+
+  // Update piano config when settings change
+  useEffect(() => {
+    setPianoConfig((prev: any) => ({
+      ...prev,
+      instrumentName: pianoSettings.instrumentName
+    }));
+  }, [pianoSettings.instrumentName]);
 
   // Simple chord playing when sequencer is OFF
   useEffect(() => {
@@ -244,14 +258,14 @@ const PianoControl: React.FC<PianoProps> = ({
         
         const midiNote = MidiNumbers.fromNote(`${note}${finalOctave}`);
         
-        if (!cutOffPreviousNotes && stopAllNotesRef.current) {
+        if (!pianoSettings.cutOffPreviousNotes && stopAllNotesRef.current) {
           stopAllNotesRef.current();
         }
         
         setActivePianoNotes([midiNote]);
         
         const stepDuration = getStepDuration();
-        const sustainDuration = Math.min(stepDuration * noteDuration, stepDuration - 50);
+        const sustainDuration = Math.min(stepDuration * pianoSettings.noteDuration, stepDuration - 50);
         
         setTimeout(() => {
           setActivePianoNotes([]);
@@ -271,8 +285,8 @@ const PianoControl: React.FC<PianoProps> = ({
     globalPatternState.currentStep,
     globalPatternState.isPlaying,
     activeNotes,
-    cutOffPreviousNotes,
-    noteDuration,
+    pianoSettings.cutOffPreviousNotes,
+    pianoSettings.noteDuration,
     getStepDuration,
     getCurrentPattern,
     parsePatternStep
@@ -280,7 +294,7 @@ const PianoControl: React.FC<PianoProps> = ({
 
   const playNoteWithOffset = (playNote: (midiNumber: number) => void) =>
     (midiNumber: number) => {
-      if (!cutOffPreviousNotes && stopAllNotesRef.current) {
+      if (!pianoSettings.cutOffPreviousNotes && stopAllNotesRef.current) {
         stopAllNotesRef.current();
       }
       playNote(midiNumber + midiOffset);
@@ -297,15 +311,14 @@ const PianoControl: React.FC<PianoProps> = ({
 
   return (
     <SoundfontProvider
-      instrumentName={pianoConfig.instrumentName}
+      instrumentName={pianoSettings.instrumentName}
       audioContext={audioContext}
       hostname={soundfontHostname}
-      eq={eq}
-      reverbLevel={reverbLevel}
+      eq={pianoSettings.eq}
+      reverbLevel={pianoSettings.reverbLevel}
       render={({ isLoading, playNote, stopNote, stopAllNotes }) => {
         stopAllNotesRef.current = stopAllNotes;
-        const currentPattern = getCurrentPattern();
-
+        
         return (<>
           <div ref={containerRef} className="relative w-full">
             {/* Piano Container - Properly centered */}
@@ -334,25 +347,34 @@ const PianoControl: React.FC<PianoProps> = ({
           <div className="mt-5">
             <InstrumentListProvider
               hostname={soundfontHostname}
-              render={(instrumentList) => (
-                <PianoConfig
-                  config={pianoConfig}
-                  setConfig={setPianoConfig}
-                  instrumentList={instrumentList || [pianoConfig.instrumentName]}
-                  keyboardShortcuts={keyboardShortcuts}
-                  // Pass settings props to PianoConfig
-                  cutOffPreviousNotes={cutOffPreviousNotes}
-                  setCutOffPreviousNotes={setCutOffPreviousNotes}
-                  eq={eq}
-                  setEq={setEq}
-                  octaveOffset={octaveOffset}
-                  setOctaveOffset={setOctaveOffset}
-                  reverbLevel={reverbLevel}
-                  setReverbLevel={setReverbLevel}
-                  noteDuration={noteDuration}
-                  setNoteDuration={setNoteDuration}
-                />
-              )}
+              render={(instrumentList) => {
+                // Notify parent component about available instruments
+                if (instrumentList && instrumentList.length > 0 && 
+                    JSON.stringify(instrumentList) !== JSON.stringify(availableInstruments)) {
+                  onAvailableInstrumentsChange(instrumentList);
+                }
+                
+                return (
+                  <PianoConfig
+                    config={pianoConfig}
+                    setConfig={setPianoConfig}
+                    instrumentList={instrumentList || availableInstruments}
+                    keyboardShortcuts={keyboardShortcuts}
+                    // Pass piano settings props
+                    cutOffPreviousNotes={pianoSettings.cutOffPreviousNotes}
+                    setCutOffPreviousNotes={onCutOffPreviousNotesChange}
+                    eq={pianoSettings.eq}
+                    setEq={onEqChange}
+                    octaveOffset={pianoSettings.octaveOffset}
+                    setOctaveOffset={onOctaveOffsetChange}
+                    reverbLevel={pianoSettings.reverbLevel}
+                    setReverbLevel={onReverbLevelChange}
+                    noteDuration={pianoSettings.noteDuration}
+                    setNoteDuration={onNoteDurationChange}
+                    onInstrumentChange={onInstrumentChange}
+                  />
+                )
+              }}
             />
           </div>
         </>)

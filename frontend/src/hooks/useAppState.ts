@@ -8,11 +8,21 @@ import { normalizeNoteName } from '../util/NoteUtil';
 import { 
     encodeAndSaveToUrl, 
     loadAndDecodeFromUrl, 
-    type AddedChord 
+    type AddedChord,
+    type PianoSettings 
 } from '../util/urlStateEncoder';
 
 const START_OCTAVE = 4;
 const END_OCTAVE = 7;
+
+// Available keys for the dropdown
+const AVAILABLE_KEYS = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+// Default instrument list (will be replaced when actual list loads)
+const DEFAULT_INSTRUMENTS = [
+    'electric_piano_1', 'acoustic_grand_piano', 'bright_acoustic_piano', 
+    'electric_grand_piano', 'honkytonk_piano', 'electric_piano_2', 'harpsichord', 'clavinet'
+];
 
 // Types
 export interface ActiveNoteInfo {
@@ -54,6 +64,15 @@ const resolvePatternForPlayback = (
     return currentlyActivePattern;
 };
 
+const getDefaultPianoSettings = (): PianoSettings => ({
+    instrumentName: 'electric_piano_1',
+    cutOffPreviousNotes: true,
+    eq: { bass: 0, mid: 0, treble: 0 },
+    octaveOffset: 0,
+    reverbLevel: 0.0,
+    noteDuration: 0.8
+});
+
 export const useAppState = () => {
     // ========== STATE MANAGEMENT ==========
     
@@ -63,6 +82,12 @@ export const useAppState = () => {
     const [key, setKey] = useState<string>('C');
     const [mode, setMode] = useState<string>('Ionian');
     const { modes } = useModes();
+
+    // Available instruments state
+    const [availableInstruments, setAvailableInstruments] = useState<string[]>(DEFAULT_INSTRUMENTS);
+
+    // Piano settings state (lifted from PianoControl)
+    const [pianoSettings, setPianoSettings] = useState<PianoSettings>(getDefaultPianoSettings());
 
     // Playback state
     const [activeNotes, setActiveNotes] = useState<ActiveNoteInfo[]>([]);
@@ -100,6 +125,8 @@ export const useAppState = () => {
     const nextStepTimeRef = useRef<number>(0);
     const silentAudioRef = useRef<HTMLAudioElement>(null);
     const audioInitializedRef = useRef(false);
+    const hasLoadedFromUrl = useRef(false);
+    const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // ========== COMPUTED VALUES ==========
     const baseStepDuration = useMemo(() => {
@@ -114,26 +141,44 @@ export const useAppState = () => {
             .filter(Boolean) as string[];
     }, [scaleNotes]);
 
-    // URL state management - now using extracted module
+    // Available modes for encoding
+    const availableModes = useMemo(() => modes || ['Ionian'], [modes]);
+
+    // ========== URL STATE MANAGEMENT ==========
+    
     const saveStateToUrl = useCallback(() => {
-        encodeAndSaveToUrl(
-            key, 
-            mode, 
-            addedChords, 
-            globalPatternState.currentPattern,
-            globalPatternState.bpm, 
-            globalPatternState.subdivision, 
-            globalPatternState.swing, 
-            showPatternSystem, 
-            isLiveMode, 
-            chords
-        );
-    }, [key, mode, addedChords, globalPatternState.currentPattern, globalPatternState.bpm, 
-        globalPatternState.subdivision, globalPatternState.swing, showPatternSystem, isLiveMode, chords]);
+        if (chords?.length && availableModes.length) {
+            encodeAndSaveToUrl(
+                key, 
+                mode, 
+                addedChords, 
+                globalPatternState.currentPattern,
+                globalPatternState.bpm, 
+                globalPatternState.subdivision, 
+                globalPatternState.swing, 
+                showPatternSystem, 
+                isLiveMode,
+                pianoSettings,
+                AVAILABLE_KEYS,
+                availableModes,
+                availableInstruments,
+                chords
+            );
+        }
+    }, [
+        key, mode, addedChords, globalPatternState.currentPattern, globalPatternState.bpm, 
+        globalPatternState.subdivision, globalPatternState.swing, showPatternSystem, isLiveMode,
+        pianoSettings, availableModes, availableInstruments, chords
+    ]);
 
     const loadStateFromUrl = useCallback(() => {
         if (chords?.length) {
-            const decoded = loadAndDecodeFromUrl(chords);
+            const decoded = loadAndDecodeFromUrl(
+                AVAILABLE_KEYS,
+                availableModes,
+                availableInstruments,
+                chords
+            );
             if (decoded) {
                 setKey(decoded.key);
                 setMode(decoded.mode);
@@ -147,9 +192,39 @@ export const useAppState = () => {
                 }));
                 setShowPatternSystem(decoded.showPattern);
                 setIsLiveMode(decoded.liveMode);
+                setPianoSettings(decoded.pianoSettings);
             }
         }
-    }, [chords]);
+    }, [chords, availableModes, availableInstruments]);
+
+    // ========== PIANO SETTINGS CALLBACKS ==========
+    const updatePianoSettings = useCallback((updates: Partial<PianoSettings>) => {
+        setPianoSettings(prev => ({ ...prev, ...updates }));
+    }, []);
+
+    const setPianoInstrument = useCallback((instrumentName: string) => {
+        updatePianoSettings({ instrumentName });
+    }, [updatePianoSettings]);
+
+    const setCutOffPreviousNotes = useCallback((cutOffPreviousNotes: boolean) => {
+        updatePianoSettings({ cutOffPreviousNotes });
+    }, [updatePianoSettings]);
+
+    const setEq = useCallback((eq: { bass: number; mid: number; treble: number }) => {
+        updatePianoSettings({ eq });
+    }, [updatePianoSettings]);
+
+    const setOctaveOffset = useCallback((octaveOffset: number) => {
+        updatePianoSettings({ octaveOffset });
+    }, [updatePianoSettings]);
+
+    const setReverbLevel = useCallback((reverbLevel: number) => {
+        updatePianoSettings({ reverbLevel });
+    }, [updatePianoSettings]);
+
+    const setNoteDuration = useCallback((noteDuration: number) => {
+        updatePianoSettings({ noteDuration });
+    }, [updatePianoSettings]);
 
     // ========== CALLBACKS ==========
     const getSwingDuration = useCallback((stepIndex: number) => {
@@ -507,7 +582,6 @@ export const useAppState = () => {
     useEffect(() => {
         if (!key) return;
         setLoadingChords(true);
-        setChords([]);
 
         Promise.all([
             dataService.getModeKeyChords(key, mode),
@@ -521,27 +595,62 @@ export const useAppState = () => {
             .finally(() => setLoadingChords(false));
     }, [key, mode]);
 
-    // Load state from URL when chords are available
+    // Load state from URL only once when chords first become available
     useEffect(() => {
-        if (chords?.length) {
+        if (chords?.length && !hasLoadedFromUrl.current) {
+            hasLoadedFromUrl.current = true;
             loadStateFromUrl();
         }
     }, [chords, loadStateFromUrl]);
 
     // Save state to URL when relevant state changes (but not immediately after loading)
     useEffect(() => {
-        if (chords?.length) {
-            const timeoutId = setTimeout(saveStateToUrl, 300); // Debounce
-            return () => clearTimeout(timeoutId);
+        if (chords?.length && availableModes.length && hasLoadedFromUrl.current) {
+            // Clear any existing timeout
+            if (saveTimeoutRef.current) {
+                clearTimeout(saveTimeoutRef.current);
+            }
+            
+            // Debounce the save
+            saveTimeoutRef.current = setTimeout(() => {
+                saveStateToUrl();
+            }, 300);
         }
-    }, [key, mode, addedChords, globalPatternState.currentPattern, globalPatternState.bpm, 
-        globalPatternState.subdivision, globalPatternState.swing, showPatternSystem, isLiveMode, chords, saveStateToUrl]);
+        
+        return () => {
+            if (saveTimeoutRef.current) {
+                clearTimeout(saveTimeoutRef.current);
+            }
+        };
+    }, [
+        key, mode, addedChords, globalPatternState.currentPattern, globalPatternState.bpm, 
+        globalPatternState.subdivision, globalPatternState.swing, showPatternSystem, isLiveMode,
+        pianoSettings, chords?.length, availableModes.length, saveStateToUrl
+    ]);
 
     // Keyboard event listener
     useEffect(() => {
         document.addEventListener('keydown', handleKeyPress);
         return () => document.removeEventListener('keydown', handleKeyPress);
     }, [handleKeyPress]);
+
+    // Clean up invalid chords when available chords change
+    useEffect(() => {
+        if (chords?.length && addedChords.length > 0) {
+            const validChords = addedChords.filter(addedChord => 
+                chords.some(availableChord => availableChord.chordName === addedChord.name)
+            );
+            
+            if (validChords.length !== addedChords.length) {
+                console.log(`Removing ${addedChords.length - validChords.length} invalid chords after key/mode change`);
+                setAddedChords(validChords);
+                if (validChords.length === 0) {
+                    setActiveChordIndex(null);
+                    setIsLiveMode(false);
+                }
+            }
+        }
+    }, [chords, addedChords]);
 
     // ========== RETURN VALUES ==========
     return {
@@ -564,6 +673,8 @@ export const useAppState = () => {
         currentlyActivePattern,
         temporaryChord,
         normalizedScaleNotes,
+        pianoSettings,
+        availableInstruments,
         
         // Refs (for the silent audio element)
         silentAudioRef,
@@ -574,6 +685,7 @@ export const useAppState = () => {
         setIsDeleteMode,
         setShowPatternSystem,
         setIsLiveMode,
+        setAvailableInstruments,
         handleChordClick,
         addChordClick,
         removeChord,
@@ -583,6 +695,15 @@ export const useAppState = () => {
         handlePatternChange,
         handleTogglePlayback,
         getCurrentPattern,
+        
+        // Piano settings handlers
+        setPianoInstrument,
+        setCutOffPreviousNotes,
+        setEq,
+        setOctaveOffset,
+        setReverbLevel,
+        setNoteDuration,
+        updatePianoSettings,
         
         // Helper functions
         playNotes,

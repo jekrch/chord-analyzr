@@ -42,6 +42,7 @@ interface PianoConfigProps {
     setReverbLevel: (level: number) => void;
     noteDuration: number;
     setNoteDuration: (duration: number) => void;
+    onInstrumentChange: (instrumentName: string) => void;
 }
 
 interface PianoConfigState {
@@ -105,9 +106,15 @@ class PianoConfig extends Component<PianoConfigProps, PianoConfigState> {
     };
 
     onChangeInstrument = (value: any) => {
+        const instrumentName = value.replaceAll(' ', '_');
+        
+        // Update local config
         this.props.setConfig({
-            instrumentName: value.replaceAll(' ', '_'),
+            instrumentName: instrumentName,
         });
+        
+        // Notify parent component
+        this.props.onInstrumentChange(instrumentName);
     };
 
 render() {

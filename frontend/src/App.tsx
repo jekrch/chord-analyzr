@@ -28,6 +28,8 @@ function App() {
         currentlyActivePattern,
         temporaryChord,
         normalizedScaleNotes,
+        pianoSettings,
+        availableInstruments,
         
         // Refs
         silentAudioRef,
@@ -38,6 +40,7 @@ function App() {
         setIsDeleteMode,
         setShowPatternSystem,
         setIsLiveMode,
+        setAvailableInstruments,
         handleChordClick,
         addChordClick,
         clearAllChords,
@@ -46,6 +49,14 @@ function App() {
         handlePatternChange,
         handleTogglePlayback,
         getCurrentPattern,
+        
+        // Piano settings handlers
+        setPianoInstrument,
+        setCutOffPreviousNotes,
+        setEq,
+        setOctaveOffset,
+        setReverbLevel,
+        setNoteDuration,
     } = useAppState();
 
     // ========== RENDER ==========
@@ -86,6 +97,16 @@ function App() {
                         activeChordIndex={activeChordIndex}
                         addedChords={addedChords}
                         currentlyActivePattern={currentlyActivePattern}
+                        // Piano settings props
+                        pianoSettings={pianoSettings}
+                        availableInstruments={availableInstruments}
+                        onInstrumentChange={setPianoInstrument}
+                        onCutOffPreviousNotesChange={setCutOffPreviousNotes}
+                        onEqChange={setEq}
+                        onOctaveOffsetChange={setOctaveOffset}
+                        onReverbLevelChange={setReverbLevel}
+                        onNoteDurationChange={setNoteDuration}
+                        onAvailableInstrumentsChange={setAvailableInstruments}
                     />
                 </div>
 

@@ -41,15 +41,12 @@ export interface EncodedState {
 const toBase36 = (num: number): string => Math.max(0, Math.round(num)).toString(36);
 const fromBase36 = (str: string): number => parseInt(str, 36) || 0;
 
-// Safe chord name encoding (alphanumeric only)
-const encodeChordName = (name: string): string => {
-    return name.replace(/[^a-zA-Z0-9]/g, '').substring(0, 8); // Max 8 chars
-};
-
 /**
  * Encodes application state into a robust URL-safe string
- * Format: v2_{k}_{m}_{pattern}_{timing}_{piano}_{chords}
- * Uses _ as main separator and | for sub-separators to avoid conflicts
+ * Format: v4_{k}_{m}_{pattern}_{timing}_{piano}_{chords}
+ * v4: Uses chord indices + dot-separated patterns to preserve multi-character elements like "1+"
+ * v3: Uses chord indices instead of lossy name encoding
+ * v2: Legacy name-based encoding (maintained for compatibility)
  */
 export const encodeState = (
     key: string,
@@ -75,8 +72,8 @@ export const encodeState = (
     }
     
     try {
-        // 1. Version identifier
-        const version = 'v2';
+        // 1. Version identifier (v4 for the improved pattern encoding)
+        const version = 'v4';
         
         // 2. Key (index in available keys)
         const keyIndex = availableKeys.indexOf(key);
@@ -86,11 +83,10 @@ export const encodeState = (
         const modeIndex = availableModes.indexOf(mode);
         const m = toBase36(Math.max(0, modeIndex));
         
-        // 4. Global pattern (simplified, max 16 steps)
+        // 4. Global pattern (using . as separator to preserve multi-char elements like 1+)
         const p = globalPattern.slice(0, 16)
-            .join('')
-            .replace(/[xX]/g, '0')
-            .replace(/[^0-9a-zA-Z+]/g, ''); // Keep + for octave up
+            .map(step => step.replace(/[xX]/gi, '0'))
+            .join('.');
         
         // 5. Timing settings (BPM|subdivision|swing|flags)
         const bpmClamped = Math.max(60, Math.min(200, bpm));
@@ -131,23 +127,32 @@ export const encodeState = (
         
         const piano = `${inst}|${cutOff}|${eqBass}|${eqMid}|${eqTreble}|${octave}|${reverb}|${duration}`;
         
-        // 7. Chords (name:pattern format, or just name if using global pattern)
+        // 7. Chords (using indices instead of names for reliability)
         const chordData = addedChords.map(ac => {
-            const encodedName = encodeChordName(ac.name);
+            // Find the index of this chord in the available chords
+            const chordIndex = chords.findIndex(c => 
+                c.chordName === ac.name && c.chordNoteNames === ac.notes
+            );
+            
+            if (chordIndex === -1) {
+                console.warn('Could not find chord index for:', ac.name);
+                return null;
+            }
+            
+            const encodedIndex = toBase36(chordIndex);
             
             // Compare chord pattern to global pattern
-            const chordPatternStr = ac.pattern.join('').replace(/[xX]/g, '0');
-            const globalPatternStr = globalPattern.join('').replace(/[xX]/g, '0');
+            const chordPatternStr = ac.pattern.map(step => step.replace(/[xX]/gi, '0')).join('.');
+            const globalPatternStr = globalPattern.map(step => step.replace(/[xX]/gi, '0')).join('.');
             
             if (chordPatternStr === globalPatternStr) {
-                return encodedName; // Just the name
+                return encodedIndex; // Just the index
             } else {
-                // Custom pattern: name:pattern
+                // Custom pattern: index:pattern (using . separator for multi-char elements)
                 const customPattern = ac.pattern.slice(0, 16)
-                    .join('')
-                    .replace(/[xX]/g, '0')
-                    .replace(/[^0-9a-zA-Z+]/g, '');
-                return `${encodedName}:${customPattern}`;
+                    .map(step => step.replace(/[xX]/gi, '0'))
+                    .join('.');
+                return `${encodedIndex}:${customPattern}`;
             }
         }).filter(Boolean);
         
@@ -156,6 +161,7 @@ export const encodeState = (
         // Final format: version_key_mode_pattern_timing_piano_chords
         const result = `${version}_${k}_${m}_${p}_${timing}_${piano}_${chordsStr}`;
         console.log('Encoded state result:', result);
+        console.log('Encoded chords:', chordsStr);
         return result;
         
     } catch (error) {
@@ -166,6 +172,7 @@ export const encodeState = (
 
 /**
  * Decodes a state string back into application state
+ * Handles v2 (old name-based), v3 (index-based), and v4 (index-based + improved pattern encoding)
  */
 export const decodeState = (
     state: string,
@@ -185,8 +192,9 @@ export const decodeState = (
         const parts = state.split('_');
         console.log('State parts:', parts);
         
-        // Check version
-        if (parts[0] !== 'v2' || parts.length < 6) {
+        // Check version and handle v2, v3, and v4
+        const version = parts[0];
+        if (!['v2', 'v3', 'v4'].includes(version) || parts.length < 6) {
             console.log('Invalid state format or version');
             return null;
         }
@@ -199,9 +207,11 @@ export const decodeState = (
         const modeIndex = fromBase36(parts[2] || '0');
         const mode = availableModes[modeIndex] || availableModes[0];
         
-        // 3. Pattern
-        const patternStr = parts[3] || '1234';
-        const pattern = patternStr.split('').map(c => c === '0' ? 'x' : c);
+        // 3. Pattern (version-aware decoding)
+        const patternStr = parts[3] || (version === 'v4' ? '1.2.3.4' : '1234');
+        const pattern = version === 'v4' 
+            ? patternStr.split('.').map(c => c === '0' ? 'x' : c)
+            : patternStr.split('').map(c => c === '0' ? 'x' : c);
         
         // 4. Timing
         const timingParts = (parts[4] || '').split('|');
@@ -238,26 +248,38 @@ export const decodeState = (
         
         if (chordsPart) {
             const chordEntries = chordsPart.split('|').filter(Boolean);
+            console.log('Chord entries to decode:', chordEntries);
             
             for (const entry of chordEntries) {
-                let chordName: string;
+                let chordIndex: number;
                 let chordPattern: string[];
                 
                 if (entry.includes(':')) {
-                    // Custom pattern: name:pattern
-                    const [encodedName, patternStr] = entry.split(':');
-                    chordName = encodedName;
-                    chordPattern = patternStr.split('').map(c => c === '0' ? 'x' : c);
+                    // Custom pattern: index:pattern (version-aware)
+                    const [indexStr, patternStr] = entry.split(':');
+                    chordIndex = fromBase36(indexStr);
+                    chordPattern = version === 'v4'
+                        ? patternStr.split('.').map(c => c === '0' ? 'x' : c)
+                        : patternStr.split('').map(c => c === '0' ? 'x' : c);
                 } else {
                     // Uses global pattern
-                    chordName = entry;
+                    chordIndex = fromBase36(entry);
                     chordPattern = [...pattern];
                 }
                 
-                // Find the actual chord by matching the encoded name
-                const matchingChord = chords.find(c => 
-                    c.chordName && encodeChordName(c.chordName) === chordName
-                );
+                // Get the chord by index for v3/v4, or fall back to name matching for v2
+                let matchingChord: ModeScaleChordDto | undefined;
+                
+                if (version === 'v3' || version === 'v4') {
+                    // v3/v4: Use direct index lookup
+                    matchingChord = chords[chordIndex];
+                } else {
+                    // v2 compatibility: Try to find by encoded name (fallback)
+                    const encodedName = entry.includes(':') ? entry.split(':')[0] : entry;
+                    matchingChord = chords.find(c => 
+                        c.chordName && encodeChordNameLegacy(c.chordName) === encodedName
+                    );
+                }
                 
                 if (matchingChord?.chordName && matchingChord?.chordNoteNames) {
                     addedChords.push({
@@ -265,8 +287,9 @@ export const decodeState = (
                         notes: matchingChord.chordNoteNames,
                         pattern: chordPattern
                     });
+                    console.log('Successfully decoded chord:', matchingChord.chordName);
                 } else {
-                    console.warn('Could not find chord for encoded name:', chordName);
+                    console.warn('Could not find chord at index/name:', (version === 'v3' || version === 'v4') ? chordIndex : entry);
                 }
             }
         }
@@ -284,13 +307,19 @@ export const decodeState = (
             pianoSettings
         };
         
-        console.log('Decoded state:', result);
+        console.log('Decoded state result:', result);
+        console.log('Decoded addedChords:', addedChords.length);
         return result;
         
     } catch (error) {
         console.error('Failed to decode state:', error);
         return null;
     }
+};
+
+// Legacy chord name encoding for v2 compatibility
+const encodeChordNameLegacy = (name: string): string => {
+    return name.replace(/[^a-zA-Z0-9]/g, '').substring(0, 8);
 };
 
 /**

@@ -127,6 +127,7 @@ export const useAppState = () => {
     const audioInitializedRef = useRef(false);
     const hasLoadedFromUrl = useRef(false);
     const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const isInitialLoad = useRef(true);
 
     // ========== COMPUTED VALUES ==========
     const baseStepDuration = useMemo(() => {
@@ -147,7 +148,8 @@ export const useAppState = () => {
     // ========== URL STATE MANAGEMENT ==========
     
     const saveStateToUrl = useCallback(() => {
-        if (chords?.length && availableModes.length) {
+        if (chords?.length && availableModes.length && !isInitialLoad.current) {
+            console.log('Saving state to URL - addedChords:', addedChords.length);
             encodeAndSaveToUrl(
                 key, 
                 mode, 
@@ -173,6 +175,7 @@ export const useAppState = () => {
 
     const loadStateFromUrl = useCallback(() => {
         if (chords?.length) {
+            console.log('Loading state from URL - chords available:', chords.length);
             const decoded = loadAndDecodeFromUrl(
                 AVAILABLE_KEYS,
                 availableModes,
@@ -180,6 +183,7 @@ export const useAppState = () => {
                 chords
             );
             if (decoded) {
+                console.log('Loaded state from URL - addedChords:', decoded.addedChords.length);
                 setKey(decoded.key);
                 setMode(decoded.mode);
                 setAddedChords(decoded.addedChords);
@@ -193,6 +197,8 @@ export const useAppState = () => {
                 setShowPatternSystem(decoded.showPattern);
                 setIsLiveMode(decoded.liveMode);
                 setPianoSettings(decoded.pianoSettings);
+            } else {
+                console.log('No valid state found in URL');
             }
         }
     }, [chords, availableModes, availableInstruments]);
@@ -284,6 +290,7 @@ export const useAppState = () => {
                 notes: chordNotes,
                 pattern: [...currentlyActivePattern]
             }];
+            console.log('Added chord, new total:', newChords.length);
             return newChords;
         });
     }, [currentlyActivePattern]);
@@ -291,6 +298,7 @@ export const useAppState = () => {
     const removeChord = useCallback((indexToRemove: number) => {
         setAddedChords(current => {
             const newChords = current.filter((_, index) => index !== indexToRemove);
+            console.log('Removed chord, new total:', newChords.length);
             if (newChords.length === 0 && isLiveMode) {
                 setIsLiveMode(false);
             }
@@ -595,26 +603,31 @@ export const useAppState = () => {
             .finally(() => setLoadingChords(false));
     }, [key, mode]);
 
-    // Load state from URL only once when chords first become available
+    // Load state from URL when chords first become available
     useEffect(() => {
         if (chords?.length && !hasLoadedFromUrl.current) {
             hasLoadedFromUrl.current = true;
+            isInitialLoad.current = true;
             loadStateFromUrl();
+            // Allow saving after a brief delay to ensure the load is complete
+            setTimeout(() => {
+                isInitialLoad.current = false;
+            }, 100);
         }
     }, [chords, loadStateFromUrl]);
 
-    // Save state to URL when relevant state changes (but not immediately after loading)
+    // Save state to URL when relevant state changes (with improved debouncing)
     useEffect(() => {
-        if (chords?.length && availableModes.length && hasLoadedFromUrl.current) {
+        if (chords?.length && availableModes.length && !isInitialLoad.current) {
             // Clear any existing timeout
             if (saveTimeoutRef.current) {
                 clearTimeout(saveTimeoutRef.current);
             }
             
-            // Debounce the save
+            // Debounce the save with a shorter delay for better responsiveness
             saveTimeoutRef.current = setTimeout(() => {
                 saveStateToUrl();
-            }, 300);
+            }, 100);
         }
         
         return () => {
@@ -710,4 +723,4 @@ export const useAppState = () => {
         saveStateToUrl,
         loadStateFromUrl,
     };
-};
+}; 

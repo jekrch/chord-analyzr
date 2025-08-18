@@ -254,6 +254,23 @@ export const useAppState = () => {
         setTimeout(() => setActiveNotes(notes), 10);
     }, []);
 
+	const removeChord = useCallback((indexToRemove: number) => {
+        setAddedChords(current => {
+            const newChords = current.filter((_, index) => index !== indexToRemove);
+            console.log('Removed chord, new total:', newChords.length);
+            if (newChords.length === 0 && isLiveMode) {
+                setIsLiveMode(false);
+            }
+            return newChords;
+        });
+
+        if (activeChordIndex === indexToRemove) {
+            setActiveChordIndex(null);
+        } else if (activeChordIndex !== null && activeChordIndex > indexToRemove) {
+            setActiveChordIndex(activeChordIndex - 1);
+        }
+    }, [activeChordIndex, isLiveMode]);
+
     const handleChordClick = useCallback((chordNoteNames: string, chordIndex?: number, chordName?: string) => {
         if (isDeleteMode && chordIndex !== undefined) {
             removeChord(chordIndex);
@@ -281,7 +298,7 @@ export const useAppState = () => {
                 playNotes(notesWithOctaves as ActiveNoteInfo[]);
             }
         }
-    }, [playNotes, globalPatternState.isPlaying, isDeleteMode]);
+    }, [playNotes, globalPatternState.isPlaying, isDeleteMode, removeChord]);
 
     const addChordClick = useCallback((chordName: string, chordNotes: string) => {
         setAddedChords(current => {
@@ -294,23 +311,6 @@ export const useAppState = () => {
             return newChords;
         });
     }, [currentlyActivePattern]);
-
-    const removeChord = useCallback((indexToRemove: number) => {
-        setAddedChords(current => {
-            const newChords = current.filter((_, index) => index !== indexToRemove);
-            console.log('Removed chord, new total:', newChords.length);
-            if (newChords.length === 0 && isLiveMode) {
-                setIsLiveMode(false);
-            }
-            return newChords;
-        });
-
-        if (activeChordIndex === indexToRemove) {
-            setActiveChordIndex(null);
-        } else if (activeChordIndex !== null && activeChordIndex > indexToRemove) {
-            setActiveChordIndex(activeChordIndex - 1);
-        }
-    }, [activeChordIndex, isLiveMode]);
 
     const clearAllChords = useCallback(() => {
         setAddedChords([]);
@@ -647,24 +647,6 @@ export const useAppState = () => {
         return () => document.removeEventListener('keydown', handleKeyPress);
     }, [handleKeyPress]);
 
-    // Clean up invalid chords when available chords change
-    useEffect(() => {
-        if (chords?.length && addedChords.length > 0) {
-            const validChords = addedChords.filter(addedChord => 
-                chords.some(availableChord => availableChord.chordName === addedChord.name)
-            );
-            
-            if (validChords.length !== addedChords.length) {
-                console.log(`Removing ${addedChords.length - validChords.length} invalid chords after key/mode change`);
-                setAddedChords(validChords);
-                if (validChords.length === 0) {
-                    setActiveChordIndex(null);
-                    setIsLiveMode(false);
-                }
-            }
-        }
-    }, [chords, addedChords]);
-
     // ========== RETURN VALUES ==========
     return {
         // State
@@ -723,4 +705,4 @@ export const useAppState = () => {
         saveStateToUrl,
         loadStateFromUrl,
     };
-}; 
+};

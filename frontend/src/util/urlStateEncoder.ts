@@ -43,7 +43,8 @@ const fromBase36 = (str: string): number => parseInt(str, 36) || 0;
 
 /**
  * Encodes application state into a robust URL-safe string
- * Format: v4_{k}_{m}_{pattern}_{timing}_{piano}_{chords}
+ * Format: v5_{k}_{m}_{pattern}_{timing}_{piano}_{chords}
+ * v5: Uses URI-encoded name~notes for robust, key-independent chord storage
  * v4: Uses chord indices + dot-separated patterns to preserve multi-character elements like "1+"
  * v3: Uses chord indices instead of lossy name encoding
  * v2: Legacy name-based encoding (maintained for compatibility)
@@ -72,8 +73,8 @@ export const encodeState = (
     }
     
     try {
-        // 1. Version identifier (v4 for the improved pattern encoding)
-        const version = 'v4';
+        // 1. Version identifier (v5 for robust chord encoding)
+        const version = 'v5';
         
         // 2. Key (index in available keys)
         const keyIndex = availableKeys.indexOf(key);
@@ -127,32 +128,25 @@ export const encodeState = (
         
         const piano = `${inst}|${cutOff}|${eqBass}|${eqMid}|${eqTreble}|${octave}|${reverb}|${duration}`;
         
-        // 7. Chords (using indices instead of names for reliability)
+        // 7. Chords (using absolute name and notes for robustness)
         const chordData = addedChords.map(ac => {
-            // Find the index of this chord in the available chords
-            const chordIndex = chords.findIndex(c => 
-                c.chordName === ac.name && c.chordNoteNames === ac.notes
-            );
+            const safeName = encodeURIComponent(ac.name);
+            const safeNotes = encodeURIComponent(ac.notes);
             
-            if (chordIndex === -1) {
-                console.warn('Could not find chord index for:', ac.name);
-                return null;
-            }
-            
-            const encodedIndex = toBase36(chordIndex);
+            const chordId = `${safeName}~${safeNotes}`;
             
             // Compare chord pattern to global pattern
             const chordPatternStr = ac.pattern.map(step => step.replace(/[xX]/gi, '0')).join('.');
             const globalPatternStr = globalPattern.map(step => step.replace(/[xX]/gi, '0')).join('.');
             
             if (chordPatternStr === globalPatternStr) {
-                return encodedIndex; // Just the index
+                return chordId; // Just the ID
             } else {
-                // Custom pattern: index:pattern (using . separator for multi-char elements)
+                // Custom pattern: id:pattern
                 const customPattern = ac.pattern.slice(0, 16)
                     .map(step => step.replace(/[xX]/gi, '0'))
                     .join('.');
-                return `${encodedIndex}:${customPattern}`;
+                return `${chordId}:${customPattern}`;
             }
         }).filter(Boolean);
         
@@ -172,7 +166,7 @@ export const encodeState = (
 
 /**
  * Decodes a state string back into application state
- * Handles v2 (old name-based), v3 (index-based), and v4 (index-based + improved pattern encoding)
+ * Handles v2, v3, v4, and v5 (robust chord encoding)
  */
 export const decodeState = (
     state: string,
@@ -192,9 +186,9 @@ export const decodeState = (
         const parts = state.split('_');
         console.log('State parts:', parts);
         
-        // Check version and handle v2, v3, and v4
+        // Check version and handle v2, v3, v4, and v5
         const version = parts[0];
-        if (!['v2', 'v3', 'v4'].includes(version) || parts.length < 6) {
+        if (!['v2', 'v3', 'v4', 'v5'].includes(version) || parts.length < 6) {
             console.log('Invalid state format or version');
             return null;
         }
@@ -208,8 +202,8 @@ export const decodeState = (
         const mode = availableModes[modeIndex] || availableModes[0];
         
         // 3. Pattern (version-aware decoding)
-        const patternStr = parts[3] || (version === 'v4' ? '1.2.3.4' : '1234');
-        const pattern = version === 'v4' 
+        const patternStr = parts[3] || (version === 'v4' || version === 'v5' ? '1.2.3.4' : '1234');
+        const pattern = (version === 'v4' || version === 'v5')
             ? patternStr.split('.').map(c => c === '0' ? 'x' : c)
             : patternStr.split('').map(c => c === '0' ? 'x' : c);
         
@@ -251,45 +245,71 @@ export const decodeState = (
             console.log('Chord entries to decode:', chordEntries);
             
             for (const entry of chordEntries) {
-                let chordIndex: number;
-                let chordPattern: string[];
-                
-                if (entry.includes(':')) {
-                    // Custom pattern: index:pattern (version-aware)
-                    const [indexStr, patternStr] = entry.split(':');
-                    chordIndex = fromBase36(indexStr);
-                    chordPattern = version === 'v4'
-                        ? patternStr.split('.').map(c => c === '0' ? 'x' : c)
-                        : patternStr.split('').map(c => c === '0' ? 'x' : c);
+                if (version === 'v5') {
+                    // v5: {name}~{notes}[:pattern]
+                    const [chordIdPart, patternPart] = entry.split(':');
+                    const [safeName, safeNotes] = chordIdPart.split('~');
+
+                    if (safeName && safeNotes) {
+                        const name = decodeURIComponent(safeName);
+                        const notes = decodeURIComponent(safeNotes);
+                        let chordPattern: string[];
+
+                        if (patternPart) {
+                            // Custom pattern for v5 uses dot separator like v4
+                            chordPattern = patternPart.split('.').map(c => c === '0' ? 'x' : c);
+                        } else {
+                            // No custom pattern, use the global pattern
+                            chordPattern = [...pattern]; 
+                        }
+
+                        addedChords.push({ name, notes, pattern: chordPattern });
+                        console.log('Successfully decoded v5 chord:', name);
+                    } else {
+                        console.warn('Invalid v5 chord format:', entry);
+                    }
                 } else {
-                    // Uses global pattern
-                    chordIndex = fromBase36(entry);
-                    chordPattern = [...pattern];
-                }
-                
-                // Get the chord by index for v3/v4, or fall back to name matching for v2
-                let matchingChord: ModeScaleChordDto | undefined;
-                
-                if (version === 'v3' || version === 'v4') {
-                    // v3/v4: Use direct index lookup
-                    matchingChord = chords[chordIndex];
-                } else {
-                    // v2 compatibility: Try to find by encoded name (fallback)
-                    const encodedName = entry.includes(':') ? entry.split(':')[0] : entry;
-                    matchingChord = chords.find(c => 
-                        c.chordName && encodeChordNameLegacy(c.chordName) === encodedName
-                    );
-                }
-                
-                if (matchingChord?.chordName && matchingChord?.chordNoteNames) {
-                    addedChords.push({
-                        name: matchingChord.chordName,
-                        notes: matchingChord.chordNoteNames,
-                        pattern: chordPattern
-                    });
-                    console.log('Successfully decoded chord:', matchingChord.chordName);
-                } else {
-                    console.warn('Could not find chord at index/name:', (version === 'v3' || version === 'v4') ? chordIndex : entry);
+                    // Handle v2, v3, v4
+                    let chordIndex: number;
+                    let chordPattern: string[];
+                    
+                    if (entry.includes(':')) {
+                        // Custom pattern: index:pattern (version-aware)
+                        const [indexStr, patternStr_legacy] = entry.split(':');
+                        chordIndex = fromBase36(indexStr);
+                        chordPattern = version === 'v4'
+                            ? patternStr_legacy.split('.').map(c => c === '0' ? 'x' : c)
+                            : patternStr_legacy.split('').map(c => c === '0' ? 'x' : c);
+                    } else {
+                        // Uses global pattern
+                        chordIndex = fromBase36(entry);
+                        chordPattern = [...pattern];
+                    }
+                    
+                    // Get the chord by index for v3/v4, or fall back to name matching for v2
+                    let matchingChord: ModeScaleChordDto | undefined;
+                    
+                    if (version === 'v3' || version === 'v4') {
+                        // v3/v4: Use direct index lookup
+                        matchingChord = chords[chordIndex];
+                    } else {
+                        // v2 compatibility: Try to find by encoded name (fallback)
+                        const encodedName = entry.includes(':') ? entry.split(':')[0] : entry;
+                        matchingChord = chords.find(c => 
+                            c.chordName && encodeChordNameLegacy(c.chordName) === encodedName
+                        );
+                    }
+                    
+                    if (matchingChord?.chordName && matchingChord?.chordNoteNames) {
+                        addedChords.push({
+                            name: matchingChord.chordName,
+                            notes: matchingChord.chordNoteNames,
+                            pattern: chordPattern
+                        });
+                        console.log('Successfully decoded chord:', matchingChord.chordName);
+                    } else {
+                        console.warn('Could not find chord at index/name:', (version === 'v3' || version === 'v4') ? chordIndex : entry);
+                    }
                 }
             }
         }

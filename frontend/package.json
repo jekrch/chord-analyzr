@@ -15,6 +15,7 @@
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
     "classnames": "^2.3.2",
+    "lucide-react": "^0.540.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-piano": "^3.1.3",

@@ -1,7 +1,5 @@
-import React, { useRef, useState } from 'react';
-import { Menu, Transition } from '@headlessui/react';
-import { ChevronDownIcon } from '@heroicons/react/20/solid'
-import classNames from 'classnames';
+import React, { useRef, useState, useEffect } from 'react';
+import { ChevronDown, Search } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
 type DropdownProps = {
@@ -18,150 +16,225 @@ const Dropdown: React.FC<DropdownProps> = ({
   value, 
   onChange, 
   options, 
-  className, 
-  menuClassName, 
-  showSearch, 
-  buttonClassName 
+  className = '', 
+  menuClassName = '', 
+  showSearch = false, 
+  buttonClassName = '' 
 }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isPositioned, setIsPositioned] = useState(false);
   const [filter, setFilter] = useState('');
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [menuPosition, setMenuPosition] = useState({
     top: 0, 
     left: 0, 
     width: 0,
-    maxHeight: 300 
+    maxHeight: 320 
   });
   
   const filteredOptions = options.filter(option =>
     filter?.length ? option.toLowerCase().includes(filter.toLowerCase()) : true
   );
 
-  const portalMountNode = document.body;
-
   const updateMenuPosition = () => {
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
       const bottomSpace = window.innerHeight - rect.bottom; 
-      const maxHeight = Math.min(bottomSpace - 10, 300); 
+      const maxHeight = Math.min(bottomSpace - 10, 320); 
   
       setMenuPosition({
         top: rect.bottom + window.scrollY,
         left: rect.left + window.scrollX,
-        width: rect.width, // Match button width
+        width: rect.width,
         maxHeight 
       });
+      setIsPositioned(true);
     }
   };
 
-  return (
-    <Menu as="div" className={classNames("relative inline-block text-left z-50", className)}>
-      <div>
-        <Menu.Button 
-          ref={buttonRef}
-          onClick={(e) => {
-            updateMenuPosition();
-          }}
-          className={classNames(
-            "inline-flex w-full justify-between items-center gap-x-2 rounded-lg",
-            "bg-[#3d434f] px-4 py-2.5 text-sm font-medium",
-            "text-slate-200 shadow-sm ring-1 ring-inset ring-gray-600",
-            "hover:bg-[#4a5262] hover:ring-gray-500 hover:shadow-md",
-            "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#3d434f]",
-            "transition-all duration-200 ease-in-out",
-            "group h-10 ",
-            buttonClassName
-          )}
-        >
-          <span className="truncate text-left flex-1">{value}</span>
-          <ChevronDownIcon 
-            className="h-4 w-4 text-slate-400 group-hover:text-slate-300 transition-colors duration-200 flex-shrink-0" 
-            aria-hidden="true" 
-          />
-        </Menu.Button>
-      </div>
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        buttonRef.current && 
+        !buttonRef.current.contains(event.target as Node) &&
+        menuRef.current && 
+        !menuRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+        setFilter('');
+        setIsPositioned(false);
+      }
+    };
 
-      <Transition
-        enter="transition ease-out duration-200"
-        enterFrom="transform opacity-0 scale-95 translate-y-1"
-        enterTo="transform opacity-100 scale-100 translate-y-0"
-        leave="transition ease-in duration-150"
-        leaveFrom="transform opacity-100 scale-100 translate-y-0"
-        leaveTo="transform opacity-0 scale-95 translate-y-1"
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+        setFilter('');
+        setIsPositioned(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscape);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen]);
+
+  const handleToggle = () => {
+    if (!isOpen) {
+      updateMenuPosition();
+      // Small delay to ensure position is set before render
+      requestAnimationFrame(() => {
+        setIsOpen(true);
+      });
+    } else {
+      setIsOpen(false);
+      setIsPositioned(false);
+    }
+  };
+
+  const handleSelect = (option: string) => {
+    onChange(option);
+    setIsOpen(false);
+    setFilter('');
+    setIsPositioned(false);
+  };
+
+  return (
+    <div className={`relative inline-block text-left ${className}`}>
+      <button
+        ref={buttonRef}
+        onClick={handleToggle}
+        className={`
+          inline-flex w-full justify-between items-center gap-x-2 rounded-lg
+          bg-gradient-to-b from-[#464d5a] to-[#3d434f]
+          px-4 py-2.5 text-sm font-medium
+          text-slate-200 shadow-lg ring-1 ring-inset
+          ${isOpen ? 'ring-blue-500/50 shadow-blue-900/20' : 'ring-gray-600/50'}
+          hover:from-[#4d5462] hover:to-[#434956] hover:ring-gray-500/50 hover:shadow-xl
+          focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 focus:ring-offset-[#3d434f]
+          transition-all duration-300 ease-out
+          group h-10 backdrop-blur-sm
+          relative overflow-hidden
+          ${buttonClassName}
+        `}
       >
-        {createPortal(
-          <div
-            style={{
-              position: 'absolute',
-              top: `${menuPosition.top + 4}px`,
-              left: `${menuPosition.left}px`,
-              minWidth: `${menuPosition.width}px`,
-              zIndex: 1000,
+        {/* Subtle shimmer effect on hover */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 pointer-events-none" />
+        
+        <span className="truncate text-left flex-1 relative z-10 font-medium tracking-wide">
+          {value}
+        </span>
+        <ChevronDown 
+          className={`
+            h-4 w-4 text-slate-400 group-hover:text-slate-200 
+            transition-all duration-300 flex-shrink-0 relative z-10
+            ${isOpen ? 'rotate-180 text-slate-200' : ''}
+          `}
+          aria-hidden="true" 
+        />
+      </button>
+
+      {isOpen && isPositioned && createPortal(
+        <div
+          ref={menuRef}
+          style={{
+            position: 'absolute',
+            top: `${menuPosition.top + 4}px`,
+            left: `${menuPosition.left}px`,
+            minWidth: `${menuPosition.width}px`,
+            maxWidth: `${menuPosition.width}px`,
+            zIndex: 9999,
+          }}
+          className="origin-top dropdown-enter"
+        >
+          <div 
+            style={{ 
+              maxHeight: `${menuPosition.maxHeight}px`,
+              minWidth: `${menuPosition.width}px`
             }}
-            className="origin-top"
+            className="dropdown-menu rounded-lg shadow-2xl ring-1 ring-black/30 overflow-hidden backdrop-blur-xl"
           >
-            <Menu.Items 
-              as="div" 
-              style={{ 
-                maxHeight: `${menuPosition.maxHeight}px`, 
-                overflowY: 'auto',
-                minWidth: `${menuPosition.width}px`
-              }}
-              className="dropdown-menu rounded-lg shadow-xl ring-1 ring-black ring-opacity-20 focus:outline-none custom-scrollbar backdrop-blur-sm"
-            >
-              <div className="bg-[#3d434f] border border-gray-600 rounded-lg overflow-hidden shadow-2xl">
-                {showSearch && (
-                  <div className="p-3 border-b border-gray-600 bg-[#3d434f]">
+            <div className="bg-gradient-to-b from-[#444b59]/95 to-[#3d434f]/95 border border-gray-600/50 rounded-lg overflow-hidden shadow-2xl backdrop-blur-xl">
+              {/* Subtle top highlight */}
+              <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+              
+              {showSearch && (
+                <div className="p-3 border-b border-gray-600/30 bg-[#3d434f]/50 backdrop-blur-sm">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <input
                       type="text"
-                      className="w-full text-slate-200 px-3 py-2 text-sm font-normal bg-[#444b59] border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-slate-400 transition-all duration-200"
+                      className="w-full text-slate-200 pl-9 pr-3 py-2 text-sm font-normal 
+                        bg-[#2a2f38]/60 backdrop-blur-sm
+                        border border-gray-600/40 rounded-md 
+                        focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent 
+                        placeholder-slate-500 
+                        transition-all duration-200
+                        hover:bg-[#2a2f38]/80 hover:border-gray-500/40"
                       placeholder="Search options..."
                       value={filter}                
-                      onChange={(e) => {
-                        setFilter(e.target.value)
-                      }}
+                      onChange={(e) => setFilter(e.target.value)}
+                      autoFocus
                     />
                   </div>
-                )}
-                <div className={classNames(
-                  "py-1 bg-[#444b59]",
-                  menuClassName
-                )}>
-                  {filteredOptions.length > 0 ? (
-                    filteredOptions.map((option, index) => (
-                      <Menu.Item key={index}>
-                        {({ active }) => (
-                          <button
-                            onClick={(event) => {
-                              onChange(option)
-                              setFilter('');
-                            }}
-                            className={classNames(
-                              'block w-full px-4 py-3 text-left text-sm font-medium transition-all duration-150',
-                              active 
-                                ? 'bg-[#4a5262] text-slate-100 shadow-sm' 
-                                : 'text-slate-300 hover:bg-[#4a5262] hover:text-slate-100',
-                              'border-l-2 border-transparent',
-                              active && 'border-l-blue-500'
-                            )}
-                          >
-                            <span className="truncate block">{option}</span>
-                          </button>
-                        )}
-                      </Menu.Item>
-                    ))
-                  ) : (
-                    <div className="px-4 py-3 text-sm text-slate-500 italic">
-                      No options found
-                    </div>
-                  )}
                 </div>
+              )}
+              
+              <div 
+                className={`py-1.5 overflow-y-auto ${menuClassName}`}
+                style={{ maxHeight: showSearch ? `${menuPosition.maxHeight - 60}px` : `${menuPosition.maxHeight}px` }}
+              >
+                {filteredOptions.length > 0 ? (
+                  filteredOptions.map((option, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSelect(option)}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.classList.add('active');
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.classList.remove('active');
+                      }}
+                      className={`
+                        relative block w-full px-4 py-2.5 text-left text-sm font-medium 
+                        transition-all duration-200
+                        text-slate-300 hover:text-slate-100
+                        hover:bg-gradient-to-r hover:from-blue-600/20 hover:to-purple-600/20
+                        border-l-2 border-l-transparent hover:border-l-blue-400
+                        group
+                      `}
+                    >
+                      {/* Hover glow effect */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 to-purple-500/0 group-hover:from-blue-500/5 group-hover:to-purple-500/5 pointer-events-none transition-all duration-200" />
+                      
+                      <span className="relative truncate block tracking-wide">
+                        {option}
+                      </span>
+                      
+                      {value === option && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 w-1.5 h-1.5 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50 animate-pulse" />
+                      )}
+                    </button>
+                  ))
+                ) : (
+                  <div className="px-4 py-3 text-sm text-slate-500 italic text-center">
+                    No options found
+                  </div>
+                )}
               </div>
-            </Menu.Items>
-          </div>,
-          portalMountNode
-        )}
-      </Transition>
-    </Menu>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+    </div>
   );
 };
 

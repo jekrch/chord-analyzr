@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useEffect, memo, useCallback } from 'react';
-import { PlayCircleIcon, PauseIcon, ArrowPathIcon, Cog6ToothIcon } from '@heroicons/react/20/solid';
+import { PlayCircleIcon, PauseIcon, ArrowPathIcon, ChevronUpIcon, ChevronDownIcon, PlusIcon, MinusIcon } from '@heroicons/react/20/solid';
 import { PATTERN_PRESETS, PATTERN_CATEGORIES } from '../util/Pattern';
 import Dropdown from './Dropdown';
 import PatternNotationHelpModal from './PatternNotationHelpModal';
+import { Button } from './Button';
 
 // FIXED: Define proper subdivisions with correct values and names
 const SUBDIVISIONS = [
@@ -31,7 +32,7 @@ interface PatternSystemProps {
     lastChordChangeTime: number;
     globalClockStartTime: number;
   }>) => void;
-  onUpdateChordPattern?: (chordIndex: number, newPattern: string[]) => void; // callback to update chord patterns
+  onUpdateChordPattern?: (chordIndex: number, newPattern: string[]) => void;
   globalPatternState: {
     currentPattern: string[];
     bpm: number;
@@ -115,10 +116,10 @@ const StepEditor = memo(({
         options={options}
         className="w-full"
         buttonClassName={`w-full h-8 text-xs ${stepValue === 'x'
-            ? 'bg-[#3d434f] border-gray-700 text-slate-400'
-            : isExceedingNotes
-              ? 'bg-[#3d434f] border-gray-700 text-orange-400' // Different color for exceeded notes
-              : 'bg-[#3d434f] border-gray-600 text-slate-200 hover:bg-[#4a5262]'
+          ? 'bg-[#3d434f] border-gray-700 text-slate-400'
+          : isExceedingNotes
+            ? 'bg-[#3d434f] border-gray-700 text-orange-400' // Different color for exceeded notes
+            : 'bg-[#3d434f] border-gray-600 text-slate-200 hover:bg-[#4a5262]'
           } border rounded transition-all duration-200`}
       />
     </div>
@@ -137,7 +138,8 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
   globalPatternState
 }) => {
   // ========== LOCAL STATE ==========
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [isSequencerExpanded, setIsSequencerExpanded] = useState(false); // Default to collapsed
+  const [isSettingsExpanded, setIsSettingsExpanded] = useState(true); // Settings shown by default when sequencer is open
   const [customPattern, setCustomPattern] = useState<string>('1,2,3,4');
   const [hideFewerNotePatterns, setHideFewerNotePatterns] = useState(false);
 
@@ -333,356 +335,452 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
   // ========== RENDER ==========
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-2">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-4">
-          <h2 className="text-lg font-bold text-slate-200">Sequencer</h2>
-          <div className="text-xs text-slate-400 hidden sm:block">
-            {editingContext.description}
-          </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className={`w-8 h-8 flex items-center justify-center rounded-lg border transition-all duration-200 ${showAdvanced
-                ? 'bg-[#4a5262] border-gray-600 text-slate-200'
-                : 'bg-[#3d434f] border-gray-600 text-slate-400 hover:bg-[#4a5262] hover:border-gray-500 hover:text-slate-200'
-              }`}
-          >
-            <Cog6ToothIcon className="w-4 h-4" />
-          </button>
-          <button
-            onClick={togglePlayback}
-            className={`flex items-center px-4 py-2 rounded-lg font-medium transition-colors text-sm uppercase tracking-wide w-[7em] ${globalPatternState.isPlaying
-                ? 'bg-red-700 hover:bg-red-800 text-white'
-                : 'bg-green-600 hover:bg-green-700 text-white'
-              }`}
-          >
-            {globalPatternState.isPlaying ? (
-              <><PauseIcon className="w-4 h-4 mr-2" />Stop</>
-            ) : (
-              <><PlayCircleIcon className="w-4 h-4 mr-2" />Play</>
-            )}
-          </button>
-          <button
-            onClick={resetPattern}
-            className="w-8 h-8 flex items-center justify-center bg-[#3d434f] hover:bg-[#4a5262] text-slate-400 hover:text-slate-200 border border-gray-600 hover:border-gray-500 rounded-lg transition-all duration-200"
-            title="Reset pattern"
-          >
-            <ArrowPathIcon className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* Description for mobile */}
-      <div className="text-xs text-slate-400 mb-4 sm:hidden">
-        {editingContext.description}
-      </div>
-
-      {/* Main Pattern Display */}
-      <div className="mb-4 bg-[#3d434f] border border-gray-600 rounded-lg overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-600">
+    <div className="w-full max-w-7xl mx-auto px-2 mt-6">
+      {/* Main Header - Clean and Simple */}
+      <div className="bg-[#3d434f] border border-gray-600 rounded-lg overflow-hidden">
+        <div className="px-4 py-3">
           <div className="flex items-center justify-between">
+            <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider">Sequencer</h2>
             <div className="flex items-center space-x-3">
-              <div className="text-sm font-medium text-slate-200 uppercase tracking-wider">
-                {editingContext.title}
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="text-xs text-slate-400 uppercase tracking-wide">Steps: {currentPattern.length}</div>
               <button
-                onClick={removeStep}
-                disabled={currentPattern.length <= 1}
-                className="w-6 h-6 bg-[#4a5262] hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-xs rounded transition-colors text-slate-200"
-              >-</button>
-              <button
-                onClick={addStep}
-                disabled={currentPattern.length >= 16}
-                className="w-6 h-6 bg-[#4a5262] hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-xs rounded transition-colors text-slate-200"
-              >+</button>
+                onClick={() => setIsSequencerExpanded(!isSequencerExpanded)}
+                className="w-[7em] flex items-center space-x-2 px-3 py-1.5 text-xs text-slate-300 hover:text-slate-200 bg-[#4a5262] hover:bg-[#525a6b] border border-gray-600 rounded transition-all duration-200"
+              >
+                {isSequencerExpanded ? (
+                  <>
+                    <ChevronUpIcon className="w-3 h-3" />
+                    <span>Hide</span>
+                  </>
+                ) : (
+                  <>
+                    <ChevronDownIcon className="w-3 h-3" />
+                    <span>Show</span>
+                  </>
+                )}
+              </button>
+              <Button
+                onClick={togglePlayback}
+                variant="play-stop"
+                size="sm"
+                active={globalPatternState.isPlaying}
+                className="shadow-lg"
+              >
+                {globalPatternState.isPlaying ? (
+                  <>
+                    <PauseIcon className="w-4 h-4" />
+                    <span className="hidden sm:inline">Stop</span>
+                  </>
+                ) : (
+                  <>
+                    <PlayCircleIcon className="w-4 h-4" />
+                    <span className="hidden sm:inline">Play</span>
+                  </>
+                )}
+              </Button>
             </div>
           </div>
         </div>
 
-        <div className="p-6 bg-[#444b59]">
-          {/* Step Grid - Responsive: 4 columns on mobile, 8 on larger screens */}
-          {/* Mobile Layout: 4 columns */}
-          <div className="block md:hidden">
-            {Array.from({ length: Math.ceil(currentPattern.length / 4) }, (_, rowIndex) => {
-              const startIndex = rowIndex * 4;
-              const endIndex = Math.min(startIndex + 4, currentPattern.length);
-              const rowSteps = currentPattern.slice(startIndex, endIndex);
-
-              return (
-                <div key={`mobile-row-${rowIndex}`} className="mb-3 last:mb-0">
-                  <div className="grid grid-cols-4 gap-1">
-                    {rowSteps.map((step, stepIndex) => {
-                      const globalIndex = startIndex + stepIndex;
-                      return (
-                        <StepEditor
-                          key={`pattern-${editingContext.type}-${activeChordIndex}-${globalIndex}`}
-                          stepIndex={globalIndex}
-                          stepValue={step}
-                          maxNotes={maxAvailableNotes}
-                          onStepChange={handleStepChange}
-                        />
-                      );
-                    })}
-                    {Array.from({ length: 4 - rowSteps.length }, (_, i) => (
-                      <div key={`empty-${i}`} />
-                    ))}
-                  </div>
-
-                  <div className="grid grid-cols-4 gap-1 mt-2">
-                    {rowSteps.map((_, stepIndex) => {
-                      const globalIndex = startIndex + stepIndex;
-                      return (
-                        <div key={`indicator-${globalIndex}`} className="flex justify-center">
-                          <div className={`transition-all duration-300 ${currentStepIndex === globalIndex
-                              ? 'w-full h-1 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50'
-                              : 'w-full h-1 bg-gray-600 rounded-full'
-                            }`}></div>
-                        </div>
-                      );
-                    })}
-                    {Array.from({ length: 4 - rowSteps.length }, (_, i) => (
-                      <div key={`empty-indicator-${i}`} />
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Desktop Layout: 8 columns */}
-          <div className="hidden md:block">
-            {Array.from({ length: Math.ceil(currentPattern.length / 8) }, (_, rowIndex) => {
-              const startIndex = rowIndex * 8;
-              const endIndex = Math.min(startIndex + 8, currentPattern.length);
-              const rowSteps = currentPattern.slice(startIndex, endIndex);
-
-              return (
-                <div key={`desktop-row-${rowIndex}`} className="mb-3 last:mb-0">
-                  <div className="grid grid-cols-8 gap-1">
-                    {rowSteps.map((step, stepIndex) => {
-                      const globalIndex = startIndex + stepIndex;
-                      return (
-                        <StepEditor
-                          key={`pattern-${editingContext.type}-${activeChordIndex}-${globalIndex}`}
-                          stepIndex={globalIndex}
-                          stepValue={step}
-                          maxNotes={maxAvailableNotes}
-                          onStepChange={handleStepChange}
-                        />
-                      );
-                    })}
-                    {Array.from({ length: 8 - rowSteps.length }, (_, i) => (
-                      <div key={`empty-${i}`} />
-                    ))}
-                  </div>
-
-                  <div className="grid grid-cols-8 gap-1 mt-2">
-                    {rowSteps.map((_, stepIndex) => {
-                      const globalIndex = startIndex + stepIndex;
-                      return (
-                        <div key={`indicator-${globalIndex}`} className="flex justify-center">
-                          <div className={`transition-all duration-300 ${currentStepIndex === globalIndex
-                              ? 'w-full h-1 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50'
-                              : 'w-full h-1 bg-gray-600 rounded-full'
-                            }`}></div>
-                        </div>
-                      );
-                    })}
-                    {Array.from({ length: 8 - rowSteps.length }, (_, i) => (
-                      <div key={`empty-indicator-${i}`} />
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Advanced Controls with smooth animation */}
-      <div className={`transition-all duration-300 ease-in-out overflow-hidden ${showAdvanced ? ' opacity-100' : 'max-h-0 opacity-0'
+        {/* Expandable Sequencer Content */}
+        <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
+          isSequencerExpanded ? 'max-h-[1200px] opacity-100' : 'max-h-0 opacity-0'
         }`}>
-        <div className="bg-[#3d434f] border border-gray-600 rounded-lg overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-600">
-            <h3 className="text-sm font-medium text-slate-200 uppercase tracking-wider">
-              Sequencer Settings
-            </h3>
-          </div>
-
-          <div className="p-6 bg-[#444b59]">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-x-8 gap-y-6">
-
-              {/* Timing Controls */}
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Timing</label>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">
-                    BPM<span className="text-xs text-slate-400 ml-2 normal-case">({globalPatternState.bpm})</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="range"
-                      min="60"
-                      max="200"
-                      value={globalPatternState.bpm}
-                      onChange={(e) => onPatternChange?.({ bpm: parseInt(e.target.value) })}
-                      className="w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb"
-                    />
+          {/* Pattern Editor Section */}
+          <div className="border-t border-gray-600 bg-[#444b59]">
+            {/* Pattern Controls Bar */}
+            <div className="px-4 py-3 border-b border-gray-600 bg-[#3d434f]">
+              {/* Mobile Layout: Single row with step controls left, chord label right */}
+              <div className="flex items-center justify-between sm:hidden">
+                {/* Left: Step controls */}
+                <div className="flex items-center space-x-1">
+                  <button
+                    onClick={removeStep}
+                    disabled={currentPattern.length <= 1}
+                    className="flex items-center justify-center w-7 h-7 bg-[#4a5262] hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-xs rounded transition-all duration-200 text-slate-200 hover:text-white disabled:hover:bg-[#4a5262] disabled:hover:text-slate-200"
+                    title="Remove step"
+                  >
+                    <MinusIcon className="w-3 h-3" />
+                  </button>
+                  <div className="text-xs text-slate-300 font-mono w-8 text-center">
+                    {currentPattern.length}
                   </div>
-                  <div className="flex justify-between text-xs text-slate-500 mt-1">
-                    <span>60</span>
-                    <span>200</span>
-                  </div>
+                  <button
+                    onClick={addStep}
+                    disabled={currentPattern.length >= 16}
+                    className="flex items-center justify-center w-7 h-7 bg-[#4a5262] hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-xs rounded transition-all duration-200 text-slate-200 hover:text-white disabled:hover:bg-[#4a5262] disabled:hover:text-slate-200"
+                    title="Add step"
+                  >
+                    <PlusIcon className="w-3 h-3" />
+                  </button>
                 </div>
-
+                
+                {/* Right: Chord label */}
                 <div>
-                  <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Subdivision</label>
-                  <Dropdown
-                    value={currentSubdivisionDisplay}
-                    onChange={(value) => {
-                      const subdivision = SUBDIVISIONS.find(sub => `${sub.symbol} ${sub.name}` === value);
-                      if (subdivision) {
-                        onPatternChange?.({ subdivision: subdivision.value });
-                      }
-                    }}
-                    options={subdivisionOptions}
-                    className="w-full"
-                    buttonClassName="w-full p-3 bg-[#3d434f] border border-gray-600 rounded text-slate-200 text-xs focus:border-blue-500 transition-colors hover:bg-[#4a5262]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">
-                    Swing<span className="text-xs text-slate-400 ml-2 normal-case">({globalPatternState.swing}%)</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="range"
-                      min="0"
-                      max="50"
-                      value={globalPatternState.swing}
-                      onChange={(e) => onPatternChange?.({ swing: parseInt(e.target.value) })}
-                      className="w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb"
-                    />
-                  </div>
-                  <div className="flex justify-between text-xs text-slate-500 mt-1">
-                    <span>0%</span>
-                    <span>50%</span>
-                  </div>
-                </div>
-
-                {/* Pattern Constraints */}
-                <div>
-                  <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Pattern Presets</label>
-                  <label className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={hideFewerNotePatterns}
-                      onChange={(e) => setHideFewerNotePatterns(e.target.checked)}
-                      className="w-3 h-3 rounded border-gray-600 bg-[#3d434f] text-blue-600 focus:ring-blue-500 focus:ring-1"
-                    />
-                    <span className="text-xs text-slate-200">Hide patterns with fewer notes</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Pattern Presets */}
-              <div className="space-y-4">
-                {/* Compact Filter Controls */}
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <Dropdown
-                    value={stepCountOptions[selectedStepCount === 'all' ? 0 : stepCountOptions.findIndex(opt => opt === `${selectedStepCount} Steps`)]}
-                    onChange={(value) => {
-                      if (value === 'All Steps') {
-                        setSelectedStepCount('all');
-                      } else {
-                        const stepCount = value.replace(' Steps', '');
-                        setSelectedStepCount(stepCount);
-                      }
-                    }}
-                    options={stepCountOptions}
-                    className="flex-1"
-                    buttonClassName="w-full p-2 bg-[#3d434f] border border-gray-600 rounded text-slate-200 text-xs transition-colors hover:bg-[#4a5262]"
-                  />
-                  <Dropdown
-                    value={categoryOptions[selectedCategory === 'all' ? 0 : categoryOptions.findIndex(opt => opt.toLowerCase() === selectedCategory)]}
-                    onChange={(value) => {
-                      if (value === 'All Categories') {
-                        setSelectedCategory('all');
-                      } else {
-                        setSelectedCategory(value.toLowerCase());
-                      }
-                    }}
-                    options={categoryOptions}
-                    className="flex-1"
-                    buttonClassName="w-full p-2 bg-[#3d434f] border border-gray-600 rounded text-slate-200 text-xs transition-colors hover:bg-[#4a5262]"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 gap-2 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
-                  {filteredPresets.length > 0 ? (
-                    filteredPresets.map((preset, index) => {
-                      const distinctNotes = countDistinctNotesInPattern(preset.pattern);
-                      return (
-                        <button
-                          key={index}
-                          onClick={() => applyPreset(preset)}
-                          className="p-2 rounded text-xs transition-colors text-left bg-[#3d434f] text-slate-300 hover:bg-[#4a5262] hover:text-slate-200 border border-gray-600 hover:border-gray-500"
-                        >
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="font-medium uppercase tracking-wide">{preset.name}</span>
-                            <div className="flex items-center space-x-2">
-                              <span className="text-xs text-slate-500">
-                                {distinctNotes}n • {preset.pattern.length}s
-                              </span>
-                              <span>{preset.icon}</span>
-                            </div>
-                          </div>
-                          <div className="text-xs opacity-60 text-slate-500">
-                            {preset.desc}
-                          </div>
-                        </button>
-                      );
-                    })
+                  {editingContext.chordName ? (
+                    <div className="text-xs font-medium text-purple-300 bg-purple-900/30 px-2 py-1 rounded border border-purple-700/50">
+                      {editingContext.chordName}
+                    </div>
                   ) : (
-                    <div className="p-3 text-xs text-slate-400 text-center">
-                      No patterns found matching current filters
+                    <div className="text-xs text-cyan-300 bg-cyan-900/30 px-2 py-1 rounded border border-cyan-700/50">
+                      Global Pattern
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Custom Pattern Input - Compact */}
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <label className="block text-xs font-medium text-slate-200 uppercase tracking-wide">Custom</label>
-                  <PatternNotationHelpModal />
+              {/* Desktop Layout: Original multi-section layout */}
+              <div className="hidden sm:flex sm:items-center sm:justify-between">
+                {/* Left side: Pattern info and chord name */}
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-xs text-slate-400 font-medium">Pattern:</span>
+                    <div className="text-xs text-slate-300 font-mono bg-[#4a5262] px-2 py-1 rounded">
+                      {currentPattern.length} steps
+                    </div>
+                  </div>
+                  {editingContext.chordName && (
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs text-slate-400">for</span>
+                      <div className="text-xs font-medium text-purple-300 bg-purple-900/30 px-2 py-1 rounded border border-purple-700/50">
+                        {editingContext.chordName}
+                      </div>
+                    </div>
+                  )}
+                  {!editingContext.chordName && (
+                    <div className="text-xs text-cyan-300 bg-cyan-900/30 px-2 py-1 rounded border border-cyan-700/50">
+                      Global Pattern
+                    </div>
+                  )}
                 </div>
+                
+                {/* Right side: Step controls */}
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-slate-400">Steps:</span>
+                  <div className="flex items-center space-x-1">
+                    <button
+                      onClick={removeStep}
+                      disabled={currentPattern.length <= 1}
+                      className="flex items-center justify-center w-7 h-7 bg-[#4a5262] hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-xs rounded transition-all duration-200 text-slate-200 hover:text-white disabled:hover:bg-[#4a5262] disabled:hover:text-slate-200"
+                      title="Remove step"
+                    >
+                      <MinusIcon className="w-3 h-3" />
+                    </button>
+                    <div className="text-xs text-slate-300 font-mono w-8 text-center">
+                      {currentPattern.length}
+                    </div>
+                    <button
+                      onClick={addStep}
+                      disabled={currentPattern.length >= 16}
+                      className="flex items-center justify-center w-7 h-7 bg-[#4a5262] hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-xs rounded transition-all duration-200 text-slate-200 hover:text-white disabled:hover:bg-[#4a5262] disabled:hover:text-slate-200"
+                      title="Add step"
+                    >
+                      <PlusIcon className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-                <div className="space-y-3">
-                  <input
-                    type="text"
-                    value={customPattern}
-                    onChange={(e) => setCustomPattern(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && applyCustomPattern()}
-                    placeholder="1,x,3,2+"
-                    className="w-full p-2 bg-[#3d434f] border border-gray-600 rounded text-slate-200 text-xs focus:border-blue-500 transition-colors placeholder-slate-500"
-                  />
-                  <button
-                    onClick={applyCustomPattern}
-                    className="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors uppercase tracking-wide"
-                  >
-                    Apply Pattern
-                  </button>
+            {/* Step Grid */}
+            <div className="p-6 px-3 sm:px-4">
+              {/* Mobile Layout: 4 columns */}
+              <div className="block md:hidden">
+                {Array.from({ length: Math.ceil(currentPattern.length / 4) }, (_, rowIndex) => {
+                  const startIndex = rowIndex * 4;
+                  const endIndex = Math.min(startIndex + 4, currentPattern.length);
+                  const rowSteps = currentPattern.slice(startIndex, endIndex);
+
+                  return (
+                    <div key={`mobile-row-${rowIndex}`} className="mb-4 last:mb-0">
+                      <div className="grid grid-cols-4 gap-2">
+                        {rowSteps.map((step, stepIndex) => {
+                          const globalIndex = startIndex + stepIndex;
+                          return (
+                            <StepEditor
+                              key={`pattern-${editingContext.type}-${activeChordIndex}-${globalIndex}`}
+                              stepIndex={globalIndex}
+                              stepValue={step}
+                              maxNotes={maxAvailableNotes}
+                              onStepChange={handleStepChange}
+                            />
+                          );
+                        })}
+                        {Array.from({ length: 4 - rowSteps.length }, (_, i) => (
+                          <div key={`empty-${i}`} />
+                        ))}
+                      </div>
+
+                      <div className="grid grid-cols-4 gap-2 mt-2">
+                        {rowSteps.map((_, stepIndex) => {
+                          const globalIndex = startIndex + stepIndex;
+                          return (
+                            <div key={`indicator-${globalIndex}`} className="flex justify-center">
+                              <div className={`transition-all duration-200 ${currentStepIndex === globalIndex
+                                ? 'w-full h-1 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50'
+                                : 'w-full h-1 bg-gray-600 rounded-full'
+                                }`}></div>
+                            </div>
+                          );
+                        })}
+                        {Array.from({ length: 4 - rowSteps.length }, (_, i) => (
+                          <div key={`empty-indicator-${i}`} />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop Layout: 8 columns */}
+              <div className="hidden md:block">
+                {Array.from({ length: Math.ceil(currentPattern.length / 8) }, (_, rowIndex) => {
+                  const startIndex = rowIndex * 8;
+                  const endIndex = Math.min(startIndex + 8, currentPattern.length);
+                  const rowSteps = currentPattern.slice(startIndex, endIndex);
+
+                  return (
+                    <div key={`desktop-row-${rowIndex}`} className="mb-4 last:mb-0">
+                      <div className="grid grid-cols-8 gap-2">
+                        {rowSteps.map((step, stepIndex) => {
+                          const globalIndex = startIndex + stepIndex;
+                          return (
+                            <StepEditor
+                              key={`pattern-${editingContext.type}-${activeChordIndex}-${globalIndex}`}
+                              stepIndex={globalIndex}
+                              stepValue={step}
+                              maxNotes={maxAvailableNotes}
+                              onStepChange={handleStepChange}
+                            />
+                          );
+                        })}
+                        {Array.from({ length: 8 - rowSteps.length }, (_, i) => (
+                          <div key={`empty-${i}`} />
+                        ))}
+                      </div>
+
+                      <div className="grid grid-cols-8 gap-2 mt-2">
+                        {rowSteps.map((_, stepIndex) => {
+                          const globalIndex = startIndex + stepIndex;
+                          return (
+                            <div key={`indicator-${globalIndex}`} className="flex justify-center">
+                              <div className={`transition-all duration-200 ${currentStepIndex === globalIndex
+                                ? 'w-full h-1.5 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50'
+                                : 'w-full h-1 bg-gray-600 rounded-full'
+                                }`}></div>
+                            </div>
+                          );
+                        })}
+                        {Array.from({ length: 8 - rowSteps.length }, (_, i) => (
+                          <div key={`empty-indicator-${i}`} />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Settings Section - Now completely inside the expandable area */}
+          <div className="bg-[#3d434f] border-t border-gray-600">
+            <div className="px-4 py-3 border-b border-gray-600">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-slate-200 uppercase tracking-wider">
+                  Settings
+                </h3>
+                <button
+                  onClick={() => setIsSettingsExpanded(!isSettingsExpanded)}
+                  className="w-[7em] flex items-center space-x-2 px-3 py-1.5 text-xs text-slate-300 hover:text-slate-200 bg-[#4a5262] hover:bg-[#525a6b] border border-gray-600 rounded transition-all duration-200"
+                >
+                  {isSettingsExpanded ? (
+                    <>
+                      <ChevronUpIcon className="w-3 h-3" />
+                      <span>Hide</span>
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDownIcon className="w-3 h-3" />
+                      <span>Show</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Expandable Settings Content */}
+            <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
+              isSettingsExpanded ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
+            }`}>
+              <div className="p-6 bg-[#444b59]">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-x-8 gap-y-6">
+
+                  {/* Timing Controls */}
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Timing</label>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">
+                        BPM<span className="text-xs text-slate-400 ml-2 normal-case">({globalPatternState.bpm})</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="range"
+                          min="60"
+                          max="200"
+                          value={globalPatternState.bpm}
+                          onChange={(e) => onPatternChange?.({ bpm: parseInt(e.target.value) })}
+                          className="w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb"
+                        />
+                      </div>
+                      <div className="flex justify-between text-xs text-slate-500 mt-1">
+                        <span>60</span>
+                        <span>200</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Subdivision</label>
+                      <Dropdown
+                        value={currentSubdivisionDisplay}
+                        onChange={(value) => {
+                          const subdivision = SUBDIVISIONS.find(sub => `${sub.symbol} ${sub.name}` === value);
+                          if (subdivision) {
+                            onPatternChange?.({ subdivision: subdivision.value });
+                          }
+                        }}
+                        options={subdivisionOptions}
+                        className="w-full"
+                        buttonClassName="w-full p-3 bg-[#3d434f] border border-gray-600 rounded text-slate-200 text-xs focus:border-blue-500 transition-colors hover:bg-[#4a5262]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">
+                        Swing<span className="text-xs text-slate-400 ml-2 normal-case">({globalPatternState.swing}%)</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="range"
+                          min="0"
+                          max="50"
+                          value={globalPatternState.swing}
+                          onChange={(e) => onPatternChange?.({ swing: parseInt(e.target.value) })}
+                          className="w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb"
+                        />
+                      </div>
+                      <div className="flex justify-between text-xs text-slate-500 mt-1">
+                        <span>0%</span>
+                        <span>50%</span>
+                      </div>
+                    </div>
+
+                    {/* Pattern Constraints */}
+                    <div>
+                      <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Pattern Presets</label>
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={hideFewerNotePatterns}
+                          onChange={(e) => setHideFewerNotePatterns(e.target.checked)}
+                          className="w-3 h-3 rounded border-gray-600 bg-[#3d434f] text-blue-600 focus:ring-blue-500 focus:ring-1"
+                        />
+                        <span className="text-xs text-slate-200">Hide patterns with fewer notes</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Pattern Presets */}
+                  <div className="space-y-4">
+                    {/* Compact Filter Controls */}
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Dropdown
+                        value={stepCountOptions[selectedStepCount === 'all' ? 0 : stepCountOptions.findIndex(opt => opt === `${selectedStepCount} Steps`)]}
+                        onChange={(value) => {
+                          if (value === 'All Steps') {
+                            setSelectedStepCount('all');
+                          } else {
+                            const stepCount = value.replace(' Steps', '');
+                            setSelectedStepCount(stepCount);
+                          }
+                        }}
+                        options={stepCountOptions}
+                        className="flex-1"
+                        buttonClassName="w-full p-2 bg-[#3d434f] border border-gray-600 rounded text-slate-200 text-xs transition-colors hover:bg-[#4a5262]"
+                      />
+                      <Dropdown
+                        value={categoryOptions[selectedCategory === 'all' ? 0 : categoryOptions.findIndex(opt => opt.toLowerCase() === selectedCategory)]}
+                        onChange={(value) => {
+                          if (value === 'All Categories') {
+                            setSelectedCategory('all');
+                          } else {
+                            setSelectedCategory(value.toLowerCase());
+                          }
+                        }}
+                        options={categoryOptions}
+                        className="flex-1"
+                        buttonClassName="w-full p-2 bg-[#3d434f] border border-gray-600 rounded text-slate-200 text-xs transition-colors hover:bg-[#4a5262]"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-2 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
+                      {filteredPresets.length > 0 ? (
+                        filteredPresets.map((preset, index) => {
+                          const distinctNotes = countDistinctNotesInPattern(preset.pattern);
+                          return (
+                            <button
+                              key={index}
+                              onClick={() => applyPreset(preset)}
+                              className="p-2 rounded text-xs transition-colors text-left bg-[#3d434f] text-slate-300 hover:bg-[#4a5262] hover:text-slate-200 border border-gray-600 hover:border-gray-500"
+                            >
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-medium uppercase tracking-wide">{preset.name}</span>
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-xs text-slate-500">
+                                    {distinctNotes}n • {preset.pattern.length}s
+                                  </span>
+                                  <span>{preset.icon}</span>
+                                </div>
+                              </div>
+                              <div className="text-xs opacity-60 text-slate-500">
+                                {preset.desc}
+                              </div>
+                            </button>
+                          );
+                        })
+                      ) : (
+                        <div className="p-3 text-xs text-slate-400 text-center">
+                          No patterns found matching current filters
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Custom Pattern Input - Compact */}
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <label className="block text-xs font-medium text-slate-200 uppercase tracking-wide">Custom</label>
+                      <PatternNotationHelpModal />
+                    </div>
+
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        value={customPattern}
+                        onChange={(e) => setCustomPattern(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && applyCustomPattern()}
+                        placeholder="1,x,3,2+"
+                        className="w-full p-2 bg-[#3d434f] border border-gray-600 rounded text-slate-200 text-xs focus:border-blue-500 transition-colors placeholder-slate-500"
+                      />
+                      <button
+                        onClick={applyCustomPattern}
+                        className="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors uppercase tracking-wide"
+                      >
+                        Apply Pattern
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

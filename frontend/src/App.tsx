@@ -6,6 +6,7 @@ import PianoControl from './components/piano/PianoControl';
 import PatternSystem from './components/PatternSystem';
 import ChordNavigation from './components/ChordNavigation';
 import './App.css';
+import { Button, ChordButton } from './components/Button';
 
 function App() {
     // ========== CUSTOM HOOK ==========
@@ -22,7 +23,7 @@ function App() {
         loadingChords,
         isDeleteMode,
         isPlayingScale,
-        showPatternSystem,
+
         isLiveMode,
         globalPatternState,
         currentlyActivePattern,
@@ -30,15 +31,15 @@ function App() {
         normalizedScaleNotes,
         pianoSettings,
         availableInstruments,
-        
+
         // Refs
         silentAudioRef,
-        
+
         // Handlers
         setKey,
         setMode,
         setIsDeleteMode,
-        setShowPatternSystem,
+
         setIsLiveMode,
         setAvailableInstruments,
         handleChordClick,
@@ -49,7 +50,7 @@ function App() {
         handlePatternChange,
         handleTogglePlayback,
         getCurrentPattern,
-        
+
         // Piano settings handlers
         setPianoInstrument,
         setCutOffPreviousNotes,
@@ -71,19 +72,9 @@ function App() {
 
                 {/* Header Controls */}
                 <div className="flex items-center justify-center space-x-6 pt-6">
-                    <button
-                        onClick={() => setShowPatternSystem(!showPatternSystem)}
-                        className={`px-4 py-2 rounded-lg font-medium transition-colors text-sm ${showPatternSystem
-                            ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                            : 'bg-gray-600 hover:bg-gray-700 text-white'
-                            }`}
-                    >
-                        {showPatternSystem ? 'Hide' : 'Show'} Sequencer
-                    </button>
-
                     <div className="text-xs text-gray-400 text-center">
-                        <div>Press 'P' to toggle | 'L' to expand </div>
-                        <div>Space to play/pause | 1-9 for chords </div>
+                        <div>Press 'L' to expand piano | Space to play/pause</div>
+                        <div>1-9 for chords | Click sequencer header to show/hide</div>
                     </div>
                 </div>
 
@@ -110,21 +101,18 @@ function App() {
                     />
                 </div>
 
-                {/* Pattern System with smooth animation */}
-                <div className={`w-full transition-all duration-300 ease-in-out overflow-hidden ${showPatternSystem ? 'opacity-100' : 'max-h-0 opacity-0'
-                    }`}>
-                    <PatternSystem
-                        activeNotes={activeNotes}
-                        normalizedScaleNotes={normalizedScaleNotes}
-                        addedChords={addedChords}
-                        activeChordIndex={activeChordIndex}
-                        onPatternChange={handlePatternChange}
-                        onUpdateChordPattern={updateChordPattern}
-                        globalPatternState={globalPatternState}
-                        currentlyActivePattern={currentlyActivePattern}
-                        getCurrentPattern={getCurrentPattern}
-                    />
-                </div>
+                {/* Pattern System - self-contained with persistent headers */}
+                <PatternSystem
+                    activeNotes={activeNotes}
+                    normalizedScaleNotes={normalizedScaleNotes}
+                    addedChords={addedChords}
+                    activeChordIndex={activeChordIndex}
+                    onPatternChange={handlePatternChange}
+                    onUpdateChordPattern={updateChordPattern}
+                    globalPatternState={globalPatternState}
+                    currentlyActivePattern={currentlyActivePattern}
+                    getCurrentPattern={getCurrentPattern}
+                />
 
                 {/* Playback Status */}
                 {globalPatternState.isPlaying && (
@@ -187,8 +175,8 @@ function App() {
                                 >
                                     <PlayCircleIcon
                                         className={`w-5 h-5 transition-colors duration-200 ${isPlayingScale
-                                                ? 'text-green-400 animate-pulse'
-                                                : 'text-slate-300 group-hover:text-slate-100'
+                                            ? 'text-green-400 animate-pulse'
+                                            : 'text-slate-300 group-hover:text-slate-100'
                                             }`}
                                     />
                                 </button>

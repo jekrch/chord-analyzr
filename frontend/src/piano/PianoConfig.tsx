@@ -44,6 +44,7 @@ interface PianoConfigProps {
     noteDuration: number;
     setNoteDuration: (duration: number) => void;
     onInstrumentChange: (instrumentName: string) => void;
+    // hideControls?: boolean;
 }
 
 interface PianoConfigState {

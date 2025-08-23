@@ -50,6 +50,9 @@ interface PianoProps {
   onReverbLevelChange: (level: number) => void;
   onNoteDurationChange: (duration: number) => void;
   onAvailableInstrumentsChange: (instruments: string[]) => void;
+  
+  // New prop to hide the original config controls
+  hideConfigControls?: boolean;
 }
 
 export const startOctave = 4;
@@ -71,7 +74,8 @@ const PianoControl: React.FC<PianoProps> = ({
   onOctaveOffsetChange,
   onReverbLevelChange,
   onNoteDurationChange,
-  onAvailableInstrumentsChange
+  onAvailableInstrumentsChange,
+  hideConfigControls = false
 }) => {
   const soundfontHostname = 'https://d1pzp51pvbm36p.cloudfront.net';
   const stopAllNotesRef = useRef<(() => void) | null>(null);
@@ -344,39 +348,55 @@ const PianoControl: React.FC<PianoProps> = ({
             </div>
           </div>
 
-          <div className="mt-5">
-            <InstrumentListProvider
-              hostname={soundfontHostname}
-              render={(instrumentList) => {
-                // Notify parent component about available instruments
-                if (instrumentList && instrumentList.length > 0 && 
-                    JSON.stringify(instrumentList) !== JSON.stringify(availableInstruments)) {
-                  onAvailableInstrumentsChange(instrumentList);
-                }
-                
-                return (
-                  <PianoConfig
-                    config={pianoConfig}
-                    setConfig={setPianoConfig}
-                    instrumentList={instrumentList || availableInstruments}
-                    keyboardShortcuts={keyboardShortcuts}
-                    // Pass piano settings props
-                    cutOffPreviousNotes={pianoSettings.cutOffPreviousNotes}
-                    setCutOffPreviousNotes={onCutOffPreviousNotesChange}
-                    eq={pianoSettings.eq}
-                    setEq={onEqChange}
-                    octaveOffset={pianoSettings.octaveOffset}
-                    setOctaveOffset={onOctaveOffsetChange}
-                    reverbLevel={pianoSettings.reverbLevel}
-                    setReverbLevel={onReverbLevelChange}
-                    noteDuration={pianoSettings.noteDuration}
-                    setNoteDuration={onNoteDurationChange}
-                    onInstrumentChange={onInstrumentChange}
-                  />
-                )
-              }}
-            />
-          </div>
+          {/* Only show config controls if not hidden */}
+          {!hideConfigControls && (
+            <div className="mt-5">
+              <InstrumentListProvider
+                hostname={soundfontHostname}
+                render={(instrumentList) => {
+                  // Notify parent component about available instruments
+                  if (instrumentList && instrumentList.length > 0 && 
+                      JSON.stringify(instrumentList) !== JSON.stringify(availableInstruments)) {
+                    onAvailableInstrumentsChange(instrumentList);
+                  }
+                  
+                  return (
+                    <PianoConfig
+                      config={pianoConfig}
+                      setConfig={setPianoConfig}
+                      instrumentList={instrumentList || availableInstruments}
+                      keyboardShortcuts={keyboardShortcuts}
+                      // Pass piano settings props
+                      cutOffPreviousNotes={pianoSettings.cutOffPreviousNotes}
+                      setCutOffPreviousNotes={onCutOffPreviousNotesChange}
+                      eq={pianoSettings.eq}
+                      setEq={onEqChange}
+                      octaveOffset={pianoSettings.octaveOffset}
+                      setOctaveOffset={onOctaveOffsetChange}
+                      reverbLevel={pianoSettings.reverbLevel}
+                      setReverbLevel={onReverbLevelChange}
+                      noteDuration={pianoSettings.noteDuration}
+                      setNoteDuration={onNoteDurationChange}
+                      onInstrumentChange={onInstrumentChange}
+                    />
+                  )
+                }}
+              />
+            </div>
+          )}
+
+          {/* Always ensure instrument list is available for the main controls */}
+          <InstrumentListProvider
+            hostname={soundfontHostname}
+            render={(instrumentList) => {
+              // Notify parent component about available instruments
+              if (instrumentList && instrumentList.length > 0 && 
+                  JSON.stringify(instrumentList) !== JSON.stringify(availableInstruments)) {
+                onAvailableInstrumentsChange(instrumentList);
+              }
+              return <></>;
+            }}
+          />
         </>)
       }}
     />

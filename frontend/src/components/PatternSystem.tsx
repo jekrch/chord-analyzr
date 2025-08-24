@@ -344,7 +344,7 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
             <div className="flex items-center space-x-3">
               <button
                 onClick={() => setIsSequencerExpanded(!isSequencerExpanded)}
-                className="w-[7em] flex items-center space-x-2 px-3 py-1.5 text-xs text-slate-300 hover:text-slate-200 bg-[#4a5262] hover:bg-[#525a6b] border border-gray-600 rounded transition-all duration-200"
+                className="w-[7em] h-8 flex items-center space-x-2 px-3 py-1.5 text-xs text-slate-300 hover:text-slate-200 bg-[#4a5262] hover:bg-[#525a6b] border border-gray-600 rounded transition-all duration-200"
               >
                 {isSequencerExpanded ? (
                   <>
@@ -383,7 +383,7 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
 
         {/* Expandable Sequencer Content */}
         <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
-          isSequencerExpanded ? 'max-h-[1200px] opacity-100' : 'max-h-0 opacity-0'
+          isSequencerExpanded ? ' opacity-100' : 'max-h-0 opacity-0'
         }`}>
           {/* Pattern Editor Section */}
           <div className="border-t border-gray-600 bg-[#444b59]">
@@ -590,7 +590,7 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
                 </h3>
                 <button
                   onClick={() => setIsSettingsExpanded(!isSettingsExpanded)}
-                  className="w-[7em] flex items-center space-x-2 px-3 py-1.5 text-xs text-slate-300 hover:text-slate-200 bg-[#4a5262] hover:bg-[#525a6b] border border-gray-600 rounded transition-all duration-200"
+                  className="w-[7em] h-8 flex items-center space-x-2 px-3 py-1.5 text-xs text-slate-300 hover:text-slate-200 bg-[#4a5262] hover:bg-[#525a6b] border border-gray-600 rounded transition-all duration-200"
                 >
                   {isSettingsExpanded ? (
                     <>
@@ -609,7 +609,7 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
 
             {/* Expandable Settings Content */}
             <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
-              isSettingsExpanded ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
+              isSettingsExpanded ? ' opacity-100' : 'max-h-0 opacity-0'
             }`}>
               <div className="p-6 bg-[#444b59]">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-x-8 gap-y-6">

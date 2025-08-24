@@ -68,6 +68,7 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                                 onClick={onTogglePlayback}
                                 variant="icon"
                                 size="icon"
+                                className=""
                                 active={globalPatternState.isPlaying}
                                 title={globalPatternState.isPlaying ? "Stop" : "Play"}
                             >

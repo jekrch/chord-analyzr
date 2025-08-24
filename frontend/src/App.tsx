@@ -159,7 +159,7 @@ function App() {
                 )}
 
                 {/* Chord Table */}
-                <div className="w-full max-w-7xl mb-20">
+                <div className="w-full max-w-7xl mb-20 mt-2">
                     <ChordTable
                         chords={chords?.filter(c => !!c.chordName && !!c.chordNoteNames) as any}
                         loading={loadingChords}

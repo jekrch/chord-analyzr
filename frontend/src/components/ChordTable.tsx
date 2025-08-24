@@ -158,16 +158,20 @@ const ChordTable: React.FC<ChordTableProps> = ({
 
   return (
     <div className="w-full max-w-7xl mx-auto px-2">
-     {/* Header */}
-      <div className="flex uppercase flex-row items-center justify-between mb-3 sm:mb-4 gap-2">
-        <h2 className="text-lg font-medium text-gray-300">Chord Explorer</h2>
-        <div className="text-sm text-gray-400">
-          {filteredChords?.length || 0} of {chords?.length || 0} chords
+      {/* Header - Updated to match PatternSystem style */}
+      <div className="bg-[#3d434f] border border-gray-600 rounded-lg overflow-hidden mb-6">
+        <div className="px-4 py-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider">Chord Explorer</h2>
+            <div className="text-sm text-gray-400">
+              {filteredChords?.length || 0} of {chords?.length || 0} chords
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Search Bar */}
-      <div className="mb-3 sm:mb-4">
+      <div className="mb-6 sm:mb-4">
         <div className="relative">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
@@ -175,7 +179,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
             placeholder="Search chords or notes..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="text-lg w-full pl-10 pr-4 py-3 bg-[#3d434f] border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none transition-colors"
+            className="text-lg w-full pl-10 pr-4 py-2 bg-[#3d434f] border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none transition-colors"
           />
         </div>
       </div>

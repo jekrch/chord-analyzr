@@ -158,44 +158,39 @@ const ChordTable: React.FC<ChordTableProps> = ({
 
   return (
     <div className="w-full max-w-7xl mx-auto px-2">
-      {/* Header - Updated to match PatternSystem style */}
-      <div className="bg-[#3d434f] border border-gray-600 rounded-lg overflow-hidden mb-6">
+      {/* Header Section - Contains title, count, search, and mobile filters */}
+      <div className="bg-[#3d434f] border border-gray-600 rounded-lg overflow-hidden mb-4">
         <div className="px-4 py-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider">Chord Explorer</h2>
             <div className="text-sm text-gray-400">
               {filteredChords?.length || 0} of {chords?.length || 0} chords
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Search Bar */}
-      <div className="mb-6 sm:mb-4">
-        <div className="relative">
-          <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search chords or notes..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="text-lg w-full pl-10 pr-4 py-2 bg-[#3d434f] border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none transition-colors"
-          />
-        </div>
-      </div>
+          {/* Search Bar */}
+          <div className="mb-4">
+            <div className="relative">
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search chords or notes..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-[#444b59] border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none transition-colors !text-base"
+              />
+            </div>
+          </div>
 
-      <div className="flex flex-col lg:flex-row gap-3 lg:gap-4">
-        {/* Root Note Filter - Horizontal scroll on mobile, sidebar on desktop */}
-        <div className="lg:w-48 flex-shrink-0">
-          {/* Mobile: Horizontal scrollable */}
-          <div className="lg:hidden mb-3">
+          {/* Mobile Root Note Filter - Only visible on narrow screens */}
+          <div className="lg:hidden">
             <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent px-1">
               <button
                 onClick={() => setSelectedRootNote('All')}
                 className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
                   selectedRootNote === 'All' 
                     ? 'bg-blue-600 text-white' 
-                    : 'bg-[#3d434f] text-gray-300 hover:bg-[#444b59] hover:text-white'
+                    : 'bg-[#444b59] text-gray-300 hover:bg-[#525a6b] hover:text-white'
                 }`}
               >
                 All ({chords?.length || 0})
@@ -207,7 +202,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
                   className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
                     selectedRootNote === note 
                       ? 'bg-blue-600 text-white' 
-                      : 'bg-[#3d434f] text-gray-300 hover:bg-[#444b59] hover:text-white'
+                      : 'bg-[#444b59] text-gray-300 hover:bg-[#525a6b] hover:text-white'
                   }`}
                 >
                   {note} ({chordCounts[note] || 0})
@@ -215,52 +210,55 @@ const ChordTable: React.FC<ChordTableProps> = ({
               ))}
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Desktop: Sidebar */}
-          <div className="hidden lg:block">
-            <div className="bg-[#3d434f] rounded-lg h-fit">
-              <div className="px-4 py-3 border-b border-gray-600">
-                <h3 className="text-sm font-medium text-gray-200 uppercase tracking-wide">
-                  Filter by Root
-                </h3>
-              </div>
-              
-              <div className="p-2">
+      {/* Main Content Area */}
+      <div className="flex flex-col lg:flex-row gap-3 lg:gap-4">
+        {/* Desktop Sidebar Filter */}
+        <div className="hidden lg:block lg:w-48 flex-shrink-0">
+          <div className="bg-[#3d434f] rounded-lg h-fit">
+            <div className="px-4 py-3 border-b border-gray-600">
+              <h3 className="text-sm font-medium text-gray-200 uppercase tracking-wide">
+                Filter by Root
+              </h3>
+            </div>
+            
+            <div className="p-2">
+              <button
+                onClick={() => setSelectedRootNote('All')}
+                className={`w-full px-3 py-2 text-left transition-colors rounded-md border-l-4 ${
+                  selectedRootNote === 'All' 
+                    ? 'bg-[#4a5262] border-l-blue-500 text-white' 
+                    : 'hover:bg-[#444b59] border-l-transparent text-gray-300 hover:text-white'
+                }`}
+              >
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">All Notes</span>
+                  <span className="text-xs text-gray-400 bg-gray-700 px-2 py-1 rounded">
+                    {chords?.length || 0}
+                  </span>
+                </div>
+              </button>
+
+              {rootNotes.map(note => (
                 <button
-                  onClick={() => setSelectedRootNote('All')}
-                  className={`w-full px-3 py-2 text-left transition-colors rounded-md border-l-4 ${
-                    selectedRootNote === 'All' 
+                  key={note}
+                  onClick={() => setSelectedRootNote(note)}
+                  className={`w-full px-3 py-2 text-left transition-colors rounded-md border-l-4 mt-1 ${
+                    selectedRootNote === note 
                       ? 'bg-[#4a5262] border-l-blue-500 text-white' 
                       : 'hover:bg-[#444b59] border-l-transparent text-gray-300 hover:text-white'
                   }`}
                 >
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">All Notes</span>
+                    <span className="text-sm font-medium">{note}</span>
                     <span className="text-xs text-gray-400 bg-gray-700 px-2 py-1 rounded">
-                      {chords?.length || 0}
+                      {chordCounts[note] || 0}
                     </span>
                   </div>
                 </button>
-
-                {rootNotes.map(note => (
-                  <button
-                    key={note}
-                    onClick={() => setSelectedRootNote(note)}
-                    className={`w-full px-3 py-2 text-left transition-colors rounded-md border-l-4 mt-1 ${
-                      selectedRootNote === note 
-                        ? 'bg-[#4a5262] border-l-blue-500 text-white' 
-                        : 'hover:bg-[#444b59] border-l-transparent text-gray-300 hover:text-white'
-                    }`}
-                  >
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">{note}</span>
-                      <span className="text-xs text-gray-400 bg-gray-700 px-2 py-1 rounded">
-                        {chordCounts[note] || 0}
-                      </span>
-                    </div>
-                  </button>
-                ))}
-              </div>
+              ))}
             </div>
           </div>
         </div>

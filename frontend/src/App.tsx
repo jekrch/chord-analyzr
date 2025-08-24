@@ -44,7 +44,7 @@ function App() {
         addChordClick,
         clearAllChords,
         updateChordPattern,
-        playScaleNotes,
+        toggleScalePlayback,
         handlePatternChange,
         handleTogglePlayback,
         getCurrentPattern,
@@ -111,7 +111,7 @@ function App() {
                     availableInstruments={availableInstruments}
                     setKey={setKey}
                     setMode={setMode}
-                    playScaleNotes={playScaleNotes}
+                    toggleScalePlayback={toggleScalePlayback}
                     setPianoInstrument={setPianoInstrument}
                     setCutOffPreviousNotes={setCutOffPreviousNotes}
                     setEq={setEq}

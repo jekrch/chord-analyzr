@@ -115,7 +115,7 @@ const StepEditor = memo(({
         onChange={handleChange}
         options={options}
         className="w-full"
-        buttonClassName={`w-full h-8 text-xs ${stepValue === 'x'
+        buttonClassName={`w-full h-10 text-xs pl-2.5 ${stepValue === 'x'
           ? 'bg-[#3d434f] border-gray-700 text-slate-400'
           : isExceedingNotes
             ? 'bg-[#3d434f] border-gray-700 text-orange-400' // Different color for exceeded notes
@@ -367,12 +367,12 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
               >
                 {globalPatternState.isPlaying ? (
                   <>
-                    <PauseIcon className="w-4 h-4" />
+                    <PauseIcon className="w-6 h-6" />
                     <span className="hidden sm:inline">Stop</span>
                   </>
                 ) : (
                   <>
-                    <PlayCircleIcon className="w-4 h-4" />
+                    <PlayCircleIcon className="w-6 h-6" />
                     <span className="hidden sm:inline">Play</span>
                   </>
                 )}
@@ -516,7 +516,7 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
                           return (
                             <div key={`indicator-${globalIndex}`} className="flex justify-center">
                               <div className={`transition-all duration-200 ${currentStepIndex === globalIndex
-                                ? 'w-full h-1 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50'
+                                ? 'w-full h-1 bg-blue-400 rounded-full'
                                 : 'w-full h-1 bg-gray-600 rounded-full'
                                 }`}></div>
                             </div>
@@ -564,7 +564,7 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
                           return (
                             <div key={`indicator-${globalIndex}`} className="flex justify-center">
                               <div className={`transition-all duration-200 ${currentStepIndex === globalIndex
-                                ? 'w-full h-1.5 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50'
+                                ? 'w-full h-1 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50'
                                 : 'w-full h-1 bg-gray-600 rounded-full'
                                 }`}></div>
                             </div>
@@ -744,7 +744,7 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
                                 </div>
                               </div>
                               <div className="text-xs opacity-60 text-slate-500">
-                                {preset.desc}
+                                {preset.pattern.join('-')}
                               </div>
                             </button>
                           );

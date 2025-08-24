@@ -1,5 +1,5 @@
-import { PlayCircleIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { PlayCircleIcon, PauseIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
 import Dropdown from '../Dropdown';
 import { Button } from '../Button';
 
@@ -30,7 +30,7 @@ interface PianoControlPanelProps {
     // Handlers
     setKey: (key: string) => void;
     setMode: (mode: string) => void;
-    playScaleNotes: () => void;
+    toggleScalePlayback: () => void;
     setPianoInstrument: (instrument: string) => void;
     setCutOffPreviousNotes: (cutOff: boolean) => void;
     setEq: (eq: EqSettings) => void;
@@ -51,7 +51,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
     // Handlers
     setKey,
     setMode,
-    playScaleNotes,
+    toggleScalePlayback,
     setPianoInstrument,
     setCutOffPreviousNotes,
     setEq,
@@ -94,70 +94,145 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                     </div>
                 </div>
 
-                {/* Main Controls Content - Responsive Grid with proper alignment */}
+                {/* Main Controls Content - Stable Layout */}
                 <div className="p-6 bg-[#444b59]">
-                    <div className="flex flex-col md:flex-row items-start md:items-center md:justify-center gap-6 md:gap-8">
-                        {/* Key Control Group */}
-                        <div className="flex items-center gap-3">
-                            <span className="text-sm text-slate-300 font-medium whitespace-nowrap">Key:</span>
-                            <div className="flex items-center gap-2">
+                    <div className="flex flex-col xl:flex-row xl:items-center xl:justify-center gap-6">
+                        {/* Desktop: Centered container with internal separators */}
+                        <div className="hidden xl:flex items-center bg-[#3d434f]/30 border border-gray-600/30 rounded-lg px-6 py-4">
+                            {/* Key Control Group */}
+                            <div className="flex items-center gap-3">
+                                <span className="text-sm text-slate-300 font-medium whitespace-nowrap">Key:</span>
+                                <div className="flex items-center gap-2">
+                                    <Dropdown
+                                        value={currentKey}
+                                        className='w-[5rem]'
+                                        buttonClassName='px-3 py-1.5 text-center font-medium text-xs h-10 flex items-center justify-center'
+                                        menuClassName='min-w-[5rem]'
+                                        onChange={setKey}
+                                        showSearch={false}
+                                        options={['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']}
+                                    />
+                                    <Button
+                                        onClick={toggleScalePlayback}
+                                        variant="play-stop"
+                                        size="icon"
+                                        className="!w-8 !h-8 flex items-center justify-center ml-1"
+                                        active={isPlayingScale}
+                                        title={isPlayingScale ? 'Stop scale' : 'Play scale'}
+                                    >
+                                        {isPlayingScale ? (
+                                            <PauseIcon className="w-6 h-6" />
+                                        ) : (
+                                            <PlayCircleIcon className="w-6 h-6" />
+                                        )}
+                                    </Button>
+                                </div>
+                            </div>
+
+                            {/* Separator */}
+                            <div className="w-px h-8 bg-gray-600/50 mx-8"></div>
+
+                            {/* Mode Control Group */}
+                            <div className="flex items-center gap-3">
+                                <span className="text-sm text-slate-300 font-medium whitespace-nowrap">Mode:</span>
+                                {modes && (
+                                    <Dropdown
+                                        value={mode}
+                                        className='w-[11rem]'
+                                        buttonClassName='px-3 py-1.5 text-left font-medium text-xs h-10 flex items-center'
+                                        menuClassName='min-w-[11rem]'
+                                        onChange={setMode}
+                                        showSearch={true}
+                                        options={modes}
+                                    />
+                                )}
+                            </div>
+
+                            {/* Separator */}
+                            <div className="w-px h-8 bg-gray-600/50 mx-8"></div>
+
+                            {/* Voice Control Group */}
+                            <div className="flex items-center gap-3">
+                                <span className="text-sm text-slate-300 font-medium whitespace-nowrap">Voice:</span>
                                 <Dropdown
-                                    value={currentKey}
-                                    className='w-[5rem]'
-                                    buttonClassName='px-3 py-1.5 text-center font-medium text-xs h-10'
-                                    menuClassName='min-w-[5rem]'
-                                    onChange={setKey}
-                                    showSearch={false}
-                                    options={['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']}
+                                    value={pianoSettings.instrumentName.replaceAll('_', ' ')}
+                                    className='w-[14rem]'
+                                    buttonClassName='px-3 py-1.5 text-left font-medium text-xs h-10 flex items-center'
+                                    menuClassName='min-w-[11rem]'
+                                    onChange={handleInstrumentChange}
+                                    showSearch={true}
+                                    options={availableInstruments.map((name) => name.replaceAll('_', ' '))}
                                 />
-                                <Button
-                                    onClick={playScaleNotes}
-                                    variant="success"
-                                    size="sm"
-                                    className="w-8 pr-[0.9em] self-center"
-                                    disabled={isPlayingScale}
-                                    active={isPlayingScale}
-                                    title={isPlayingScale ? 'Playing scale...' : 'Play scale'}
-                                >
-                                    <PlayCircleIcon className="w-6 h-6" />
-                                </Button>
                             </div>
                         </div>
 
-                        {/* Mode Control Group */}
-                        <div className="flex items-center gap-3">
-                            <span className="text-sm text-slate-300 font-medium whitespace-nowrap">Mode:</span>
-                            {modes && (
-                                <Dropdown
-                                    value={mode}
-                                    className='w-[11rem] self-center'
-                                    buttonClassName='px-3 py-1.5 text-left font-medium text-xs h-10'
-                                    menuClassName='min-w-[11rem]'
-                                    onChange={setMode}
-                                    showSearch={true}
-                                    options={modes}
-                                />
-                            )}
-                        </div>
+                        {/* Mobile: Stack vertically */}
+                        <div className="xl:hidden space-y-6">
+                            {/* Key Control Group */}
+                            <div className="flex items-center gap-3">
+                                <span className="text-sm text-slate-300 font-medium whitespace-nowrap w-16 flex items-center">Key:</span>
+                                <div className="flex items-center gap-2">
+                                    <Dropdown
+                                        value={currentKey}
+                                        className='w-[5rem]'
+                                        buttonClassName='px-3 py-1.5 text-center font-medium text-xs h-10 flex items-center justify-center'
+                                        menuClassName='min-w-[5rem]'
+                                        onChange={setKey}
+                                        showSearch={false}
+                                        options={['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']}
+                                    />
+                                    <Button
+                                        onClick={toggleScalePlayback}
+                                        variant="play-stop"
+                                        size="icon"
+                                        className="!w-8 !h-8 flex items-center justify-center ml-1"
+                                        active={isPlayingScale}
+                                        title={isPlayingScale ? 'Stop scale' : 'Play scale'}
+                                    >
+                                        {isPlayingScale ? (
+                                            <PauseIcon className="w-6 h-6" />
+                                        ) : (
+                                            <PlayCircleIcon className="w-6 h-6" />
+                                        )}
+                                    </Button>
+                                </div>
+                            </div>
 
-                        {/* Voice Control Group */}
-                        <div className="flex items-center gap-3">
-                            <span className="text-sm text-slate-300 font-medium whitespace-nowrap">Voice:</span>
-                            <Dropdown
-                                value={pianoSettings.instrumentName.replaceAll('_', ' ')}
-                                className='w-[14rem] self-center'
-                                buttonClassName='px-3 py-1.5 text-left font-medium text-xs h-10'
-                                menuClassName='min-w-[11rem]'
-                                onChange={handleInstrumentChange}
-                                showSearch={true}
-                                options={availableInstruments.map((name) => name.replaceAll('_', ' '))}
-                            />
+                            {/* Mode Control Group */}
+                            <div className="flex items-center gap-3">
+                                <span className="text-sm text-slate-300 font-medium whitespace-nowrap w-16 flex items-center">Mode:</span>
+                                {modes && (
+                                    <Dropdown
+                                        value={mode}
+                                        className='w-[11rem]'
+                                        buttonClassName='px-3 py-1.5 text-left font-medium text-xs h-10 flex items-center'
+                                        menuClassName='min-w-[11rem]'
+                                        onChange={setMode}
+                                        showSearch={true}
+                                        options={modes}
+                                    />
+                                )}
+                            </div>
+
+                            {/* Voice Control Group */}
+                            <div className="flex items-center gap-3">
+                                <span className="text-sm text-slate-300 font-medium whitespace-nowrap w-16 flex items-center">Voice:</span>
+                                <Dropdown
+                                    value={pianoSettings.instrumentName.replaceAll('_', ' ')}
+                                    className='w-[14rem]'
+                                    buttonClassName='px-3 py-1.5 text-left font-medium text-xs h-10 flex items-center'
+                                    menuClassName='min-w-[11rem]'
+                                    onChange={handleInstrumentChange}
+                                    showSearch={true}
+                                    options={availableInstruments.map((name) => name.replaceAll('_', ' '))}
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Expandable Piano Settings - Bottom Section */}
-                <div className={`transition-all duration-300 ease-in-out overflow-hidden ${settingsOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
+                <div className={`transition-all duration-300 ease-in-out overflow-hidden ${settingsOpen ? ' opacity-100' : 'max-h-0 opacity-0'
                     }`}>
                     <div className="border-t border-gray-600 bg-[#3d434f]">
                         <div className="px-4 py-3 border-b border-gray-600">

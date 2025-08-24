@@ -101,6 +101,7 @@ export const useAppState = () => {
     const [isPlayingScale, setIsPlayingScale] = useState<boolean>(false);
     const [showPatternSystem, setShowPatternSystem] = useState(false);
     const [isLiveMode, setIsLiveMode] = useState<boolean>(false);
+const scalePlaybackTimeouts = useRef<NodeJS.Timeout[]>([]);
 
     // Pattern sequencer state
     const [globalPatternState, setGlobalPatternState] = useState<GlobalPatternState>({
@@ -328,65 +329,99 @@ export const useAppState = () => {
         });
     }, []);
 
-    const playScaleNotes = useCallback(() => {
-        if (!scaleNotes?.length || isPlayingScale) {
-            return;
-        }
+    const toggleScalePlayback = useCallback(() => {
+    // --- STOP PLAYBACK LOGIC ---
+    if (isPlayingScale) {
+        // Clear any scheduled timeouts to prevent further notes from playing.
+        scalePlaybackTimeouts.current.forEach(clearTimeout);
+        // Reset the ref for the next playback.
+        scalePlaybackTimeouts.current = [];
 
-        setIsPlayingScale(true);
-
-        const wasPlaying = globalPatternState.isPlaying;
-        if (wasPlaying) {
-            setGlobalPatternState(prev => ({ ...prev, isPlaying: false }));
-        }
-
+        // Immediately clear the active notes to stop the visual indicator.
         setActiveNotes([]);
+        // Update the state to reflect that playback has stopped.
+        setIsPlayingScale(false);
 
-        const quarterNoteDuration = 60000 / globalPatternState.bpm;
-        const noteDuration = quarterNoteDuration * 0.8;
+        // If you have a function to cut off MIDI notes, call it here.
+        // For example: stopAllMidiNotes();
         
-        let cumulativeDelay = 100;
-        let currentOctave = 4;
-        let lastMidiNumber = 0;
+        return; // Exit the function after stopping.
+    }
 
-        const scaleNotesWithTonic = [...scaleNotes];
-        if (scaleNotes[0]?.noteName) {
-            scaleNotesWithTonic.push({ noteName: scaleNotes[0].noteName });
-        }
+    // --- START PLAYBACK LOGIC ---
+    if (!scaleNotes?.length) {
+        return;
+    }
 
-        scaleNotesWithTonic.forEach((scaleNote, index) => {
-            if (!scaleNote.noteName) return;
+    setIsPlayingScale(true);
 
-            setTimeout(() => {
-                const noteName = normalizeNoteName(scaleNote.noteName);
-                if (!noteName) return;
+    // Pause the main sequencer if it's running.
+    const wasPlaying = globalPatternState.isPlaying;
+    if (wasPlaying) {
+        setGlobalPatternState(prev => ({ ...prev, isPlaying: false }));
+    }
 
-                let midiNumber = MidiNumbers.fromNote(noteName + currentOctave);
+    setActiveNotes([]);
 
-                if (index > 0 && midiNumber <= lastMidiNumber) {
-                    currentOctave++;
-                    midiNumber = MidiNumbers.fromNote(noteName + currentOctave);
-                }
+    // Calculate timing based on the global BPM.
+    const quarterNoteDuration = 60000 / globalPatternState.bpm;
+    const noteDuration = quarterNoteDuration * 0.8; // 80% of the beat duration.
+    
+    let cumulativeDelay = 100; // Start with a small initial delay.
+    let currentOctave = 4;
+    let lastMidiNumber = 0;
 
-                lastMidiNumber = midiNumber;
-                const noteDetails = MidiNumbers.getAttributes(midiNumber);
-                const note = noteDetails.note.slice(0, -1);
-                const octave = parseInt(noteDetails.note.slice(-1), 10);
+    // Add the root note at the end to resolve the scale.
+    const scaleNotesWithTonic = [...scaleNotes];
+    if (scaleNotes[0]?.noteName) {
+        scaleNotesWithTonic.push({ noteName: scaleNotes[0].noteName });
+    }
 
-                setActiveNotes([{ note, octave }]);
-            }, cumulativeDelay);
+    // Schedule each note to play.
+    scaleNotesWithTonic.forEach((scaleNote) => {
+        if (!scaleNote.noteName) return;
 
-            cumulativeDelay += noteDuration;
-        });
+        const timeoutId = setTimeout(() => {
+            const noteName = normalizeNoteName(scaleNote.noteName);
+            if (!noteName) return;
 
-        setTimeout(() => {
-            setActiveNotes([]);
-            setIsPlayingScale(false);
-            if (wasPlaying) {
-                setGlobalPatternState(prev => ({ ...prev, isPlaying: true }));
+            let midiNumber = MidiNumbers.fromNote(noteName + currentOctave);
+
+            // Logic to handle octave jumps correctly.
+            if (midiNumber <= lastMidiNumber) {
+                currentOctave++;
+                midiNumber = MidiNumbers.fromNote(noteName + currentOctave);
             }
-        }, cumulativeDelay + noteDuration);
-    }, [scaleNotes, globalPatternState.isPlaying, globalPatternState.bpm, isPlayingScale]);
+
+            lastMidiNumber = midiNumber;
+            const noteDetails = MidiNumbers.getAttributes(midiNumber);
+            const note = noteDetails.note.slice(0, -1);
+            const octave = parseInt(noteDetails.note.slice(-1), 10);
+
+            // Set the currently playing note for visual feedback.
+            setActiveNotes([{ note, octave }]);
+        }, cumulativeDelay);
+
+        // Store the timeout ID so we can cancel it if needed.
+        scalePlaybackTimeouts.current.push(timeoutId);
+
+        cumulativeDelay += noteDuration;
+    });
+
+    // Schedule the final cleanup task.
+    const finalTimeoutId = setTimeout(() => {
+        setActiveNotes([]);
+        setIsPlayingScale(false);
+        scalePlaybackTimeouts.current = []; // Clear the timeouts ref.
+        // Resume the main sequencer if it was playing before.
+        if (wasPlaying) {
+            setGlobalPatternState(prev => ({ ...prev, isPlaying: true }));
+        }
+    }, cumulativeDelay + noteDuration);
+
+    scalePlaybackTimeouts.current.push(finalTimeoutId);
+
+}, [scaleNotes, isPlayingScale, globalPatternState.bpm, globalPatternState.isPlaying]);
 
     const handlePatternChange = useCallback((newPatternState: Partial<GlobalPatternState>) => {
         setGlobalPatternState(prev => ({
@@ -686,7 +721,7 @@ export const useAppState = () => {
         removeChord,
         clearAllChords,
         updateChordPattern,
-        playScaleNotes,
+        toggleScalePlayback,
         handlePatternChange,
         handleTogglePlayback,
         getCurrentPattern,

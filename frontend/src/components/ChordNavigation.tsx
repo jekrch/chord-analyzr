@@ -6,11 +6,11 @@ import { Button, ChordButton } from './Button'; // Updated import
 interface AddedChord {
     name: string;
     notes: string;
-    pattern: string[]; 
+    pattern: string[];
 }
 
 interface GlobalPatternState {
-    currentPattern: string[]; 
+    currentPattern: string[];
     isPlaying: boolean;
     bpm: number;
     subdivision: number;
@@ -50,19 +50,17 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
 }) => {
     if (addedChords.length === 0) return null;
 
-    const baseClasses = isLiveMode 
+    const baseClasses = isLiveMode
         ? "fixed inset-0 bg-[#1a1e24] bg-opacity-95 backdrop-blur-sm z-50 flex flex-col"
         : "fixed bottom-0 left-0 right-0 bg-[#1e2329] border-t border-gray-600 shadow-2xl z-50";
 
     return (
         <div className={baseClasses}>
             {/* Header */}
-            <div className={`${isLiveMode ? 'flex-shrink-0' : ''} max-w-7xl mx-auto px-4 ${isLiveMode ? 'py-3' : 'py-2'} w-full`}>
+            <div className={`${isLiveMode ? 'flex-shrink-0' : ''} max-w-7xl mx-auto px-2 ${isLiveMode ? 'py-3' : 'py-2'} w-full`}>
                 <div className={`flex items-center justify-between ${isLiveMode ? 'mb-2' : 'mb-1'}`}>
                     <div className="flex items-center space-x-4">
-                        <div className="text-sm text-gray-400 font-medium uppercase tracking-wide">
-                            Chords
-                        </div>
+
                         {!isLiveMode && (
                             <Button
                                 onClick={onTogglePlayback}
@@ -100,6 +98,9 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                                 )}
                             </Button>
                         )}
+                        <div className="text-sm mr-2 text-gray-400 font-medium uppercase tracking-wide">
+                            Chords
+                        </div>
                     </div>
                     <div className="flex items-center space-x-1.5">
                         <Button
@@ -127,7 +128,7 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                                     onClick={() => {
                                         if (isLiveMode)
                                             onToggleLiveMode();
-                                        onClearAll(); 
+                                        onClearAll();
                                     }}
                                     variant="primary"
                                     size="sm"
@@ -165,7 +166,7 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
             {/* Chord Buttons */}
             <div className={`flex-1 max-w-7xl mx-auto px-4 w-full ${isLiveMode ? 'pb-8 overflow-y-auto pt-2' : 'pb-2 pt-0'}`}>
                 <div className={
-                    isLiveMode 
+                    isLiveMode
                         ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 auto-rows-max"
                         : "flex space-x-2 overflow-x-auto pb-2 chord-sequence-scroll"
                 }>
@@ -197,14 +198,14 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                                 {isDeleteMode && (
                                     <XCircleIcon className={`absolute top-1 right-1 h-4 w-4 text-white bg-red-500 rounded-full shadow-sm ${isLiveMode ? 'h-6 w-6' : ''}`} />
                                 )}
-                                
+
                                 <div className={`text-cyan-200 font-bold ${isLiveMode ? 'text-xl mb-2' : 'text-xs mb-1'}`}>
                                     {index + 1}
                                 </div>
                                 <div className={`leading-tight ${isLiveMode ? 'text-base text-center text-white ' : 'text-xs'}`}>
                                     {chord.name}
                                 </div>
-                                
+
                                 {isLiveMode && (
                                     <>
                                         <div className="text-xs text-gray-300 mt-4 text-center">

@@ -159,8 +159,8 @@ const ChordTable: React.FC<ChordTableProps> = ({
   return (
     <div className="w-full max-w-7xl mx-auto px-2">
      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 gap-2">
-        <h2 className="text-lg font-bold text-white">Chord Explorer</h2>
+      <div className="flex uppercase flex-row items-center justify-between mb-3 sm:mb-4 gap-2">
+        <h2 className="text-lg font-medium text-gray-300">Chord Explorer</h2>
         <div className="text-sm text-gray-400">
           {filteredChords?.length || 0} of {chords?.length || 0} chords
         </div>

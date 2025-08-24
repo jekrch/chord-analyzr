@@ -107,7 +107,7 @@ const Dropdown: React.FC<DropdownProps> = ({
   };
 
   return (
-    <div className={`relative inline-block text-left ${className}`}>
+    <div className={`relative inline-block text-left text-lg ${className}`}>
       <button
         ref={buttonRef}
         onClick={handleToggle}
@@ -115,7 +115,7 @@ const Dropdown: React.FC<DropdownProps> = ({
           inline-flex w-full justify-between items-center gap-x-2 rounded-lg
           bg-[#3d434f] border
           px-4 py-2.5 text-sm font-medium
-          text-slate-200
+          text-slate-200 
           ${isOpen ? 'border-blue-500 bg-[#4a5262]' : 'border-gray-600 hover:bg-[#4a5262] hover:border-gray-500'}
           focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 focus:ring-offset-[#2a2f38]
           transition-all duration-200 ease-out

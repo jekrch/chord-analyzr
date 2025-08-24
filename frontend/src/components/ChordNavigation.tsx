@@ -187,7 +187,7 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                                         // Live mode styles
                                         'py-8 px-6 text-lg min-h-[120px] flex flex-col items-center justify-center': isLiveMode,
                                         // Normal mode styles  
-                                        'flex-shrink-0 py-4 px-4 text-sm min-w-[85px] bottom-nav-button chord-button m-2 min-h-[60px] flex flex-col items-center justify-center': !isLiveMode,
+                                        'flex-shrink-0 py-4 px-2 text-sm min-w-[85px] bottom-nav-button chord-button space-x-1 mt-1 min-h-[60px] flex flex-col items-center justify-center': !isLiveMode,
                                         // Highlight effect
                                         'transform': isHighlighted,
                                         // Live mode hover effects

@@ -134,7 +134,8 @@ function App() {
 
                 {/* Playback Status */}
                 {globalPatternState.isPlaying && (
-                    <div className="px-6 py-3 bg-green-900 bg-opacity-50 rounded-lg border border-green-700">
+                    <div className="w-full px-2 mx-auto items-center"> 
+                    <div className="px-6 py-3 bg-green-900 bg-opacity-50 rounded-lg border border-green-700 w-full max-w-7xl mx-auto">
                         <div className="text-sm text-green-300 flex items-center justify-center space-x-4">
                             <div className="flex items-center">
                                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-2"></div>
@@ -155,6 +156,7 @@ function App() {
                                 }
                             </div>
                         </div>
+                    </div>
                     </div>
                 )}
 

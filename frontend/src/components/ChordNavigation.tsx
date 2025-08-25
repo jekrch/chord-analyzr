@@ -52,15 +52,14 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
 
     const baseClasses = isLiveMode
         ? "fixed inset-0 bg-[#1a1e24] bg-opacity-95 backdrop-blur-sm z-50 flex flex-col"
-        : "fixed bottom-0 left-0 right-0 bg-[#1e2329] border-t border-gray-600 shadow-2xl z-50";
+        : "fixed bottom-0 left-0 right-0 bg-[#2a2f38] border-t border-gray-600 shadow-2xl z-50";
 
     return (
         <div className={baseClasses}>
             {/* Header */}
-            <div className={`${isLiveMode ? 'flex-shrink-0' : ''} max-w-7xl mx-auto px-2 ${isLiveMode ? 'py-3' : 'py-2'} w-full`}>
-                <div className={`flex items-center justify-between ${isLiveMode ? 'mb-2' : 'mb-1'}`}>
+            <div className={`${isLiveMode ? 'flex-shrink-0' : ''} max-w-7xl mx-auto px-4 ${isLiveMode ? 'py-4' : 'py-3'} w-full`}>
+                <div className={`flex items-center justify-between ${isLiveMode ? 'mb-3' : 'mb-2'}`}>
                     <div className="flex items-center space-x-4">
-
                         {!isLiveMode && (
                             <Button
                                 onClick={onTogglePlayback}
@@ -83,7 +82,7 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                                 variant="play-stop"
                                 size="sm"
                                 active={globalPatternState.isPlaying}
-                                className="shadow-lg pr-4.5"
+                                className="shadow-lg"
                             >
                                 {globalPatternState.isPlaying ? (
                                     <>
@@ -98,54 +97,56 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                                 )}
                             </Button>
                         )}
-                        <div className="text-sm mr-2 text-gray-400 font-medium uppercase tracking-wide">
+                        <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider mr-4">
                             Chords
-                        </div>
+                        </h2>
                     </div>
-                    <div className="flex items-center space-x-1.5">
-                        <Button
+                    <div className="flex items-center space-x-2">
+                        <button
                             onClick={onToggleLiveMode}
-                            variant="primary"
-                            size="sm"
-                            active={isLiveMode}
-                            className="py-1.5 px-3 text-xs h-7"
+                            className={classNames(
+                                "w-[7em] h-8 flex items-center space-x-2 px-3 py-1.5 text-xs border rounded transition-all duration-200",
+                                isLiveMode
+                                    ? "text-slate-200 bg-[#4a5262] border-gray-600 hover:bg-[#525a6b]"
+                                    : "text-slate-300 hover:text-slate-200 bg-[#4a5262] hover:bg-[#525a6b] border-gray-600"
+                            )}
                         >
                             {isLiveMode ? (
                                 <>
                                     <ArrowsPointingInIcon className="h-3 w-3" />
-                                    Collapse
+                                    <span>Collapse</span>
                                 </>
                             ) : (
                                 <>
                                     <ArrowsPointingOutIcon className="h-3 w-3" />
-                                    Expand
+                                    <span>Expand</span>
                                 </>
                             )}
-                        </Button>
+                        </button>
                         {!isLiveMode && (
                             <>
-                                <Button
+                                <button
                                     onClick={() => {
                                         if (isLiveMode)
                                             onToggleLiveMode();
                                         onClearAll();
                                     }}
-                                    variant="primary"
-                                    size="sm"
-                                    className="py-1.5 px-3 text-xs h-7"
+                                    className="w-[5em] h-8 flex items-center justify-center px-3 py-1.5 text-xs text-slate-300 hover:text-slate-200 bg-[#4a5262] hover:bg-[#525a6b] border border-gray-600 rounded transition-all duration-200"
                                 >
                                     Clear
-                                </Button>
-                                <Button
+                                </button>
+                                <button
                                     onClick={onToggleDeleteMode}
-                                    variant={isDeleteMode ? "danger" : "primary"}
-                                    size="sm"
-                                    active={isDeleteMode}
-                                    className="py-1.5 px-3 text-xs h-7 w-[7em]"
+                                    className={classNames(
+                                        "w-[7em] h-8 flex items-center space-x-2 px-3 py-1.5 text-xs border rounded transition-all duration-200",
+                                        isDeleteMode
+                                            ? "text-white bg-red-600 border-red-500 hover:bg-red-700"
+                                            : "text-slate-300 hover:text-slate-200 bg-[#4a5262] hover:bg-[#525a6b] border-gray-600"
+                                    )}
                                 >
                                     <TrashIcon className="h-3 w-3" />
-                                    {isDeleteMode ? 'Done' : 'Delete'}
-                                </Button>
+                                    <span>{isDeleteMode ? 'Done' : 'Delete'}</span>
+                                </button>
                             </>
                         )}
                     </div>
@@ -153,10 +154,10 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
 
                 {/* Live Mode Info */}
                 {isLiveMode && (
-                    <div className="text-center text-gray-400 text-sm mb-4">
+                    <div className="text-center text-slate-400 text-sm mb-4">
                         <div>Use 1-{Math.min(addedChords.length, 9)} or click chords</div>
-                        <div className="text-xs mt-1">
-                            <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-1"></span>
+                        <div className="text-xs mt-2">
+                            <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
                             Active Chord
                         </div>
                     </div>
@@ -164,7 +165,7 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
             </div>
 
             {/* Chord Buttons */}
-            <div className={`flex-1 max-w-7xl mx-auto px-4 w-full ${isLiveMode ? 'pb-8 overflow-y-auto pt-2' : 'pb-2 pt-0'}`}>
+            <div className={`flex-1 max-w-7xl mx-auto w-full ${isLiveMode ? 'px-4 pb-8 overflow-y-auto' : 'px-1 sm:px-4 pb-3'}`}>
                 <div className={
                     isLiveMode
                         ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 auto-rows-max"
@@ -208,10 +209,10 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
 
                                 {isLiveMode && (
                                     <>
-                                        <div className="text-xs text-gray-300 mt-4 text-center">
+                                        <div className="text-xs text-slate-300 mt-4 text-center">
                                             {chord.notes.replace(/,/g, ' • ')}
                                         </div>
-                                        <div className="text-xs text-gray-300 mt-1 text-center font-mono">
+                                        <div className="text-xs text-slate-300 mt-1 text-center font-mono">
                                             {chord.pattern.join('-')}
                                         </div>
                                     </>
@@ -224,30 +225,30 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
 
             {/* Live Mode Footer */}
             {isLiveMode && (
-                <div className="flex-shrink-0 bg-[#1e2329] border-t border-gray-600 px-4 py-3">
+                <div className="flex-shrink-0 bg-[#2a2f38] border-t border-gray-600 px-4 py-3">
                     <div className="max-w-7xl mx-auto flex items-center justify-between">
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-slate-400 font-medium">
                             {addedChords.length} chord{addedChords.length !== 1 ? 's' : ''} loaded
                         </div>
-                        <div className="flex items-center space-x-1.5">
-                            <Button
+                        <div className="flex items-center space-x-2">
+                            <button
                                 onClick={onClearAll}
-                                variant="secondary"
-                                size="sm"
-                                className="py-1.5 px-3 text-xs h-7"
+                                className="w-[5em] h-8 flex items-center justify-center px-3 py-1.5 text-xs text-slate-300 hover:text-slate-200 bg-[#4a5262] hover:bg-[#525a6b] border border-gray-600 rounded transition-all duration-200"
                             >
                                 Clear
-                            </Button>
-                            <Button
+                            </button>
+                            <button
                                 onClick={onToggleDeleteMode}
-                                variant={isDeleteMode ? "danger" : "secondary"}
-                                size="sm"
-                                active={isDeleteMode}
-                                className="py-1.5 px-3 text-xs h-7"
+                                className={classNames(
+                                    "w-[7em] h-8 flex items-center space-x-2 px-3 py-1.5 text-xs border rounded transition-all duration-200",
+                                    isDeleteMode
+                                        ? "text-white bg-red-600 border-red-500 hover:bg-red-700"
+                                        : "text-slate-300 hover:text-slate-200 bg-[#4a5262] hover:bg-[#525a6b] border-gray-600"
+                                )}
                             >
                                 <TrashIcon className="h-3 w-3" />
-                                {isDeleteMode ? 'Done' : 'Delete'}
-                            </Button>
+                                <span>{isDeleteMode ? 'Done' : 'Delete'}</span>
+                            </button>
                         </div>
                     </div>
                 </div>

@@ -57,7 +57,7 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
     return (
         <div className={baseClasses}>
             {/* Header */}
-            <div className={`${isLiveMode ? 'flex-shrink-0' : ''} max-w-7xl mx-auto px-4 ${isLiveMode ? 'py-4' : 'py-3'} w-full`}>
+            <div className={`${isLiveMode ? 'flex-shrink-0' : ''} max-w-7xl mx-auto px-4 ${isLiveMode ? 'py-4' : 'pt-2'} w-full`}>
                 <div className={`flex items-center justify-between ${isLiveMode ? 'mb-3' : 'mb-2'}`}>
                     <div className="flex items-center space-x-4">
                         {!isLiveMode && (
@@ -97,9 +97,12 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                                 )}
                             </Button>
                         )}
-                        <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider mr-4">
-                            Chords
-                        </h2>
+                        <div className="text-center text-xs font-bold text-slate-300 uppercase tracking-wider mr-3x -ml-1x invisible sm:visible w-0 sm:w-auto">
+                            chords
+                        </div>
+                        <div className="text-center text-xs text-slate-300 uppercase tracking-wider w-auto sm:w-0 visible sm:invisible -ml-6">
+                            chords
+                        </div>
                     </div>
                     <div className="flex items-center space-x-2">
                         <button
@@ -165,11 +168,11 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
             </div>
 
             {/* Chord Buttons */}
-            <div className={`flex-1 max-w-7xl mx-auto w-full ${isLiveMode ? 'px-4 pb-8 overflow-y-auto' : 'px-1 sm:px-4 pb-3'}`}>
+            <div className={`flex-1 max-w-7xl mx-auto w-full ${isLiveMode ? 'px-4 pb-8 overflow-y-auto' : 'px-2 pb-2'}`}>
                 <div className={
                     isLiveMode
                         ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 auto-rows-max"
-                        : "flex space-x-2 overflow-x-auto pb-2 chord-sequence-scroll"
+                        : "flex space-x-2 overflow-x-auto pb-1 chord-sequence-scroll -mx-2 px-2"
                 }>
                     {addedChords.map((chord, index) => {
                         const isActive = index === activeChordIndex;

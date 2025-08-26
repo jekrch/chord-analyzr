@@ -282,9 +282,9 @@ const ChordTable: React.FC<ChordTableProps> = ({
                 return (
                   <div
                     key={`chord-${index}`}
-                    className={`bg-[#3d434f] rounded-lg border border-gray-600 hover:border-blue-500 hover:bg-[#444b59] transition-all duration-200 overflow-hidden cursor-pointer group ${
-                      isPlaying ? 'chord-playing' : ''
-                    } ${isAdding ? 'chord-adding' : ''}`}
+                    className={`bg-[#3d434f] rounded-lg border border-gray-600 hover:border-blue-500 hover:bg-[#444b59] transition-all duration-200 overflow-hidden cursor-pointer group relative ${
+                      isPlaying ? 'chord-playing z-50' : ''
+                    } ${isAdding ? 'chord-adding z-40' : ''}`}
                     onClick={() => handleChordPlay(chord.chordNoteNames!, index, chord.chordName!)}
                   >
                     {/* Main content */}

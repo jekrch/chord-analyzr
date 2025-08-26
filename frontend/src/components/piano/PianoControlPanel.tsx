@@ -174,9 +174,9 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                 <div className="flex items-center gap-2">
                                     <Dropdown
                                         value={currentKey}
-                                        className='w-[5rem]'
+                                        className='w-[6em]'
                                         buttonClassName='px-3 py-1.5 text-center font-medium text-xs h-10 flex items-center justify-center'
-                                        menuClassName='min-w-[5rem]'
+                                        menuClassName='min-w-[6rem]'
                                         onChange={setKey}
                                         showSearch={false}
                                         options={['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']}
@@ -204,9 +204,9 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                 {modes && (
                                     <Dropdown
                                         value={mode}
-                                        className='w-[11rem]'
+                                        className='w-[14rem]'
                                         buttonClassName='px-3 py-1.5 text-left font-medium text-xs h-10 flex items-center'
-                                        menuClassName='min-w-[11rem]'
+                                        menuClassName='min-w-[14rem]'
                                         onChange={setMode}
                                         showSearch={true}
                                         options={modes}

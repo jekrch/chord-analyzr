@@ -100,7 +100,7 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                         <div className="text-center text-xs font-bold text-slate-300 uppercase tracking-wider mr-3x -ml-1x invisible sm:visible w-0 sm:w-auto">
                             chords
                         </div>
-                        <div className="text-center text-xs text-slate-300 uppercase tracking-wider w-auto sm:w-0 visible sm:invisible -ml-6">
+                        <div className={`text-center text-xs text-slate-300 uppercase tracking-wider w-auto sm:w-0 visible sm:invisible ${!isLiveMode ? '-ml-6' : 'mx-6'}`}>
                             chords
                         </div>
                     </div>

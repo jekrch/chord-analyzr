@@ -95,7 +95,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                 </div>
 
                 {/* Main Controls Content - Stable Layout */}
-                <div className="p-6 bg-[#444b59]">
+                <div className="p-6 py-4 bg-[#444b59]">
                     <div className="flex flex-col xl:flex-row xl:items-center xl:justify-center gap-6">
                         {/* Desktop: Centered container with internal separators */}
                         <div className="hidden xl:flex items-center bg-[#3d434f]/30 border border-gray-600/30 rounded-lg px-6 py-4">

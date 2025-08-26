@@ -495,36 +495,8 @@ const scalePlaybackTimeouts = useRef<NodeJS.Timeout[]>([]);
         }
     }, [addedChords, handleChordClick, globalPatternState.isPlaying]);
 
-    // Audio initialization
-    const initializeAudio = useCallback(async () => {
-        if (!audioInitializedRef.current) {
-            try {
-                await silentAudioRef.current?.play();
-                audioInitializedRef.current = true;
-
-                document.removeEventListener('touchstart', initializeAudio);
-                document.removeEventListener('mousedown', initializeAudio);
-                document.removeEventListener('click', initializeAudio);
-            } catch (error) {
-                console.error('failed to initialize audio:', error);
-            }
-        }
-    }, []);
 
     // ========== EFFECTS ==========
-
-    // Audio initialization effect
-    useEffect(() => {
-        document.addEventListener('touchstart', initializeAudio);
-        document.addEventListener('mousedown', initializeAudio);
-        document.addEventListener('click', initializeAudio);
-
-        return () => {
-            document.removeEventListener('touchstart', initializeAudio);
-            document.removeEventListener('mousedown', initializeAudio);
-            document.removeEventListener('click', initializeAudio);
-        };
-    }, [initializeAudio]);
 
     // Sequencer timing effect
     useEffect(() => {

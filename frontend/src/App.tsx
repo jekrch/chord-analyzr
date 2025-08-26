@@ -59,8 +59,6 @@ function App() {
         setNoteDuration,
     } = useAppState();
 
-    // this silent audio reference is used to prevent the mute function 
-    // on iOS devices from blocking tonejs audio
     const silentAudioRef = useRef<HTMLAudioElement>(null)
     const audioInitializedRef = useRef(false)
 
@@ -111,7 +109,7 @@ function App() {
                 {/* Header Controls */}
                 <div className="flex items-center justify-center space-x-6 pt-6">
                     <div className="text-xs text-gray-400 text-center">
-                        <div>Press 'L' to expand piano | Space to play/pause</div>
+                        <div>Press 'L' to expand chord buttons | Space to play/pause</div>
                         <div>1-9 for chords | Click sequencer header to show/hide</div>
                     </div>
                 </div>

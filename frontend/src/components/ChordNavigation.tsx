@@ -101,7 +101,7 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                     </div>
 
                     {/* Center Section - centered between left and right */}
-                    <div className="text-center">
+                    <div className="text-center sm:w-full sm:text-left sm:mx-4">
                         {/* Desktop version - visible on sm and up */}
                         <div className="hidden sm:block text-xs font-bold text-slate-300 uppercase tracking-wider">
                             chords

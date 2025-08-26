@@ -5,6 +5,7 @@ import PatternSystem from './components/PatternSystem';
 import ChordNavigation from './components/ChordNavigation';
 import PianoControlPanel from './components/piano/PianoControlPanel';
 import './App.css';
+import { useEffect, useRef } from 'react';
 
 function App() {
     // ========== CUSTOM HOOK ==========
@@ -31,7 +32,7 @@ function App() {
         availableInstruments,
 
         // Refs
-        silentAudioRef,
+        //silentAudioRef,
 
         // Handlers
         setKey,
@@ -57,6 +58,45 @@ function App() {
         setReverbLevel,
         setNoteDuration,
     } = useAppState();
+
+    // this silent audio reference is used to prevent the mute function 
+    // on iOS devices from blocking tonejs audio
+    const silentAudioRef = useRef<HTMLAudioElement>(null)
+    const audioInitializedRef = useRef(false)
+
+    // audio initialization
+    const initializeAudio = async () => {
+        if (!audioInitializedRef.current) {
+            try {
+                // for ios, we need to play silent audio first
+                await silentAudioRef.current?.play()
+
+                audioInitializedRef.current = true
+
+                // cleanup listeners after successful initialization
+                document.removeEventListener('touchstart', initializeAudio)
+                document.removeEventListener('mousedown', initializeAudio)
+                document.removeEventListener('click', initializeAudio)
+            } catch (error) {
+                console.error('failed to initialize audio:', error)
+            }
+        }
+    }
+
+    useEffect(() => {
+        // event listeners for user interaction
+        document.addEventListener('touchstart', initializeAudio)
+        document.addEventListener('mousedown', initializeAudio)
+        document.addEventListener('click', initializeAudio)
+
+        // cleanup event listeners on unmount
+        return () => {
+            document.removeEventListener('touchstart', initializeAudio)
+            document.removeEventListener('mousedown', initializeAudio)
+            document.removeEventListener('click', initializeAudio)
+        }
+    }, [])
+
 
     // ========== RENDER ==========
     return (
@@ -134,29 +174,29 @@ function App() {
 
                 {/* Playback Status */}
                 {globalPatternState.isPlaying && (
-                    <div className="w-full px-2 mx-auto items-center"> 
-                    <div className="px-6 py-3 bg-green-900 bg-opacity-50 rounded-lg border border-green-700 w-full max-w-7xl mx-auto">
-                        <div className="text-sm text-green-300 flex items-center justify-center space-x-4">
-                            <div className="flex items-center">
-                                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-2"></div>
-                                <span className="font-medium">Sequencer Active</span>
-                            </div>
-                            <div className="text-xs opacity-80">
-                                Pattern: {getCurrentPattern().join('-')} |
-                                {globalPatternState.bpm} BPM |
-                                Step {(globalPatternState.currentStep % getCurrentPattern().length) + 1}/{getCurrentPattern().length}
-                                {temporaryChord &&
-                                    <span className="ml-2 text-yellow-300">• {temporaryChord.name} (table chord)</span>
-                                }
-                                {!temporaryChord && activeChordIndex !== null &&
-                                    <span className="ml-2 text-purple-300">• {addedChords[activeChordIndex]?.name} (selected chord)</span>
-                                }
-                                {!temporaryChord && activeChordIndex === null &&
-                                    <span className="ml-2 text-cyan-300">• Global pattern</span>
-                                }
+                    <div className="w-full px-2 mx-auto items-center">
+                        <div className="px-6 py-3 bg-green-900 bg-opacity-50 rounded-lg border border-green-700 w-full max-w-7xl mx-auto">
+                            <div className="text-sm text-green-300 flex items-center justify-center space-x-4">
+                                <div className="flex items-center">
+                                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-2"></div>
+                                    <span className="font-medium">Sequencer Active</span>
+                                </div>
+                                <div className="text-xs opacity-80">
+                                    Pattern: {getCurrentPattern().join('-')} |
+                                    {globalPatternState.bpm} BPM |
+                                    Step {(globalPatternState.currentStep % getCurrentPattern().length) + 1}/{getCurrentPattern().length}
+                                    {temporaryChord &&
+                                        <span className="ml-2 text-yellow-300">• {temporaryChord.name} (table chord)</span>
+                                    }
+                                    {!temporaryChord && activeChordIndex !== null &&
+                                        <span className="ml-2 text-purple-300">• {addedChords[activeChordIndex]?.name} (selected chord)</span>
+                                    }
+                                    {!temporaryChord && activeChordIndex === null &&
+                                        <span className="ml-2 text-cyan-300">• Global pattern</span>
+                                    }
+                                </div>
                             </div>
                         </div>
-                    </div>
                     </div>
                 )}
 

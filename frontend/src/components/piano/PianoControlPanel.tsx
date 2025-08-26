@@ -16,6 +16,9 @@ interface PianoSettings {
     noteDuration: number;
     cutOffPreviousNotes: boolean;
     eq: EqSettings;
+    volume: number;
+    chorusLevel: number;
+    delayLevel: number;
 }
 
 interface PianoControlPanelProps {
@@ -37,6 +40,9 @@ interface PianoControlPanelProps {
     setOctaveOffset: (offset: number) => void;
     setReverbLevel: (level: number) => void;
     setNoteDuration: (duration: number) => void;
+    setVolume: (volume: number) => void;
+    setChorusLevel: (level: number) => void;
+    setDelayLevel: (level: number) => void;
 }
 
 const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
@@ -58,6 +64,9 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
     setOctaveOffset,
     setReverbLevel,
     setNoteDuration,
+    setVolume,
+    setChorusLevel,
+    setDelayLevel,
 }) => {
     // Local state for piano settings panel
     const [settingsOpen, setSettingsOpen] = useState(false);
@@ -246,6 +255,23 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                 {/* Left Column */}
                                 <div className="space-y-6">
                                     <div>
+                                        <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">
+                                            Volume<span className="text-xs text-slate-400 ml-2 normal-case">({Math.round(pianoSettings.volume * 100)}%)</span>
+                                        </label>
+                                        <div className="relative">
+                                            <input
+                                                type="range"
+                                                min="0"
+                                                max="1.0"
+                                                step="0.05"
+                                                value={pianoSettings.volume}
+                                                onChange={(e) => setVolume(parseFloat(e.target.value))}
+                                                className="w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
                                         <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Octave Shift</label>
                                         <div className="flex items-center justify-between bg-[#3d434f] border border-gray-600 rounded-md p-1.5">
                                             <button
@@ -315,7 +341,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                     </div>
                                 </div>
 
-                                {/* Right Column - Equalizer */}
+                                {/* Right Column - Equalizer and Effects */}
                                 <div className="space-y-4 mt-6 lg:mt-0">
                                     <div>
                                         <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Equalizer</label>
@@ -345,6 +371,42 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                                     />
                                                 </div>
                                             ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">
+                                                Chorus<span className="text-xs text-slate-400 ml-2 normal-case">({Math.round(pianoSettings.chorusLevel * 100)}%)</span>
+                                            </label>
+                                            <div className="relative">
+                                                <input
+                                                    type="range"
+                                                    min="0"
+                                                    max="1.0"
+                                                    step="0.05"
+                                                    value={pianoSettings.chorusLevel}
+                                                    onChange={(e) => setChorusLevel(parseFloat(e.target.value))}
+                                                    className="w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">
+                                                Delay<span className="text-xs text-slate-400 ml-2 normal-case">({Math.round(pianoSettings.delayLevel * 100)}%)</span>
+                                            </label>
+                                            <div className="relative">
+                                                <input
+                                                    type="range"
+                                                    min="0"
+                                                    max="1.0"
+                                                    step="0.05"
+                                                    value={pianoSettings.delayLevel}
+                                                    onChange={(e) => setDelayLevel(parseFloat(e.target.value))}
+                                                    className="w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

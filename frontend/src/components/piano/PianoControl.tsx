@@ -49,6 +49,9 @@ interface PianoProps {
   onOctaveOffsetChange: (offset: number) => void;
   onReverbLevelChange: (level: number) => void;
   onNoteDurationChange: (duration: number) => void;
+  onVolumeChange: (volume: number) => void;
+  onChorusLevelChange: (level: number) => void;
+  onDelayLevelChange: (level: number) => void;
   onAvailableInstrumentsChange: (instruments: string[]) => void;
   
   // New prop to hide the original config controls
@@ -74,6 +77,9 @@ const PianoControl: React.FC<PianoProps> = ({
   onOctaveOffsetChange,
   onReverbLevelChange,
   onNoteDurationChange,
+  onVolumeChange,
+  onChorusLevelChange,
+  onDelayLevelChange,
   onAvailableInstrumentsChange,
   hideConfigControls = false
 }) => {
@@ -320,6 +326,9 @@ const PianoControl: React.FC<PianoProps> = ({
       hostname={soundfontHostname}
       eq={pianoSettings.eq}
       reverbLevel={pianoSettings.reverbLevel}
+      volume={pianoSettings.volume}
+      chorusLevel={pianoSettings.chorusLevel}
+      delayLevel={pianoSettings.delayLevel}
       render={({ isLoading, playNote, stopNote, stopAllNotes }) => {
         stopAllNotesRef.current = stopAllNotes;
         
@@ -377,6 +386,12 @@ const PianoControl: React.FC<PianoProps> = ({
                       setReverbLevel={onReverbLevelChange}
                       noteDuration={pianoSettings.noteDuration}
                       setNoteDuration={onNoteDurationChange}
+                      volume={pianoSettings.volume}
+                      setVolume={onVolumeChange}
+                      chorusLevel={pianoSettings.chorusLevel}
+                      setChorusLevel={onChorusLevelChange}
+                      delayLevel={pianoSettings.delayLevel}
+                      setDelayLevel={onDelayLevelChange}
                       onInstrumentChange={onInstrumentChange}
                     />
                   )

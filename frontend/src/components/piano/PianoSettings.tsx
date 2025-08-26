@@ -18,6 +18,12 @@ interface PianoSettingsProps {
   setReverbLevel: (level: number) => void;
   noteDuration: number;
   setNoteDuration: (duration: number) => void;
+  volume: number;
+  setVolume: (volume: number) => void;
+  chorusLevel: number;
+  setChorusLevel: (level: number) => void;
+  delayLevel: number;
+  setDelayLevel: (level: number) => void;
 }
 
 const PianoSettings: React.FC<PianoSettingsProps> = ({
@@ -32,6 +38,12 @@ const PianoSettings: React.FC<PianoSettingsProps> = ({
   setReverbLevel,
   noteDuration,
   setNoteDuration,
+  volume,
+  setVolume,
+  chorusLevel,
+  setChorusLevel,
+  delayLevel,
+  setDelayLevel,
 }) => {
   const handleEqChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -54,6 +66,23 @@ const PianoSettings: React.FC<PianoSettingsProps> = ({
 
             <div className="space-y-6">
               <div>
+                <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">
+                  Volume<span className="text-xs text-slate-400 ml-2 normal-case">({Math.round(volume * 100)}%)</span>
+                </label>
+                <div className="relative">
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="1.0" 
+                    step="0.05" 
+                    value={volume} 
+                    onChange={(e) => setVolume(parseFloat(e.target.value))} 
+                    className="w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb" 
+                  />
+                </div>
+              </div>
+
+              <div>
                 <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Octave Shift</label>
                 <div className="flex items-center justify-between bg-[#3d434f] border border-gray-600 rounded-md p-1.5">
                   <button 
@@ -63,7 +92,7 @@ const PianoSettings: React.FC<PianoSettingsProps> = ({
                   >
                     −
                   </button>
-                  <span className="font-mono text-xs text-slate-200 px-2">
+                  <span className="font-mono !text-xs text-slate-200 px-2">
                     {octaveOffset === 0 ? 'Normal' : `${octaveOffset > 0 ? '+' : ''}${octaveOffset} octave${Math.abs(octaveOffset) > 1 ? 's' : ''}`}
                   </span>
                   <button 
@@ -149,6 +178,42 @@ const PianoSettings: React.FC<PianoSettingsProps> = ({
                       />
                     </div>
                   ))}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">
+                    Chorus<span className="text-xs text-slate-400 ml-2 normal-case">({Math.round(chorusLevel * 100)}%)</span>
+                  </label>
+                  <div className="relative">
+                    <input 
+                      type="range" 
+                      min="0" 
+                      max="1.0" 
+                      step="0.05" 
+                      value={chorusLevel} 
+                      onChange={(e) => setChorusLevel(parseFloat(e.target.value))} 
+                      className="w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb" 
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">
+                    Delay<span className="text-xs text-slate-400 ml-2 normal-case">({Math.round(delayLevel * 100)}%)</span>
+                  </label>
+                  <div className="relative">
+                    <input 
+                      type="range" 
+                      min="0" 
+                      max="1.0" 
+                      step="0.05" 
+                      value={delayLevel} 
+                      onChange={(e) => setDelayLevel(parseFloat(e.target.value))} 
+                      className="w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb" 
+                    />
+                  </div>
                 </div>
               </div>
             </div>

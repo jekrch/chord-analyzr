@@ -22,6 +22,9 @@ export interface PianoSettings {
     octaveOffset: number;
     reverbLevel: number;
     noteDuration: number;
+    volume: number;
+    chorusLevel: number;
+    delayLevel: number;
 }
 
 export interface EncodedState {
@@ -43,7 +46,8 @@ const fromBase36 = (str: string): number => parseInt(str, 36) || 0;
 
 /**
  * Encodes application state into a robust URL-safe string
- * Format: v5_{k}_{m}_{pattern}_{timing}_{piano}_{chords}
+ * Format: v6_{k}_{m}_{pattern}_{timing}_{piano}_{chords}
+ * v6: Adds volume, chorus, and delay controls
  * v5: Uses URI-encoded name~notes for robust, key-independent chord storage
  * v4: Uses chord indices + dot-separated patterns to preserve multi-character elements like "1+"
  * v3: Uses chord indices instead of lossy name encoding
@@ -73,8 +77,8 @@ export const encodeState = (
     }
     
     try {
-        // 1. Version identifier (v5 for robust chord encoding)
-        const version = 'v5';
+        // 1. Version identifier (v6 for new audio effects)
+        const version = 'v6';
         
         // 2. Key (index in available keys)
         const keyIndex = availableKeys.indexOf(key);
@@ -106,7 +110,7 @@ export const encodeState = (
         
         const timing = `${bpmEncoded}|${sub}|${swingEncoded}|${f}`;
         
-        // 6. Piano settings
+        // 6. Piano settings (extended for v6)
         const instrumentIndex = availableInstruments.indexOf(pianoSettings.instrumentName);
         const inst = toBase36(Math.max(0, instrumentIndex));
         
@@ -126,7 +130,12 @@ export const encodeState = (
         // Duration: 0.1-1.0 -> 1-10 -> 0-9
         const duration = toBase36(Math.max(0, Math.round(pianoSettings.noteDuration * 10) - 1));
         
-        const piano = `${inst}|${cutOff}|${eqBass}|${eqMid}|${eqTreble}|${octave}|${reverb}|${duration}`;
+        // New v6 settings: Volume, Chorus, Delay: 0-1 -> 0-35 (base36)
+        const volume = toBase36(Math.round(pianoSettings.volume * 35));
+        const chorus = toBase36(Math.round(pianoSettings.chorusLevel * 35));
+        const delay = toBase36(Math.round(pianoSettings.delayLevel * 35));
+        
+        const piano = `${inst}|${cutOff}|${eqBass}|${eqMid}|${eqTreble}|${octave}|${reverb}|${duration}|${volume}|${chorus}|${delay}`;
         
         // 7. Chords (using absolute name and notes for robustness)
         const chordData = addedChords.map(ac => {
@@ -166,7 +175,7 @@ export const encodeState = (
 
 /**
  * Decodes a state string back into application state
- * Handles v2, v3, v4, and v5 (robust chord encoding)
+ * Handles v2, v3, v4, v5, and v6 (with new audio effects)
  */
 export const decodeState = (
     state: string,
@@ -186,9 +195,9 @@ export const decodeState = (
         const parts = state.split('_');
         console.log('State parts:', parts);
         
-        // Check version and handle v2, v3, v4, and v5
+        // Check version and handle v2, v3, v4, v5, and v6
         const version = parts[0];
-        if (!['v2', 'v3', 'v4', 'v5'].includes(version) || parts.length < 6) {
+        if (!['v2', 'v3', 'v4', 'v5', 'v6'].includes(version) || parts.length < 6) {
             console.log('Invalid state format or version');
             return null;
         }
@@ -202,8 +211,8 @@ export const decodeState = (
         const mode = availableModes[modeIndex] || availableModes[0];
         
         // 3. Pattern (version-aware decoding)
-        const patternStr = parts[3] || (version === 'v4' || version === 'v5' ? '1.2.3.4' : '1234');
-        const pattern = (version === 'v4' || version === 'v5')
+        const patternStr = parts[3] || (version === 'v4' || version === 'v5' || version === 'v6' ? '1.2.3.4' : '1234');
+        const pattern = (version === 'v4' || version === 'v5' || version === 'v6')
             ? patternStr.split('.').map(c => c === '0' ? 'x' : c)
             : patternStr.split('').map(c => c === '0' ? 'x' : c);
         
@@ -221,8 +230,18 @@ export const decodeState = (
         const showPattern = (flags & 2) !== 0;
         const liveMode = (flags & 1) !== 0;
         
-        // 5. Piano settings
+        // 5. Piano settings (version-aware for v6 extensions)
         const pianoParts = (parts[5] || '').split('|');
+        
+        // Get default values for new v6 fields
+        const getDefaultPianoSettings = () => ({
+            volume: 0.8, // 80% default volume
+            chorusLevel: 0.0,
+            delayLevel: 0.0
+        });
+        
+        const defaults = getDefaultPianoSettings();
+        
         const pianoSettings: PianoSettings = {
             instrumentName: availableInstruments[fromBase36(pianoParts[0] || '0')] || availableInstruments[0] || 'electric_piano_1',
             cutOffPreviousNotes: (pianoParts[1] || '1') === '1',
@@ -234,6 +253,10 @@ export const decodeState = (
             octaveOffset: fromBase36(pianoParts[5] || '3') - 3,
             reverbLevel: fromBase36(pianoParts[6] || '0') / 35,
             noteDuration: (fromBase36(pianoParts[7] || '7') + 1) / 10, // Default 0.8
+            // v6 additions with defaults for older versions
+            volume: version === 'v6' ? fromBase36(pianoParts[8] || Math.round(defaults.volume * 35).toString(36)) / 35 : defaults.volume,
+            chorusLevel: version === 'v6' ? fromBase36(pianoParts[9] || '0') / 35 : defaults.chorusLevel,
+            delayLevel: version === 'v6' ? fromBase36(pianoParts[10] || '0') / 35 : defaults.delayLevel,
         };
         
         // 6. Chords
@@ -245,8 +268,8 @@ export const decodeState = (
             console.log('Chord entries to decode:', chordEntries);
             
             for (const entry of chordEntries) {
-                if (version === 'v5') {
-                    // v5: {name}~{notes}[:pattern]
+                if (version === 'v5' || version === 'v6') {
+                    // v5/v6: {name}~{notes}[:pattern]
                     const [chordIdPart, patternPart] = entry.split(':');
                     const [safeName, safeNotes] = chordIdPart.split('~');
 
@@ -256,7 +279,7 @@ export const decodeState = (
                         let chordPattern: string[];
 
                         if (patternPart) {
-                            // Custom pattern for v5 uses dot separator like v4
+                            // Custom pattern for v5/v6 uses dot separator like v4
                             chordPattern = patternPart.split('.').map(c => c === '0' ? 'x' : c);
                         } else {
                             // No custom pattern, use the global pattern
@@ -264,9 +287,9 @@ export const decodeState = (
                         }
 
                         addedChords.push({ name, notes, pattern: chordPattern });
-                        console.log('Successfully decoded v5 chord:', name);
+                        console.log('Successfully decoded v5/v6 chord:', name);
                     } else {
-                        console.warn('Invalid v5 chord format:', entry);
+                        console.warn('Invalid v5/v6 chord format:', entry);
                     }
                 } else {
                     // Handle v2, v3, v4
@@ -351,7 +374,10 @@ const getDefaultPianoSettings = (availableInstruments: string[]): PianoSettings 
     eq: { bass: 0, mid: 0, treble: 0 },
     octaveOffset: 0,
     reverbLevel: 0.0,
-    noteDuration: 0.8
+    noteDuration: 0.8,
+    volume: 0.8, // 80% default volume
+    chorusLevel: 0.0,
+    delayLevel: 0.0
 });
 
 /**

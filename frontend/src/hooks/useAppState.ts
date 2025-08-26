@@ -70,7 +70,10 @@ const getDefaultPianoSettings = (): PianoSettings => ({
     eq: { bass: 0, mid: 0, treble: 0 },
     octaveOffset: 0,
     reverbLevel: 0.0,
-    noteDuration: 0.8
+    noteDuration: 0.8,
+    volume: 0.8,        // 80% default volume
+    chorusLevel: 0.0,   // No chorus by default
+    delayLevel: 0.0,    // No delay by default
 });
 
 export const useAppState = () => {
@@ -231,6 +234,19 @@ const scalePlaybackTimeouts = useRef<NodeJS.Timeout[]>([]);
 
     const setNoteDuration = useCallback((noteDuration: number) => {
         updatePianoSettings({ noteDuration });
+    }, [updatePianoSettings]);
+
+    // NEW: Audio effects handlers
+    const setVolume = useCallback((volume: number) => {
+        updatePianoSettings({ volume });
+    }, [updatePianoSettings]);
+
+    const setChorusLevel = useCallback((chorusLevel: number) => {
+        updatePianoSettings({ chorusLevel });
+    }, [updatePianoSettings]);
+
+    const setDelayLevel = useCallback((delayLevel: number) => {
+        updatePianoSettings({ delayLevel });
     }, [updatePianoSettings]);
 
     // ========== CALLBACKS ==========
@@ -705,6 +721,9 @@ const scalePlaybackTimeouts = useRef<NodeJS.Timeout[]>([]);
         setOctaveOffset,
         setReverbLevel,
         setNoteDuration,
+        setVolume,           // NEW: Volume handler
+        setChorusLevel,      // NEW: Chorus handler  
+        setDelayLevel,       // NEW: Delay handler
         updatePianoSettings,
         
         // Helper functions

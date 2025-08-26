@@ -57,6 +57,9 @@ function App() {
         setOctaveOffset,
         setReverbLevel,
         setNoteDuration,
+        setVolume,           // Add this
+        setChorusLevel,      // Add this  
+        setDelayLevel,       // Add this
     } = useAppState();
 
     const silentAudioRef = useRef<HTMLAudioElement>(null)
@@ -133,6 +136,9 @@ function App() {
                         onOctaveOffsetChange={setOctaveOffset}
                         onReverbLevelChange={setReverbLevel}
                         onNoteDurationChange={setNoteDuration}
+                        onVolumeChange={setVolume}               // Add this
+                        onChorusLevelChange={setChorusLevel}     // Add this
+                        onDelayLevelChange={setDelayLevel}       // Add this
                         onAvailableInstrumentsChange={setAvailableInstruments}
                         // Hide the original config controls since we're moving them here
                         hideConfigControls={true}
@@ -156,6 +162,9 @@ function App() {
                     setOctaveOffset={setOctaveOffset}
                     setReverbLevel={setReverbLevel}
                     setNoteDuration={setNoteDuration}
+                    setVolume={setVolume}             
+                    setChorusLevel={setChorusLevel}      
+                    setDelayLevel={setDelayLevel}       
                 />
 
                 <PatternSystem

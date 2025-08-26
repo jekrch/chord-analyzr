@@ -43,6 +43,12 @@ interface PianoConfigProps {
     setReverbLevel: (level: number) => void;
     noteDuration: number;
     setNoteDuration: (duration: number) => void;
+    volume: number;
+    setVolume: (volume: number) => void;
+    chorusLevel: number;
+    setChorusLevel: (level: number) => void;
+    delayLevel: number;
+    setDelayLevel: (level: number) => void;
     onInstrumentChange: (instrumentName: string) => void;
     // hideControls?: boolean;
 }
@@ -170,6 +176,12 @@ class PianoConfig extends Component<PianoConfigProps, PianoConfigState> {
                         setReverbLevel={this.props.setReverbLevel}
                         noteDuration={this.props.noteDuration}
                         setNoteDuration={this.props.setNoteDuration}
+                        volume={this.props.volume}
+                        setVolume={this.props.setVolume}
+                        chorusLevel={this.props.chorusLevel}
+                        setChorusLevel={this.props.setChorusLevel}
+                        delayLevel={this.props.delayLevel}
+                        setDelayLevel={this.props.setDelayLevel}
                     />
                 </div>
             </div>

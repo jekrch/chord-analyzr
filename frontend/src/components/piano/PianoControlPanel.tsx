@@ -167,7 +167,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                         </div>
 
                         {/* Mobile: Stack vertically */}
-                        <div className="xl:hidden space-y-6">
+                        <div className="xl:hidden space-y-4">
                             {/* Key Control Group */}
                             <div className="flex items-center gap-3">
                                 <span className="text-sm text-slate-300 font-medium whitespace-nowrap w-16 flex items-center">Key:</span>

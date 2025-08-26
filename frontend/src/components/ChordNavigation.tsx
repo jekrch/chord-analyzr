@@ -59,6 +59,7 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
             {/* Header */}
             <div className={`${isLiveMode ? 'flex-shrink-0' : ''} max-w-7xl mx-auto px-4 ${isLiveMode ? 'py-4' : 'pt-2'} w-full`}>
                 <div className={`flex items-center justify-between ${isLiveMode ? 'mb-3' : 'mb-2'}`}>
+                    {/* Left Section - stays on the left */}
                     <div className="flex items-center space-x-4">
                         {!isLiveMode && (
                             <Button
@@ -97,13 +98,21 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                                 )}
                             </Button>
                         )}
-                        <div className="text-center text-xs font-bold text-slate-300 uppercase tracking-wider mr-3x -ml-1x invisible sm:visible w-0 sm:w-auto">
+                    </div>
+
+                    {/* Center Section - centered between left and right */}
+                    <div className="text-center">
+                        {/* Desktop version - visible on sm and up */}
+                        <div className="hidden sm:block text-xs font-bold text-slate-300 uppercase tracking-wider">
                             chords
                         </div>
-                        <div className={`text-center text-xs text-slate-300 uppercase tracking-wider w-auto sm:w-0 visible sm:invisible ${!isLiveMode ? '-ml-6' : 'mx-6'}`}>
+                        {/* Mobile version - visible on smaller than sm */}
+                        <div className="block sm:hidden text-xs text-slate-300 uppercase tracking-wider">
                             chords
                         </div>
                     </div>
+
+                    {/* Right Section - stays on the right */}
                     <div className="flex items-center space-x-2">
                         <button
                             onClick={onToggleLiveMode}

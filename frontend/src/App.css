@@ -345,36 +345,49 @@ body {
   background-color: rgba(34, 197, 94, 0.1) !important;
 }
 
- @keyframes animate-in {
-          from {
-            opacity: 0;
-            transform: scale(0.95) translateY(-2px);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-          }
-        }
+@keyframes animate-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-2px);
+  }
 
-        .animate-in {
-          animation: animate-in 0.2s ease-out;
-        }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
 
-        .dropdown-menu::-webkit-scrollbar {
-          width: 6px;
-        }
-        
-        .dropdown-menu::-webkit-scrollbar-track {
-          background: rgba(0, 0, 0, 0.1);
-          border-radius: 3px;
-        }
-        
-        .dropdown-menu::-webkit-scrollbar-thumb {
-          background: linear-gradient(to bottom, #5a6170, #4a5262);
-          border-radius: 3px;
-          box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.1);
-        }
-        
-        .dropdown-menu::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(to bottom, #6a7180, #5a6272);
-        }
+.animate-in {
+  animation: animate-in 0.2s ease-out;
+}
+
+.dropdown-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dropdown-menu::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+.dropdown-menu::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #5a6170, #4a5262);
+  border-radius: 3px;
+  box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-menu::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #6a7180, #5a6272);
+}
+
+.ReactPiano__Key--active {
+  background: oklch(70.7% 0.165 254.624);
+}
+
+.ReactPiano__Key--active.ReactPiano__Key--accidental {
+  border-top: 1px solid oklch(70.7% 0.165 254.624);
+}
+
+.ReactPiano__Key--active.ReactPiano__Key--natural {
+  border: 1px solid oklch(70.7% 0.165 254.624);
+}

@@ -92,23 +92,7 @@ const HeaderNav: React.FC<HeaderNavProps> = ({
 
                         {/* Center/Right - Status and Key/Mode (Desktop) and Menu */}
                         <div className="flex items-center space-x-4">
-                            {/* Status Indicators - Hidden on mobile */}
-                            <div className="hidden sm:flex items-center space-x-3">
-                                {globalPatternState.isPlaying && (
-                                    <div className="flex items-center space-x-2 px-2 py-1 bg-[#444b59] border border-gray-600 rounded">
-                                        <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
-                                        <span className="text-xs text-green-300 font-medium">LIVE</span>
-                                    </div>
-                                )}
-                                
-                                {isLiveMode && (
-                                    <div className="flex items-center space-x-2 px-2 py-1 bg-[#444b59] border border-gray-600 rounded">
-                                        <div className="w-1.5 h-1.5 bg-purple-400 rounded-full"></div>
-                                        <span className="text-xs text-purple-300 font-medium">MODE</span>
-                                    </div>
-                                )}
-                            </div>
-
+                           
                             {/* Key/Mode Display - Hidden on small screens */}
                             <div className="hidden sm:flex items-center space-x-2 text-sm">
                                 <div className="px-2 py-0.5 bg-[#444b59] border border-gray-600 rounded text-slate-300 font-mono">
@@ -137,42 +121,6 @@ const HeaderNav: React.FC<HeaderNavProps> = ({
                                         ref={dropdownRef}
                                         className="absolute right-0 mt-2 w-64 bg-[#3d434f] border border-gray-600 rounded-lg shadow-xl z-50 overflow-hidden"
                                     >
-                                        {/* Mobile Status Section */}
-                                        <div className="sm:hidden border-b border-gray-600">
-                                            {/* Status Indicators */}
-                                            {(globalPatternState.isPlaying || isLiveMode) && (
-                                                <div className="px-4 py-3">
-                                                    <div className="flex items-center space-x-3">
-                                                        {globalPatternState.isPlaying && (
-                                                            <div className="flex items-center space-x-2 px-2 py-1 bg-[#444b59] border border-gray-600 rounded">
-                                                                <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
-                                                                <span className="text-xs text-green-300 font-medium">LIVE</span>
-                                                            </div>
-                                                        )}
-                                                        
-                                                        {isLiveMode && (
-                                                            <div className="flex items-center space-x-2 px-2 py-1 bg-[#444b59] border border-gray-600 rounded">
-                                                                <div className="w-1.5 h-1.5 bg-purple-400 rounded-full"></div>
-                                                                <span className="text-xs text-purple-300 font-medium">MODE</span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* Key/Mode Display */}
-                                            <div className="px-4 pb-3 mt-4">
-                                                <div className="flex items-center space-x-2 text-sm">
-                                                    <div className="px-2 py-0.5 bg-[#444b59] border border-gray-600 rounded text-slate-300 font-mono">
-                                                        {keySignature}
-                                                    </div>
-                                                    <div className="w-px h-4 bg-slate-600"></div>
-                                                    <div className="px-2 py-1 bg-[#444b59] border border-gray-600 rounded text-slate-300 text-xs font-mono">
-                                                        {mode}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
 
                                         {/* Menu Items */}
                                         <div className="py-2">

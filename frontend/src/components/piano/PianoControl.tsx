@@ -348,7 +348,7 @@ const PianoControl: React.FC<PianoProps> = ({
                   const noteNameWithoutOctave = MidiNumbers.getAttributes(midiNumber).note.slice(0, -1);
                   const isScaleNote = normalizedScaleNotes.includes(normalizeNoteName(noteNameWithoutOctave)!);
                   if (isScaleNote) {
-                    return <div className={`mx-auto mb-2 w-2 h-2 rounded-full ${isAccidental ? 'bg-blue-200' : 'bg-blue-400'}`} />;
+                    return <div className={`mx-auto mb-2 w-2 h-2 rounded-full ${isAccidental ? 'bg-blue-300' : 'bg-blue-500'}`} />;
                   }
                   return null;
                 }

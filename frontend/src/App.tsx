@@ -4,6 +4,7 @@ import PianoControl from './components/piano/PianoControl';
 import PatternSystem from './components/PatternSystem';
 import ChordNavigation from './components/ChordNavigation';
 import PianoControlPanel from './components/piano/PianoControlPanel';
+import HeaderNav from './components/HeaderNav';
 import './App.css';
 import { useEffect, useRef } from 'react';
 
@@ -30,10 +31,6 @@ function App() {
         normalizedScaleNotes,
         pianoSettings,
         availableInstruments,
-
-        // Refs
-        //silentAudioRef,
-
         // Handlers
         setKey,
         setMode,
@@ -101,21 +98,21 @@ function App() {
 
     // ========== RENDER ==========
     return (
-        <div className="select-none text-center bg-[#282c34] min-h-screen pb-24">
+        <div className="select-none text-center bg-[#282c34] min-h-screen">
             {/* Silent audio element for iOS compatibility */}
             <audio ref={silentAudioRef} preload="auto">
               <source src="/silence.mp3" type="audio/mp3" />
             </audio>
 
-            <div className={`flex flex-col items-center justify-start text-[calc(10px+2vmin)] text-white p-4 space-y-6 ${isLiveMode ? 'pointer-events-none opacity-30' : ''}`}>
+            {/* Header Navigation */}
+            <HeaderNav 
+                globalPatternState={globalPatternState}
+                isLiveMode={isLiveMode}
+                keySignature={key}
+                mode={mode}
+            />
 
-                {/* Header Controls */}
-                <div className="flex items-center justify-center space-x-6 pt-6">
-                    <div className="text-xs text-gray-400 text-center">
-                        <div>Press 'L' to expand chord buttons | Space to play/pause</div>
-                        <div>1-9 for chords | Click sequencer header to show/hide</div>
-                    </div>
-                </div>
+            <div className={`mt-2 flex flex-col items-center justify-start text-[calc(10px+2vmin)] text-white p-4 space-y-6 pb-24 ${isLiveMode ? 'pointer-events-none opacity-30' : ''}`}>
 
                 {/* Piano */}
                 <div className="w-full max-w-7xl">

@@ -18,7 +18,7 @@ export default defineConfig(({ command }) => {
   }
 
   if (command === 'build') {
-    config.base = '/chord-analyzr/'
+    config.base = '/'
   }
 
   return config

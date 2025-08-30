@@ -2,7 +2,7 @@
   "name": "chordanalyzr",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://jekrch.github.io/chord-analyzr/",
+  "homepage": "https://modal.chordbuildr.com",
   "type": "module",
   "dependencies": {
     "@headlessui/react": "^1.7.17",

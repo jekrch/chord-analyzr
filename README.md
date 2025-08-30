@@ -1,5 +1,7 @@
 # Chord Analyzr :musical_note:
 
+[modal.chordbuildr.come](https://modal.chordbuildr.com/)
+
 A Postgres driven solution for analyzing chord progressions and generating chord suggestions. 
 
 <img width="420" alt="image" src="https://github.com/jekrch/chord-analyzr/assets/8173930/4af7243c-bec5-4ff5-a187-f644cf8a5fd0">

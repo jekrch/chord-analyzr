@@ -103,8 +103,8 @@ function App() {
     return (
         <div className="select-none text-center bg-[#282c34] min-h-screen pb-24">
             {/* Silent audio element for iOS compatibility */}
-            <audio ref={silentAudioRef} preload="auto" muted>
-                <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQQA" type="audio/wav" />
+            <audio ref={silentAudioRef} preload="auto">
+              <source src="/silence.mp3" type="audio/mp3" />
             </audio>
 
             <div className={`flex flex-col items-center justify-start text-[calc(10px+2vmin)] text-white p-4 space-y-6 ${isLiveMode ? 'pointer-events-none opacity-30' : ''}`}>

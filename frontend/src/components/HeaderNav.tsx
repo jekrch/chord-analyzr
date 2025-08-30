@@ -54,7 +54,7 @@ const HeaderNav: React.FC<HeaderNavProps> = ({
                         {/* Left side - App Name with Geometric Logo */}
                         <div className="flex items-center space-x-4">
                             {/* Hexagonal Geometric Logo */}
-                            <div className="relative flex items-center">
+                            <div className="relative flex items-center mt-2">
                                 <div className="relative w-12 h-12">
                                     <svg viewBox="0 0 48 48" className="w-12 h-12">
                                         <polygon 

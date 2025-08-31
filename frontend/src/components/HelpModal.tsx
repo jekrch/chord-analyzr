@@ -60,7 +60,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                             </div>
                             <div className="text-left">
                                 <div className="text-sm font-semibold text-white mb-1">Choose a Key & Mode</div>
-                                <div className="text-sm text-slate-300">Use the Controls section to select your musical key and mode (like C Major, A Minor, etc.)</div>
+                                <div className="text-sm text-slate-300">Use the Controls section to select your musical key and mode (like C Ionian, D# Lydian, etc.)</div>
                             </div>
                         </div>
                         <div className="flex items-start space-x-4 p-3 rounded-lg bg-[#3d434f]/30 hover:bg-[#3d434f]/50 transition-colors">
@@ -226,6 +226,61 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                                 <div>Use numbers 1-9 to jump between chords</div>
                                 <div>Toggle Delete mode to remove unwanted chords</div>
                                 <div>Clear all chords to start fresh</div>
+                                <div><strong className="text-blue-400">Click the gear icon</strong> to enter Edit mode and modify chords</div>
+                            </div>
+                        </div>
+                    </div>
+                </HelpSection>
+
+                <HelpSection title="Chord Editing">
+                    <div className="space-y-4">
+                        <div className="p-4 rounded-lg bg-[#3d434f]/30">
+                            <h5 className="text-white font-semibold mb-3 text-sm text-left">Edit Mode</h5>
+                            <p className="text-sm mb-3 text-left">Click the <span className="text-blue-400 font-bold">gear icon</span> next to your chord sequence to enter Edit Mode. In this mode, you can:</p>
+                            <div className="space-y-2 text-sm text-left">
+                                <div><strong className="text-white">Click any chord</strong> to open the chord editor</div>
+                                <div><strong className="text-white">Modify chord voicings</strong> by reordering notes</div>
+                                <div><strong className="text-white">Add slash chords</strong> to change the bass note</div>
+                                <div><strong className="text-white">Preview changes</strong> before saving them</div>
+                            </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            <div className="p-4 rounded-lg bg-[#3d434f]/30">
+                                <h5 className="text-white font-semibold mb-3 text-sm text-left">Slash Chords</h5>
+                                <p className="text-sm mb-3 text-left">Create slash chords (like C/E) by specifying a bass note:</p>
+                                <div className="space-y-2 text-sm text-left">
+                                    <div><strong className="text-white">Bass Note Field:</strong> Enter a note name (e.g., E, Gb3, C4)</div>
+                                    <div><strong className="text-white">Automatic Voicing:</strong> The bass note moves to the lowest position</div>
+                                    <div><strong className="text-white">Chord Name:</strong> Updates to show the slash notation (C/E)</div>
+                                    <div><strong className="text-white">Remove Bass:</strong> Clear the field to return to original chord</div>
+                                </div>
+                            </div>
+                            <div className="p-4 rounded-lg bg-[#3d434f]/30">
+                                <h5 className="text-white font-semibold mb-3 text-sm text-left">Note Reordering</h5>
+                                <p className="text-sm mb-3 text-left">Change the order of chord notes for different voicings:</p>
+                                <div className="space-y-2 text-sm text-left">
+                                    <div><strong className="text-white">Drag & Drop:</strong> Drag notes to reorder them</div>
+                                    <div><strong className="text-white">Arrow Buttons:</strong> Use up/down arrows to move notes</div>
+                                    <div><strong className="text-white">Auto-Detection:</strong> Slash note updates automatically when you change the bass</div>
+                                    <div><strong className="text-white">Visual Feedback:</strong> Slash notes are highlighted in amber</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-4 rounded-lg bg-[#3d434f]/30">
+                            <h5 className="text-white font-semibold mb-3 text-sm text-left">Editor Controls</h5>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <div className="space-y-2 text-sm text-left">
+                                    <div><strong className="text-white">Preview:</strong> Click the play button to hear your changes</div>
+                                    <div><strong className="text-white">Save:</strong> Green checkmark to confirm edits</div>
+                                    <div><strong className="text-white">Cancel:</strong> Discard changes and close editor</div>
+                                </div>
+                                <div className="space-y-2 text-sm text-left">
+                                    <div><strong className="text-white">Original Notes:</strong> Editor preserves original chord voicing</div>
+                                    <div><strong className="text-white">Real-time Updates:</strong> Changes reflect immediately in the editor</div>
+                                    <div><strong className="text-white">Full-screen:</strong> Editor takes over the entire interface for focused editing</div>
+                                </div>
                             </div>
                         </div>
                     </div>

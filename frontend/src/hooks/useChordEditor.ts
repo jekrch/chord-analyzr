@@ -27,17 +27,30 @@ const notesToString = (notes: string[]): string => {
     return notes.join(', ');
 };
 
+const isValidNoteName = (note: string): boolean => {
+    if (!note.trim()) return true; // Empty is valid (no slash note)
+    
+    // Valid note pattern: A-G (case insensitive) + optional sharp/flat + optional octave number
+    const notePattern = /^[a-gA-G][#b]?(\d+)?$/;
+    return notePattern.test(note.trim());
+};
+
 const formatNoteName = (note: string): string => {
     if (!note.trim()) return note;
     
-    const match = note.trim().match(/^([a-gA-G][#b]?)(\d*)$/);
+    const trimmed = note.trim();
+    if (!isValidNoteName(trimmed)) {
+        return trimmed; // Return as-is if invalid, let validation handle it
+    }
+    
+    const match = trimmed.match(/^([a-gA-G])([#b]?)(\d*)$/);
     if (match) {
-        const [, noteName, octave] = match;
-        const formattedNote = noteName.charAt(0).toUpperCase() + noteName.slice(1).toLowerCase();
+        const [, noteLetter, accidental, octave] = match;
+        const formattedNote = noteLetter.toUpperCase() + accidental.toLowerCase();
         return formattedNote + octave;
     }
     
-    return note;
+    return trimmed;
 };
 
 export const useChordEditor = ({
@@ -50,6 +63,7 @@ export const useChordEditor = ({
     const [editingChord, setEditingChord] = useState<AddedChord | null>(null);
     const [slashNote, setSlashNote] = useState<string>('');
     const [originalChordNotes, setOriginalChordNotes] = useState<string>('');
+    const [slashNoteError, setSlashNoteError] = useState<string>('');
 
     const findOriginalChordFromLibrary = async (chord: AddedChord): Promise<string | null> => {
         const baseChordName = chord.name.replace(/\/[A-G][#b]?\d*/, '');
@@ -75,6 +89,27 @@ export const useChordEditor = ({
         return chord.originalNotes || null;
     };
 
+    // Check if a slash note is manually added (not from original chord)
+    const isManualSlashNote = (note: string): boolean => {
+        if (!slashNote.trim() || !originalChordNotes) return false;
+        
+        const noteNameOnly = note.replace(/\d+/, '');
+        const slashNoteNameOnly = slashNote.trim().replace(/\d+/, '');
+        
+        // If this note matches the slash note
+        if (noteNameOnly === slashNoteNameOnly) {
+            // Check if it exists in the original chord
+            const originalNotes = parseNotes(originalChordNotes);
+            const existsInOriginal = originalNotes.some(originalNote => {
+                const originalNoteNameOnly = originalNote.replace(/\d+/, '');
+                return originalNoteNameOnly === slashNoteNameOnly;
+            });
+            return !existsInOriginal;
+        }
+        
+        return false;
+    };
+
     const handleEditChord = async (index: number, chord: AddedChord) => {
         setEditingChordIndex(index);
         setEditingChord({ ...chord });
@@ -97,6 +132,11 @@ export const useChordEditor = ({
 
     const handleSaveEdit = () => {
         if (editingChordIndex !== null && editingChord && onUpdateChord) {
+            // Don't save if there's a slash note error
+            if (slashNoteError) {
+                return;
+            }
+
             let updatedName = editingChord.name.replace(/\/[A-G][#b]?\d*/, '');
             let updatedNotes = editingChord.notes;
 
@@ -143,12 +183,19 @@ export const useChordEditor = ({
         setEditingChord(null);
         setSlashNote('');
         setOriginalChordNotes('');
+        setSlashNoteError('');
     };
 
     const moveNoteUp = async (noteIndex: number) => {
         if (!editingChord || noteIndex === 0) return;
         
         const notes = parseNotes(editingChord.notes);
+        
+        // Prevent moving manually added slash note from first position
+        if (noteIndex === 1 && isManualSlashNote(notes[0])) {
+            return;
+        }
+        
         [notes[noteIndex], notes[noteIndex - 1]] = [notes[noteIndex - 1], notes[noteIndex]];
         
         setEditingChord({
@@ -164,6 +211,11 @@ export const useChordEditor = ({
         
         const notes = parseNotes(editingChord.notes);
         if (noteIndex === notes.length - 1) return;
+        
+        // Prevent moving manually added slash note from first position
+        if (noteIndex === 0 && isManualSlashNote(notes[0])) {
+            return;
+        }
         
         [notes[noteIndex], notes[noteIndex + 1]] = [notes[noteIndex + 1], notes[noteIndex]];
         
@@ -307,7 +359,26 @@ export const useChordEditor = ({
     };
 
     const handleSlashNoteChange = async (value: string) => {
-        const formattedValue = formatNoteName(value);
+        const trimmedValue = value.trim();
+        
+        // Clear error if input is empty
+        if (!trimmedValue) {
+            setSlashNoteError('');
+            setSlashNote('');
+            await updateChordNotesWithSlashNote('');
+            return;
+        }
+        
+        // Validate the note name
+        if (!isValidNoteName(trimmedValue)) {
+            setSlashNoteError('Invalid note. Use A-G with optional # or b (e.g., C, F#, Bb, D4)');
+            setSlashNote(value); // Keep the invalid input visible
+            return;
+        }
+        
+        // Clear error and format the valid note
+        setSlashNoteError('');
+        const formattedValue = formatNoteName(trimmedValue);
         setSlashNote(formattedValue);
         await updateChordNotesWithSlashNote(formattedValue);
     };
@@ -326,6 +397,17 @@ export const useChordEditor = ({
         }
 
         const notes = parseNotes(editingChord.notes);
+        
+        // Prevent dragging manually added slash note from first position
+        if (result.source.index === 0 && isManualSlashNote(notes[0])) {
+            return;
+        }
+        
+        // Prevent dropping anything into first position if there's a manually added slash note there
+        if (result.destination.index === 0 && isManualSlashNote(notes[0])) {
+            return;
+        }
+
         const [reorderedItem] = notes.splice(result.source.index, 1);
         notes.splice(result.destination.index, 0, reorderedItem);
 
@@ -349,6 +431,7 @@ export const useChordEditor = ({
         editingChord,
         slashNote,
         originalChordNotes,
+        slashNoteError,
         
         // Actions
         handleEditChord,
@@ -361,10 +444,12 @@ export const useChordEditor = ({
         handleDragEnd,
         handlePreviewChord,
         isSlashNote,
+        isManualSlashNote,
         
         // Utilities
         parseNotes,
         notesToString,
-        formatNoteName
+        formatNoteName,
+        isValidNoteName
     };
 };

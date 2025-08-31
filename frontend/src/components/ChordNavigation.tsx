@@ -64,6 +64,12 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
         setEditingChordIndex(null);
     };
 
+    const handleNavigateToChord = (index: number) => {
+        if (index >= 0 && index < addedChords.length) {
+            setEditingChordIndex(index);
+        }
+    };
+
     const baseClasses = isLiveMode
         ? "fixed inset-0 bg-[#1a1e24] bg-opacity-95 backdrop-blur-sm z-50 flex flex-col"
         : "fixed bottom-0 left-0 right-0 bg-[#2a2f38] border-t border-gray-600 shadow-2xl z-50";
@@ -76,11 +82,13 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                 <ChordEditor
                     editingChordIndex={editingChordIndex}
                     editingChord={editingChord}
+                    totalChords={addedChords.length}
                     chords={chords}
                     onUpdateChord={onUpdateChord}
                     onFetchOriginalChord={onFetchOriginalChord}
                     onChordClick={onChordClick}
                     onClose={handleCloseEditor}
+                    onNavigateToChord={handleNavigateToChord}
                 />
             );
         }

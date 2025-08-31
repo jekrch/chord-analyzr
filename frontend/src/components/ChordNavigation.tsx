@@ -1,13 +1,10 @@
-import React from 'react';
-import { TrashIcon, XCircleIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon, PlayIcon, StopIcon, PauseIcon, PlayCircleIcon } from '@heroicons/react/20/solid';
+import React, { useState } from 'react';
+import { TrashIcon, XCircleIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon, PlayIcon, StopIcon, PauseIcon, PlayCircleIcon, CogIcon } from '@heroicons/react/20/solid';
 import classNames from 'classnames';
-import { Button, ChordButton } from './Button'; // Updated import
-
-interface AddedChord {
-    name: string;
-    notes: string;
-    pattern: string[];
-}
+import { Button, ChordButton } from './Button';
+import ChordEditor from './ChordEditor';
+import { AddedChord } from '../hooks/useChordEditor';
+import { ModeScaleChordDto } from '../api';
 
 interface GlobalPatternState {
     currentPattern: string[];
@@ -28,11 +25,14 @@ interface ChordNavigationProps {
     isDeleteMode: boolean;
     isLiveMode: boolean;
     globalPatternState: GlobalPatternState;
+    chords?: ModeScaleChordDto[];
     onChordClick: (notes: string, index: number) => void;
     onClearAll: () => void;
     onToggleDeleteMode: () => void;
     onToggleLiveMode: () => void;
     onTogglePlayback: () => void;
+    onUpdateChord?: (index: number, updatedChord: AddedChord) => void;
+    onFetchOriginalChord?: (chordName: string, key: string, mode: string) => Promise<string | null>;
 }
 
 const ChordNavigation: React.FC<ChordNavigationProps> = ({
@@ -42,17 +42,49 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
     isDeleteMode,
     isLiveMode,
     globalPatternState,
+    chords,
     onChordClick,
     onClearAll,
     onToggleDeleteMode,
     onToggleLiveMode,
-    onTogglePlayback
+    onTogglePlayback,
+    onUpdateChord,
+    onFetchOriginalChord
 }) => {
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [editingChordIndex, setEditingChordIndex] = useState<number | null>(null);
+
     if (addedChords.length === 0) return null;
+
+    const handleEditChord = (index: number) => {
+        setEditingChordIndex(index);
+    };
+
+    const handleCloseEditor = () => {
+        setEditingChordIndex(null);
+    };
 
     const baseClasses = isLiveMode
         ? "fixed inset-0 bg-[#1a1e24] bg-opacity-95 backdrop-blur-sm z-50 flex flex-col"
         : "fixed bottom-0 left-0 right-0 bg-[#2a2f38] border-t border-gray-600 shadow-2xl z-50";
+
+    // If we're editing a specific chord, show the chord editor
+    if (editingChordIndex !== null) {
+        const editingChord = addedChords[editingChordIndex];
+        if (editingChord) {
+            return (
+                <ChordEditor
+                    editingChordIndex={editingChordIndex}
+                    editingChord={editingChord}
+                    chords={chords}
+                    onUpdateChord={onUpdateChord}
+                    onFetchOriginalChord={onFetchOriginalChord}
+                    onChordClick={onChordClick}
+                    onClose={handleCloseEditor}
+                />
+            );
+        }
+    }
 
     return (
         <div className={baseClasses}>
@@ -190,9 +222,9 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                         return (
                             <ChordButton
                                 key={index}
-                                onClick={() => onChordClick(chord.notes, index)}
-                                variant={isDeleteMode ? "danger" : "primary"}
-                                active={isActive && !isDeleteMode}
+                                onClick={() => isEditMode ? handleEditChord(index) : onChordClick(chord.notes, index)}
+                                variant={isDeleteMode ? "danger" : isEditMode ? "secondary" : "primary"}
+                                active={isActive && !isDeleteMode && !isEditMode}
                                 aria-label={`Pattern: ${chord.pattern.join('-')}`}
                                 className={classNames(
                                     'relative',
@@ -205,11 +237,17 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                                         'transform': isHighlighted,
                                         // Live mode hover effects
                                         'shadow-xl': isLiveMode,
+                                        // Edit mode styling
+                                        'border-blue-500 hover:border-blue-400': isEditMode,
                                     }
                                 )}
                             >
                                 {isDeleteMode && (
                                     <XCircleIcon className={`absolute top-1 right-1 h-4 w-4 text-white bg-red-500 rounded-full shadow-sm ${isLiveMode ? 'h-6 w-6' : ''}`} />
+                                )}
+
+                                {isEditMode && (
+                                    <CogIcon className={`absolute top-1 right-1 h-4 w-4 text-white bg-blue-500 rounded-full shadow-sm p-0.5 ${isLiveMode ? 'h-6 w-6' : ''}`} />
                                 )}
 
                                 <div className={`text-cyan-200 font-bold ${isLiveMode ? 'text-xl mb-2' : 'text-xs mb-1'}`}>
@@ -232,6 +270,32 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                             </ChordButton>
                         );
                     })}
+
+                    {/* Edit Mode Toggle Button - appears after last chord */}
+                    <div className={classNames(
+                        'flex items-center justify-center',
+                        {
+                            'py-8 px-6 min-h-[120px]': isLiveMode,
+                            'flex-shrink-0 py-4 px-2 min-w-[85px] min-h-[60px] mt-1': !isLiveMode,
+                        }
+                    )}>
+                        <button
+                            onClick={() => setIsEditMode(!isEditMode)}
+                            className={classNames(
+                                "flex items-center justify-center rounded-lg border-2 border-dashed transition-all duration-200 hover:scale-105",
+                                {
+                                    'w-16 h-16': isLiveMode,
+                                    'w-12 h-12': !isLiveMode,
+                                },
+                                isEditMode
+                                    ? "border-blue-500 text-blue-400 bg-blue-500/10 hover:bg-blue-500/20"
+                                    : "border-gray-500 text-gray-400 hover:border-gray-400 hover:text-gray-300 hover:bg-gray-500/10"
+                            )}
+                            title={isEditMode ? "Exit edit mode" : "Edit chords"}
+                        >
+                            <CogIcon className={`${isLiveMode ? 'w-8 h-8' : 'w-6 h-6'} ${isEditMode ? 'animate-spin' : ''}`} />
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -241,6 +305,7 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                     <div className="max-w-7xl mx-auto flex items-center justify-between">
                         <div className="text-xs text-slate-400 font-medium">
                             {addedChords.length} chord{addedChords.length !== 1 ? 's' : ''} loaded
+                            {isEditMode && <span className="ml-2 text-blue-400">• Edit Mode: Click chords to edit</span>}
                         </div>
                         <div className="flex items-center space-x-2">
                             <button

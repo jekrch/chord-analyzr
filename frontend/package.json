@@ -6,6 +6,7 @@
   "type": "module",
   "dependencies": {
     "@headlessui/react": "^1.7.17",
+    "@hello-pangea/dnd": "^18.0.1",
     "@heroicons/react": "^2.0.18",
     "@tailwindcss/vite": "^4.1.11",
     "@testing-library/jest-dom": "^5.17.0",

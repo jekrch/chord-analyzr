@@ -40,13 +40,14 @@ function App() {
         setAvailableInstruments,
         handleChordClick,
         addChordClick,
+        updateChord,         // NEW: Add the updateChord handler
         clearAllChords,
         updateChordPattern,
         toggleScalePlayback,
         handlePatternChange,
         handleTogglePlayback,
         getCurrentPattern,
-
+        handleFetchOriginalChord, 
         // Piano settings handlers
         setPianoInstrument,
         setCutOffPreviousNotes,
@@ -54,9 +55,9 @@ function App() {
         setOctaveOffset,
         setReverbLevel,
         setNoteDuration,
-        setVolume,           // Add this
-        setChorusLevel,      // Add this  
-        setDelayLevel,       // Add this
+        setVolume,           
+        setChorusLevel,     
+        setDelayLevel,       
     } = useAppState();
 
     const silentAudioRef = useRef<HTMLAudioElement>(null)
@@ -228,6 +229,8 @@ function App() {
                 onToggleDeleteMode={() => setIsDeleteMode(!isDeleteMode)}
                 onToggleLiveMode={() => setIsLiveMode(!isLiveMode)}
                 onTogglePlayback={handleTogglePlayback}
+                onUpdateChord={updateChord} 
+                onFetchOriginalChord={handleFetchOriginalChord}
             />
         </div>
     );

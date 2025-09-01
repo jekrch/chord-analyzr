@@ -250,7 +250,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                                 <h5 className="text-white font-semibold mb-3 text-sm text-left">Slash Chords</h5>
                                 <p className="text-sm mb-3 text-left">Create slash chords (like C/E) by specifying a bass note:</p>
                                 <div className="space-y-2 text-sm text-left">
-                                    <div><strong className="text-white">Bass Note Field:</strong> Enter a note name (e.g., E, Gb3, C4)</div>
+                                    <div><strong className="text-white">Bass Note Field:</strong> Enter a note name (e.g., E, Gb, C)</div>
                                     <div><strong className="text-white">Automatic Voicing:</strong> The bass note moves to the lowest position</div>
                                     <div><strong className="text-white">Chord Name:</strong> Updates to show the slash notation (C/E)</div>
                                     <div><strong className="text-white">Remove Bass:</strong> Clear the field to return to original chord</div>

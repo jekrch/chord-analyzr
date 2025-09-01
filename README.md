@@ -4,7 +4,7 @@
 
 A Postgres driven solution for analyzing chord progressions and generating chord suggestions. 
 
-<img width="420" alt="image" src="https://github.com/user-attachments/assets/6822f515-e7ea-4fe6-b927-c9a64a8b2fb2" />
+<img width="420" alt="image" src="https://github.com/user-attachments/assets/62a52551-1a06-4f87-87c8-524998bf86c8" />
 
 <hr>
 <h3>Setup</h3> 
@@ -116,6 +116,8 @@ Returns:
 ## Frontend
 
 **modal.chordbuildr.com** is a comprehensive web-based music composition and performance tool built with React. The application provides an intuitive interface for exploring musical scales, building chord progressions, and creating rhythmic patterns.
+
+<img width="420" alt="image" src="https://github.com/user-attachments/assets/6822f515-e7ea-4fe6-b927-c9a64a8b2fb2" />
 
 ### Core Features
 

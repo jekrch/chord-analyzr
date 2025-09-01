@@ -4,6 +4,10 @@ import { PATTERN_PRESETS, PATTERN_CATEGORIES } from '../util/Pattern';
 import Dropdown from './Dropdown';
 import PatternNotationHelpModal from './PatternNotationHelpModal';
 import { Button } from './Button';
+import { useMusicStore } from '../stores/musicStore';
+import { usePlaybackStore } from '../stores/playbackStore';
+import { usePatternStore } from '../stores/patternStore';
+import { useUIStore } from '../stores/uiStore';
 
 // FIXED: Define proper subdivisions with correct values and names
 const SUBDIVISIONS = [
@@ -15,35 +19,7 @@ const SUBDIVISIONS = [
 ];
 
 interface PatternSystemProps {
-  activeNotes: { note: string; octave?: number }[];
-  normalizedScaleNotes: string[];
-  addedChords: { name: string; notes: string; pattern: string[] }[];
-  activeChordIndex: number | null;
-  currentlyActivePattern: string[];
-  getCurrentPattern: () => string[];
-  onPatternChange?: (newPatternState: Partial<{
-    currentPattern: string[];
-    bpm: number;
-    subdivision: number;
-    isPlaying: boolean;
-    currentStep: number;
-    swing: number;
-    repeat: boolean;
-    lastChordChangeTime: number;
-    globalClockStartTime: number;
-  }>) => void;
-  onUpdateChordPattern?: (chordIndex: number, newPattern: string[]) => void;
-  globalPatternState: {
-    currentPattern: string[];
-    bpm: number;
-    subdivision: number;
-    isPlaying: boolean;
-    currentStep: number;
-    swing: number;
-    repeat: boolean;
-    lastChordChangeTime: number;
-    globalClockStartTime: number;
-  };
+  // No props needed now - everything comes from stores
 }
 
 // Helper function to count distinct notes in a pattern
@@ -128,15 +104,29 @@ const StepEditor = memo(({
 
 StepEditor.displayName = 'StepEditor';
 
-const PatternSystem: React.FC<PatternSystemProps> = ({
-  activeNotes,
-  addedChords,
-  activeChordIndex,
-  currentlyActivePattern,
-  onPatternChange,
-  onUpdateChordPattern,
-  globalPatternState
-}) => {
+const PatternSystem: React.FC<PatternSystemProps> = () => {
+  // Direct store access
+  const musicStore = useMusicStore();
+  const playbackStore = usePlaybackStore();
+  const patternStore = usePatternStore();
+  const uiStore = useUIStore();
+
+  // Extract state from stores
+  const {
+    activeNotes,
+    addedChords,
+    activeChordIndex,
+  } = playbackStore;
+
+  const {
+    normalizedScaleNotes,
+  } = musicStore;
+
+  const {
+    currentlyActivePattern,
+    globalPatternState,
+  } = patternStore;
+
   // ========== LOCAL STATE ==========
   const [isSequencerExpanded, setIsSequencerExpanded] = useState(false); // Default to collapsed
   const [isSettingsExpanded, setIsSettingsExpanded] = useState(true); // Settings shown by default when sequencer is open
@@ -148,6 +138,15 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   // ========== PATTERN MANAGEMENT ==========
+
+  // Get current active pattern (same logic as in useIntegratedAppLogic)
+  const getCurrentPattern = useCallback(() => {
+    // If a chord is selected, use its pattern; otherwise use currently active pattern
+    if (activeChordIndex !== null && addedChords[activeChordIndex]) {
+      return addedChords[activeChordIndex].pattern;
+    }
+    return currentlyActivePattern;
+  }, [activeChordIndex, addedChords, currentlyActivePattern]);
 
   const { currentPattern, editingContext } = useMemo(() => {
     if (activeChordIndex !== null && addedChords[activeChordIndex]) {
@@ -258,27 +257,25 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
 
   const togglePlayback = useCallback(() => {
     const newIsPlaying = !globalPatternState.isPlaying;
-    onPatternChange?.({
-      isPlaying: newIsPlaying
-    });
-  }, [globalPatternState.isPlaying, onPatternChange]);
+    patternStore.setGlobalPatternState({ isPlaying: newIsPlaying });
+  }, [globalPatternState.isPlaying]);
 
   const resetPattern = useCallback(() => {
-    onPatternChange?.({
+    patternStore.setGlobalPatternState({
       isPlaying: false,
       currentStep: 0
     });
-  }, [onPatternChange]);
+  }, []);
 
   const updateCurrentPattern = useCallback((newPattern: string[]) => {
     if (editingContext.type === 'current') {
       // Update the global current pattern
-      onPatternChange?.({ currentPattern: newPattern });
+      patternStore.setGlobalPatternState({ currentPattern: newPattern });
     } else if (editingContext.type === 'chord' && activeChordIndex !== null) {
       // Update the specific chord's pattern
-      onUpdateChordPattern?.(activeChordIndex, newPattern);
+      playbackStore.updateChordPattern(activeChordIndex, newPattern);
     }
-  }, [editingContext.type, activeChordIndex, onPatternChange, onUpdateChordPattern]);
+  }, [editingContext.type, activeChordIndex]);
 
   const handleStepChange = useCallback((stepIndex: number, value: string) => {
     const newPattern = [...currentPattern];
@@ -314,6 +311,11 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
   const applyPreset = useCallback((preset: typeof PATTERN_PRESETS[0]) => {
     updateCurrentPattern(preset.pattern);
   }, [updateCurrentPattern]);
+
+  // Handler for pattern changes (BPM, subdivision, swing, etc.)
+  const handlePatternChange = useCallback((newPatternState: Partial<any>) => {
+    patternStore.updatePattern(newPatternState);
+  }, []);
 
   // Calculate which step is currently playing
   const currentStepIndex = useMemo(() => {
@@ -630,7 +632,7 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
                           min="60"
                           max="200"
                           value={globalPatternState.bpm}
-                          onChange={(e) => onPatternChange?.({ bpm: parseInt(e.target.value) })}
+                          onChange={(e) => handlePatternChange({ bpm: parseInt(e.target.value) })}
                           className="w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb"
                         />
                       </div>
@@ -647,7 +649,7 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
                         onChange={(value) => {
                           const subdivision = SUBDIVISIONS.find(sub => `${sub.symbol} ${sub.name}` === value);
                           if (subdivision) {
-                            onPatternChange?.({ subdivision: subdivision.value });
+                            handlePatternChange({ subdivision: subdivision.value });
                           }
                         }}
                         options={subdivisionOptions}
@@ -666,7 +668,7 @@ const PatternSystem: React.FC<PatternSystemProps> = ({
                           min="0"
                           max="50"
                           value={globalPatternState.swing}
-                          onChange={(e) => onPatternChange?.({ swing: parseInt(e.target.value) })}
+                          onChange={(e) => handlePatternChange({ swing: parseInt(e.target.value) })}
                           className="w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb"
                         />
                       </div>

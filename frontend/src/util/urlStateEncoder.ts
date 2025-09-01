@@ -1,12 +1,10 @@
-// Enhanced URL state management - robust and readable encoding
-
 export interface AddedChord {
     name: string;
     notes: string;
     pattern: string[];
-    originalKey?: string;   // NEW: Store original key
-    originalMode?: string;  // NEW: Store original mode
-    originalNotes?: string; // NEW: Store original notes before modifications
+    originalKey: string;  
+    originalMode?: string; 
+    originalNotes?: string; 
 }
 
 export interface ModeScaleChordDto {
@@ -296,7 +294,7 @@ export const decodeState = (
                         if (origStr.length >= 2) {
                             const origKeyIndex = fromBase36(origStr[0]);
                             const origModeIndex = fromBase36(origStr[1]);
-                            originalKey = availableKeys[origKeyIndex];
+                            originalKey = availableKeys[origKeyIndex]!;
                             originalMode = availableModes[origModeIndex];
                         }
                     }
@@ -319,15 +317,11 @@ export const decodeState = (
                         const addedChord: AddedChord = {
                             name,
                             notes,
-                            pattern: chordPattern
+                            pattern: chordPattern,
+                            originalKey: originalKey || key, // Fallback to current key if not provided
+                            originalMode,
+                            originalNotes: notes // Store original notes
                         };
-
-                        // Add original key/mode for v7
-                        if (version === 'v7' && originalKey && originalMode) {
-                            addedChord.originalKey = originalKey;
-                            addedChord.originalMode = originalMode;
-                            addedChord.originalNotes = notes; // Store original notes
-                        }
 
                         addedChords.push(addedChord);
                         console.log('Successfully decoded chord:', name);

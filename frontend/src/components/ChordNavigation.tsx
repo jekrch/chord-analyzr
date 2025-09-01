@@ -1,58 +1,115 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { TrashIcon, XCircleIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon, PlayIcon, StopIcon, PauseIcon, PlayCircleIcon, CogIcon } from '@heroicons/react/20/solid';
 import classNames from 'classnames';
 import { Button, ChordButton } from './Button';
 import ChordEditor from './ChordEditor';
-import { AddedChord } from '../hooks/useChordEditor';
-import { ModeScaleChordDto } from '../api';
+import { useMusicStore } from '../stores/musicStore';
+import { usePlaybackStore } from '../stores/playbackStore';
+import { usePatternStore } from '../stores/patternStore';
+import { useUIStore } from '../stores/uiStore';
+import { getMidiNotes } from '../util/ChordUtil';
 
-interface GlobalPatternState {
-    currentPattern: string[];
-    isPlaying: boolean;
-    bpm: number;
-    subdivision: number;
-    swing: number;
-    currentStep: number;
-    repeat: boolean;
-    lastChordChangeTime: number;
-    globalClockStartTime: number;
-}
+const START_OCTAVE = 4;
+const END_OCTAVE = 7;
 
 interface ChordNavigationProps {
-    addedChords: AddedChord[];
-    activeChordIndex: number | null;
-    highlightedChordIndex: number | null;
-    isDeleteMode: boolean;
-    isLiveMode: boolean;
-    globalPatternState: GlobalPatternState;
-    chords?: ModeScaleChordDto[];
-    onChordClick: (notes: string, index: number) => void;
-    onClearAll: () => void;
-    onToggleDeleteMode: () => void;
-    onToggleLiveMode: () => void;
-    onTogglePlayback: () => void;
-    onUpdateChord?: (index: number, updatedChord: AddedChord) => void;
-    onFetchOriginalChord?: (chordName: string, key: string, mode: string) => Promise<string | null>;
+  // No props needed now - everything comes from stores
 }
 
-const ChordNavigation: React.FC<ChordNavigationProps> = ({
-    addedChords,
-    activeChordIndex,
-    highlightedChordIndex,
-    isDeleteMode,
-    isLiveMode,
-    globalPatternState,
-    chords,
-    onChordClick,
-    onClearAll,
-    onToggleDeleteMode,
-    onToggleLiveMode,
-    onTogglePlayback,
-    onUpdateChord,
-    onFetchOriginalChord
-}) => {
+const ChordNavigation: React.FC<ChordNavigationProps> = () => {
+    // Direct store access
+    const musicStore = useMusicStore();
+    const playbackStore = usePlaybackStore();
+    const patternStore = usePatternStore();
+    const uiStore = useUIStore();
+
+    // Extract state from stores
+    const {
+        addedChords,
+        activeChordIndex,
+        highlightedChordIndex,
+    } = playbackStore;
+
+    const {
+        isDeleteMode,
+        isLiveMode,
+    } = uiStore;
+
+    const {
+        globalPatternState,
+    } = patternStore;
+
+    const {
+        chords,
+    } = musicStore;
+
+    // Local state for edit mode
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingChordIndex, setEditingChordIndex] = useState<number | null>(null);
+
+    // Recreate the chord click handler (similar to useIntegratedAppLogic)
+    const handleChordClick = useCallback((chordNoteNames: string, chordIndex?: number, chordName?: string) => {
+        if (uiStore.isDeleteMode && chordIndex !== undefined) {
+            playbackStore.removeChord(chordIndex);
+            return;
+        }
+
+        const notesWithOctaves = getMidiNotes(START_OCTAVE, END_OCTAVE, chordNoteNames);
+
+        if (chordIndex !== undefined) {
+            playbackStore.setTemporaryChord(null);
+            playbackStore.setActiveChordIndex(chordIndex);
+
+            if (!patternStore.globalPatternState.isPlaying) {
+                playbackStore.playNotes(notesWithOctaves as any);
+            }
+
+            playbackStore.setHighlightedChordIndex(chordIndex);
+            setTimeout(() => playbackStore.setHighlightedChordIndex(null), 150);
+        } else {
+            if (chordName) {
+                playbackStore.setTemporaryChord({ name: chordName, notes: chordNoteNames });
+            }
+
+            if (!patternStore.globalPatternState.isPlaying) {
+                playbackStore.playNotes(notesWithOctaves as any);
+            }
+        }
+    }, [uiStore.isDeleteMode, patternStore.globalPatternState.isPlaying]);
+
+    // Handler functions from stores
+    const handleClearAll = useCallback(() => {
+        playbackStore.clearAllChords();
+        patternStore.setGlobalPatternState({ isPlaying: false });
+        uiStore.setIsLiveMode(false);
+    }, []);
+
+    const handleTogglePlayback = useCallback(() => {
+        const newIsPlaying = !patternStore.globalPatternState.isPlaying;
+        patternStore.setGlobalPatternState({ isPlaying: newIsPlaying });
+    }, [patternStore.globalPatternState.isPlaying]);
+
+    const handleToggleDeleteMode = () => {
+        uiStore.setIsDeleteMode(!isDeleteMode);
+    };
+
+    const handleToggleLiveMode = () => {
+        uiStore.setIsLiveMode(!isLiveMode);
+    };
+
+    const handleUpdateChord = (index: number, updatedChord: any) => {
+        // Ensure all required properties are present with fallbacks
+        const normalizedChord = {
+            name: updatedChord.name,
+            notes: updatedChord.notes,
+            pattern: updatedChord.pattern || ['1', '2', '3', '4'],
+            originalKey: updatedChord.originalKey || musicStore.key,
+            originalMode: updatedChord.originalMode || musicStore.mode,
+            originalNotes: updatedChord.originalNotes || updatedChord.notes
+        };
+        
+        playbackStore.updateChord(index, normalizedChord);
+    };
 
     if (addedChords.length === 0) return null;
 
@@ -84,9 +141,9 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                     editingChord={editingChord}
                     totalChords={addedChords.length}
                     chords={chords}
-                    onUpdateChord={onUpdateChord}
-                    onFetchOriginalChord={onFetchOriginalChord}
-                    onChordClick={onChordClick}
+                    onUpdateChord={handleUpdateChord}
+                    onFetchOriginalChord={playbackStore.handleFetchOriginalChord}
+                    onChordClick={handleChordClick}
                     onClose={handleCloseEditor}
                     onNavigateToChord={handleNavigateToChord}
                 />
@@ -103,7 +160,7 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                     <div className="flex items-center space-x-4">
                         {!isLiveMode && (
                             <Button
-                                onClick={onTogglePlayback}
+                                onClick={handleTogglePlayback}
                                 variant="icon"
                                 size="icon"
                                 className=""
@@ -119,7 +176,7 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                         )}
                         {isLiveMode && (
                             <Button
-                                onClick={onTogglePlayback}
+                                onClick={handleTogglePlayback}
                                 variant="play-stop"
                                 size="sm"
                                 active={globalPatternState.isPlaying}
@@ -155,7 +212,7 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                     {/* Right Section - stays on the right */}
                     <div className="flex items-center space-x-2">
                         <button
-                            onClick={onToggleLiveMode}
+                            onClick={handleToggleLiveMode}
                             className={classNames(
                                 "w-[7em] h-8 flex items-center space-x-2 px-3 py-1.5 text-xs border rounded transition-all duration-200",
                                 isLiveMode
@@ -180,15 +237,15 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                                 <button
                                     onClick={() => {
                                         if (isLiveMode)
-                                            onToggleLiveMode();
-                                        onClearAll();
+                                            handleToggleLiveMode();
+                                        handleClearAll();
                                     }}
                                     className="w-[5em] h-8 flex items-center justify-center px-3 py-1.5 text-xs text-slate-300 hover:text-slate-200 bg-[#4a5262] hover:bg-[#525a6b] border border-gray-600 rounded transition-all duration-200"
                                 >
                                     Clear
                                 </button>
                                 <button
-                                    onClick={onToggleDeleteMode}
+                                    onClick={handleToggleDeleteMode}
                                     className={classNames(
                                         "w-[7em] h-8 flex items-center space-x-2 px-3 py-1.5 text-xs border rounded transition-all duration-200",
                                         isDeleteMode
@@ -230,7 +287,7 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                         return (
                             <ChordButton
                                 key={index}
-                                onClick={() => isEditMode ? handleEditChord(index) : onChordClick(chord.notes, index)}
+                                onClick={() => isEditMode ? handleEditChord(index) : handleChordClick(chord.notes, index)}
                                 variant={isDeleteMode ? "danger" : isEditMode ? "secondary" : "primary"}
                                 active={isActive && !isDeleteMode && !isEditMode}
                                 aria-label={`Pattern: ${chord.pattern.join('-')}`}
@@ -317,13 +374,13 @@ const ChordNavigation: React.FC<ChordNavigationProps> = ({
                         </div>
                         <div className="flex items-center space-x-2">
                             <button
-                                onClick={onClearAll}
+                                onClick={handleClearAll}
                                 className="w-[5em] h-8 flex items-center justify-center px-3 py-1.5 text-xs text-slate-300 hover:text-slate-200 bg-[#4a5262] hover:bg-[#525a6b] border border-gray-600 rounded transition-all duration-200"
                             >
                                 Clear
                             </button>
                             <button
-                                onClick={onToggleDeleteMode}
+                                onClick={handleToggleDeleteMode}
                                 className={classNames(
                                     "w-[7em] h-8 flex items-center space-x-2 px-3 py-1.5 text-xs border rounded transition-all duration-200",
                                     isDeleteMode

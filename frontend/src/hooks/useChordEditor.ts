@@ -70,8 +70,9 @@ export const useChordEditor = ({
         
         if (chords) {
             const currentChord = chords.find(c => c.chordName === baseChordName);
-            if (currentChord?.chordNotes) {
-                return currentChord.chordNotes;
+            // Fixed: Use chordNoteNames instead of chordNotes to match the interface
+            if (currentChord?.chordNoteNames) {
+                return currentChord.chordNoteNames;
             }
         }
         
@@ -234,17 +235,44 @@ export const useChordEditor = ({
                 const libraryOriginalNotes = await findOriginalChordFromLibrary(editingChord);
                 const originalNotes = libraryOriginalNotes || editingChord.originalNotes || originalChordNotes;
                 
-                setEditingChord({
-                    ...editingChord,
-                    notes: originalNotes
-                });
+                // Ensure we're setting properly formatted note names, not MIDI numbers
+                if (originalNotes) {
+                    // Validate that originalNotes contains note names and not MIDI numbers
+                    const parsedOriginal = parseNotes(originalNotes);
+                    const hasValidNoteNames = parsedOriginal.every(note => {
+                        // Check if it looks like a note name (starts with A-G)
+                        return /^[A-Ga-g]/.test(note.trim());
+                    });
+                    
+                    if (hasValidNoteNames) {
+                        setEditingChord({
+                            ...editingChord,
+                            notes: originalNotes
+                        });
+                    } else {
+                        console.warn('Original notes appear to be in invalid format, keeping current notes:', originalNotes);
+                        // Keep the current notes if the original seems invalid
+                    }
+                } else {
+                    console.warn('No original notes found, keeping current notes');
+                }
             } catch (error) {
                 console.warn('Failed to revert to original chord:', error);
                 const originalNotes = editingChord.originalNotes || originalChordNotes;
-                setEditingChord({
-                    ...editingChord,
-                    notes: originalNotes
-                });
+                if (originalNotes) {
+                    // Same validation for fallback
+                    const parsedOriginal = parseNotes(originalNotes);
+                    const hasValidNoteNames = parsedOriginal.every(note => {
+                        return /^[A-Ga-g]/.test(note.trim());
+                    });
+                    
+                    if (hasValidNoteNames) {
+                        setEditingChord({
+                            ...editingChord,
+                            notes: originalNotes
+                        });
+                    }
+                }
             }
         }
     };

@@ -1,15 +1,11 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { PlayCircleIcon, PlusCircleIcon, MagnifyingGlassIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/20/solid';
-
-interface ModeScaleChordDto {
-  chordName: string;
-  chordNoteNames: string;
-}
+import { ModeScaleChordDto } from '../api';
 
 interface ChordTableProps {
   chords: ModeScaleChordDto[] | undefined;
   loading: boolean;
-  onChordClick: (chordNoteNames: string, index?: number, chordName?: string) => void; // Updated to include chordName
+  onChordClick: (chordNoteNames: string, index?: number, chordName?: string) => void;
   addChordClick?: (chordName: string, chordNotes: string) => void;
 }
 
@@ -44,26 +40,36 @@ const ChordTable: React.FC<ChordTableProps> = ({
     return () => window.removeEventListener('resize', updateColumns);
   }, []);
 
-  // Extract root note from chord name
-  const extractRootNote = (chordName: string): string => {
+  // Extract root note from chord name - with null safety
+  const extractRootNote = (chordName: string | undefined): string => {
+    if (!chordName) return '';
     if (chordName.length >= 2 && (chordName[1] === 'b' || chordName[1] === '#')) {
       return chordName.substring(0, 2);
     }
-    return chordName[0];
+    return chordName[0] || '';
   };
 
-  // Get unique root notes from chords
+  // Get unique root notes from chords - with null safety
   const rootNotes = useMemo(() => {
     if (!chords) return [];
-    const notes = chords.map(chord => extractRootNote(chord.chordName));
+    const notes = chords
+      .filter(chord => chord.chordName) // Filter out chords without names
+      .map(chord => extractRootNote(chord.chordName))
+      .filter(note => note); // Filter out empty strings
     return [...new Set(notes)].sort();
   }, [chords]);
 
-  // Filter chords based on selected root note and search query
+  // Filter chords based on selected root note and search query - with null safety
   const filteredChords = useMemo(() => {
     if (!chords) return [];
     
-    let filtered = chords;
+    // First filter out chords that don't have required properties
+    let filtered = chords.filter(chord => 
+      chord.chordName && 
+      chord.chordNoteNames &&
+      chord.chordName.trim() !== '' &&
+      chord.chordNoteNames.trim() !== ''
+    );
     
     if (selectedRootNote !== 'All') {
       filtered = filtered.filter(chord => extractRootNote(chord.chordName) === selectedRootNote);
@@ -72,21 +78,25 @@ const ChordTable: React.FC<ChordTableProps> = ({
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       filtered = filtered.filter(chord => 
-        chord.chordName.toLowerCase().includes(query) ||
-        chord.chordNoteNames.toLowerCase().includes(query)
+        chord.chordName?.toLowerCase().includes(query) ||
+        chord.chordNoteNames?.toLowerCase().includes(query)
       );
     }
     
     return filtered;
   }, [chords, selectedRootNote, searchQuery]);
 
-  // Count chords per root note
+  // Count chords per root note - with null safety
   const chordCounts = useMemo(() => {
     if (!chords) return {};
     const counts: { [key: string]: number } = {};
     chords.forEach(chord => {
-      const root = extractRootNote(chord.chordName);
-      counts[root] = (counts[root] || 0) + 1;
+      if (chord.chordName) {
+        const root = extractRootNote(chord.chordName);
+        if (root) {
+          counts[root] = (counts[root] || 0) + 1;
+        }
+      }
     });
     return counts;
   }, [chords]);
@@ -275,13 +285,18 @@ const ChordTable: React.FC<ChordTableProps> = ({
           ) : filteredChords?.length ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 sm:gap-3">
               {filteredChords.map((chord: ModeScaleChordDto, index: number) => {
+                // Early return if chord doesn't have required properties (shouldn't happen due to filtering)
+                if (!chord.chordName || !chord.chordNoteNames) {
+                  return null;
+                }
+
                 const isExpanded = expandedChords.has(index);
                 const isPlaying = playingChords.has(index);
                 const isAdding = addingChords.has(index);
                 
                 return (
                   <div
-                    key={`chord-${index}`}
+                    key={`chord-${chord.chordName}-${index}`}
                     className={`bg-[#3d434f] rounded-lg border border-gray-600 hover:border-blue-500 hover:bg-[#444b59] transition-all duration-200 overflow-hidden cursor-pointer group relative ${
                       isPlaying ? 'chord-playing z-50' : ''
                     } ${isAdding ? 'chord-adding z-40' : ''}`}

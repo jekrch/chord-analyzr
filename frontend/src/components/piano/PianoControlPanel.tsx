@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { PlayCircleIcon, PauseIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
 import Dropdown from '../Dropdown';
 import { Button } from '../Button';
+import { useMusicStore } from '../../stores/musicStore';
+import { usePianoStore } from '../../stores/pianoStore';
+import { usePlaybackStore } from '../../stores/playbackStore';
+import { usePatternStore } from '../../stores/patternStore';
 
 interface EqSettings {
     bass: number;
@@ -9,76 +13,191 @@ interface EqSettings {
     treble: number;
 }
 
-interface PianoSettings {
-    instrumentName: string;
-    octaveOffset: number;
-    reverbLevel: number;
-    noteDuration: number;
-    cutOffPreviousNotes: boolean;
-    eq: EqSettings;
-    volume: number;
-    chorusLevel: number;
-    delayLevel: number;
-}
-
+// Optional props interface for backwards compatibility
 interface PianoControlPanelProps {
-    // Key/Mode/Voice props
-    currentKey: string;
-    mode: string;
-    modes: string[] | undefined;
-    isPlayingScale: boolean;
-    pianoSettings: PianoSettings;
-    availableInstruments: string[];
-    
-    // Handlers
-    setKey: (key: string) => void;
-    setMode: (mode: string) => void;
-    toggleScalePlayback: () => void;
-    setPianoInstrument: (instrument: string) => void;
-    setCutOffPreviousNotes: (cutOff: boolean) => void;
-    setEq: (eq: EqSettings) => void;
-    setOctaveOffset: (offset: number) => void;
-    setReverbLevel: (level: number) => void;
-    setNoteDuration: (duration: number) => void;
-    setVolume: (volume: number) => void;
-    setChorusLevel: (level: number) => void;
-    setDelayLevel: (level: number) => void;
+    // All props are optional - stores will be used by default
+    className?: string;
+    // You can still override specific behaviors if needed
+    onKeyChange?: (key: string) => void;
+    onModeChange?: (mode: string) => void;
+    onInstrumentChange?: (instrument: string) => void;
 }
 
 const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
-    // Key/Mode/Voice props
-    currentKey,
-    mode,
-    modes,
-    isPlayingScale,
-    pianoSettings,
-    availableInstruments,
-    
-    // Handlers
-    setKey,
-    setMode,
-    toggleScalePlayback,
-    setPianoInstrument,
-    setCutOffPreviousNotes,
-    setEq,
-    setOctaveOffset,
-    setReverbLevel,
-    setNoteDuration,
-    setVolume,
-    setChorusLevel,
-    setDelayLevel,
+    className = "",
+    onKeyChange,
+    onModeChange,
+    onInstrumentChange
 }) => {
+    // Get data from stores with stable selectors (separate subscriptions to avoid object recreation)
+    const currentKey = useMusicStore(state => state.key);
+    const mode = useMusicStore(state => state.mode);
+    const modes = useMusicStore(state => state.modes);
+    const scaleNotes = useMusicStore(state => state.scaleNotes);
+    
+    const pianoSettings = usePianoStore(state => state.pianoSettings);
+    const availableInstruments = usePianoStore(state => state.availableInstruments);
+    
+    const isPlayingScale = usePlaybackStore(state => state.isPlayingScale);
+    const globalPatternState = usePatternStore(state => state.globalPatternState);
+
+    // Get store actions
+    const { setKey, setMode } = useMusicStore();
+    const {
+        setPianoInstrument,
+        setCutOffPreviousNotes,
+        setEq,
+        setOctaveOffset,
+        setReverbLevel,
+        setNoteDuration,
+        setVolume,
+        setChorusLevel,
+        setDelayLevel
+    } = usePianoStore();
+    
+    // Get scale playback toggle from playback store
+    const { setIsPlayingScale, clearScalePlaybackTimeouts, setActiveNotes } = usePlaybackStore();
+
     // Local state for piano settings panel
     const [settingsOpen, setSettingsOpen] = useState(false);
+    
+    // Refs for managing scale playback
+    const scaleTimeoutsRef = useRef<NodeJS.Timeout[]>([]);
+    const scalePlaybackRef = useRef<boolean>(false);
 
     // Handler for instrument change
     const handleInstrumentChange = (value: string) => {
         const instrumentName = value.replaceAll(' ', '_');
-        setPianoInstrument(instrumentName);
+        if (onInstrumentChange) {
+            onInstrumentChange(instrumentName);
+        } else {
+            setPianoInstrument(instrumentName);
+        }
     };
 
+    // Handler for key change
+    const handleKeyChange = (key: string) => {
+        if (onKeyChange) {
+            onKeyChange(key);
+        } else {
+            setKey(key);
+        }
+    };
+
+    // Handler for mode change
+    const handleModeChange = (mode: string) => {
+        if (onModeChange) {
+            onModeChange(mode);
+        } else {
+            setMode(mode);
+        }
+    };
+
+    // Clear all scale playback timeouts
+    const clearScaleTimeouts = useCallback(() => {
+        scaleTimeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+        scaleTimeoutsRef.current = [];
+        scalePlaybackRef.current = false;
+    }, []);
+
+    // Calculate note duration based on BPM
+    const calculateNoteDuration = useCallback((bpm: number) => {
+        // Quarter note duration in milliseconds
+        const quarterNoteDuration = 60000 / bpm;
+        // Use eighth notes for scale playback (faster)
+        return quarterNoteDuration / 2;
+    }, []);
+
+    // Play scale with proper timing
+    const playScale = useCallback(() => {
+        if (!scaleNotes || scaleNotes.length === 0) {
+            console.warn('No scale notes available to play');
+            return;
+        }
+
+        // Clear any existing timeouts
+        clearScaleTimeouts();
+        
+        // Use BPM from pattern store, fallback to 120
+        const bpm = globalPatternState?.bpm || 120;
+        const noteDuration = calculateNoteDuration(bpm);
+        
+        scalePlaybackRef.current = true;
+        setIsPlayingScale(true);
+
+        // Create note objects for the scale (starting from octave 4)
+        const scaleNotesForPlayback = scaleNotes.map((scaleNote) => ({
+            note: scaleNote.noteName || 'C',
+            octave: 4
+        }));
+
+        // Add the root note an octave higher to complete the scale
+        if (scaleNotes.length > 0) {
+            scaleNotesForPlayback.push({
+                note: scaleNotes[0].noteName || 'C',
+                octave: 5
+            });
+        }
+
+        // Play each note in sequence
+        scaleNotesForPlayback.forEach((noteObj, index) => {
+            const timeout = setTimeout(() => {
+                if (!scalePlaybackRef.current) return;
+                
+                // Set the active note
+                setActiveNotes([noteObj]);
+                
+                // Clear the note after a portion of the duration
+                const noteOffTimeout = setTimeout(() => {
+                    if (!scalePlaybackRef.current) return;
+                    setActiveNotes([]);
+                }, noteDuration * 0.8); // Note off after 80% of duration
+                
+                scaleTimeoutsRef.current.push(noteOffTimeout);
+                
+                // If this is the last note, end the scale playback
+                if (index === scaleNotesForPlayback.length - 1) {
+                    const endTimeout = setTimeout(() => {
+                        if (scalePlaybackRef.current) {
+                            stopScale();
+                        }
+                    }, noteDuration);
+                    scaleTimeoutsRef.current.push(endTimeout);
+                }
+            }, index * noteDuration);
+            
+            scaleTimeoutsRef.current.push(timeout);
+        });
+    }, [scaleNotes, globalPatternState, setIsPlayingScale, setActiveNotes, clearScaleTimeouts, calculateNoteDuration]);
+
+    // Stop scale playback
+    const stopScale = useCallback(() => {
+        clearScaleTimeouts();
+        setActiveNotes([]);
+        setIsPlayingScale(false);
+        if (clearScalePlaybackTimeouts) {
+            clearScalePlaybackTimeouts();
+        }
+    }, [clearScaleTimeouts, setActiveNotes, setIsPlayingScale, clearScalePlaybackTimeouts]);
+
+    // Integrated scale playback toggle
+    const toggleScalePlayback = useCallback(() => {
+        if (isPlayingScale || scalePlaybackRef.current) {
+            stopScale();
+        } else {
+            playScale();
+        }
+    }, [isPlayingScale, playScale, stopScale]);
+
+    // Cleanup on unmount
+    React.useEffect(() => {
+        return () => {
+            clearScaleTimeouts();
+        };
+    }, [clearScaleTimeouts]);
+
     return (
-        <div className="w-full max-w-7xl mx-auto px-2 sm:mt-4 mt-0 mb-2">
+        <div className={`w-full max-w-7xl mx-auto px-2 sm:mt-4 mt-0 mb-2 ${className}`}>
             <div className="bg-[#3d434f] border border-gray-600 rounded-lg overflow-hidden">
                 {/* Main Controls Header */}
                 <div className="px-4 py-3 border-b border-gray-600">
@@ -117,7 +236,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                         className='w-[5rem]'
                                         buttonClassName='px-3 py-1.5 text-center font-medium text-xs h-10 flex items-center justify-center'
                                         menuClassName='min-w-[5rem]'
-                                        onChange={setKey}
+                                        onChange={handleKeyChange}
                                         showSearch={false}
                                         options={['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']}
                                     />
@@ -127,7 +246,8 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                         size="icon"
                                         className="!w-8 !h-8 flex items-center justify-center ml-1"
                                         active={isPlayingScale}
-                                        title={isPlayingScale ? 'Stop scale' : 'Play scale'}
+                                        title={isPlayingScale ? 'Stop scale' : `Play ${currentKey} ${mode} scale`}
+                                        disabled={!scaleNotes || scaleNotes.length === 0}
                                     >
                                         {isPlayingScale ? (
                                             <PauseIcon className="w-6 h-6" />
@@ -150,7 +270,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                         className='w-[11rem]'
                                         buttonClassName='px-3 py-1.5 text-left font-medium text-xs h-10 flex items-center'
                                         menuClassName='min-w-[11rem]'
-                                        onChange={setMode}
+                                        onChange={handleModeChange}
                                         showSearch={true}
                                         options={modes}
                                     />
@@ -186,7 +306,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                         className='w-[6em]'
                                         buttonClassName='px-3 py-1.5 text-center font-medium text-xs h-10 flex items-center justify-center'
                                         menuClassName='min-w-[6rem]'
-                                        onChange={setKey}
+                                        onChange={handleKeyChange}
                                         showSearch={false}
                                         options={['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']}
                                     />
@@ -196,7 +316,8 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                         size="icon"
                                         className="!w-8 !h-8 flex items-center justify-center ml-1"
                                         active={isPlayingScale}
-                                        title={isPlayingScale ? 'Stop scale' : 'Play scale'}
+                                        title={isPlayingScale ? 'Stop scale' : `Play ${currentKey} ${mode} scale`}
+                                        disabled={!scaleNotes || scaleNotes.length === 0}
                                     >
                                         {isPlayingScale ? (
                                             <PauseIcon className="w-6 h-6" />
@@ -216,7 +337,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                         className='w-[14rem]'
                                         buttonClassName='px-3 py-1.5 text-left font-medium text-xs h-10 flex items-center'
                                         menuClassName='min-w-[14rem]'
-                                        onChange={setMode}
+                                        onChange={handleModeChange}
                                         showSearch={true}
                                         options={modes}
                                     />

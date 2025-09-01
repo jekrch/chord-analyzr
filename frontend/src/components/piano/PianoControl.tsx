@@ -5,56 +5,16 @@ import InstrumentListProvider from '../../piano/InstrumentListProvider';
 import PianoConfig from '../../piano/PianoConfig';
 import { SoundfontProvider } from '../../piano/SoundfontProvider';
 import { normalizeNoteName } from '../../util/NoteUtil';
-import { PianoSettings } from '../../util/urlStateEncoder';
+import { useMusicStore } from '../../stores/musicStore';
+import { usePianoStore } from '../../stores/pianoStore';
+import { usePlaybackStore } from '../../stores/playbackStore';
+import { usePatternStore } from '../../stores/patternStore';
 
 // Create the AudioContext ONCE, outside the component.
 // This ensures the same instance is reused across re-renders and prevents exceeding the browser limit.
 const audioContext = typeof window !== 'undefined' ? new (window.AudioContext || (window as any).webkitAudioContext)() : null;
 
 interface PianoProps {
-  activeNotes: { note: string; octave?: number }[];
-  normalizedScaleNotes: string[];
-  activeChordIndex: number | null;
-  addedChords: { name: string; notes: string; pattern: string[] }[]; 
-  currentlyActivePattern: string[]; 
-  globalPatternState: {
-    currentPattern: string[]; 
-    isPlaying: boolean;
-    bpm: number;
-    subdivision: number;
-    swing: number;
-    currentStep: number;
-    repeat: boolean;
-    lastChordChangeTime: number;
-    globalClockStartTime: number;
-  };
-  onPatternStateChange: (updates: Partial<{
-    currentPattern: string[];
-    isPlaying: boolean;
-    bpm: number;
-    subdivision: number;
-    swing: number;
-    currentStep: number;
-    repeat: boolean;
-    lastChordChangeTime: number;
-    globalClockStartTime: number;
-  }>) => void;
-  
-  // Piano settings props
-  pianoSettings: PianoSettings;
-  availableInstruments: string[];
-  onInstrumentChange: (instrumentName: string) => void;
-  onCutOffPreviousNotesChange: (cutOff: boolean) => void;
-  onEqChange: (eq: { bass: number; mid: number; treble: number }) => void;
-  onOctaveOffsetChange: (offset: number) => void;
-  onReverbLevelChange: (level: number) => void;
-  onNoteDurationChange: (duration: number) => void;
-  onVolumeChange: (volume: number) => void;
-  onChorusLevelChange: (level: number) => void;
-  onDelayLevelChange: (level: number) => void;
-  onAvailableInstrumentsChange: (instruments: string[]) => void;
-  
-  // New prop to hide the original config controls
   hideConfigControls?: boolean;
 }
 
@@ -62,27 +22,45 @@ export const startOctave = 4;
 export const endOctave = 7;
 
 const PianoControl: React.FC<PianoProps> = ({
-  activeNotes,
-  normalizedScaleNotes,
-  activeChordIndex,
-  addedChords,
-  currentlyActivePattern,
-  globalPatternState,
-  onPatternStateChange,
-  pianoSettings,
-  availableInstruments,
-  onInstrumentChange,
-  onCutOffPreviousNotesChange,
-  onEqChange,
-  onOctaveOffsetChange,
-  onReverbLevelChange,
-  onNoteDurationChange,
-  onVolumeChange,
-  onChorusLevelChange,
-  onDelayLevelChange,
-  onAvailableInstrumentsChange,
   hideConfigControls = false
 }) => {
+  // Direct store access
+  const musicStore = useMusicStore();
+  const pianoStore = usePianoStore();
+  const playbackStore = usePlaybackStore();
+  const patternStore = usePatternStore();
+
+  // Extract state from stores
+  const {
+    activeNotes,
+    activeChordIndex,
+    addedChords,
+  } = playbackStore;
+
+  const {
+    normalizedScaleNotes,
+  } = musicStore;
+
+  const {
+    currentlyActivePattern,
+    globalPatternState,
+  } = patternStore;
+
+  const {
+    pianoSettings,
+    availableInstruments,
+    setPianoInstrument,
+    setCutOffPreviousNotes,
+    setEq,
+    setOctaveOffset,
+    setReverbLevel,
+    setNoteDuration,
+    setVolume,
+    setChorusLevel,
+    setDelayLevel,
+    setAvailableInstruments,
+  } = pianoStore;
+
   const soundfontHostname = 'https://d1pzp51pvbm36p.cloudfront.net';
   const stopAllNotesRef = useRef<(() => void) | null>(null);
   const [activePianoNotes, setActivePianoNotes] = useState<number[]>([]);
@@ -366,7 +344,7 @@ const PianoControl: React.FC<PianoProps> = ({
                   // Notify parent component about available instruments
                   if (instrumentList && instrumentList.length > 0 && 
                       JSON.stringify(instrumentList) !== JSON.stringify(availableInstruments)) {
-                    onAvailableInstrumentsChange(instrumentList);
+                    setAvailableInstruments(instrumentList);
                   }
                   
                   return (
@@ -377,22 +355,22 @@ const PianoControl: React.FC<PianoProps> = ({
                       keyboardShortcuts={keyboardShortcuts}
                       // Pass piano settings props
                       cutOffPreviousNotes={pianoSettings.cutOffPreviousNotes}
-                      setCutOffPreviousNotes={onCutOffPreviousNotesChange}
+                      setCutOffPreviousNotes={setCutOffPreviousNotes}
                       eq={pianoSettings.eq}
-                      setEq={onEqChange}
+                      setEq={setEq}
                       octaveOffset={pianoSettings.octaveOffset}
-                      setOctaveOffset={onOctaveOffsetChange}
+                      setOctaveOffset={setOctaveOffset}
                       reverbLevel={pianoSettings.reverbLevel}
-                      setReverbLevel={onReverbLevelChange}
+                      setReverbLevel={setReverbLevel}
                       noteDuration={pianoSettings.noteDuration}
-                      setNoteDuration={onNoteDurationChange}
+                      setNoteDuration={setNoteDuration}
                       volume={pianoSettings.volume}
-                      setVolume={onVolumeChange}
+                      setVolume={setVolume}
                       chorusLevel={pianoSettings.chorusLevel}
-                      setChorusLevel={onChorusLevelChange}
+                      setChorusLevel={setChorusLevel}
                       delayLevel={pianoSettings.delayLevel}
-                      setDelayLevel={onDelayLevelChange}
-                      onInstrumentChange={onInstrumentChange}
+                      setDelayLevel={setDelayLevel}
+                      onInstrumentChange={setPianoInstrument}
                     />
                   )
                 }}
@@ -407,7 +385,7 @@ const PianoControl: React.FC<PianoProps> = ({
               // Notify parent component about available instruments
               if (instrumentList && instrumentList.length > 0 && 
                   JSON.stringify(instrumentList) !== JSON.stringify(availableInstruments)) {
-                onAvailableInstrumentsChange(instrumentList);
+                setAvailableInstruments(instrumentList);
               }
               return <></>;
             }}

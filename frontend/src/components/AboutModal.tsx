@@ -4,9 +4,15 @@ import Modal from './Modal';
 interface AboutModalProps {
     isOpen: boolean;
     onClose: () => void;
+    onOpenHelp: () => void; // New prop for opening help modal
 }
 
-const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
+const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose, onOpenHelp }) => {
+    const handleHelpClick = () => {
+        onClose(); // Close about modal first
+        onOpenHelp(); // Then open help modal
+    };
+
     return (
         <Modal
             isOpen={isOpen}
@@ -25,10 +31,17 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
                     </div>
                     <div className="p-4 text-sm leading-relaxed space-y-3 text-slate-300 text-left">
                         <p>
-                            Modal Chord Buildr is a music theory app that allows you to explore and experiment with chords, modes, and scales in real-time. Build chord progressions, create rhythmic sequences, and hear how different musical elements work together.
+                            Modal Chord Buildr **modal.chordbuildr.com** is a comprehensive web-based music composition and performance tool built with React. The application provides an intuitive interface for exploring musical scales, building chord progressions, and creating rhythmic patterns.
                         </p>
                         <p>
-                            The application features a virtual piano, pattern sequencer, chord explorer, and comprehensive controls for crafting musical sequences. Whether you're learning music theory, composing, or just experimenting with sounds, Modal Chord Buildr provides an intuitive interface for musical exploration.
+                            For more details on how to use this app, please refer to the{' '}
+                            <button 
+                                onClick={handleHelpClick}
+                                className="font-semibold text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors cursor-pointer"
+                            >
+                                Help & Guide
+                            </button>{' '}
+                            documentation.
                         </p>
                     </div>
                 </div>

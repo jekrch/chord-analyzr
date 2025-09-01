@@ -46,6 +46,10 @@ const HeaderNav: React.FC<HeaderNavProps> = ({
         setIsDropdownOpen(false);
     };
 
+    const handleOpenHelp = () => {
+        setShowHelpModal(true);
+    };
+
     return (
         <>
             <div className="bg-[#3d434f] border-b border-gray-600">
@@ -150,6 +154,7 @@ const HeaderNav: React.FC<HeaderNavProps> = ({
             <AboutModal 
                 isOpen={showAboutModal}
                 onClose={() => setShowAboutModal(false)}
+                onOpenHelp={handleOpenHelp}
             />
             <HelpModal 
                 isOpen={showHelpModal}

@@ -4,7 +4,7 @@
 
 A Postgres driven solution for analyzing chord progressions and generating chord suggestions. 
 
-<img width="420" alt="image" src="https://github.com/jekrch/chord-analyzr/assets/8173930/4af7243c-bec5-4ff5-a187-f644cf8a5fd0">
+<img width="420" alt="image" src="https://github.com/user-attachments/assets/6822f515-e7ea-4fe6-b927-c9a64a8b2fb2" />
 
 <hr>
 <h3>Setup</h3> 

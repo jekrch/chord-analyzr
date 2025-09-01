@@ -115,11 +115,48 @@ Returns:
 
 ## Frontend
 
-Initial progress is being made to build a spring-boot API and react frontend. Currently users can enter a key and mode, and see all chords that fall within the scale. Clicking on the chord play button plays displays it on a piano component. A chord can be added to a progression which maps to the number keys on the users keyboard. 
+**modal.chordbuildr.com** is a comprehensive web-based music composition and performance tool built with React. The application provides an intuitive interface for exploring musical scales, building chord progressions, and creating rhythmic patterns.
 
-<p align="center">
-     
-<img width="371" alt="image" src="https://github.com/jekrch/chord-analyzr/assets/8173930/a9c20d02-187e-4422-b634-cb174b27d1a0">
+### Core Features
 
-</p>
+**Chord Explorer & Theory Engine**
+- Browse chords that fit any selected key and mode combination
+- Search and filter chords by root note or chord type  
+- Real-time chord preview with visual piano feedback
+- Advanced chord editing with custom voicings and slash chord support
 
+**Pattern Sequencer**
+- Create rhythmic patterns for chord progressions
+- Customizable pattern length and timing controls
+- Multiple pattern presets and BPM adjustment
+- Visual step sequencer with rest and octave notation
+
+**Live Mode**
+- Full-screen chord buttons optimized for live performance
+- Keyboard shortcuts (1-9) for instant chord switching
+- Touch-friendly interface for mobile devices
+- Real-time pattern playback during performance
+
+**Interactive Piano**
+- Visual scale and chord tone highlighting
+- Click-to-play individual notes
+- Dynamic feedback based on current key/mode selection
+
+**Professional Audio Engine**
+- Multiple instrument voices and sound synthesis
+- Comprehensive effects processing (reverb, chorus, delay)
+- 3-band equalizer for sound shaping
+- Adjustable note duration and octave controls
+
+### Data Architecture
+
+The frontend leverages the PostgreSQL-driven backend that provides:
+- **Comprehensive chord database** with all permutations of root notes and chord types
+- **Modal scale analysis** across all keys and modes (Ionian, Dorian, Phrygian, etc.)
+- **Harmonic relationship mapping** that identifies which chords naturally fit within each scale
+
+Data is served through two pathways:
+1. **Live API** via Spring Boot backend for dynamic queries
+2. **Static JSON files** generated from database views for optimal performance
+
+The static data generator extracts chord relationships from views like `mode_scale_chord_relation_view`, ensuring the frontend has instant access to music theory data without database latency during performance.

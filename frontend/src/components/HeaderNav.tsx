@@ -2,27 +2,22 @@ import React, { useState, useRef, useEffect } from 'react';
 import { InformationCircleIcon, QuestionMarkCircleIcon, EllipsisVerticalIcon } from '@heroicons/react/20/solid';
 import AboutModal from './AboutModal';
 import HelpModal from './HelpModal';
+import { useMusicStore } from '../stores/musicStore';
 
-interface HeaderNavProps {
-    globalPatternState: {
-        isPlaying: boolean;
-    };
-    isLiveMode: boolean;
-    keySignature: string;
-    mode: string;
-}
 
-const HeaderNav: React.FC<HeaderNavProps> = ({
-    globalPatternState,
-    isLiveMode,
-    keySignature,
-    mode
-}) => {
+const HeaderNav: React.FC = () => {
     const [showAboutModal, setShowAboutModal] = useState(false);
     const [showHelpModal, setShowHelpModal] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
+
+    const musicStore = useMusicStore();
+
+    const { 
+        key,
+        mode
+    } = musicStore;
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -100,7 +95,7 @@ const HeaderNav: React.FC<HeaderNavProps> = ({
                             {/* Key/Mode Display - Hidden on small screens */}
                             <div className="hidden sm:flex items-center space-x-2 text-sm">
                                 <div className="px-2 py-0.5 bg-[#444b59] border border-gray-600 rounded text-slate-300 font-mono">
-                                    {keySignature}
+                                    {key}
                                 </div>
                                 <div className="w-px h-4 bg-slate-600"></div>
                                 <div className="px-2 py-1 bg-[#444b59] border border-gray-600 rounded text-slate-300 text-xs font-mono">

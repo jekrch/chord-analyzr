@@ -1,17 +1,14 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { PlayCircleIcon, PlusCircleIcon, MagnifyingGlassIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/20/solid';
 import { ModeScaleChordDto } from '../api';
+import { useMusicStore } from '../stores/musicStore';
 
 interface ChordTableProps {
-  chords: ModeScaleChordDto[] | undefined;
-  loading: boolean;
   onChordClick: (chordNoteNames: string, index?: number, chordName?: string) => void;
   addChordClick?: (chordName: string, chordNotes: string) => void;
 }
 
-const ChordTable: React.FC<ChordTableProps> = ({ 
-  chords, 
-  loading, 
+const ChordTable: React.FC<ChordTableProps> = ({  
   onChordClick, 
   addChordClick 
 }) => {
@@ -22,6 +19,13 @@ const ChordTable: React.FC<ChordTableProps> = ({
   const [addingChords, setAddingChords] = useState<Set<number>>(new Set());
   const [currentColumns, setCurrentColumns] = useState<number>(1);
 
+  const musicStore = useMusicStore();
+
+  const {
+    chords,
+    loadingChords,
+  } = musicStore;
+  
   // Track screen size to determine number of columns
   useEffect(() => {
     const updateColumns = () => {
@@ -275,7 +279,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
 
         {/* Chord Cards */}
         <div className="flex-1">
-          {loading ? (
+          {loadingChords ? (
             <div className="flex justify-center items-center h-64">
               <div className="flex flex-col items-center space-y-3">
                 <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-blue-500" />

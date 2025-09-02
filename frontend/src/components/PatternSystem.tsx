@@ -109,18 +109,12 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
   const musicStore = useMusicStore();
   const playbackStore = usePlaybackStore();
   const patternStore = usePatternStore();
-  const uiStore = useUIStore();
 
   // Extract state from stores
   const {
-    activeNotes,
     addedChords,
     activeChordIndex,
   } = playbackStore;
-
-  const {
-    normalizedScaleNotes,
-  } = musicStore;
 
   const {
     currentlyActivePattern,

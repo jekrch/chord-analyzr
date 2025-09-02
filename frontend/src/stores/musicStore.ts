@@ -12,12 +12,13 @@ interface MusicState {
     modes: string[];
     loadingChords: boolean;
     normalizedScaleNotes: string[];
-    
+
     // Actions
     setKey: (key: string) => void;
     setMode: (mode: string) => void;
     setModes: (modes: string[]) => void;
     fetchMusicData: (key: string, mode: string) => Promise<void>;
+    setKeyAndMode: (key: string, mode: string) => void;
     initialize: () => Promise<void>;
 }
 
@@ -51,26 +52,31 @@ export const useMusicStore = create<MusicState>((set, get) => ({
         }
     },
 
+    setKeyAndMode: (key: string, mode: string) => {
+        set({ key, mode });
+        get().fetchMusicData(key, mode);
+    },
+
     fetchMusicData: async (key: string, mode: string) => {
         if (!key || !mode) return;
-        
+
         set({ loadingChords: true });
-        
+
         try {
             const [chordsData, scaleData] = await Promise.all([
                 dataService.getModeKeyChords(key, mode),
                 dataService.getScaleNotes(key, mode)
             ]);
-            
+
             const normalizedScaleNotes = scaleData
                 .map(scaleNote => scaleNote.noteName ? normalizeNoteName(scaleNote.noteName) : null)
                 .filter(Boolean) as string[];
-            
-            set({ 
-                chords: chordsData, 
+
+            set({
+                chords: chordsData,
                 scaleNotes: scaleData,
                 normalizedScaleNotes,
-                loadingChords: false 
+                loadingChords: false
             });
         } catch (err) {
             console.error('Error fetching music data:', err);

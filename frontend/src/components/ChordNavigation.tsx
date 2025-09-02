@@ -12,11 +12,7 @@ import { getMidiNotes } from '../util/ChordUtil';
 const START_OCTAVE = 4;
 const END_OCTAVE = 7;
 
-interface ChordNavigationProps {
-  // No props needed now - everything comes from stores
-}
-
-const ChordNavigation: React.FC<ChordNavigationProps> = () => {
+const ChordNavigation: React.FC = () => {
     // Direct store access
     const musicStore = useMusicStore();
     const playbackStore = usePlaybackStore();

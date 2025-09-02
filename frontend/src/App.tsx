@@ -13,16 +13,12 @@ function App() {
     const {
         // State
         chords,
-        key,
-        mode,
         loadingChords,
         isLiveMode,
-        globalPatternState,
         
         // Handlers
         handleChordClick,
         addChordClick,
-        getCurrentPattern,
     } = useIntegratedAppLogic();
 
     const silentAudioRef = useRef<HTMLAudioElement>(null);
@@ -62,12 +58,7 @@ function App() {
                 <source src="/silence.mp3" type="audio/mp3" />
             </audio>
 
-            <HeaderNav 
-                globalPatternState={globalPatternState}
-                isLiveMode={isLiveMode}
-                keySignature={key}
-                mode={mode}
-            />
+            <HeaderNav />
 
             <div className={`mt-2 flex flex-col items-center justify-start text-[calc(10px+2vmin)] text-white p-4 space-y-6 pb-24 ${isLiveMode ? 'pointer-events-none opacity-30' : ''}`}>
 
@@ -83,8 +74,6 @@ function App() {
 
                 <div className="w-full max-w-7xl mb-20 mt-2">
                     <ChordTable
-                        chords={chords?.filter(c => !!c.chordName && !!c.chordNoteNames) as any}
-                        loading={loadingChords}
                         onChordClick={handleChordClick}
                         addChordClick={addChordClick}
                     />

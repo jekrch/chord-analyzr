@@ -23,6 +23,20 @@ interface PianoControlPanelProps {
     onInstrumentChange?: (instrument: string) => void;
 }
 
+// Helper function to convert note name to MIDI number for sorting
+const getNoteValueFromNoteName = (noteName: string, octave: number = 4): number => {
+    const noteMap: { [key: string]: number } = {
+        'C': 0, 'C#': 1, 'Db': 1,
+        'D': 2, 'D#': 3, 'Eb': 3,
+        'E': 4,
+        'F': 5, 'F#': 6, 'Gb': 6,
+        'G': 7, 'G#': 8, 'Ab': 8,
+        'A': 9, 'A#': 10, 'Bb': 10,
+        'B': 11
+    };
+    return (octave + 1) * 12 + (noteMap[noteName] ?? 0);
+};
+
 const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
     className = "",
     onKeyChange,
@@ -34,10 +48,10 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
     const mode = useMusicStore(state => state.mode);
     const modes = useMusicStore(state => state.modes);
     const scaleNotes = useMusicStore(state => state.scaleNotes);
-    
+
     const pianoSettings = usePianoStore(state => state.pianoSettings);
     const availableInstruments = usePianoStore(state => state.availableInstruments);
-    
+
     const isPlayingScale = usePlaybackStore(state => state.isPlayingScale);
     const globalPatternState = usePatternStore(state => state.globalPatternState);
 
@@ -54,13 +68,13 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
         setChorusLevel,
         setDelayLevel
     } = usePianoStore();
-    
+
     // Get scale playback toggle from playback store
     const { setIsPlayingScale, clearScalePlaybackTimeouts, setActiveNotes } = usePlaybackStore();
 
     // Local state for piano settings panel
     const [settingsOpen, setSettingsOpen] = useState(false);
-    
+
     // Refs for managing scale playback
     const scaleTimeoutsRef = useRef<NodeJS.Timeout[]>([]);
     const scalePlaybackRef = useRef<boolean>(false);
@@ -108,7 +122,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
         return quarterNoteDuration / 2;
     }, []);
 
-    // Play scale with proper timing
+    // Play scale with proper timing and correct order
     const playScale = useCallback(() => {
         if (!scaleNotes || scaleNotes.length === 0) {
             console.warn('No scale notes available to play');
@@ -117,44 +131,103 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
 
         // Clear any existing timeouts
         clearScaleTimeouts();
-        
+
         // Use BPM from pattern store, fallback to 120
         const bpm = globalPatternState?.bpm || 120;
         const noteDuration = calculateNoteDuration(bpm);
-        
+
         scalePlaybackRef.current = true;
         setIsPlayingScale(true);
 
-        // Create note objects for the scale (starting from octave 4)
-        const scaleNotesForPlayback = scaleNotes.map((scaleNote) => ({
-            note: scaleNote.noteName || 'C',
-            octave: 4
-        }));
+        // Create note objects, add the final root note, and sort them by pitch to ensure ascending order
+        const scaleNotesWithFinalNote = [...scaleNotes];
 
-        // Add the root note an octave higher to complete the scale
+        // Add the root note to complete the scale (it will go through the same octave logic)
         if (scaleNotes.length > 0) {
-            scaleNotesForPlayback.push({
-                note: scaleNotes[0].noteName || 'C',
-                octave: 5
+            const rootNote = scaleNotes[0];
+            scaleNotesWithFinalNote.push({
+                ...rootNote,
+                // Give it a higher sort value to ensure it comes last
+                seqNote: rootNote.seqNote ? rootNote.seqNote + 12 : undefined
             });
+        }
+
+        const sortedScaleNotes = scaleNotesWithFinalNote
+            .map((scaleNote) => {
+                const noteName = scaleNote.noteName || 'C';
+                const octave = 4;
+
+                // Use MIDI number if available, otherwise calculate from note name
+                const sortValue = scaleNote.seqNote
+                    ? scaleNote.seqNote
+                    : getNoteValueFromNoteName(noteName, octave);
+
+                return {
+                    note: noteName,
+                    octave: octave,
+                    sortValue: sortValue
+                };
+            })
+            .sort((a, b) => a.sortValue - b.sortValue); // Sort by MIDI/pitch value to ensure ascending order
+
+        // Helper function to get note index in chromatic scale (C=0, C#=1, ..., B=11)
+        const getNoteIndex = (noteName: string): number => {
+            const noteMap: { [key: string]: number } = {
+                'C': 0, 'C#': 1, 'Db': 1,
+                'D': 2, 'D#': 3, 'Eb': 3,
+                'E': 4,
+                'F': 5, 'F#': 6, 'Gb': 6,
+                'G': 7, 'G#': 8, 'Ab': 8,
+                'A': 9, 'A#': 10, 'Bb': 10,
+                'B': 11
+            };
+            return noteMap[noteName] ?? 0;
+        };
+
+        // Assign octaves based on B->C crossings
+        const scaleNotesForPlayback = [];
+        let currentOctave = 4;
+        let previousNoteIndex = -1;
+
+        for (let i = 0; i < sortedScaleNotes.length; i++) {
+            const currentNote = sortedScaleNotes[i];
+            const currentNoteIndex = getNoteIndex(currentNote.note);
+
+            // Check if we crossed from B to C or any lower note (indicating octave boundary)
+            if (previousNoteIndex !== -1 && previousNoteIndex === 11 && currentNoteIndex <= 11 && currentNoteIndex < previousNoteIndex) {
+                currentOctave++;
+            }
+            // Also check for general octave crossing (when current note index is lower than previous, indicating wrap-around)
+            else if (previousNoteIndex !== -1 && currentNoteIndex < previousNoteIndex && !(previousNoteIndex === 11 && currentNoteIndex === 0)) {
+                // This handles cases where we might have multiple octave crossings within the scale
+                currentOctave++;
+            }
+
+            scaleNotesForPlayback.push({
+                note: currentNote.note,
+                octave: currentOctave
+            });
+
+            previousNoteIndex = currentNoteIndex;
         }
 
         // Play each note in sequence
         scaleNotesForPlayback.forEach((noteObj, index) => {
             const timeout = setTimeout(() => {
                 if (!scalePlaybackRef.current) return;
-                
+
+                console.log(noteObj)
                 // Set the active note
                 setActiveNotes([noteObj]);
-                
+
                 // Clear the note after a portion of the duration
                 const noteOffTimeout = setTimeout(() => {
                     if (!scalePlaybackRef.current) return;
                     setActiveNotes([]);
                 }, noteDuration * 0.8); // Note off after 80% of duration
-                
+
                 scaleTimeoutsRef.current.push(noteOffTimeout);
-                
+
                 // If this is the last note, end the scale playback
                 if (index === scaleNotesForPlayback.length - 1) {
                     const endTimeout = setTimeout(() => {
@@ -165,7 +238,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                     scaleTimeoutsRef.current.push(endTimeout);
                 }
             }, index * noteDuration);
-            
+
             scaleTimeoutsRef.current.push(timeout);
         });
     }, [scaleNotes, globalPatternState, setIsPlayingScale, setActiveNotes, clearScaleTimeouts, calculateNoteDuration]);

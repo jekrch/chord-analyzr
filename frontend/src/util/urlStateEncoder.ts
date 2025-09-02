@@ -71,10 +71,10 @@ export const encodeState = (
     availableInstruments: string[],
     chords: ModeScaleChordDto[] | undefined
 ): string => {
-    console.log('Encoding state - addedChords:', addedChords.length, 'chords available:', chords?.length);
+    //console.log('Encoding state - addedChords:', addedChords.length, 'chords available:', chords?.length);
     
     if (!chords?.length || !availableKeys.length || !availableModes.length) {
-        console.log('Skipping encode due to missing data');
+        //console.log('Skipping encode due to missing data');
         return '';
     }
     
@@ -174,7 +174,7 @@ export const encodeState = (
         
         // Final format: version_key_mode_pattern_timing_piano_chords
         const result = `${version}_${k}_${m}_${p}_${timing}_${piano}_${chordsStr}`;
-        console.log('Encoded state result:', result);
+        //console.log('Encoded state result:', result);
         return result;
         
     } catch (error) {
@@ -203,7 +203,7 @@ export const decodeState = (
     
     try {
         const parts = state.split('_');
-        console.log('State parts:', parts);
+        //console.log('State parts:', parts);
         
         // Check version and handle v2, v3, v4, v5, v6, and v7
         const version = parts[0];
@@ -275,7 +275,7 @@ export const decodeState = (
         
         if (chordsPart) {
             const chordEntries = chordsPart.split('|').filter(Boolean);
-            console.log('Chord entries to decode:', chordEntries);
+            //console.log('Chord entries to decode:', chordEntries);
             
             for (const entry of chordEntries) {
                 if (version === 'v5' || version === 'v6' || version === 'v7') {
@@ -324,7 +324,7 @@ export const decodeState = (
                         };
 
                         addedChords.push(addedChord);
-                        console.log('Successfully decoded chord:', name);
+                        //console.log('Successfully decoded chord:', name);
                     } else {
                         console.warn('Invalid chord format:', entry);
                     }
@@ -370,7 +370,7 @@ export const decodeState = (
                             originalMode: mode,
                             originalNotes: matchingChord.chordNoteNames
                         });
-                        console.log('Successfully decoded chord:', matchingChord.chordName);
+                        //console.log('Successfully decoded chord:', matchingChord.chordName);
                     } else {
                         console.warn('Could not find chord at index/name:', (version === 'v3' || version === 'v4') ? chordIndex : entry);
                     }
@@ -391,8 +391,8 @@ export const decodeState = (
             pianoSettings
         };
         
-        console.log('Decoded state result:', result);
-        console.log('Decoded addedChords:', addedChords.length);
+        //console.log('Decoded state result:', result);
+        //console.log('Decoded addedChords:', addedChords.length);
         return result;
         
     } catch (error) {
@@ -429,7 +429,7 @@ export const saveStateToUrl = (encodedState: string, paramName: string = 's'): v
         const url = new URL(window.location.href);
         url.searchParams.set(paramName, encodedState);
         window.history.replaceState({}, '', url.toString());
-        console.log('URL updated with state:', encodedState);
+        //console.log('URL updated with state:', encodedState);
     }
 };
 

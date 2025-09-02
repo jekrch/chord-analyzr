@@ -31,7 +31,7 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose, onOpenHelp }) 
                     </div>
                     <div className="p-4 text-sm leading-relaxed space-y-3 text-slate-300 text-left">
                         <p>
-                            Modal Chord Buildr is a music learning, composition, and performance tool built with React. The application provides an intuitive interface for exploring musical scales and building chord progressions, while also providing some synth and sequencer functionality.
+                            Modal Chord Buildr is a music learning, composition, and performance tool built with React. The app provides an intuitive interface for exploring musical scales and building chord progressions, while also offering basic synth and sequencer functionality.
                         </p>
                         <p>
                             For more details on how to use this app, please refer to the{' '}

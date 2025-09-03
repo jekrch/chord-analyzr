@@ -26,6 +26,8 @@ const Dropdown: React.FC<DropdownProps> = ({
   const [filter, setFilter] = useState('');
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const selectedOptionRef = useRef<HTMLButtonElement>(null);
   const [menuPosition, setMenuPosition] = useState({
     top: 0, 
     left: 0, 
@@ -85,6 +87,16 @@ const Dropdown: React.FC<DropdownProps> = ({
       document.removeEventListener('keydown', handleEscape);
     };
   }, [isOpen]);
+
+  // Scroll to selected option when menu opens
+  useEffect(() => {
+    if (isOpen && isPositioned && selectedOptionRef.current && scrollContainerRef.current) {
+      selectedOptionRef.current.scrollIntoView({
+        block: 'nearest',
+        behavior: 'instant'
+      });
+    }
+  }, [isOpen, isPositioned]);
 
   const handleToggle = () => {
     if (!isOpen) {
@@ -179,6 +191,7 @@ const Dropdown: React.FC<DropdownProps> = ({
               )}
               
               <div 
+                ref={scrollContainerRef}
                 className={`py-1.5 overflow-y-auto ${menuClassName}`}
                 style={{ maxHeight: showSearch ? `${menuPosition.maxHeight - 60}px` : `${menuPosition.maxHeight}px` }}
               >
@@ -186,6 +199,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                   filteredOptions.map((option, index) => (
                     <button
                       key={index}
+                      ref={value === option ? selectedOptionRef : null}
                       onClick={() => handleSelect(option)}
                       className={`
                         relative block w-full px-4 py-2.5 text-left text-sm font-medium 

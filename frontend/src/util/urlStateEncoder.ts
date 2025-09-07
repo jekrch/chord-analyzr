@@ -323,6 +323,9 @@ export const decodeState = (
                             originalNotes: notes // Store original notes
                         };
 
+                        //console.log('originalKey:', addedChord.originalKey, 'originalMode:', addedChord.originalMode);
+                        //console.log('Adding chord:', addedChord)
+
                         addedChords.push(addedChord);
                         //console.log('Successfully decoded chord:', name);
                     } else {

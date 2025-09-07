@@ -12,8 +12,6 @@ import SequenceStatusView from './components/SequenceStatusView';
 function App() {
     const {
         // State
-        chords,
-        loadingChords,
         isLiveMode,
         
         // Handlers

@@ -78,7 +78,9 @@ export const useChordEditor = ({
         
         if (chord.originalKey && chord.originalMode && onFetchOriginalChord) {
             try {
+                console.log('!!!Fetching original chord for', baseChordName, 'in', chord.originalKey, chord.originalMode);
                 const originalNotes = await onFetchOriginalChord(baseChordName, chord.originalKey, chord.originalMode);
+                console.log(originalNotes)
                 if (originalNotes) {
                     return originalNotes;
                 }
@@ -233,10 +235,10 @@ export const useChordEditor = ({
         if (editingChord) {
             try {
                 //console.log('Reverting to original chord notes');
-                //console.log('Current editing chord:', editingChord);
+                console.log('Current editing chord:', editingChord);
                 const libraryOriginalNotes = await findOriginalChordFromLibrary(editingChord);
                 const originalNotes = libraryOriginalNotes || editingChord.originalNotes || originalChordNotes;
-                //console.log('Reverting to original notes:', originalNotes);
+                console.log('Reverting to original notes:', originalNotes);
                 // Ensure we're setting properly formatted note names, not MIDI numbers
                 if (originalNotes) {
                     // Validate that originalNotes contains note names and not MIDI numbers

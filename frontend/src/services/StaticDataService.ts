@@ -172,7 +172,7 @@ class StaticDataService {
     }
 
     try {
-      console.log('Loading all distinct chords from static data...');
+      //console.log('Loading all distinct chords from static data...');
       
       // Get the index to find all available modes
       const index = await this.loadIndex();
@@ -209,7 +209,7 @@ class StaticDataService {
       // Deduplicate chords
       this.distinctChordsCache = this.deduplicateChords(allChords);
       
-      console.log(`Loaded ${allChords.length} total chords, ${this.distinctChordsCache.length} distinct chords`);
+      //console.log(`Loaded ${allChords.length} total chords, ${this.distinctChordsCache.length} distinct chords`);
       
       return this.distinctChordsCache;
     } catch (error) {

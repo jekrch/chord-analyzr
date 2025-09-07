@@ -11,6 +11,7 @@ import {
 } from '../api';
 import { staticDataService } from './StaticDataService';
 import { getEnvBoolean, getEnvString } from '../util/env';
+import { AVAILABLE_KEYS } from '../hooks/useIntegratedAppLogic';
 
 export interface DataServiceConfig {
   useStaticData: boolean;
@@ -54,10 +55,10 @@ class DataService {
    */
   async getModeKeyChords(key: string, mode: string): Promise<ModeScaleChordDto[]> {
     if (this.config.useStaticData) {
-      console.log(`Loading chords from static data: ${mode} in ${key}`);
+      //console.log(`Loading chords from static data: ${mode} in ${key}`);
       return staticDataService.getModeKeyChords(key, mode);
     } else {
-      console.log(`Loading chords from API: ${mode} in ${key}`);
+      //console.log(`Loading chords from API: ${mode} in ${key}`);
       return ChordControllerService.getModeKeyChords(key, mode);
     }
   }
@@ -67,10 +68,10 @@ class DataService {
    */
   async getScaleNotes(key: string, mode: string): Promise<ScaleNoteDto[]> {
     if (this.config.useStaticData) {
-      console.log(`Loading scale notes from static data: ${mode} in ${key}`);
+      //console.log(`Loading scale notes from static data: ${mode} in ${key}`);
       return staticDataService.getScaleNotes(key, mode);
     } else {
-      console.log(`Loading scale notes from API: ${mode} in ${key}`);
+      //console.log(`Loading scale notes from API: ${mode} in ${key}`);
       return ScaleControllerService.getScaleNotes(key, mode);
     }
   }
@@ -86,7 +87,7 @@ class DataService {
       console.log('Loading all distinct chords from API');
 
       const modes = await ModeControllerService.getModes();
-      const allKeys = ['C', 'C#', '', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']; // Define your available keys
+      const allKeys = AVAILABLE_KEYS
       
       const allChords: ModeScaleChordDto[] = [];
       

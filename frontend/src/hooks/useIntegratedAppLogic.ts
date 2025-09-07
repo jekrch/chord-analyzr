@@ -15,7 +15,7 @@ import {
 
 const START_OCTAVE = 4;
 const END_OCTAVE = 7;
-const AVAILABLE_KEYS = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+export const AVAILABLE_KEYS = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Gb', 'G#', 'A', 'Ab', 'A#', 'B'];
 
 // Helper functions
 const shouldPlayAtCurrentStep = (pattern: string[], stepIndex: number): boolean => {
@@ -189,13 +189,14 @@ export const useIntegratedAppLogic = () => {
         }
     }, [uiStore.isDeleteMode, patternStore.globalPatternState.isPlaying]);
 
-    const addChordClick = useCallback((chordName: string, chordNotes: string) => {
+    const addChordClick = useCallback((chordName: string, chordNotes: string, key: string, mode: string) => {
+        //console.log('Adding chord:', { chordName, chordNotes, key, mode })
         playbackStore.addChord(
             chordName,
             chordNotes,
             patternStore.currentlyActivePattern,
-            musicStore.key,
-            musicStore.mode
+            key,
+            mode
         );
     }, [patternStore.currentlyActivePattern, musicStore.key, musicStore.mode]);
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ModeControllerService } from "../api";
+import { ModeControllerService, ModeDto } from "../api";
 import { dataService } from "../services/DataService";
 
 export function useModes() {
@@ -10,6 +10,8 @@ export function useModes() {
       const fetchModes = async () => {
         try {
           const response = await dataService.getModes();
+          //console.log('Fetched modes:', response);
+          //setModes(response.sort((a: ModeDto, b: ModeDto) => a.id! - b.id!).map(m => m.name!));
           setModes(response.map(m => m.name!));
         } catch (err) {
           setError(err as any);

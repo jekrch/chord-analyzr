@@ -5,7 +5,7 @@ import { useMusicStore } from '../stores/musicStore';
 
 interface ChordTableProps {
   onChordClick: (chordNoteNames: string, index?: number, chordName?: string) => void;
-  addChordClick?: (chordName: string, chordNotes: string) => void;
+  addChordClick?: (chordName: string, chordNotes: string, key: string, mode: string) => void;
 }
 
 const ChordTable: React.FC<ChordTableProps> = ({  
@@ -171,13 +171,16 @@ const ChordTable: React.FC<ChordTableProps> = ({
     }, 800);
   };
 
-  const handleChordAdd = (index: number, chordName: string, chordNotes: string) => {
+  const handleChordAdd = (index: number, chordName: string, chordNotes: string, key: string, modeId: number) => {
     // Trigger add animation
     setAddingChords(prev => new Set(prev).add(index));
     
+    const mode = musicStore.modes[modeId - 1];
+
     // Call the original function
-    addChordClick?.(chordName, chordNotes);
+    addChordClick?.(chordName, chordNotes, key, mode);
     
+    //console.log(`Adding chord: ${chordName} with notes: ${chordNotes} in key: ${key} mode: ${modeId} ${mode}`);
     // Remove animation after duration
     setTimeout(() => {
       setAddingChords(prev => {
@@ -377,7 +380,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleChordAdd(index, chord.chordName!, chord.chordNoteNames!);
+                              handleChordAdd(index, chord.chordName!, chord.chordNoteNames!, chord.keyName!, chord.modeId!);
                             }}
                             className={`p-1 sm:p-2 rounded-md transition-colors ${
                               isAdding 

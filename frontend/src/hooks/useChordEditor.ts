@@ -30,8 +30,9 @@ const notesToString = (notes: string[]): string => {
 const isValidNoteName = (note: string): boolean => {
     if (!note.trim()) return true; // Empty is valid (no slash note)
     
-    // Valid note pattern: A-G (case insensitive) + optional sharp/flat + optional octave number
-    const notePattern = /^[a-gA-G][#b]?(\d+)?$/;
+    // Valid note pattern: A-G (case insensitive) + optional double/single sharp/flat + optional octave number
+    // Supports: C, C#, C##, Cb, Cbb, C4, C#4, C##4, Cb4, Cbb4, etc.
+    const notePattern = /^[a-gA-G](##|#|bb|b)?(\d+)?$/;
     return notePattern.test(note.trim());
 };
 
@@ -43,9 +44,9 @@ const formatNoteName = (note: string): string => {
         return trimmed; // Return as-is if invalid, let validation handle it
     }
     
-    const match = trimmed.match(/^([a-gA-G])([#b]?)(\d*)$/);
+    const match = trimmed.match(/^([a-gA-G])(##|#|bb|b)?(\d*)$/);
     if (match) {
-        const [, noteLetter, accidental, octave] = match;
+        const [, noteLetter, accidental = '', octave] = match;
         const formattedNote = noteLetter.toUpperCase() + accidental.toLowerCase();
         return formattedNote + octave;
     }
@@ -66,7 +67,7 @@ export const useChordEditor = ({
     const [slashNoteError, setSlashNoteError] = useState<string>('');
 
     const findOriginalChordFromLibrary = async (chord: AddedChord): Promise<string | null> => {
-        const baseChordName = chord.name.replace(/\/[A-G][#b]?\d*/, '');
+        const baseChordName = chord.name.replace(/\/[A-G](##|#|bb|b)?\d*/, '');
         
         if (chords) {
             const currentChord = chords.find(c => c.chordName === baseChordName);
@@ -78,9 +79,9 @@ export const useChordEditor = ({
         
         if (chord.originalKey && chord.originalMode && onFetchOriginalChord) {
             try {
-                console.log('!!!Fetching original chord for', baseChordName, 'in', chord.originalKey, chord.originalMode);
+                //console.log('!!!Fetching original chord for', baseChordName, 'in', chord.originalKey, chord.originalMode);
                 const originalNotes = await onFetchOriginalChord(baseChordName, chord.originalKey, chord.originalMode);
-                console.log(originalNotes)
+                //console.log('!!!Fetched original notes from props:', originalNotes);
                 if (originalNotes) {
                     return originalNotes;
                 }
@@ -125,7 +126,8 @@ export const useChordEditor = ({
             setOriginalChordNotes(chord.originalNotes || chord.notes);
         }
         
-        const slashMatch = chord.name.match(/\/([A-G][#b]?\d*)/);
+        const slashMatch = chord.name.match(/\/([A-G](##|#|bb|b)?\d*)/);
+
         if (slashMatch) {
             setSlashNote(slashMatch[1]);
         } else {
@@ -140,7 +142,7 @@ export const useChordEditor = ({
                 return;
             }
 
-            let updatedName = editingChord.name.replace(/\/[A-G][#b]?\d*/, '');
+            let updatedName = editingChord.name.replace(/\/[A-G](##|#|bb|b)?\d*/, '');
             let updatedNotes = editingChord.notes;
 
             if (slashNote.trim()) {

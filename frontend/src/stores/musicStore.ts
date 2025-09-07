@@ -12,6 +12,11 @@ interface MusicState {
     modes: string[];
     loadingChords: boolean;
     normalizedScaleNotes: string[];
+    
+    // All distinct chords state
+    allDistinctChords: ModeScaleChordDto[] | undefined;
+    loadingAllChords: boolean;
+    showAllChords: boolean;
 
     // Actions
     setKey: (key: string) => void;
@@ -20,6 +25,11 @@ interface MusicState {
     fetchMusicData: (key: string, mode: string) => Promise<void>;
     setKeyAndMode: (key: string, mode: string) => void;
     initialize: () => Promise<void>;
+    
+    // All distinct chords actions
+    fetchAllDistinctChords: () => Promise<void>;
+    toggleShowAllChords: () => void;
+    setShowAllChords: (show: boolean) => void;
 }
 
 export const useMusicStore = create<MusicState>((set, get) => ({
@@ -31,6 +41,11 @@ export const useMusicStore = create<MusicState>((set, get) => ({
     modes: [],
     loadingChords: false,
     normalizedScaleNotes: [],
+    
+    // All distinct chords initial state
+    allDistinctChords: undefined,
+    loadingAllChords: false,
+    showAllChords: false,
 
     // Actions
     setKey: (key: string) => {
@@ -88,5 +103,49 @@ export const useMusicStore = create<MusicState>((set, get) => ({
     initialize: async () => {
         const { key, mode } = get();
         await get().fetchMusicData(key, mode);
+    },
+
+    // All distinct chords actions
+    fetchAllDistinctChords: async () => {
+        const { allDistinctChords } = get();
+        
+        // Only fetch if we don't already have the data
+        if (allDistinctChords) {
+            return;
+        }
+
+        set({ loadingAllChords: true });
+
+        try {
+            const distinctChords = await dataService.getAllDistinctChords();
+            set({ 
+                allDistinctChords: distinctChords,
+                loadingAllChords: false 
+            });
+        } catch (err) {
+            console.error('Error fetching all distinct chords:', err);
+            set({ loadingAllChords: false });
+        }
+    },
+
+    toggleShowAllChords: () => {
+        const { showAllChords, allDistinctChords } = get();
+        const newShowAllChords = !showAllChords;
+        
+        set({ showAllChords: newShowAllChords });
+        
+        // Fetch all distinct chords if we're switching to show them and don't have them yet
+        if (newShowAllChords && !allDistinctChords) {
+            get().fetchAllDistinctChords();
+        }
+    },
+
+    setShowAllChords: (show: boolean) => {
+        set({ showAllChords: show });
+        
+        // Fetch all distinct chords if we're switching to show them and don't have them yet
+        if (show && !get().allDistinctChords) {
+            get().fetchAllDistinctChords();
+        }
     },
 }));

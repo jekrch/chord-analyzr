@@ -76,6 +76,82 @@ class DataService {
   }
 
   /**
+   * Get all distinct chords across all keys and modes
+   */
+  async getAllDistinctChords(): Promise<ModeScaleChordDto[]> {
+    if (this.config.useStaticData) {
+      console.log('Loading all distinct chords from static data');
+      return staticDataService.getAllDistinctChords();
+    } else {
+      console.log('Loading all distinct chords from API');
+
+      const modes = await ModeControllerService.getModes();
+      const allKeys = ['C', 'C#', '', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']; // Define your available keys
+      
+      const allChords: ModeScaleChordDto[] = [];
+      
+      for (const mode of modes) {
+        for (const key of allKeys) {
+          try {
+            const chords = await ChordControllerService.getModeKeyChords(key, mode.name!);
+            allChords.push(...chords);
+          } catch (error) {
+            console.warn(`Failed to load chords for ${mode.name} in ${key}:`, error);
+          }
+        }
+      }
+      
+      // Deduplicate based on chord name and notes
+      return this.deduplicateChords(allChords);
+    }
+  }
+
+  /**
+   * Helper method to deduplicate chords
+   */
+  private deduplicateChords(chords: ModeScaleChordDto[]): ModeScaleChordDto[] {
+    const seen = new Map<string, ModeScaleChordDto>();
+    
+    for (const chord of chords) {
+      // Create a unique key based on chord properties that define musical uniqueness
+      let uniqueKey: string;
+      
+      // Primary: Use chordName if available (e.g., "Cmaj7", "Am", "F#dim")
+      if (chord.chordName && chord.chordName.trim() !== '') {
+        uniqueKey = chord.chordName.trim();
+      }
+      // Secondary: Use chord note names if chord name is not available
+      else if (chord.chordNoteNames && chord.chordNoteNames.trim() !== '') {
+        uniqueKey = chord.chordNoteNames.trim();
+      }
+      // Tertiary: Combine chord type and root note
+      else if (chord.chordTypeId !== undefined && chord.chordNoteName) {
+        uniqueKey = `${chord.chordNoteName}_type_${chord.chordTypeId}`;
+      }
+      // Quaternary: Use chordNotes string representation
+      else if (chord.chordNotes && chord.chordNotes.trim() !== '') {
+        uniqueKey = chord.chordNotes.trim();
+      }
+      // Fallback: Combine available identifying properties
+      else {
+        const keyParts = [];
+        if (chord.chordNote !== undefined) keyParts.push(`note_${chord.chordNote}`);
+        if (chord.chordTypeId !== undefined) keyParts.push(`type_${chord.chordTypeId}`);
+        if (chord.chordNoteName) keyParts.push(chord.chordNoteName);
+        
+        uniqueKey = keyParts.length > 0 ? keyParts.join('_') : JSON.stringify(chord);
+      }
+      
+      // Only keep the first occurrence of each unique chord
+      if (!seen.has(uniqueKey)) {
+        seen.set(uniqueKey, chord);
+      }
+    }
+    
+    return Array.from(seen.values());
+  }
+
+  /**
    * Get current configuration
    */
   getConfig(): DataServiceConfig {

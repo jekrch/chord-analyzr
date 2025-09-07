@@ -25,6 +25,7 @@ class StaticDataService {
   private modesCache: ModeDto[] | null = null;
   private chordsCache: Map<string, ModeScaleChordDto[]> = new Map();
   private scalesCache: Map<string, ScalesByKey> = new Map();
+  private distinctChordsCache: ModeScaleChordDto[] | null = null;
 
   /**
    * Normalizes a musical key string to have the first letter capitalized
@@ -162,6 +163,83 @@ class StaticDataService {
   }
 
   /**
+   * Get all distinct chords across all keys and modes
+   */
+  async getAllDistinctChords(): Promise<ModeScaleChordDto[]> {
+    // Return cached result if available
+    if (this.distinctChordsCache) {
+      return this.distinctChordsCache;
+    }
+
+    try {
+      console.log('Loading all distinct chords from static data...');
+      
+      // Get the index to find all available modes
+      const index = await this.loadIndex();
+      
+      const allChords: ModeScaleChordDto[] = [];
+
+      // Load chord data for each mode
+      for (const mode of index.modes) {
+        if (!mode.id) continue;
+        
+        const modeId = mode.id.toString();
+        
+        try {
+          // Check if already cached
+          if (this.chordsCache.has(modeId)) {
+            allChords.push(...this.chordsCache.get(modeId)!);
+          } else {
+            // Load chord data for this mode
+            const response = await fetch(`${this.baseUrl}/chords-mode-${modeId}.json`);
+            if (!response.ok) {
+              console.warn(`Failed to load chords for mode ${mode.name} (ID: ${modeId}): ${response.statusText}`);
+              continue;
+            }
+            
+            const modeChords: ModeScaleChordDto[] = await response.json();
+            this.chordsCache.set(modeId, modeChords);
+            allChords.push(...modeChords);
+          }
+        } catch (error) {
+          console.warn(`Error loading chords for mode ${mode.name}:`, error);
+        }
+      }
+
+      // Deduplicate chords
+      this.distinctChordsCache = this.deduplicateChords(allChords);
+      
+      console.log(`Loaded ${allChords.length} total chords, ${this.distinctChordsCache.length} distinct chords`);
+      
+      return this.distinctChordsCache;
+    } catch (error) {
+      console.error('Error loading all distinct chords from static data:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Helper method to deduplicate chords based on their musical properties
+   */
+  private deduplicateChords(chords: ModeScaleChordDto[]): ModeScaleChordDto[] {
+    const seen = new Map<string, ModeScaleChordDto>();
+    
+    for (const chord of chords) {
+      // Create a unique key based on chord properties that define musical uniqueness
+      let uniqueKey: string;
+      
+      uniqueKey = chord.chordName!.trim();
+
+      // Only keep the first occurrence of each unique chord
+      if (!seen.has(uniqueKey)) {
+        seen.set(uniqueKey, chord);
+      }
+    }
+    
+    return Array.from(seen.values());
+  }
+
+  /**
    * Get generation metadata
    */
   async getMetadata(): Promise<{ generatedAt: string; modesCount: number }> {
@@ -180,6 +258,7 @@ class StaticDataService {
     this.modesCache = null;
     this.chordsCache.clear();
     this.scalesCache.clear();
+    this.distinctChordsCache = null;
   }
 }
 

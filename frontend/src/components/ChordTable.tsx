@@ -24,7 +24,17 @@ const ChordTable: React.FC<ChordTableProps> = ({
   const {
     chords,
     loadingChords,
+    allDistinctChords,
+    loadingAllChords,
+    showAllChords,
+    toggleShowAllChords,
+    key,
+    mode
   } = musicStore;
+
+  // Determine which chord set to use
+  const currentChords = showAllChords ? allDistinctChords : chords;
+  const currentLoading = showAllChords ? loadingAllChords : loadingChords;
   
   // Track screen size to determine number of columns
   useEffect(() => {
@@ -55,20 +65,20 @@ const ChordTable: React.FC<ChordTableProps> = ({
 
   // Get unique root notes from chords - with null safety
   const rootNotes = useMemo(() => {
-    if (!chords) return [];
-    const notes = chords
+    if (!currentChords) return [];
+    const notes = currentChords
       .filter(chord => chord.chordName) // Filter out chords without names
       .map(chord => extractRootNote(chord.chordName))
       .filter(note => note); // Filter out empty strings
     return [...new Set(notes)].sort();
-  }, [chords]);
+  }, [currentChords]);
 
   // Filter chords based on selected root note and search query - with null safety
   const filteredChords = useMemo(() => {
-    if (!chords) return [];
+    if (!currentChords) return [];
     
     // First filter out chords that don't have required properties
-    let filtered = chords.filter(chord => 
+    let filtered = currentChords.filter(chord => 
       chord.chordName && 
       chord.chordNoteNames &&
       chord.chordName.trim() !== '' &&
@@ -88,13 +98,13 @@ const ChordTable: React.FC<ChordTableProps> = ({
     }
     
     return filtered;
-  }, [chords, selectedRootNote, searchQuery]);
+  }, [currentChords, selectedRootNote, searchQuery]);
 
   // Count chords per root note - with null safety
   const chordCounts = useMemo(() => {
-    if (!chords) return {};
+    if (!currentChords) return {};
     const counts: { [key: string]: number } = {};
-    chords.forEach(chord => {
+    currentChords.forEach(chord => {
       if (chord.chordName) {
         const root = extractRootNote(chord.chordName);
         if (root) {
@@ -103,7 +113,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
       }
     });
     return counts;
-  }, [chords]);
+  }, [currentChords]);
 
   // Get indices of chords in the same row
   const getChordsInSameRow = useCallback((index: number): number[] => {
@@ -134,6 +144,14 @@ const ChordTable: React.FC<ChordTableProps> = ({
     }
     
     setExpandedChords(newExpanded);
+  };
+
+  const handleToggleAllChords = () => {
+    toggleShowAllChords();
+    // Reset filters when switching modes
+    setSelectedRootNote('All');
+    setSearchQuery('');
+    setExpandedChords(new Set());
   };
 
   const handleChordPlay = (chordNoteNames: string, index: number, chordName: string) => {
@@ -178,12 +196,45 @@ const ChordTable: React.FC<ChordTableProps> = ({
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider">Chord Explorer</h2>
             <div className="text-sm text-gray-400">
-              {filteredChords?.length || 0} of {chords?.length || 0} chords
+              {filteredChords?.length || 0} of {currentChords?.length || 0} chords
             </div>
           </div>
 
-          {/* Search Bar */}
-          <div className="mb-4">
+          {/* Toggle and Search Section */}
+          <div className="space-y-4">
+            {/* Show All Chords Toggle */}
+            <div className="flex items-center justify-between p-3 bg-[#444b59] rounded-lg border border-gray-600">
+              <div className="flex flex-col text-left">
+                <span className="text-sm font-medium text-white text-left">
+                  { 'Show All Chords'}
+                </span>
+                <span className="text-xs text-gray-400">
+                  {showAllChords 
+                    ? `${allDistinctChords?.length} chords` 
+                    : `Showing chords in ${key} ${mode}`
+                  }
+                </span>
+              </div>
+              <button
+                onClick={handleToggleAllChords}
+                disabled={currentLoading}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 ${
+                  showAllChords ? 'bg-blue-600' : 'bg-gray-600'
+                } ${currentLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                role="switch"
+                aria-checked={showAllChords}
+                aria-label="Toggle between current mode chords and all distinct chords"
+              >
+                <span
+                  aria-hidden="true"
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    showAllChords ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Search Bar */}
             <div className="relative">
               <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
@@ -197,7 +248,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
           </div>
 
           {/* Mobile Root Note Filter - Only visible on narrow screens */}
-          <div className="lg:hidden">
+          <div className="lg:hidden mt-4">
             <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent px-1">
               <button
                 onClick={() => setSelectedRootNote('All')}
@@ -207,7 +258,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
                     : 'bg-[#444b59] text-gray-300 hover:bg-[#525a6b] hover:text-white'
                 }`}
               >
-                All ({chords?.length || 0})
+                All ({currentChords?.length || 0})
               </button>
               {rootNotes.map(note => (
                 <button
@@ -250,7 +301,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">All Notes</span>
                   <span className="text-xs text-gray-400 bg-gray-700 px-2 py-1 rounded">
-                    {chords?.length || 0}
+                    {currentChords?.length || 0}
                   </span>
                 </div>
               </button>
@@ -279,11 +330,13 @@ const ChordTable: React.FC<ChordTableProps> = ({
 
         {/* Chord Cards */}
         <div className="flex-1">
-          {loadingChords ? (
+          {currentLoading ? (
             <div className="flex justify-center items-center h-64">
               <div className="flex flex-col items-center space-y-3">
                 <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-blue-500" />
-                <span className="text-sm text-gray-400">Loading chords...</span>
+                <span className="text-sm text-gray-400">
+                  {showAllChords ? 'Loading all distinct chords...' : 'Loading chords...'}
+                </span>
               </div>
             </div>
           ) : filteredChords?.length ? (
@@ -379,7 +432,9 @@ const ChordTable: React.FC<ChordTableProps> = ({
                     {searchQuery.trim() 
                       ? `No chords found matching "${searchQuery}"` 
                       : selectedRootNote === 'All' 
-                        ? 'No chords available' 
+                        ? showAllChords 
+                          ? 'No distinct chords available'
+                          : 'No chords available' 
                         : `No chords found for root note "${selectedRootNote}"`
                     }
                   </div>
@@ -406,6 +461,11 @@ const ChordTable: React.FC<ChordTableProps> = ({
                 Tap any chord to play • 
                 <span className="text-gray-300 mx-1">+</span> to add to sequence • 
                 <ChevronDownIcon className="inline h-3 w-3 mx-1" /> to show notes (expands entire row)
+                {showAllChords && (
+                  <span className="block mt-1 text-blue-400">
+                    Currently showing all distinct chords across all modes and keys
+                  </span>
+                )}
               </div>
             </div>
           )}

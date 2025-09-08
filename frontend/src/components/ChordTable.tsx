@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, memo } from 'react';
 import { PlayCircleIcon, PlusCircleIcon, MagnifyingGlassIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/20/solid';
 import { ModeScaleChordDto } from '../api';
 import { useMusicStore } from '../stores/musicStore';
@@ -7,6 +7,107 @@ interface ChordTableProps {
   onChordClick: (chordNoteNames: string, index?: number, chordName?: string) => void;
   addChordClick?: (chordName: string, chordNotes: string, key: string, mode: string) => void;
 }
+
+// Memoized chord card component to prevent unnecessary re-renders
+const ChordCard = memo<{
+  chord: ModeScaleChordDto;
+  index: number;
+  isExpanded: boolean;
+  isPlaying: boolean;
+  isAdding: boolean;
+  onChordPlay: (chordNoteNames: string, index: number, chordName: string) => void;
+  onChordAdd: (index: number, chordName: string, chordNotes: string, key: string, modeId: number) => void;
+  onToggleExpansion: (index: number) => void;
+}>(({ 
+  chord, 
+  index, 
+  isExpanded, 
+  isPlaying, 
+  isAdding, 
+  onChordPlay, 
+  onChordAdd, 
+  onToggleExpansion 
+}) => {
+  const handleCardClick = useCallback(() => {
+    onChordPlay(chord.chordNoteNames!, index, chord.chordName!);
+  }, [onChordPlay, chord.chordNoteNames, chord.chordName, index]);
+
+  const handleAddClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onChordAdd(index, chord.chordName!, chord.chordNoteNames!, chord.keyName!, chord.modeId!);
+  }, [onChordAdd, index, chord.chordName, chord.chordNoteNames, chord.keyName, chord.modeId]);
+
+  const handleToggleClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onToggleExpansion(index);
+  }, [onToggleExpansion, index]);
+
+  return (
+    <div
+      className={`bg-[#3d434f] rounded-lg border border-gray-600 hover:border-blue-500 hover:bg-[#444b59] transition-all duration-200 overflow-hidden cursor-pointer group relative ${
+        isPlaying ? 'chord-playing z-50' : ''
+      } ${isAdding ? 'chord-adding z-40' : ''}`}
+      onClick={handleCardClick}
+    >
+      {/* Main content */}
+      <div className="p-3 sm:p-4">
+        {/* Chord name and buttons */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
+            <PlayCircleIcon className={`h-5 w-5 sm:h-6 sm:w-6 transition-colors flex-shrink-0 ${
+              isPlaying ? 'text-blue-400' : 'text-gray-400 group-hover:text-blue-300'
+            }`} />
+            <h3 className={`text-base sm:text-lg font-bold transition-colors truncate ${
+              isPlaying ? 'text-blue-200' : 'text-white group-hover:text-blue-200'
+            }`}>
+              {chord.chordName}
+            </h3>
+          </div>
+          <div className="flex items-center space-x-1 flex-shrink-0 ml-2">
+            <button
+              onClick={handleAddClick}
+              className={`p-1 sm:p-2 rounded-md transition-colors ${
+                isAdding 
+                  ? 'bg-green-600 text-white' 
+                  : 'hover:bg-green-600 text-gray-400 hover:text-white'
+              }`}
+              title="Add to sequence"
+            >
+              <PlusCircleIcon className="h-5 w-5 sm:h-4 sm:w-4" />
+            </button>
+            <button
+              onClick={handleToggleClick}
+              className="p-1.5 sm:p-2 rounded-md hover:bg-[#555] text-gray-400 hover:text-white transition-colors"
+              title={isExpanded ? "Hide notes" : "Show notes"}
+            >
+              {isExpanded ? (
+                <ChevronUpIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              ) : (
+                <ChevronDownIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Expandable notes section */}
+      {isExpanded && (
+        <div className="px-3 pb-3 pt-0 sm:px-4 sm:pb-4">
+          <div className="bg-[#2d3142] rounded-md p-2 sm:p-3 border-t border-gray-600">
+            <div className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">
+              Notes
+            </div>
+            <div className="text-sm text-gray-200 font-mono">
+              {chord.chordNoteNames}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+});
+
+ChordCard.displayName = 'ChordCard';
 
 const ChordTable: React.FC<ChordTableProps> = ({  
   onChordClick, 
@@ -36,7 +137,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
   const currentChords = showAllChords ? allDistinctChords : chords;
   const currentLoading = showAllChords ? loadingAllChords : loadingChords;
   
-  // Track screen size to determine number of columns
+  // Track screen size to determine number of columns - memoized
   useEffect(() => {
     const updateColumns = () => {
       const width = window.innerWidth;
@@ -54,41 +155,60 @@ const ChordTable: React.FC<ChordTableProps> = ({
     return () => window.removeEventListener('resize', updateColumns);
   }, []);
 
-  // Extract root note from chord name - with null safety
-  const extractRootNote = (chordName: string | undefined): string => {
+  // Extract root note from chord name - memoized function
+  const extractRootNote = useCallback((chordName: string | undefined): string => {
     if (!chordName) return '';
     if (chordName.length >= 2 && (chordName[1] === 'b' || chordName[1] === '#')) {
       return chordName.substring(0, 2);
     }
     return chordName[0] || '';
-  };
+  }, []);
 
-  // Get unique root notes from chords - with null safety
-  const rootNotes = useMemo(() => {
+  // Pre-filter valid chords once to avoid repeated filtering
+  const validChords = useMemo(() => {
     if (!currentChords) return [];
-    const notes = currentChords
-      .filter(chord => chord.chordName) // Filter out chords without names
-      .map(chord => extractRootNote(chord.chordName))
-      .filter(note => note); // Filter out empty strings
-    return [...new Set(notes)].sort();
-  }, [currentChords]);
-
-  // Filter chords based on selected root note and search query - with null safety
-  const filteredChords = useMemo(() => {
-    if (!currentChords) return [];
-    
-    // First filter out chords that don't have required properties
-    let filtered = currentChords.filter(chord => 
+    return currentChords.filter(chord => 
       chord.chordName && 
       chord.chordNoteNames &&
       chord.chordName.trim() !== '' &&
       chord.chordNoteNames.trim() !== ''
     );
+  }, [currentChords]);
+
+  // Get unique root notes from chords - optimized
+  const rootNotes = useMemo(() => {
+    const noteSet = new Set<string>();
+    validChords.forEach(chord => {
+      const root = extractRootNote(chord.chordName);
+      if (root) noteSet.add(root);
+    });
+    return Array.from(noteSet).sort();
+  }, [validChords, extractRootNote]);
+
+  // Count chords per root note - optimized
+  const chordCounts = useMemo(() => {
+    const counts: { [key: string]: number } = {};
+    validChords.forEach(chord => {
+      const root = extractRootNote(chord.chordName!);
+      if (root) {
+        counts[root] = (counts[root] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [validChords, extractRootNote]);
+
+  // Filter and sort chords - with alphabetical ordering
+  const filteredChords = useMemo(() => {
+    let filtered = validChords;
     
+    // Filter by root note
     if (selectedRootNote !== 'All') {
-      filtered = filtered.filter(chord => extractRootNote(chord.chordName) === selectedRootNote);
+      filtered = filtered.filter(chord => 
+        extractRootNote(chord.chordName) === selectedRootNote
+      );
     }
     
+    // Filter by search query
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       filtered = filtered.filter(chord => 
@@ -97,64 +217,16 @@ const ChordTable: React.FC<ChordTableProps> = ({
       );
     }
     
-    return filtered;
-  }, [currentChords, selectedRootNote, searchQuery]);
-
-  // Count chords per root note - with null safety
-  const chordCounts = useMemo(() => {
-    if (!currentChords) return {};
-    const counts: { [key: string]: number } = {};
-    currentChords.forEach(chord => {
-      if (chord.chordName) {
-        const root = extractRootNote(chord.chordName);
-        if (root) {
-          counts[root] = (counts[root] || 0) + 1;
-        }
-      }
+    // Sort alphabetically by chord name
+    return filtered.sort((a, b) => {
+      const nameA = a.chordName?.toLowerCase() || '';
+      const nameB = b.chordName?.toLowerCase() || '';
+      return nameA.localeCompare(nameB);
     });
-    return counts;
-  }, [currentChords]);
+  }, [validChords, selectedRootNote, searchQuery, extractRootNote]);
 
-  // Get indices of chords in the same row
-  const getChordsInSameRow = useCallback((index: number): number[] => {
-    const rowIndex = Math.floor(index / currentColumns);
-    const startIndex = rowIndex * currentColumns;
-    const endIndex = Math.min(startIndex + currentColumns, filteredChords.length);
-    
-    const rowIndices: number[] = [];
-    for (let i = startIndex; i < endIndex; i++) {
-      rowIndices.push(i);
-    }
-    return rowIndices;
-  }, [currentColumns, filteredChords.length]);
-
-  const toggleChordExpansion = (index: number) => {
-    const rowIndices = getChordsInSameRow(index);
-    const newExpanded = new Set(expandedChords);
-    
-    // Check if the clicked chord is currently expanded
-    const isCurrentlyExpanded = newExpanded.has(index);
-    
-    if (isCurrentlyExpanded) {
-      // Collapse all chords in the row
-      rowIndices.forEach(i => newExpanded.delete(i));
-    } else {
-      // Expand all chords in the row
-      rowIndices.forEach(i => newExpanded.add(i));
-    }
-    
-    setExpandedChords(newExpanded);
-  };
-
-  const handleToggleAllChords = () => {
-    toggleShowAllChords();
-    // Reset filters when switching modes
-    setSelectedRootNote('All');
-    setSearchQuery('');
-    setExpandedChords(new Set());
-  };
-
-  const handleChordPlay = (chordNoteNames: string, index: number, chordName: string) => {
+  // Optimized event handlers with useCallback
+  const handleChordPlay = useCallback((chordNoteNames: string, index: number, chordName: string) => {
     // Trigger play animation
     setPlayingChords(prev => new Set(prev).add(index));
     
@@ -162,16 +234,18 @@ const ChordTable: React.FC<ChordTableProps> = ({
     onChordClick(chordNoteNames, undefined, chordName);
     
     // Remove animation after duration
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       setPlayingChords(prev => {
         const newSet = new Set(prev);
         newSet.delete(index);
         return newSet;
       });
     }, 800);
-  };
 
-  const handleChordAdd = (index: number, chordName: string, chordNotes: string, key: string, modeId: number) => {
+    return () => clearTimeout(timeoutId);
+  }, [onChordClick]);
+
+  const handleChordAdd = useCallback((index: number, chordName: string, chordNotes: string, key: string, modeId: number) => {
     // Trigger add animation
     setAddingChords(prev => new Set(prev).add(index));
     
@@ -180,26 +254,86 @@ const ChordTable: React.FC<ChordTableProps> = ({
     // Call the original function
     addChordClick?.(chordName, chordNotes, key, mode);
     
-    //console.log(`Adding chord: ${chordName} with notes: ${chordNotes} in key: ${key} mode: ${modeId} ${mode}`);
     // Remove animation after duration
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       setAddingChords(prev => {
         const newSet = new Set(prev);
         newSet.delete(index);
         return newSet;
       });
     }, 600);
-  };
+
+    return () => clearTimeout(timeoutId);
+  }, [addChordClick, musicStore.modes]);
+
+  // Simplified expansion toggle
+  const handleToggleExpansion = useCallback((index: number) => {
+    setExpandedChords(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
+  }, []);
+
+  const handleToggleAllChords = useCallback(() => {
+    toggleShowAllChords();
+    // Reset filters when switching modes
+    setSelectedRootNote('All');
+    setSearchQuery('');
+    setExpandedChords(new Set());
+  }, [toggleShowAllChords]);
+
+  const handleClearFilters = useCallback(() => {
+    setSearchQuery('');
+    setSelectedRootNote('All');
+  }, []);
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  }, []);
+
+  // Memoized filter buttons
+  const mobileFilterButtons = useMemo(() => (
+    <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent px-1">
+      <button
+        onClick={() => setSelectedRootNote('All')}
+        className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
+          selectedRootNote === 'All' 
+            ? 'bg-blue-600 text-white' 
+            : 'bg-[#444b59] text-gray-300 hover:bg-[#525a6b] hover:text-white'
+        }`}
+      >
+        All ({validChords.length})
+      </button>
+      {rootNotes.map(note => (
+        <button
+          key={note}
+          onClick={() => setSelectedRootNote(note)}
+          className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
+            selectedRootNote === note 
+              ? 'bg-blue-600 text-white' 
+              : 'bg-[#444b59] text-gray-300 hover:bg-[#525a6b] hover:text-white'
+          }`}
+        >
+          {note} ({chordCounts[note] || 0})
+        </button>
+      ))}
+    </div>
+  ), [selectedRootNote, validChords.length, rootNotes, chordCounts]);
 
   return (
     <div className="w-full max-w-7xl mx-auto px-2">
-      {/* Header Section - Contains title, count, search, and mobile filters */}
+      {/* Header Section */}
       <div className="bg-[#3d434f] border border-gray-600 rounded-lg overflow-hidden mb-4">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider">Chord Explorer</h2>
             <div className="text-sm text-gray-400">
-              {filteredChords?.length || 0} of {currentChords?.length || 0} chords
+              {filteredChords.length} of {validChords.length} chords
             </div>
           </div>
 
@@ -209,7 +343,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
             <div className="flex items-center justify-between p-3 bg-[#444b59] rounded-lg border border-gray-600">
               <div className="flex flex-col text-left">
                 <span className="text-sm font-medium text-white text-left">
-                  { 'Show All Chords'}
+                  Show All Chords
                 </span>
                 <span className="text-xs text-gray-400">
                   {showAllChords 
@@ -244,39 +378,15 @@ const ChordTable: React.FC<ChordTableProps> = ({
                 type="text"
                 placeholder="Search chords or notes..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={handleSearchChange}
                 className="w-full pl-10 pr-4 py-2 bg-[#444b59] border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none transition-colors !text-sm"
               />
             </div>
           </div>
 
-          {/* Mobile Root Note Filter - Only visible on narrow screens */}
+          {/* Mobile Root Note Filter */}
           <div className="lg:hidden mt-4">
-            <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent px-1">
-              <button
-                onClick={() => setSelectedRootNote('All')}
-                className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
-                  selectedRootNote === 'All' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-[#444b59] text-gray-300 hover:bg-[#525a6b] hover:text-white'
-                }`}
-              >
-                All ({currentChords?.length || 0})
-              </button>
-              {rootNotes.map(note => (
-                <button
-                  key={note}
-                  onClick={() => setSelectedRootNote(note)}
-                  className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-colors ${
-                    selectedRootNote === note 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-[#444b59] text-gray-300 hover:bg-[#525a6b] hover:text-white'
-                  }`}
-                >
-                  {note} ({chordCounts[note] || 0})
-                </button>
-              ))}
-            </div>
+            {mobileFilterButtons}
           </div>
         </div>
       </div>
@@ -304,7 +414,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">All Notes</span>
                   <span className="text-xs text-gray-400 bg-gray-700 px-2 py-1 rounded">
-                    {currentChords?.length || 0}
+                    {validChords.length}
                   </span>
                 </div>
               </button>
@@ -342,89 +452,21 @@ const ChordTable: React.FC<ChordTableProps> = ({
                 </span>
               </div>
             </div>
-          ) : filteredChords?.length ? (
+          ) : filteredChords.length ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 sm:gap-3">
-              {filteredChords.map((chord: ModeScaleChordDto, index: number) => {
-                // Early return if chord doesn't have required properties (shouldn't happen due to filtering)
-                if (!chord.chordName || !chord.chordNoteNames) {
-                  return null;
-                }
-
-                const isExpanded = expandedChords.has(index);
-                const isPlaying = playingChords.has(index);
-                const isAdding = addingChords.has(index);
-                
-                return (
-                  <div
-                    key={`chord-${chord.chordName}-${index}`}
-                    className={`bg-[#3d434f] rounded-lg border border-gray-600 hover:border-blue-500 hover:bg-[#444b59] transition-all duration-200 overflow-hidden cursor-pointer group relative ${
-                      isPlaying ? 'chord-playing z-50' : ''
-                    } ${isAdding ? 'chord-adding z-40' : ''}`}
-                    onClick={() => handleChordPlay(chord.chordNoteNames!, index, chord.chordName!)}
-                  >
-                    {/* Main content */}
-                    <div className="p-3 sm:p-4">
-                      {/* Chord name and buttons */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
-                          <PlayCircleIcon className={`h-5 w-5 sm:h-6 sm:w-6 transition-colors flex-shrink-0 ${
-                            isPlaying ? 'text-blue-400' : 'text-gray-400 group-hover:text-blue-300'
-                          }`} />
-                          <h3 className={`text-base sm:text-lg font-bold transition-colors truncate ${
-                            isPlaying ? 'text-blue-200' : 'text-white group-hover:text-blue-200'
-                          }`}>
-                            {chord.chordName}
-                          </h3>
-                        </div>
-                        <div className="flex items-center space-x-1 flex-shrink-0 ml-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleChordAdd(index, chord.chordName!, chord.chordNoteNames!, chord.keyName!, chord.modeId!);
-                            }}
-                            className={`p-1 sm:p-2 rounded-md transition-colors ${
-                              isAdding 
-                                ? 'bg-green-600 text-white' 
-                                : 'hover:bg-green-600 text-gray-400 hover:text-white'
-                            }`}
-                            title="Add to sequence"
-                          >
-                            <PlusCircleIcon className="h-5 w-5 sm:h-4 sm:w-4" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleChordExpansion(index);
-                            }}
-                            className="p-1.5 sm:p-2 rounded-md hover:bg-[#555] text-gray-400 hover:text-white transition-colors"
-                            title={isExpanded ? "Hide notes" : "Show notes"}
-                          >
-                            {isExpanded ? (
-                              <ChevronUpIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                            ) : (
-                              <ChevronDownIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Expandable notes section */}
-                    {isExpanded && (
-                      <div className="px-3 pb-3 pt-0 sm:px-4 sm:pb-4">
-                        <div className="bg-[#2d3142] rounded-md p-2 sm:p-3 border-t border-gray-600">
-                          <div className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">
-                            Notes
-                          </div>
-                          <div className="text-sm text-gray-200 font-mono">
-                            {chord.chordNoteNames}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+              {filteredChords.map((chord: ModeScaleChordDto, index: number) => (
+                <ChordCard
+                  key={`chord-${chord.chordName}-${index}`}
+                  chord={chord}
+                  index={index}
+                  isExpanded={expandedChords.has(index)}
+                  isPlaying={playingChords.has(index)}
+                  isAdding={addingChords.has(index)}
+                  onChordPlay={handleChordPlay}
+                  onChordAdd={handleChordAdd}
+                  onToggleExpansion={handleToggleExpansion}
+                />
+              ))}
             </div>
           ) : (
             <div className="flex justify-center items-center h-64 bg-[#3d434f] rounded-lg">
@@ -443,10 +485,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
                   </div>
                   {(searchQuery.trim() || selectedRootNote !== 'All') && (
                     <button
-                      onClick={() => {
-                        setSearchQuery('');
-                        setSelectedRootNote('All');
-                      }}
+                      onClick={handleClearFilters}
                       className="text-sm text-blue-400 hover:text-blue-300 underline transition-colors"
                     >
                       Clear filters
@@ -458,15 +497,15 @@ const ChordTable: React.FC<ChordTableProps> = ({
           )}
 
           {/* Footer info */}
-          {filteredChords?.length > 0 && (
+          {filteredChords.length > 0 && (
             <div className="mt-4 text-center">
               <div className="text-xs text-gray-400">
                 Tap any chord to play • 
                 <span className="text-gray-300 mx-1">+</span> to add to sequence • 
-                <ChevronDownIcon className="inline h-3 w-3 mx-1" /> to show notes (expands entire row)
+                <ChevronDownIcon className="inline h-3 w-3 mx-1" /> to show notes
                 {showAllChords && (
                   <span className="block mt-1 text-blue-400">
-                    Currently showing all distinct chords across all modes and keys
+                    Currently showing all distinct chords across all modes and keys (sorted alphabetically)
                   </span>
                 )}
               </div>

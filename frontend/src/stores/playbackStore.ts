@@ -17,6 +17,7 @@ interface PlaybackState {
 
     // Actions
     setActiveNotes: (notes: ActiveNoteInfo[]) => void;
+    setAddedChords: (chords: AddedChord[]) => void; // Added this method signature
     setActiveChordIndex: (index: number | null) => void;
     setHighlightedChordIndex: (index: number | null) => void;
     setTemporaryChord: (chord: { name: string; notes: string } | null) => void;
@@ -44,16 +45,18 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
 
     // Actions
     setActiveNotes: (notes: ActiveNoteInfo[]) => set({ activeNotes: notes }),
-    
+
+    setAddedChords: (chords: AddedChord[]) => set({ addedChords: chords }), // Added this implementation
+
     setActiveChordIndex: (index: number | null) => set({ activeChordIndex: index }),
-    
+
     setHighlightedChordIndex: (index: number | null) => set({ highlightedChordIndex: index }),
-    
+
     setTemporaryChord: (chord: { name: string; notes: string } | null) => set({ temporaryChord: chord }),
-    
+
     setIsPlayingScale: (isPlaying: boolean) => set({ isPlayingScale: isPlaying }),
 
-    addChord: (chordName: string, chordNotes: string, pattern: string[], key: string, mode: string) =>      
+    addChord: (chordName: string, chordNotes: string, pattern: string[], key: string, mode: string) =>
         set(state => ({
             addedChords: [...state.addedChords, {
                 name: chordName,
@@ -76,16 +79,16 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
         set(state => {
             const newChords = state.addedChords.filter((_, index) => index !== indexToRemove);
             let newActiveChordIndex = state.activeChordIndex;
-            
+
             if (state.activeChordIndex === indexToRemove) {
                 newActiveChordIndex = null;
             } else if (state.activeChordIndex !== null && state.activeChordIndex > indexToRemove) {
                 newActiveChordIndex = state.activeChordIndex - 1;
             }
-            
-            return { 
-                addedChords: newChords, 
-                activeChordIndex: newActiveChordIndex 
+
+            return {
+                addedChords: newChords,
+                activeChordIndex: newActiveChordIndex
             };
         }),
 

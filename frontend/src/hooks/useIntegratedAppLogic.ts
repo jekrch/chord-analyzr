@@ -214,6 +214,30 @@ export const useIntegratedAppLogic = () => {
         playbackStore.updateChord(chordIndex, normalizedChord);
     }, [musicStore.key, musicStore.mode]);
 
+    const reorderChords = useCallback((sourceIndex: number, destinationIndex: number) => {
+        const currentChords = Array.from(playbackStore.addedChords);
+        const [removed] = currentChords.splice(sourceIndex, 1);
+        currentChords.splice(destinationIndex, 0, removed);
+
+        playbackStore.setAddedChords(currentChords); 
+        
+        const { activeChordIndex } = playbackStore;
+        if (activeChordIndex === null) return;
+
+        let newActiveIndex = activeChordIndex;
+        if (activeChordIndex === sourceIndex) {
+            newActiveIndex = destinationIndex;
+        } else if (sourceIndex < activeChordIndex && destinationIndex >= activeChordIndex) {
+            newActiveIndex = activeChordIndex - 1;
+        } else if (sourceIndex > activeChordIndex && destinationIndex <= activeChordIndex) {
+            newActiveIndex = activeChordIndex + 1;
+        }
+
+        if (newActiveIndex !== activeChordIndex) {
+            playbackStore.setActiveChordIndex(newActiveIndex);
+        }
+    }, [playbackStore]);
+
     const clearAllChords = useCallback(() => {
         playbackStore.clearAllChords();
         patternStore.setGlobalPatternState({ isPlaying: false });
@@ -507,6 +531,7 @@ export const useIntegratedAppLogic = () => {
         handleChordClick,
         addChordClick,
         updateChord: updateChordWithFallbacks,
+        reorderChords,
         clearAllChords,
         updateChordPattern: playbackStore.updateChordPattern,
         toggleScalePlayback,

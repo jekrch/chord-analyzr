@@ -342,12 +342,12 @@ const ChordTable: React.FC<ChordTableProps> = ({
             {/* Show All Chords Toggle */}
             <div className="flex items-center justify-between p-3 bg-[#444b59] rounded-lg border border-gray-600">
               <div className="flex flex-col text-left">
-                <span className="text-sm font-medium text-white text-left">
+                <span className="text-sm font-medium text-gray-300 text-left">
                   Show All Chords
                 </span>
                 <span className="text-xs text-gray-400">
                   {showAllChords 
-                    ? `${allDistinctChords?.length} chords` 
+                    ? (allDistinctChords ? `${allDistinctChords?.length} chords` : 'Loading...')
                     : `Showing chords in ${key} ${mode}`
                   }
                 </span>

@@ -81,9 +81,9 @@ const PianoControl: React.FC<PianoProps> = ({
       return Math.max(320, availableWidth - 40);
     } else if (availableWidth < 768) {
       // Tablet: moderate scaling
+      // Small desktop: good balance
       return Math.min(600, availableWidth - 60);
     } else if (availableWidth < 1200) {
-      // Small desktop: good balance
       return Math.min(800, availableWidth - 80);
     } else {
       // Large desktop: generous but not excessive
@@ -164,7 +164,7 @@ const PianoControl: React.FC<PianoProps> = ({
     if (!globalPatternState.isPlaying && activeNotes.length > 0) {
       // Play all notes as a chord
       const chordMidiNotes = activeNotes.map(({ note, octave = 4 }) =>
-        MidiNumbers.fromNote(`${note}${octave}`)
+        MidiNumbers.fromNote(`${normalizeNoteName(note)}${octave}`)
       );
       setActivePianoNotes(chordMidiNotes);
       

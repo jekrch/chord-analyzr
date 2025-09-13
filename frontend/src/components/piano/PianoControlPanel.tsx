@@ -6,6 +6,7 @@ import { useMusicStore } from '../../stores/musicStore';
 import { usePianoStore } from '../../stores/pianoStore';
 import { usePlaybackStore } from '../../stores/playbackStore';
 import { usePatternStore } from '../../stores/patternStore';
+import { normalizeNoteName } from '../../util/NoteUtil';
 
 interface EqSettings {
     bass: number;
@@ -154,7 +155,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
 
         const sortedScaleNotes = scaleNotesWithFinalNote
             .map((scaleNote) => {
-                const noteName = scaleNote.noteName || 'C';
+                const noteName = normalizeNoteName(scaleNote.noteName) || 'C';
                 const octave = 4;
 
                 // Use MIDI number if available, otherwise calculate from note name

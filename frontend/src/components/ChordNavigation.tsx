@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { TrashIcon, XCircleIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon, PlayIcon, StopIcon, PauseIcon, PlayCircleIcon, CogIcon } from '@heroicons/react/20/solid';
+import { TrashIcon, XCircleIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon, PlayIcon, PauseIcon, PlayCircleIcon, CogIcon } from '@heroicons/react/20/solid';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import classNames from 'classnames';
 import { Button, ChordButton } from './Button';
@@ -14,113 +14,94 @@ const START_OCTAVE = 4;
 const END_OCTAVE = 7;
 
 const ChordNavigation: React.FC = () => {
-    // Direct store access
+    // Stores
     const musicStore = useMusicStore();
     const playbackStore = usePlaybackStore();
     const patternStore = usePatternStore();
     const uiStore = useUIStore();
 
-    // Extract state from stores
-    const {
-        addedChords,
-        activeChordIndex,
-        highlightedChordIndex,
-    } = playbackStore;
+    // State from stores
+    const { addedChords, activeChordIndex, highlightedChordIndex } = playbackStore;
+    const { isDeleteMode, isLiveMode } = uiStore;
+    const { globalPatternState } = patternStore;
+    const { chords } = musicStore;
 
-    const {
-        isDeleteMode,
-        isLiveMode,
-    } = uiStore;
-
-    const {
-        globalPatternState,
-    } = patternStore;
-
-    const {
-        chords,
-    } = musicStore;
-
-    // Local state for edit mode
+    // Local state
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingChordIndex, setEditingChordIndex] = useState<number | null>(null);
 
-    // Recreate the chord click handler (similar to useIntegratedAppLogic)
+    // Chord click handler
     const handleChordClick = useCallback((chordNoteNames: string, chordIndex?: number, chordName?: string) => {
         if (uiStore.isDeleteMode && chordIndex !== undefined) {
             playbackStore.removeChord(chordIndex);
             return;
         }
-
         const notesWithOctaves = getMidiNotes(START_OCTAVE, END_OCTAVE, chordNoteNames);
-
         if (chordIndex !== undefined) {
             playbackStore.setTemporaryChord(null);
             playbackStore.setActiveChordIndex(chordIndex);
-
             if (!patternStore.globalPatternState.isPlaying) {
                 playbackStore.playNotes(notesWithOctaves as any);
             }
-
             playbackStore.setHighlightedChordIndex(chordIndex);
             setTimeout(() => playbackStore.setHighlightedChordIndex(null), 150);
         } else {
             if (chordName) {
                 playbackStore.setTemporaryChord({ name: chordName, notes: chordNoteNames });
             }
-
             if (!patternStore.globalPatternState.isPlaying) {
                 playbackStore.playNotes(notesWithOctaves as any);
             }
         }
-    }, [uiStore.isDeleteMode, patternStore.globalPatternState.isPlaying]);
+    }, [uiStore.isDeleteMode, patternStore.globalPatternState.isPlaying, playbackStore]);
 
-    // Handler functions from stores
+    // General UI handlers
     const handleClearAll = useCallback(() => {
         playbackStore.clearAllChords();
         patternStore.setGlobalPatternState({ isPlaying: false });
         uiStore.setIsLiveMode(false);
-    }, []);
+    }, [playbackStore, patternStore, uiStore]);
 
     const handleTogglePlayback = useCallback(() => {
-        const newIsPlaying = !patternStore.globalPatternState.isPlaying;
-        patternStore.setGlobalPatternState({ isPlaying: newIsPlaying });
-    }, [patternStore.globalPatternState.isPlaying]);
+        patternStore.setGlobalPatternState({ isPlaying: !globalPatternState.isPlaying });
+    }, [globalPatternState.isPlaying, patternStore]);
 
-    const handleToggleDeleteMode = () => {
-        uiStore.setIsDeleteMode(!isDeleteMode);
-    };
+    const handleToggleDeleteMode = () => uiStore.setIsDeleteMode(!isDeleteMode);
+    const handleToggleLiveMode = () => uiStore.setIsLiveMode(!isLiveMode);
 
-    const handleToggleLiveMode = () => {
-        uiStore.setIsLiveMode(!isLiveMode);
-    };
-
+    // Chord Editor handlers
     const handleUpdateChord = (index: number, updatedChord: any) => {
         const normalizedChord = {
-            name: updatedChord.name,
-            notes: updatedChord.notes,
+            name: updatedChord.name, notes: updatedChord.notes,
             pattern: updatedChord.pattern || ['1', '2', '3', '4'],
             originalKey: updatedChord.originalKey || musicStore.key,
             originalMode: updatedChord.originalMode || musicStore.mode,
             originalNotes: updatedChord.originalNotes || updatedChord.notes
         };
-
         playbackStore.updateChord(index, normalizedChord);
     };
 
+    const handleEditChord = (index: number) => setEditingChordIndex(index);
+    const handleCloseEditor = () => setEditingChordIndex(null);
+    const handleNavigateToChord = (index: number) => {
+        if (index >= 0 && index < addedChords.length) {
+            setEditingChordIndex(index);
+        }
+    };
+
+    // Unified drag-and-drop handler for both modes
     const handleDragEnd = (result: DropResult) => {
         if (!result.destination) return;
-
         const sourceIndex = result.source.index;
         const destinationIndex = result.destination.index;
-
         if (sourceIndex === destinationIndex) return;
 
         const reorderedChords = Array.from(addedChords);
         const [removed] = reorderedChords.splice(sourceIndex, 1);
         reorderedChords.splice(destinationIndex, 0, removed);
-
         playbackStore.setAddedChords(reorderedChords);
 
+        // Update active chord index
         if (activeChordIndex === null) return;
         if (activeChordIndex === sourceIndex) {
             playbackStore.setActiveChordIndex(destinationIndex);
@@ -131,21 +112,9 @@ const ChordNavigation: React.FC = () => {
         }
     };
 
+    // --- RENDER LOGIC ---
+
     if (addedChords.length === 0) return null;
-
-    const handleEditChord = (index: number) => {
-        setEditingChordIndex(index);
-    };
-
-    const handleCloseEditor = () => {
-        setEditingChordIndex(null);
-    };
-
-    const handleNavigateToChord = (index: number) => {
-        if (index >= 0 && index < addedChords.length) {
-            setEditingChordIndex(index);
-        }
-    };
 
     const baseClasses = isLiveMode
         ? "fixed inset-0 bg-[#1a1e24] bg-opacity-95 backdrop-blur-sm z-50 flex flex-col"
@@ -182,10 +151,10 @@ const ChordNavigation: React.FC = () => {
                 active={isActive && !isDeleteMode && !isEditMode}
                 aria-label={`Pattern: ${chord.pattern.join('-')}`}
                 className={classNames(
-                    'relative w-full h-full', // Ensure button fills its container
+                    'relative w-full h-full',
                     {
                         'py-8 px-6 text-lg min-h-[120px] flex flex-col items-center justify-center': isLiveMode,
-                        'py-4 px-2 text-sm min-w-[85px] bottom-nav-button chord-button space-x-1 mt-1 min-h-[60px] flex flex-col items-center justify-center': !isLiveMode,
+                        'py-4 px-2 text-sm min-w-[85px] bottom-nav-button chord-button space-x-1 mt-1 min-h-[60px] !min-w-[70px] flex flex-col items-center justify-center': !isLiveMode,
                         'transform': isHighlighted,
                         'shadow-xl': isLiveMode,
                         'border-blue-500 hover:border-blue-400': isEditMode,
@@ -194,34 +163,18 @@ const ChordNavigation: React.FC = () => {
                     }
                 )}
             >
-                {isDeleteMode && (
-                    <XCircleIcon className={`absolute top-1 right-1 h-4 w-4 text-white bg-red-500 rounded-full shadow-sm ${isLiveMode ? 'h-6 w-6' : ''}`} />
-                )}
+                {isDeleteMode && <XCircleIcon className={`absolute top-1 right-1 text-white bg-red-500 rounded-full shadow-sm ${isLiveMode ? 'h-6 w-6' : 'h-4 w-4'}`} />}
+                {isEditMode && <CogIcon className={`absolute top-1 right-1 text-white bg-blue-500 rounded-full shadow-sm p-0.5 ${isLiveMode ? 'h-6 w-6' : 'h-4 w-4'}`} />}
 
-                {isEditMode && (
-                    <CogIcon className={`absolute top-1 right-1 h-4 w-4 text-white bg-blue-500 rounded-full shadow-sm p-0.5 ${isLiveMode ? 'h-6 w-6' : ''}`} />
-                )}
-
-                {isEditMode && (
-                    /* Note that this is here simply to enable the draggable button to be grabbed from any point on the button*/
-                    <CogIcon className={`${isLiveMode ? 'w-full h-full' : ''} top-0 right-0 bg-transparent opacity-0 absolute`} />
-                )}
-
-                <div className={`text-cyan-200 font-bold ${isLiveMode ? 'text-xl mb-2' : 'text-xs mb-1'}`}>
-                    {index + 1}
-                </div>
-                <div className={`leading-tight ${isLiveMode ? 'text-base text-center text-white ' : 'text-xs'}`}>
-                    {chord.name}
-                </div>
-
+                {/* Do not remove this transparent icon. It is necessary to make the entire button grabbable  */}
+                {isEditMode && <CogIcon className={`absolute top-1 right-1 opacity-0 text-white bg-blue-500 rounded-full shadow-sm`} />}
+                
+                <div className={`text-cyan-200 font-bold ${isLiveMode ? 'text-xl mb-2' : 'text-xs mb-1'}`}>{index + 1}</div>
+                <div className={`leading-tight ${isLiveMode ? 'text-base text-center text-white ' : 'text-xs'}`}>{chord.name}</div>
                 {isLiveMode && (
                     <>
-                        <div className="text-xs text-slate-300 mt-4 text-center">
-                            {chord.notes.replace(/,/g, ' • ')}
-                        </div>
-                        <div className="text-xs text-slate-300 mt-1 text-center font-mono">
-                            {chord.pattern.join('-')}
-                        </div>
+                        <div className="mt-4 text-xs text-center text-slate-300">{chord.notes.replace(/,/g, ' • ')}</div>
+                        <div className="mt-1 font-mono text-xs text-center text-slate-300">{chord.pattern.join('-')}</div>
                     </>
                 )}
             </ChordButton>
@@ -229,180 +182,152 @@ const ChordNavigation: React.FC = () => {
     };
 
     const editModeToggle = (
-        <div className={classNames(
-            'flex items-center justify-center',
-            {
-                'py-8 px-6 min-h-[120px]': isLiveMode,
-                'flex-shrink-0 py-4 px-2 min-w-[85px] min-h-[60px] mt-1': !isLiveMode,
-            }
-        )}>
-            <button
-                onClick={() => setIsEditMode(!isEditMode)}
-                className={classNames(
-                    "flex items-center justify-center rounded-lg border-2 border-dashed transition-all duration-200 hover:scale-105",
-                    {
-                        'w-16 h-16': isLiveMode,
-                        'w-12 h-12': !isLiveMode,
-                    },
-                    isEditMode
-                        ? "border-blue-500 text-blue-400 bg-blue-500/10 hover:bg-blue-500/20"
-                        : "border-gray-500 text-gray-400 hover:border-gray-400 hover:text-gray-300 hover:bg-gray-500/10"
+        <button
+            onClick={() => setIsEditMode(!isEditMode)}
+            className={classNames(
+                "flex items-center justify-center rounded-lg border-2 border-dashed transition-all duration-200 hover:scale-105",
+                isLiveMode ? "w-full h-full min-h-[120px] py-8 px-6" : "w-12 h-12",
+                isEditMode ? "border-blue-500 text-blue-400 bg-blue-500/10 hover:bg-blue-500/20" : "border-gray-500 text-gray-400 hover:border-gray-400 hover:text-gray-300 hover:bg-gray-500/10"
+            )}
+            title={isEditMode ? "Exit edit mode" : "Edit chords"}
+        >
+            <CogIcon className={`${isLiveMode ? 'w-8 h-8' : 'w-6 h-6'} ${isEditMode ? 'animate-spin' : ''}`} />
+        </button>
+    );
+
+    // Calculate responsive widths for live mode
+    const getLiveItemWidth = () => {
+        // Responsive breakpoints matching the grid cols
+        return "w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5 xl:w-1/6";
+    };
+
+    const nonEditModeView = (
+        isLiveMode ? (
+            // LIVE MODE - CSS Grid (non-edit)
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 auto-rows-max">
+                {addedChords.map((chord, index) => (
+                    <div key={index}>
+                        {renderChordButton(chord, index)}
+                    </div>
+                ))}
+                <div>
+                    {editModeToggle}
+                </div>
+            </div>
+        ) : (
+            // COLLAPSED MODE - Horizontal flex (non-edit)
+            <div className="flex space-x-2 overflow-x-auto pb-1 chord-sequence-scroll -mx-2 px-2">
+                {addedChords.map((chord, index) => (
+                    <div key={index} className="flex-shrink-0">
+                        {renderChordButton(chord, index)}
+                    </div>
+                ))}
+                <div className="flex-shrink-0 py-4 px-2 min-w-[85px] min-h-[60px] mt-1 flex items-center justify-center">
+                    {editModeToggle}
+                </div>
+            </div>
+        )
+    );
+
+    const editModeView = isLiveMode ? (
+        // EDIT MODE - LIVE (Flex wrap with DnD)
+        <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="chord-grid" direction="horizontal">
+                {(provided) => (
+                    <div 
+                        ref={provided.innerRef} 
+                        {...provided.droppableProps}
+                        className="flex flex-wrap -mx-2"
+                    >
+                        {addedChords.map((chord, index) => (
+                            <Draggable key={`chord-${index}`} draggableId={`chord-${index}`} index={index}>
+                                {(provided, snapshot) => (
+                                    <div 
+                                        ref={provided.innerRef} 
+                                        {...provided.draggableProps} 
+                                        {...provided.dragHandleProps}
+                                        className={`${getLiveItemWidth()} px-2 mb-4`}
+                                        style={{
+                                            ...provided.draggableProps.style,
+                                        }}
+                                        onClick={() => handleEditChord(index)}
+                                    >
+                                        {renderChordButton(chord, index, snapshot.isDragging)}
+                                    </div>
+                                )}
+                            </Draggable>
+                        ))}
+                        {provided.placeholder}
+                        {/* Edit toggle is NOT draggable */}
+                        <div className={`${getLiveItemWidth()} px-2 mb-4`}>
+                            {editModeToggle}
+                        </div>
+                    </div>
                 )}
-                title={isEditMode ? "Exit edit mode" : "Edit chords"}
-            >
-                <CogIcon className={`${isLiveMode ? 'w-8 h-8' : 'w-6 h-6'} ${isEditMode ? 'animate-spin' : ''}`} />
-            </button>
-        </div>
+            </Droppable>
+        </DragDropContext>
+    ) : (
+        // EDIT MODE - NON-LIVE (Horizontal List)
+        <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="chord-list" direction="horizontal">
+                {(provided) => (
+                    <div ref={provided.innerRef} {...provided.droppableProps} className="flex pb-1 -mx-2 overflow-x-auto space-x-2 px-2 chord-sequence-scroll">
+                        {addedChords.map((chord, index) => (
+                            <Draggable key={`chord-${index}`} draggableId={`chord-${index}`} index={index}>
+                                {(provided, snapshot) => (
+                                    <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className='flex-shrink-0' onClick={() => handleEditChord(index)}>
+                                        {renderChordButton(chord, index, snapshot.isDragging)}
+                                    </div>
+                                )}
+                            </Draggable>
+                        ))}
+                        {provided.placeholder}
+                        <div className="flex-shrink-0 py-4 px-2 min-w-[85px] min-h-[60px] mt-1 flex items-center justify-center">
+                            {editModeToggle}
+                        </div>
+                    </div>
+                )}
+            </Droppable>
+        </DragDropContext>
     );
 
     return (
         <div className={baseClasses}>
+            {/* Top Control Bar */}
             <div className={`${isLiveMode ? 'flex-shrink-0' : ''} max-w-7xl mx-auto px-4 ${isLiveMode ? 'py-4' : 'pt-2'} w-full`}>
                 <div className={`flex items-center justify-between ${isLiveMode ? 'mb-3' : 'mb-2'}`}>
                     <div className="flex items-center space-x-4">
-                        {!isLiveMode && (
-                            <Button
-                                onClick={handleTogglePlayback}
-                                variant="icon"
-                                size="icon"
-                                className=""
-                                active={globalPatternState.isPlaying}
-                                title={globalPatternState.isPlaying ? "Stop" : "Play"}
-                            >
-                                {globalPatternState.isPlaying ? <PauseIcon className="w-4 h-4" /> : <PlayIcon className="w-4 h-4" />}
-                            </Button>
-                        )}
-                        {isLiveMode && (
-                            <Button
-                                onClick={handleTogglePlayback}
-                                variant="play-stop"
-                                size="sm"
-                                active={globalPatternState.isPlaying}
-                                className="shadow-lg"
-                            >
-                                {globalPatternState.isPlaying ? (<><PauseIcon className="w-4 h-4" /> Stop</>) : (<><PlayCircleIcon className="w-4 h-4" /> Play</>)}
-                            </Button>
-                        )}
+                        {!isLiveMode && <Button onClick={handleTogglePlayback} variant="icon" size="icon" active={globalPatternState.isPlaying} title={globalPatternState.isPlaying ? "Stop" : "Play"}>{globalPatternState.isPlaying ? <PauseIcon className="w-4 h-4" /> : <PlayIcon className="w-4 h-4" />}</Button>}
+                        {isLiveMode && <Button onClick={handleTogglePlayback} variant="play-stop" size="sm" active={globalPatternState.isPlaying} className="shadow-lg">{globalPatternState.isPlaying ? (<><PauseIcon className="w-4 h-4" /> Stop</>) : (<><PlayCircleIcon className="w-4 h-4" /> Play</>)}</Button>}
                     </div>
                     <div className="text-center sm:w-full sm:text-left sm:mx-4">
-                        <div className="hidden sm:block text-xs font-bold text-slate-300 uppercase tracking-wider">
-                            chords {isEditMode && <span className="text-blue-400">(drag to reorder)</span>}
-                        </div>
-                        <div className="block sm:hidden text-xs text-slate-300 uppercase tracking-wider">
-                            chords {isEditMode && <span className="text-blue-400">(drag)</span>}
-                        </div>
+                        <div className="hidden sm:block text-xs font-bold text-slate-300 uppercase tracking-wider">chords {isEditMode && <span className="text-blue-400">(drag to reorder)</span>}</div>
+                        <div className="block sm:hidden text-xs text-slate-300 uppercase tracking-wider">chords {isEditMode && <span className="text-blue-400">(drag)</span>}</div>
                     </div>
                     <div className="flex items-center space-x-2">
-                        <button
-                            onClick={handleToggleLiveMode}
-                            className={classNames(
-                                "w-[7em] h-8 flex items-center space-x-2 px-3 py-1.5 text-xs border rounded transition-all duration-200",
-                                isLiveMode
-                                    ? "text-slate-200 bg-[#4a5262] border-gray-600 hover:bg-[#525a6b]"
-                                    : "text-slate-300 hover:text-slate-200 bg-[#4a5262] hover:bg-[#525a6b] border-gray-600"
-                            )}
-                        >
-                            {isLiveMode ? (<><ArrowsPointingInIcon className="h-3 w-3" /><span>Collapse</span></>) : (<><ArrowsPointingOutIcon className="h-3 w-3" /><span>Expand</span></>)}
-                        </button>
-                        {!isLiveMode && (
-                            <>
-                                <button onClick={() => { if (isLiveMode) handleToggleLiveMode(); handleClearAll(); }} className="w-[5em] h-8 flex items-center justify-center px-3 py-1.5 text-xs text-slate-300 hover:text-slate-200 bg-[#4a5262] hover:bg-[#525a6b] border border-gray-600 rounded transition-all duration-200">
-                                    Clear
-                                </button>
-                                <button onClick={handleToggleDeleteMode} className={classNames("w-[7em] h-8 flex items-center space-x-2 px-3 py-1.5 text-xs border rounded transition-all duration-200", isDeleteMode ? "text-white bg-red-600 border-red-500 hover:bg-red-700" : "text-slate-300 hover:text-slate-200 bg-[#4a5262] hover:bg-[#525a6b] border-gray-600")}>
-                                    <TrashIcon className="h-3 w-3" />
-                                    <span>{isDeleteMode ? 'Done' : 'Delete'}</span>
-                                </button>
-                            </>
-                        )}
+                        <button onClick={handleToggleLiveMode} className={classNames("w-[7em] h-8 flex items-center space-x-2 px-3 py-1.5 text-xs border rounded transition-all duration-200", isLiveMode ? "text-slate-200 bg-[#4a5262] border-gray-600 hover:bg-[#525a6b]" : "text-slate-300 hover:text-slate-200 bg-[#4a5262] hover:bg-[#525a6b] border-gray-600")}>{isLiveMode ? (<><ArrowsPointingInIcon className="h-3 w-3" /><span>Collapse</span></>) : (<><ArrowsPointingOutIcon className="h-3 w-3" /><span>Expand</span></>)}</button>
+                        {!isLiveMode && (<>
+                            <button onClick={() => { if (isLiveMode) handleToggleLiveMode(); handleClearAll(); }} className="w-[5em] h-8 flex items-center justify-center px-3 py-1.5 text-xs text-slate-300 hover:text-slate-200 bg-[#4a5262] hover:bg-[#525a6b] border border-gray-600 rounded transition-all duration-200">Clear</button>
+                            <button onClick={handleToggleDeleteMode} className={classNames("w-[7em] h-8 flex items-center space-x-2 px-3 py-1.5 text-xs border rounded transition-all duration-200", isDeleteMode ? "text-white bg-red-600 border-red-500 hover:bg-red-700" : "text-slate-300 hover:text-slate-200 bg-[#4a5262] hover:bg-[#525a6b] border-gray-600")}><TrashIcon className="h-3 w-3" /><span>{isDeleteMode ? 'Done' : 'Delete'}</span></button>
+                        </>)}
                     </div>
                 </div>
-                {isLiveMode && (
-                    <div className="text-center text-slate-400 text-sm mb-4">
-                        <div>Use 1-{Math.min(addedChords.length, 9)} or click chords</div>
-                        <div className="text-xs mt-2">
-                            <span className="inline-block w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
-                            Active Chord
-                            {isEditMode && (<><span className="mx-2">•</span><span className="text-blue-400">Drag chords to reorder</span></>)}
-                        </div>
-                    </div>
-                )}
+                {isLiveMode && <div className="mb-4 text-sm text-center text-slate-400"><div>Use 1-{Math.min(addedChords.length, 9)} or click chords</div><div className="mt-2 text-xs"><span className="inline-block w-3 h-3 mr-2 bg-blue-500 rounded-full"></span> Active Chord{isEditMode && (<><span className="mx-2">•</span><span className="text-blue-400">Drag chords to reorder</span></>)}</div></div>}
             </div>
 
+            {/* Chord Display Area */}
             <div className={`flex-1 max-w-7xl mx-auto w-full ${isLiveMode ? 'px-4 pb-8 overflow-y-auto' : 'px-2 pb-2'}`}>
-                {isEditMode ? (
-                    <DragDropContext onDragEnd={handleDragEnd}>
-                        <Droppable
-                            droppableId="chord-list"
-                            direction={isLiveMode ? "vertical" : "horizontal"}
-                            type="chord"
-                        >
-                            {(provided) => (
-                                <div
-                                    ref={provided.innerRef}
-                                    {...provided.droppableProps}
-                                    className={
-                                        isLiveMode
-                                            ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 auto-rows-max"
-                                            : "flex space-x-2 overflow-x-auto pb-1 chord-sequence-scroll -mx-2 px-2"
-                                    }
-                                >
-                                    {addedChords.map((chord, index) => (
-                                        <Draggable
-                                            key={`chord-${index}`}
-                                            draggableId={`chord-${index}`}
-                                            index={index}
-                                        >
-                                            {(provided, snapshot) => (
-                                                <div
-                                                    ref={provided.innerRef}
-                                                    {...provided.draggableProps}
-                                                    {...provided.dragHandleProps}
-                                                    className={classNames('z-[1000]', { 'flex-shrink-0': !isLiveMode })}
-                                                    onClick={() => handleEditChord(index)}
-                                                >
-                                                    {renderChordButton(chord, index, snapshot.isDragging)}
-                                                </div>
-                                            )}
-                                        </Draggable>
-                                    ))}
-                                    {provided.placeholder}
-                                    {editModeToggle}
-                                </div>
-                            )}
-                        </Droppable>
-                    </DragDropContext>
-                ) : (
-                    <div className={
-                        isLiveMode
-                            ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 auto-rows-max"
-                            : "flex space-x-2 overflow-x-auto pb-1 chord-sequence-scroll -mx-2 px-2"
-                    }>
-                        {addedChords.map((chord, index) => (
-                            <div key={index} className={classNames({ 'flex-shrink-0': !isLiveMode })}>
-                                {renderChordButton(chord, index)}
-                            </div>
-                        ))}
-                        {editModeToggle}
-                    </div>
-                )}
+                {!isEditMode ? nonEditModeView : editModeView}
             </div>
 
+            {/* Live Mode Footer  */}
             {isLiveMode && (
                 <div className="flex-shrink-0 bg-[#2a2f38] border-t border-gray-600 px-4 py-3">
                     <div className="max-w-7xl mx-auto flex items-center justify-between">
-                        <div className="text-xs text-slate-400 font-medium">
-                            {addedChords.length} chord{addedChords.length !== 1 ? 's' : ''} loaded
-                            {isEditMode && <span className="ml-2 text-blue-400">• Edit Mode: Click chords to edit</span>}
-                        </div>
+                        <div className="text-xs font-medium text-slate-400">{addedChords.length} chord{addedChords.length !== 1 ? 's' : ''} loaded{isEditMode && <span className="ml-2 text-blue-400">• Edit Mode: Click chords to edit</span>}</div>
                         <div className="flex items-center space-x-2">
-                            <button onClick={handleClearAll} className="w-[5em] h-8 flex items-center justify-center px-3 py-1.5 text-xs text-slate-300 hover:text-slate-200 bg-[#4a5262] hover:bg-[#525a6b] border border-gray-600 rounded transition-all duration-200">
-                                Clear
-                            </button>
-                            <button onClick={handleToggleDeleteMode} className={classNames("w-[7em] h-8 flex items-center space-x-2 px-3 py-1.5 text-xs border rounded transition-all duration-200", isDeleteMode ? "text-white bg-red-600 border-red-500 hover:bg-red-700" : "text-slate-300 hover:text-slate-200 bg-[#4a5262] hover:bg-[#525a6b] border-gray-600")}>
-                                <TrashIcon className="h-3 w-3" />
-                                <span>{isDeleteMode ? 'Done' : 'Delete'}</span>
-                            </button>
+                            <button onClick={handleClearAll} className="w-[5em] h-8 flex items-center justify-center px-3 py-1.5 text-xs text-slate-300 hover:text-slate-200 bg-[#4a5262] hover:bg-[#525a6b] border border-gray-600 rounded transition-all duration-200">Clear</button>
+                            <button onClick={handleToggleDeleteMode} className={classNames("w-[7em] h-8 flex items-center space-x-2 px-3 py-1.5 text-xs border rounded transition-all duration-200", isDeleteMode ? "text-white bg-red-600 border-red-500 hover:bg-red-700" : "text-slate-300 hover:text-slate-200 bg-[#4a5262] hover:bg-[#525a6b] border-gray-600")}><TrashIcon className="h-3 w-3" /><span>{isDeleteMode ? 'Done' : 'Delete'}</span></button>
                         </div>
                     </div>
                 </div>

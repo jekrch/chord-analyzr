@@ -167,7 +167,7 @@ const ChordNavigation: React.FC = () => {
                 {isEditMode && <CogIcon className={`absolute top-1 right-1 text-white bg-blue-500 rounded-full shadow-sm p-0.5 ${isLiveMode ? 'h-6 w-6' : 'h-4 w-4'}`} />}
 
                 {/* Do not remove this transparent icon. It is necessary to make the entire button grabbable  */}
-                {isEditMode && <CogIcon className={`absolute top-1 right-1 opacity-0 text-white bg-blue-500 rounded-full shadow-sm`} />}
+                {isEditMode && <CogIcon className={`absolute top-1 right-1 opacity-0 h-full w-full shadow-sm`} />}
                 
                 <div className={`text-cyan-200 font-bold ${isLiveMode ? 'text-xl mb-2' : 'text-xs mb-1'}`}>{index + 1}</div>
                 <div className={`leading-tight ${isLiveMode ? 'text-base text-center text-white ' : 'text-xs'}`}>{chord.name}</div>

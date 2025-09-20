@@ -19,6 +19,9 @@ import {
 import {
     useSortable
 } from '@dnd-kit/sortable';
+import {
+    restrictToParentElement
+} from '@dnd-kit/modifiers';
 import { CSS } from '@dnd-kit/utilities';
 import classNames from 'classnames';
 import { Button, ChordButton } from './Button';
@@ -109,6 +112,50 @@ const ChordNavigation: React.FC = () => {
             coordinateGetter: sortableKeyboardCoordinates,
         })
     );
+
+    // Custom modifier to restrict dragging within the container bounds
+    const restrictToContainer = (args: any) => {
+        const { containerNodeRect, draggingNodeRect, transform } = args;
+        
+        if (!containerNodeRect || !draggingNodeRect) {
+            return transform;
+        }
+
+        // Calculate boundaries
+        const containerLeft = containerNodeRect.left;
+        const containerRight = containerNodeRect.right;
+        const containerTop = containerNodeRect.top;
+        const containerBottom = containerNodeRect.bottom;
+
+        // Calculate the dragged element's position
+        const elementLeft = draggingNodeRect.left + transform.x;
+        const elementRight = draggingNodeRect.right + transform.x;
+        const elementTop = draggingNodeRect.top + transform.y;
+        const elementBottom = draggingNodeRect.bottom + transform.y;
+
+        let constrainedX = transform.x;
+        let constrainedY = transform.y;
+
+        // Constrain horizontal movement
+        if (elementLeft < containerLeft) {
+            constrainedX = containerLeft - draggingNodeRect.left;
+        } else if (elementRight > containerRight) {
+            constrainedX = containerRight - draggingNodeRect.right;
+        }
+
+        // Constrain vertical movement
+        if (elementTop < containerTop) {
+            constrainedY = containerTop - draggingNodeRect.top;
+        } else if (elementBottom > containerBottom) {
+            constrainedY = containerBottom - draggingNodeRect.bottom;
+        }
+
+        return {
+            ...transform,
+            x: constrainedX,
+            y: constrainedY,
+        };
+    };
 
     // Chord click handler
     const handleChordClick = useCallback((chordNoteNames: string, chordIndex?: number, chordName?: string) => {
@@ -350,12 +397,13 @@ const ChordNavigation: React.FC = () => {
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={handleDragEndDndKit}
+            modifiers={[restrictToParentElement, restrictToContainer]}
         >
             <SortableContext 
                 items={addedChords.map((_, index) => `chord-${index}`)}
                 strategy={rectSortingStrategy}
             >
-                <div className="flex flex-wrap -mx-2 ">
+                <div className="flex flex-wrap -mx-2 relative ">
                     {addedChords.map((chord, index) => (
                         <SortableChordItem
                             key={`${chord.name}-${chord.notes}-${index}`}
@@ -424,7 +472,7 @@ const ChordNavigation: React.FC = () => {
             </div>
 
             {/* Chord Display Area */}
-            <div className={`flex-1 max-w-7xl mx-auto w-full ${isLiveMode ? 'px-4 pb-8 overflow-y-auto' : 'px-2 pb-2'}`}>
+            <div className={`flex-1 max-w-7xl mx-auto w-full ${isLiveMode ? 'px-4 pb-8 pt-2 overflow-y-auto' : 'px-2 pb-2'}`}>
                 {!isEditMode ? nonEditModeView : editModeView}
             </div>
 

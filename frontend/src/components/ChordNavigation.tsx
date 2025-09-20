@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { TrashIcon, XCircleIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon, PlayIcon, PauseIcon, PlayCircleIcon, CogIcon } from '@heroicons/react/20/solid';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { 
@@ -6,6 +6,7 @@ import {
     closestCenter, 
     KeyboardSensor, 
     PointerSensor, 
+    TouchSensor,
     useSensor, 
     useSensors,
     DragEndEvent
@@ -34,6 +35,13 @@ import { getMidiNotes } from '../util/ChordUtil';
 
 const START_OCTAVE = 4;
 const END_OCTAVE = 7;
+
+// Helper function to detect mobile devices
+const isMobile = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+           'ontouchstart' in window ||
+           navigator.maxTouchPoints > 0;
+};
 
 // Sortable item component for @dnd-kit (live mode only)
 interface SortableChordItemProps {
@@ -64,16 +72,28 @@ const SortableChordItem: React.FC<SortableChordItemProps> = ({
 
     const style = {
         transform: CSS.Transform.toString(transform),
-        transition,
+        transition: isDragging ? 'none' : transition, // Disable transition during drag for smoother mobile experience
+    };
+
+    // Enhanced attributes for mobile
+    const enhancedAttributes = {
+        ...attributes,
+        // Prevent default touch behaviors that interfere with dragging
+        style: {
+            touchAction: 'none' as const, // Prevent scrolling during drag
+            userSelect: 'none' as const,  // Prevent text selection
+            WebkitUserSelect: 'none' as const,
+            ...style
+        } as React.CSSProperties
     };
 
     return (
         <div 
             ref={setNodeRef}
-            style={style}
-            {...attributes}
+            {...enhancedAttributes}
             {...listeners}
-            className={`${getLiveItemWidth()} px-2 mb-4 `}
+            // Remove the width classes since we're now in a CSS Grid cell
+            className="mobile-drag-item"
         >
             {renderChordButton(chord, index, isDragging, onEdit)}
         </div>
@@ -97,11 +117,41 @@ const ChordNavigation: React.FC = () => {
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingChordIndex, setEditingChordIndex] = useState<number | null>(null);
 
-    // Sensors for @dnd-kit
+    // Prevent body scroll when in live mode
+    useEffect(() => {
+        if (isLiveMode) {
+            // Store the current overflow style to restore later
+            const originalOverflow = document.body.style.overflow;
+            const originalOverscrollBehavior = document.body.style.overscrollBehavior;
+            
+            // Prevent body scroll
+            document.body.style.overflow = 'hidden';
+            document.body.style.overscrollBehavior = 'none';
+            
+            // Cleanup function to restore original styles
+            return () => {
+                document.body.style.overflow = originalOverflow;
+                document.body.style.overscrollBehavior = originalOverscrollBehavior;
+            };
+        }
+    }, [isLiveMode]);
+
+    // Mobile-optimized sensors configuration
     const sensors = useSensors(
         useSensor(PointerSensor, {
+            activationConstraint: isMobile() ? {
+                // For mobile: use delay to avoid conflicts with scrolling
+                delay: 200,
+                tolerance: 5,
+            } : {
+                // For desktop: use distance for immediate response
+                distance: 8,
+            },
+        }),
+        useSensor(TouchSensor, {
             activationConstraint: {
-                distance: 8, // Require 8px of movement before starting drag
+                delay: 250,
+                tolerance: 8,
             },
         }),
         useSensor(KeyboardSensor, {
@@ -109,7 +159,7 @@ const ChordNavigation: React.FC = () => {
         })
     );
 
-    // Custom modifier to restrict dragging within the container bounds
+    // Custom modifier to restrict dragging within the container bounds (mobile-friendly)
     const restrictToContainer = (args: any) => {
         const { containerNodeRect, draggingNodeRect, transform } = args;
         
@@ -117,11 +167,14 @@ const ChordNavigation: React.FC = () => {
             return transform;
         }
 
-        // Calculate boundaries
-        const containerLeft = containerNodeRect.left;
-        const containerRight = containerNodeRect.right;
-        const containerTop = containerNodeRect.top;
-        const containerBottom = containerNodeRect.bottom;
+        // Add some padding for mobile to make edge cases easier
+        const padding = isMobile() ? 20 : 10;
+        
+        // Calculate boundaries with padding
+        const containerLeft = containerNodeRect.left + padding;
+        const containerRight = containerNodeRect.right - padding;
+        const containerTop = containerNodeRect.top + padding;
+        const containerBottom = containerNodeRect.bottom - padding;
 
         // Calculate the dragged element's position
         const elementLeft = draggingNodeRect.left + transform.x;
@@ -212,9 +265,34 @@ const ChordNavigation: React.FC = () => {
         }
     };
 
-    // @dnd-kit drag end handler for live mode
+    // Drag handlers with mobile cleanup
+    const handleDragStart = () => {
+        document.body.classList.add('dragging');
+        if (isMobile()) {
+            document.body.style.overflow = 'hidden';
+            // Prevent pull-to-refresh on mobile
+            document.body.style.overscrollBehavior = 'none';
+        }
+    };
+
+    const handleDragCancel = () => {
+        document.body.classList.remove('dragging');
+        if (isMobile()) {
+            document.body.style.overflow = '';
+            document.body.style.overscrollBehavior = '';
+        }
+    };
+
+    // @dnd-kit drag end handler for live mode with cleanup
     const handleDragEndDndKit = (event: DragEndEvent) => {
         const { active, over } = event;
+        
+        // Clean up drag state immediately
+        document.body.classList.remove('dragging');
+        if (isMobile()) {
+            document.body.style.overflow = '';
+            document.body.style.overscrollBehavior = '';
+        }
         
         console.log('Drag end event:', { active: active.id, over: over?.id });
         
@@ -297,6 +375,7 @@ const ChordNavigation: React.FC = () => {
         }
     }
 
+    // Enhanced renderChordButton function for better mobile experience
     const renderChordButton = (chord: any, index: number, isDragging: boolean = false, onEdit?: (index: number) => void) => {
         const isActive = index === activeChordIndex;
         const isHighlighted = index === highlightedChordIndex;
@@ -319,38 +398,84 @@ const ChordNavigation: React.FC = () => {
             }
         };
 
+        // Enhanced mobile touch handling
+        const handleTouchStart = (e: React.TouchEvent) => {
+            if (!isEditMode) {
+                // Add visual feedback for non-edit mode touches
+                (e.currentTarget as HTMLElement).style.transform = 'scale(0.95)';
+            }
+        };
+
+        const handleTouchEnd = (e: React.TouchEvent) => {
+            if (!isEditMode) {
+                // Remove visual feedback
+                (e.currentTarget as HTMLElement).style.transform = '';
+            }
+        };
+
         return (
             <ChordButton
                 key={index}
                 onClick={handleButtonClick}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
                 variant={isDeleteMode ? "danger" : isEditMode ? "secondary" : "primary"}
                 active={isActive && !isDeleteMode && !isEditMode}
                 aria-label={`Pattern: ${chord.pattern.join('-')}`}
                 className={classNames(
-                    'relative w-full h-full',
+                    'relative w-full h-full mobile-drag-item',
                     {
-                        'py-8 px-6 text-lg min-h-[120px] flex flex-col items-center justify-center': isLiveMode,
+                        'py-8 px-6 text-lg min-h-[120px] flex flex-col items-center justify-center': isLiveMode && !isMobile(),
+                        'py-8 px-6 text-lg min-h-[140px] flex flex-col items-center justify-center': isLiveMode && isMobile(),
                         'py-4 px-2 text-sm min-w-[85px] bottom-nav-button chord-button space-x-1 mt-1 min-h-[60px] !min-w-[70px] flex flex-col items-center justify-center': !isLiveMode,
                         'transform': isHighlighted,
                         'shadow-xl': isLiveMode,
                         'border-blue-500 hover:border-blue-400': isEditMode,
-                        'cursor-grab active:cursor-grabbing': isEditMode,
+                        'cursor-grab active:cursor-grabbing': isEditMode && !isMobile(),
                         'opacity-80 shadow-2xl scale-105': isDragging,
+                        // Mobile-specific styles
+                        'touch-none select-none': isEditMode,
                     }
                 )}
+                style={{
+                    touchAction: isEditMode ? 'none' : 'auto',
+                }}
             >
-                {isDeleteMode && <XCircleIcon className={`absolute top-1 right-1 text-white bg-red-500 rounded-full shadow-sm ${isLiveMode ? 'h-6 w-6' : 'h-4 w-4'}`} />}
-                {isEditMode && <CogIcon className={`absolute top-1 right-1 text-white bg-blue-500 rounded-full shadow-sm p-0.5 ${isLiveMode ? 'h-6 w-6' : 'h-4 w-4'}`} />}
+                {isDeleteMode && (
+                    <XCircleIcon 
+                        className={`absolute top-1 right-1 text-white bg-red-500 rounded-full shadow-sm ${isLiveMode ? 'h-6 w-6' : 'h-4 w-4'}`} 
+                    />
+                )}
+                {isEditMode && (
+                    <CogIcon 
+                        className={`absolute top-1 right-1 text-white bg-blue-500 rounded-full shadow-sm p-0.5 ${isLiveMode ? 'h-6 w-6' : 'h-4 w-4'}`} 
+                    />
+                )}
 
-                {/* Do not remove this transparent icon. It is necessary to make the entire button grabbable  */}
-                {isEditMode && <CogIcon className={`absolute top-1 right-1 opacity-0 h-full w-full shadow-sm`} />}
+                {/* Enhanced drag handle for mobile - make it more prominent */}
+                {isEditMode && (
+                    <>
+                        <CogIcon className="absolute top-1 right-1 opacity-0 h-full w-full shadow-sm" />
+                        {isMobile() && (
+                            <div className="absolute inset-0 bg-blue-500/5 border-2 border-blue-500/20 rounded-lg pointer-events-none" />
+                        )}
+                    </>
+                )}
                 
-                <div className={`text-blue-200 font-bold ${isLiveMode ? 'text-xl mb-2' : 'text-xs mb-1'}`}>{index + 1}</div>
-                <div className={`leading-tight ${isLiveMode ? 'text-base text-center text-white ' : 'text-xs'}`}>{chord.name}</div>
+                <div className={`text-blue-200 font-bold ${isLiveMode ? 'text-xl mb-2' : 'text-xs mb-1'}`}>
+                    {index + 1}
+                </div>
+                <div className={`leading-tight ${isLiveMode ? 'text-base text-center text-white' : 'text-xs'}`}>
+                    {chord.name}
+                </div>
                 {isLiveMode && (
                     <>
-                        <div className="mt-4 text-xs text-center text-slate-300">{chord.notes.replace(/,/g, ' • ')}</div>
-                        <div className="mt-1 font-mono text-xs text-center text-slate-300">{chord.pattern.join('-')}</div>
+                        <div className="mt-4 text-xs text-center text-slate-300">
+                            {chord.notes.replace(/,/g, ' • ')}
+                        </div>
+                        <div className="mt-1 font-mono text-xs text-center text-slate-300">
+                            {chord.pattern.join('-')}
+                        </div>
                     </>
                 )}
             </ChordButton>
@@ -366,14 +491,17 @@ const ChordNavigation: React.FC = () => {
                 isEditMode ? "border-blue-500 text-blue-400 bg-blue-500/10 hover:bg-blue-500/20" : "border-gray-500 text-gray-400 hover:border-gray-400 hover:text-gray-300 hover:bg-gray-500/10"
             )}
             title={isEditMode ? "Exit edit mode" : "Edit chords"}
+            style={{
+                minHeight: isLiveMode && isMobile() ? '140px' : undefined,
+            }}
         >
             <CogIcon className={`${isLiveMode ? 'w-8 h-8' : 'w-6 h-6'} ${isEditMode ? 'animate-spin' : ''}`} />
         </button>
     );
 
-    // Calculate responsive widths for live mode
+    // Calculate responsive widths for live mode (not used in edit mode anymore)
     const getLiveItemWidth = () => {
-        // Responsive breakpoints matching the grid cols
+        // This is only used for non-live mode now
         return "w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5 xl:w-1/6";
     };
 
@@ -406,18 +534,24 @@ const ChordNavigation: React.FC = () => {
     );
 
     const editModeView = isLiveMode ? (
-        // EDIT MODE - LIVE (Flex wrap with @dnd-kit)
+        // EDIT MODE - LIVE (CSS Grid with @dnd-kit - consistent with non-edit mode)
         <DndContext 
             sensors={sensors}
             collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
             onDragEnd={handleDragEndDndKit}
+            onDragCancel={handleDragCancel}
             modifiers={[restrictToParentElement, restrictToContainer]}
         >
             <SortableContext 
                 items={addedChords.map((_, index) => `chord-${index}`)}
                 strategy={rectSortingStrategy}
             >
-                <div className="flex flex-wrap -mx-2 relative ">
+                {/* Use the SAME grid layout as non-edit mode with forced gap */}
+                <div 
+                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 auto-rows-max pt-0"
+                    style={{ gap: '1rem' }} // Force consistent 1rem gap (gap-4)
+                >
                     {addedChords.map((chord, index) => (
                         <SortableChordItem
                             key={`${chord.name}-${chord.notes}-${index}`}
@@ -426,11 +560,11 @@ const ChordNavigation: React.FC = () => {
                             chord={chord}
                             onEdit={handleEditChord}
                             renderChordButton={renderChordButton}
-                            getLiveItemWidth={getLiveItemWidth}
+                            getLiveItemWidth={() => "w-full"} // Use full width within grid cell
                         />
                     ))}
-                    {/* Edit toggle is NOT draggable */}
-                    <div className={`${getLiveItemWidth()} px-2 mb-4`}>
+                    {/* Edit toggle in its own grid cell */}
+                    <div>
                         {editModeToggle}
                     </div>
                 </div>

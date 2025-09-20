@@ -391,3 +391,47 @@ body {
 .ReactPiano__Key--active.ReactPiano__Key--natural {
   border: 1px solid oklch(70.7% 0.165 254.624);
 }
+
+/* Mobile drag optimization styles */
+.mobile-drag-container {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-drag-item {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent text selection during drag globally */
+.dragging {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  overflow: hidden;
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 768px) {
+  .mobile-drag-container {
+    gap: 8px;
+  }
+
+  .mobile-drag-item {
+    border-radius: 12px;
+  }
+
+  .mobile-drag-item {
+    touch-action: manipulation;
+  }
+
+  .mobile-drag-item[data-state="dragging"] {
+    transform: scale(1.05) rotate(3deg);
+    z-index: 1000;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  }
+}

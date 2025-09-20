@@ -126,6 +126,8 @@ export const Button: React.FC<ButtonProps> = ({
 interface ChordButtonProps {
   children: React.ReactNode;
   onClick?: (e: React.MouseEvent) => void;
+  onTouchStart?: (e: React.TouchEvent) => void;
+  onTouchEnd?: (e: React.TouchEvent) => void;
   className?: string;
   variant?: 'primary' | 'secondary' | 'danger' | 'success';
   size?: 'sm' | 'md' | 'lg';
@@ -135,11 +137,14 @@ interface ChordButtonProps {
   'aria-expanded'?: boolean;
   type?: 'button' | 'submit' | 'reset';
   title?: string;
+  style?: React.CSSProperties;
 }
 
 export const ChordButton: React.FC<ChordButtonProps> = ({
   children,
   onClick,
+  onTouchStart,
+  onTouchEnd,
   className = '',
   variant = 'primary',
   size = 'md',
@@ -148,7 +153,8 @@ export const ChordButton: React.FC<ChordButtonProps> = ({
   'aria-label': ariaLabel,
   'aria-expanded': ariaExpanded,
   type = 'button',
-  title
+  title,
+  style
 }) => {
   const baseClasses = `
     font-medium transition-all duration-200 rounded-md border
@@ -182,10 +188,13 @@ export const ChordButton: React.FC<ChordButtonProps> = ({
     <button
       type={type}
       onClick={onClick}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
       disabled={disabled}
       aria-label={ariaLabel}
       aria-expanded={ariaExpanded}
       title={title}
+      style={style}
       className={classNames(
         baseClasses,
         sizeClasses[size],

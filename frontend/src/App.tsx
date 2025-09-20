@@ -51,7 +51,7 @@ function App() {
 
     // Rest of the component remains exactly the same
     return (
-        <div className="select-none text-center bg-[#282c34] min-h-screen">
+        <div className="select-none text-center bg-[#282c34] min-h-screen h-full">
             <audio ref={silentAudioRef} preload="auto">
                 <source src="/silence.mp3" type="audio/mp3" />
             </audio>

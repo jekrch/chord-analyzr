@@ -457,7 +457,7 @@ const ChordNavigation: React.FC = () => {
                     <>
                         <CogIcon className="absolute top-1 right-1 opacity-0 h-full w-full shadow-sm" />
                         {isMobile() && (
-                            <div className="absolute inset-0 bg-blue-500/5 border-2 border-blue-500/20 rounded-lg pointer-events-none" />
+                            <div className="absolute inset-0 w-full bg-blue-500/5 border-2 border-blue-500/20 rounded-lg pointer-events-none" />
                         )}
                     </>
                 )}

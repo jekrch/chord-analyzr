@@ -41,7 +41,7 @@ interface SortableChordItemProps {
     index: number;
     chord: any;
     onEdit: (index: number) => void;
-    renderChordButton: (chord: any, index: number, isDragging?: boolean) => React.ReactNode;
+    renderChordButton: (chord: any, index: number, isDragging?: boolean, onEdit?: (index: number) => void) => React.ReactNode;
     getLiveItemWidth: () => string;
 }
 
@@ -67,13 +67,6 @@ const SortableChordItem: React.FC<SortableChordItemProps> = ({
         transition,
     };
 
-    const handleClick = (e: React.MouseEvent) => {
-        // Only trigger edit if we're not dragging
-        if (!isDragging) {
-            onEdit(index);
-        }
-    };
-
     return (
         <div 
             ref={setNodeRef}
@@ -81,9 +74,8 @@ const SortableChordItem: React.FC<SortableChordItemProps> = ({
             {...attributes}
             {...listeners}
             className={`${getLiveItemWidth()} px-2 mb-4 `}
-            onClick={handleClick}
         >
-            {renderChordButton(chord, index, isDragging)}
+            {renderChordButton(chord, index, isDragging, onEdit)}
         </div>
     );
 };
@@ -107,7 +99,11 @@ const ChordNavigation: React.FC = () => {
 
     // Sensors for @dnd-kit
     const sensors = useSensors(
-        useSensor(PointerSensor),
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8, // Require 8px of movement before starting drag
+            },
+        }),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
         })
@@ -301,14 +297,32 @@ const ChordNavigation: React.FC = () => {
         }
     }
 
-    const renderChordButton = (chord: any, index: number, isDragging: boolean = false) => {
+    const renderChordButton = (chord: any, index: number, isDragging: boolean = false, onEdit?: (index: number) => void) => {
         const isActive = index === activeChordIndex;
         const isHighlighted = index === highlightedChordIndex;
+
+        const handleButtonClick = (e: React.MouseEvent) => {
+            console.log('Button clicked!', { isEditMode, hasOnEdit: !!onEdit, index });
+            
+            // Prevent event bubbling to avoid conflicts with drag handlers
+            e.stopPropagation();
+            e.preventDefault();
+            
+            if (isEditMode && onEdit) {
+                console.log('Opening editor for chord', index);
+                // In edit mode, clicking should open the editor
+                onEdit(index);
+            } else if (!isEditMode) {
+                console.log('Playing chord', index);
+                // In normal mode, clicking should play the chord
+                handleChordClick(chord.notes, index);
+            }
+        };
 
         return (
             <ChordButton
                 key={index}
-                onClick={() => !isEditMode && handleChordClick(chord.notes, index)}
+                onClick={handleButtonClick}
                 variant={isDeleteMode ? "danger" : isEditMode ? "secondary" : "primary"}
                 active={isActive && !isDeleteMode && !isEditMode}
                 aria-label={`Pattern: ${chord.pattern.join('-')}`}
@@ -331,7 +345,7 @@ const ChordNavigation: React.FC = () => {
                 {/* Do not remove this transparent icon. It is necessary to make the entire button grabbable  */}
                 {isEditMode && <CogIcon className={`absolute top-1 right-1 opacity-0 h-full w-full shadow-sm`} />}
                 
-                <div className={`text-cyan-200 font-bold ${isLiveMode ? 'text-xl mb-2' : 'text-xs mb-1'}`}>{index + 1}</div>
+                <div className={`text-blue-200 font-bold ${isLiveMode ? 'text-xl mb-2' : 'text-xs mb-1'}`}>{index + 1}</div>
                 <div className={`leading-tight ${isLiveMode ? 'text-base text-center text-white ' : 'text-xs'}`}>{chord.name}</div>
                 {isLiveMode && (
                     <>
@@ -366,7 +380,7 @@ const ChordNavigation: React.FC = () => {
     const nonEditModeView = (
         isLiveMode ? (
             // LIVE MODE - CSS Grid (non-edit)
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 auto-rows-max pt-1">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 auto-rows-max pt-0">
                 {addedChords.map((chord, index) => (
                     <div key={index}>
                         {renderChordButton(chord, index)}
@@ -378,7 +392,7 @@ const ChordNavigation: React.FC = () => {
             </div>
         ) : (
             // COLLAPSED MODE - Horizontal flex (non-edit)
-            <div className="flex space-x-2 overflow-x-auto pb-1 chord-sequence-scroll -mx-2 px-2">
+            <div className="flex space-x-2 overflow-x-auto pb-2 chord-sequence-scroll -mx-2 px-2">
                 {addedChords.map((chord, index) => (
                     <div key={index} className="flex-shrink-0">
                         {renderChordButton(chord, index)}
@@ -427,12 +441,17 @@ const ChordNavigation: React.FC = () => {
         <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId="chord-list" direction="horizontal">
                 {(provided) => (
-                    <div ref={provided.innerRef} {...provided.droppableProps} className="flex pb-1 -mx-2 overflow-x-auto space-x-2 px-2 chord-sequence-scroll">
+                    <div ref={provided.innerRef} {...provided.droppableProps} className="flex pb-2 -mx-2 overflow-x-auto space-x-2 px-2 chord-sequence-scroll">
                         {addedChords.map((chord, index) => (
                             <Draggable key={`chord-${index}`} draggableId={`chord-${index}`} index={index}>
                                 {(provided, snapshot) => (
-                                    <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className='flex-shrink-0' onClick={() => handleEditChord(index)}>
-                                        {renderChordButton(chord, index, snapshot.isDragging)}
+                                    <div 
+                                        ref={provided.innerRef} 
+                                        {...provided.draggableProps} 
+                                        {...provided.dragHandleProps} 
+                                        className='flex-shrink-0'
+                                    >
+                                        {renderChordButton(chord, index, snapshot.isDragging, handleEditChord)}
                                     </div>
                                 )}
                             </Draggable>
@@ -472,7 +491,7 @@ const ChordNavigation: React.FC = () => {
             </div>
 
             {/* Chord Display Area */}
-            <div className={`flex-1 max-w-7xl mx-auto w-full ${isLiveMode ? 'px-4 pb-8 pt-2 overflow-y-auto' : 'px-2 pb-2'}`}>
+            <div className={`flex-1 max-w-7xl mx-auto w-full ${isLiveMode ? 'px-4 pb-8 pt-2 overflow-y-auto' : 'px-2 pb-1'}`}>
                 {!isEditMode ? nonEditModeView : editModeView}
             </div>
 

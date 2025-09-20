@@ -82,7 +82,7 @@ const HeaderNav: React.FC = () => {
                                     </h1>
                                     <div className="flex items-center space-x-0.5">
                                         <span className="text-xs text-slate-400 font-medium uppercase tracking-widest">chord</span>
-                                        <div className="w-1 h-1 bg-slate-400"></div>
+                                        <div className="w-1 h-1 mr-[0.2em] bg-slate-400"></div>
                                         <span className="text-xs text-slate-400 font-medium uppercase tracking-widest">buildr</span>
                                     </div>
                                 </div>

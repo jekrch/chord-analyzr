@@ -125,7 +125,7 @@ export const Button: React.FC<ButtonProps> = ({
 // Chord-specific button component that matches the ChordNavigation styling
 interface ChordButtonProps {
   children: React.ReactNode;
-  onClick?: () => void;
+  onClick?: (e: React.MouseEvent) => void;
   className?: string;
   variant?: 'primary' | 'secondary' | 'danger' | 'success';
   size?: 'sm' | 'md' | 'lg';

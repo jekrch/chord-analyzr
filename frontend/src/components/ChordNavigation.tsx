@@ -1,6 +1,25 @@
 import React, { useState, useCallback } from 'react';
 import { TrashIcon, XCircleIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon, PlayIcon, PauseIcon, PlayCircleIcon, CogIcon } from '@heroicons/react/20/solid';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import { 
+    DndContext, 
+    closestCenter, 
+    KeyboardSensor, 
+    PointerSensor, 
+    useSensor, 
+    useSensors,
+    DragEndEvent
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    rectSortingStrategy
+} from '@dnd-kit/sortable';
+import {
+    useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import classNames from 'classnames';
 import { Button, ChordButton } from './Button';
 import ChordEditor from './ChordEditor';
@@ -12,6 +31,59 @@ import { getMidiNotes } from '../util/ChordUtil';
 
 const START_OCTAVE = 4;
 const END_OCTAVE = 7;
+
+// Sortable item component for @dnd-kit (live mode only)
+interface SortableChordItemProps {
+    id: string;
+    index: number;
+    chord: any;
+    onEdit: (index: number) => void;
+    renderChordButton: (chord: any, index: number, isDragging?: boolean) => React.ReactNode;
+    getLiveItemWidth: () => string;
+}
+
+const SortableChordItem: React.FC<SortableChordItemProps> = ({
+    id,
+    index,
+    chord,
+    onEdit,
+    renderChordButton,
+    getLiveItemWidth
+}) => {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging,
+    } = useSortable({ id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    };
+
+    const handleClick = (e: React.MouseEvent) => {
+        // Only trigger edit if we're not dragging
+        if (!isDragging) {
+            onEdit(index);
+        }
+    };
+
+    return (
+        <div 
+            ref={setNodeRef}
+            style={style}
+            {...attributes}
+            {...listeners}
+            className={`${getLiveItemWidth()} px-2 mb-4 `}
+            onClick={handleClick}
+        >
+            {renderChordButton(chord, index, isDragging)}
+        </div>
+    );
+};
 
 const ChordNavigation: React.FC = () => {
     // Stores
@@ -29,6 +101,14 @@ const ChordNavigation: React.FC = () => {
     // Local state
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingChordIndex, setEditingChordIndex] = useState<number | null>(null);
+
+    // Sensors for @dnd-kit
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
 
     // Chord click handler
     const handleChordClick = useCallback((chordNoteNames: string, chordIndex?: number, chordName?: string) => {
@@ -89,7 +169,42 @@ const ChordNavigation: React.FC = () => {
         }
     };
 
-    // Unified drag-and-drop handler for both modes
+    // @dnd-kit drag end handler for live mode
+    const handleDragEndDndKit = (event: DragEndEvent) => {
+        const { active, over } = event;
+        
+        console.log('Drag end event:', { active: active.id, over: over?.id });
+        
+        if (over && active.id !== over.id) {
+            // Extract indices from the IDs
+            const activeIndex = parseInt(active.id.toString().replace('chord-', ''));
+            const overIndex = parseInt(over.id.toString().replace('chord-', ''));
+            
+            console.log('Moving from index', activeIndex, 'to index', overIndex);
+            
+            if (!isNaN(activeIndex) && !isNaN(overIndex) && 
+                activeIndex >= 0 && activeIndex < addedChords.length && 
+                overIndex >= 0 && overIndex < addedChords.length) {
+                
+                const reorderedChords = arrayMove(addedChords, activeIndex, overIndex);
+                console.log('Reordered chords:', reorderedChords.map(c => c.name));
+                playbackStore.setAddedChords(reorderedChords);
+
+                // Update active chord index
+                if (activeChordIndex !== null) {
+                    if (activeChordIndex === activeIndex) {
+                        playbackStore.setActiveChordIndex(overIndex);
+                    } else if (activeIndex < activeChordIndex && overIndex >= activeChordIndex) {
+                        playbackStore.setActiveChordIndex(activeChordIndex - 1);
+                    } else if (activeIndex > activeChordIndex && overIndex <= activeChordIndex) {
+                        playbackStore.setActiveChordIndex(activeChordIndex + 1);
+                    }
+                }
+            }
+        }
+    };
+
+    // @hello-pangea/dnd drag end handler for non-live mode
     const handleDragEnd = (result: DropResult) => {
         if (!result.destination) return;
         const sourceIndex = result.source.index;
@@ -204,7 +319,7 @@ const ChordNavigation: React.FC = () => {
     const nonEditModeView = (
         isLiveMode ? (
             // LIVE MODE - CSS Grid (non-edit)
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 auto-rows-max">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 auto-rows-max pt-1">
                 {addedChords.map((chord, index) => (
                     <div key={index}>
                         {renderChordButton(chord, index)}
@@ -230,44 +345,37 @@ const ChordNavigation: React.FC = () => {
     );
 
     const editModeView = isLiveMode ? (
-        // EDIT MODE - LIVE (Flex wrap with DnD)
-        <DragDropContext onDragEnd={handleDragEnd}>
-            <Droppable droppableId="chord-grid" direction="horizontal">
-                {(provided) => (
-                    <div 
-                        ref={provided.innerRef} 
-                        {...provided.droppableProps}
-                        className="flex flex-wrap -mx-2"
-                    >
-                        {addedChords.map((chord, index) => (
-                            <Draggable key={`chord-${index}`} draggableId={`chord-${index}`} index={index}>
-                                {(provided, snapshot) => (
-                                    <div 
-                                        ref={provided.innerRef} 
-                                        {...provided.draggableProps} 
-                                        {...provided.dragHandleProps}
-                                        className={`${getLiveItemWidth()} px-2 mb-4`}
-                                        style={{
-                                            ...provided.draggableProps.style,
-                                        }}
-                                        onClick={() => handleEditChord(index)}
-                                    >
-                                        {renderChordButton(chord, index, snapshot.isDragging)}
-                                    </div>
-                                )}
-                            </Draggable>
-                        ))}
-                        {provided.placeholder}
-                        {/* Edit toggle is NOT draggable */}
-                        <div className={`${getLiveItemWidth()} px-2 mb-4`}>
-                            {editModeToggle}
-                        </div>
+        // EDIT MODE - LIVE (Flex wrap with @dnd-kit)
+        <DndContext 
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEndDndKit}
+        >
+            <SortableContext 
+                items={addedChords.map((_, index) => `chord-${index}`)}
+                strategy={rectSortingStrategy}
+            >
+                <div className="flex flex-wrap -mx-2 ">
+                    {addedChords.map((chord, index) => (
+                        <SortableChordItem
+                            key={`${chord.name}-${chord.notes}-${index}`}
+                            id={`chord-${index}`}
+                            index={index}
+                            chord={chord}
+                            onEdit={handleEditChord}
+                            renderChordButton={renderChordButton}
+                            getLiveItemWidth={getLiveItemWidth}
+                        />
+                    ))}
+                    {/* Edit toggle is NOT draggable */}
+                    <div className={`${getLiveItemWidth()} px-2 mb-4`}>
+                        {editModeToggle}
                     </div>
-                )}
-            </Droppable>
-        </DragDropContext>
+                </div>
+            </SortableContext>
+        </DndContext>
     ) : (
-        // EDIT MODE - NON-LIVE (Horizontal List)
+        // EDIT MODE - NON-LIVE (Horizontal List with @hello-pangea/dnd)
         <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId="chord-list" direction="horizontal">
                 {(provided) => (
@@ -294,7 +402,7 @@ const ChordNavigation: React.FC = () => {
     return (
         <div className={baseClasses}>
             {/* Top Control Bar */}
-            <div className={`${isLiveMode ? 'flex-shrink-0' : ''} max-w-7xl mx-auto px-4 ${isLiveMode ? 'py-4' : 'pt-2'} w-full`}>
+            <div className={`${isLiveMode ? 'flex-shrink-0' : ''} max-w-7xl mx-auto px-4 ${isLiveMode ? 'pt-4 z-10' : 'pt-2'} w-full`}>
                 <div className={`flex items-center justify-between ${isLiveMode ? 'mb-3' : 'mb-2'}`}>
                     <div className="flex items-center space-x-4">
                         {!isLiveMode && <Button onClick={handleTogglePlayback} variant="icon" size="icon" active={globalPatternState.isPlaying} title={globalPatternState.isPlaying ? "Stop" : "Play"}>{globalPatternState.isPlaying ? <PauseIcon className="w-4 h-4" /> : <PlayIcon className="w-4 h-4" />}</Button>}

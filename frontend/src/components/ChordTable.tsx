@@ -93,7 +93,7 @@ const ChordCard = memo<{
       {/* Expandable notes section */}
       {isExpanded && (
         <div className="px-3 pb-3 pt-0 sm:px-4 sm:pb-4">
-          <div className="bg-[#2d3142] rounded-md p-2 sm:p-3 border-t border-gray-600">
+          <div className="bg-gray-800 rounded-md p-2 sm:p-3 border-t border-gray-600">
             <div className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">
               Notes
             </div>
@@ -115,7 +115,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
 }) => {
   const [selectedRootNote, setSelectedRootNote] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [expandedChords, setExpandedChords] = useState<Set<number>>(new Set());
+  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [playingChords, setPlayingChords] = useState<Set<number>>(new Set());
   const [addingChords, setAddingChords] = useState<Set<number>>(new Set());
   const [currentColumns, setCurrentColumns] = useState<number>(1);
@@ -154,6 +154,11 @@ const ChordTable: React.FC<ChordTableProps> = ({
     window.addEventListener('resize', updateColumns);
     return () => window.removeEventListener('resize', updateColumns);
   }, []);
+
+  // Helper function to calculate which row a chord belongs to
+  const getRowNumber = useCallback((index: number) => {
+    return Math.floor(index / currentColumns);
+  }, [currentColumns]);
 
   // Extract root note from chord name - memoized function
   const extractRootNote = useCallback((chordName: string | undefined): string => {
@@ -225,6 +230,11 @@ const ChordTable: React.FC<ChordTableProps> = ({
     });
   }, [validChords, selectedRootNote, searchQuery, extractRootNote]);
 
+  // Clear expanded rows when columns change or filters change
+  useEffect(() => {
+    setExpandedRows(new Set());
+  }, [currentColumns, filteredChords]);
+
   // Optimized event handlers with useCallback
   const handleChordPlay = useCallback((chordNoteNames: string, index: number, chordName: string) => {
     // Trigger play animation
@@ -266,25 +276,26 @@ const ChordTable: React.FC<ChordTableProps> = ({
     return () => clearTimeout(timeoutId);
   }, [addChordClick, musicStore.modes]);
 
-  // Simplified expansion toggle
+  // Updated expansion toggle to work with rows
   const handleToggleExpansion = useCallback((index: number) => {
-    setExpandedChords(prev => {
+    const rowNumber = getRowNumber(index);
+    setExpandedRows(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(index)) {
-        newSet.delete(index);
+      if (newSet.has(rowNumber)) {
+        newSet.delete(rowNumber);
       } else {
-        newSet.add(index);
+        newSet.add(rowNumber);
       }
       return newSet;
     });
-  }, []);
+  }, [getRowNumber]);
 
   const handleToggleAllChords = useCallback(() => {
     toggleShowAllChords();
     // Reset filters when switching modes
     setSelectedRootNote('All');
     setSearchQuery('');
-    setExpandedChords(new Set());
+    setExpandedRows(new Set());
   }, [toggleShowAllChords]);
 
   const handleClearFilters = useCallback(() => {
@@ -459,7 +470,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
                   key={`chord-${chord.chordName}-${index}`}
                   chord={chord}
                   index={index}
-                  isExpanded={expandedChords.has(index)}
+                  isExpanded={expandedRows.has(getRowNumber(index))}
                   isPlaying={playingChords.has(index)}
                   isAdding={addingChords.has(index)}
                   onChordPlay={handleChordPlay}
@@ -502,7 +513,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
               <div className="text-xs text-gray-400">
                 Tap any chord to play • 
                 <span className="text-gray-300 mx-1">+</span> to add to sequence • 
-                <ChevronDownIcon className="inline h-3 w-3 mx-1" /> to show notes
+                <ChevronDownIcon className="inline h-3 w-3 mx-1" /> to show notes for entire row
                 {showAllChords && (
                   <span className="block mt-1 text-blue-400">
                     Currently showing all distinct chords across all modes and keys (sorted alphabetically)

@@ -2,11 +2,12 @@ import React, { useState, useRef, useCallback } from 'react';
 import { PlayCircleIcon, PauseIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
 import Dropdown from '../Dropdown';
 import { Button } from '../Button';
-import { useMusicStore } from '../../stores/musicStore';
+import { calculateTransposeSteps, transposeChordName, transposeNotes, useMusicStore } from '../../stores/musicStore';
 import { usePianoStore } from '../../stores/pianoStore';
 import { usePlaybackStore } from '../../stores/playbackStore';
 import { usePatternStore } from '../../stores/patternStore';
 import { normalizeNoteName } from '../../util/NoteUtil';
+import { dataService } from '../../services/DataService';
 
 interface EqSettings {
     bass: number;
@@ -73,8 +74,9 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
     // Get scale playback toggle from playback store
     const { setIsPlayingScale, clearScalePlaybackTimeouts, setActiveNotes } = usePlaybackStore();
 
-    // Local state for piano settings panel
+    // Local state for piano settings panel and transpose toggle
     const [settingsOpen, setSettingsOpen] = useState(false);
+    const [transposeEnabled, setTransposeEnabled] = useState(false);
 
     // Refs for managing scale playback
     const scaleTimeoutsRef = useRef<NodeJS.Timeout[]>([]);
@@ -90,21 +92,131 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
         }
     };
 
-    // Handler for key change
-    const handleKeyChange = (key: string) => {
+// Handler for key change
+    const handleKeyChange = async (key: string) => {
         if (onKeyChange) {
             onKeyChange(key);
+        } else if (transposeEnabled) {
+            // Transpose chords directly here where we have access to current state
+            console.log('Transposing from', currentKey, mode, 'to', key, mode);
+            
+            // Get current chords from playback store
+            const currentAddedChords = usePlaybackStore.getState().addedChords;
+            console.log('Current chords to transpose:', currentAddedChords.length);
+            
+            if (currentAddedChords.length > 0) {
+                // Calculate transpose steps
+                const steps = calculateTransposeSteps(currentKey, key);
+                
+                // Fetch new music data for the target key and all distinct chords
+                const [newChords, allChords] = await Promise.all([
+                    dataService.getModeKeyChords(key, mode),
+                    dataService.getAllDistinctChords()
+                ]);
+                
+                // Transpose each chord
+                const transposedChords = currentAddedChords.map(chord => {
+                    const transposedChordName = transposeChordName(chord.name, steps);
+                    
+                    // First try to find the chord in the new key/mode
+                    let matchingChord = newChords.find(c => c.chordName === transposedChordName);
+                    
+                    // If not found, search all distinct chords
+                    if (!matchingChord) {
+                        matchingChord = allChords.find(c => c.chordName === transposedChordName);
+                        console.log(`Chord ${transposedChordName} not in ${key} ${mode}, found in all chords:`, !!matchingChord);
+                    }
+                    
+                    if (matchingChord?.chordNoteNames) {
+                        return {
+                            ...chord,
+                            name: transposedChordName,
+                            notes: matchingChord.chordNoteNames,
+                            originalKey: key,
+                            originalMode: mode,
+                            originalNotes: matchingChord.chordNoteNames
+                        };
+                    } else {
+                        // Manually transpose the notes if chord not found anywhere
+                        console.log(`Chord ${transposedChordName} not found, manually transposing notes`);
+                        const transposedNotes = transposeNotes(chord.notes, steps);
+                        return {
+                            ...chord,
+                            name: transposedChordName,
+                            notes: transposedNotes,
+                            originalNotes: chord.originalNotes ? transposeNotes(chord.originalNotes, steps) : transposedNotes
+                        };
+                    }
+                });
+                
+                // Update the playback store with transposed chords
+                usePlaybackStore.getState().setAddedChords(transposedChords);
+            }
+            
+            // Update the key in music store
+            setKey(key);
+            console.log('Transpose complete');
         } else {
+            // Just change the key without transposing chords
             setKey(key);
         }
     };
 
     // Handler for mode change
-    const handleModeChange = (mode: string) => {
+    const handleModeChange = async (newMode: string) => {
         if (onModeChange) {
-            onModeChange(mode);
+            onModeChange(newMode);
+        } else if (transposeEnabled) {
+            // Transpose chords directly here where we have access to current state
+            console.log('Transposing from', currentKey, mode, 'to', currentKey, newMode);
+            
+            // Get current chords from playback store
+            const currentAddedChords = usePlaybackStore.getState().addedChords;
+            console.log('Current chords to transpose:', currentAddedChords.length);
+            
+            if (currentAddedChords.length > 0) {
+                // Fetch new music data for the target mode and all distinct chords
+                const [newChords, allChords] = await Promise.all([
+                    dataService.getModeKeyChords(currentKey, newMode),
+                    dataService.getAllDistinctChords()
+                ]);
+                
+                // Try to find matching chords in the new mode
+                const transposedChords = currentAddedChords.map(chord => {
+                    // First try to find in new key/mode
+                    let matchingChord = newChords.find(c => c.chordName === chord.name);
+                    
+                    // If not found, search all distinct chords
+                    if (!matchingChord) {
+                        matchingChord = allChords.find(c => c.chordName === chord.name);
+                        console.log(`Chord ${chord.name} not in ${currentKey} ${newMode}, found in all chords:`, !!matchingChord);
+                    }
+                    
+                    if (matchingChord?.chordNoteNames) {
+                        return {
+                            ...chord,
+                            notes: matchingChord.chordNoteNames,
+                            originalKey: currentKey,
+                            originalMode: newMode,
+                            originalNotes: matchingChord.chordNoteNames
+                        };
+                    } else {
+                        // Keep the chord as-is if not found anywhere
+                        console.log(`Chord ${chord.name} not found, keeping as-is`);
+                        return chord;
+                    }
+                });
+                
+                // Update the playback store with updated chords
+                usePlaybackStore.getState().setAddedChords(transposedChords);
+            }
+            
+            // Update the mode in music store
+            setMode(newMode);
+            console.log('Transpose complete');
         } else {
-            setMode(mode);
+            // Just change the mode without transposing chords
+            setMode(newMode);
         }
     };
 
@@ -298,45 +410,57 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
 
                 {/* Main Controls Content - Stable Layout */}
                 <div className="p-6 py-4 bg-[#444b59]">
-                    <div className="flex flex-col xl:flex-row xl:items-center xl:justify-center gap-6">
+                    <div className="flex flex-col xl:flex-row xl:items-start xl:justify-center gap-6">
                         {/* Desktop: Centered container with internal separators */}
-                        <div className="hidden xl:flex items-center bg-[#3d434f]/30 border border-gray-600/30 rounded-lg px-6 py-4">
+                        <div className="hidden xl:flex items-start bg-[#3d434f]/30 border border-gray-600/30 rounded-lg px-6 py-4">
                             {/* Key Control Group */}
-                            <div className="flex items-center gap-3">
-                                <span className="text-sm text-slate-300 font-medium whitespace-nowrap">Key:</span>
-                                <div className="flex items-center gap-2">
-                                    <Dropdown
-                                        value={currentKey}
-                                        className='w-[5rem]'
-                                        buttonClassName='px-3 py-1.5 text-center font-medium text-xs h-10 flex items-center justify-center'
-                                        menuClassName='min-w-[5rem]'
-                                        onChange={handleKeyChange}
-                                        showSearch={false}
-                                        options={['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']}
-                                    />
-                                    <Button
-                                        onClick={toggleScalePlayback}
-                                        variant="play-stop"
-                                        size="icon"
-                                        className="!w-8 !h-8 flex items-center justify-center ml-1"
-                                        active={isPlayingScale}
-                                        title={isPlayingScale ? 'Stop scale' : `Play ${currentKey} ${mode} scale`}
-                                        disabled={!scaleNotes || scaleNotes.length === 0}
-                                    >
-                                        {isPlayingScale ? (
-                                            <PauseIcon className="w-6 h-6" />
-                                        ) : (
-                                            <PlayCircleIcon className="w-6 h-6" />
-                                        )}
-                                    </Button>
+                            <div className="flex items-start gap-3">
+                                <span className="text-sm text-slate-300 font-medium whitespace-nowrap mt-2">Key:</span>
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex items-center gap-2">
+                                        <Dropdown
+                                            value={currentKey}
+                                            className='w-[5rem]'
+                                            buttonClassName='px-3 py-1.5 text-center font-medium text-xs h-10 flex items-center justify-center'
+                                            menuClassName='min-w-[5rem]'
+                                            onChange={handleKeyChange}
+                                            showSearch={false}
+                                            options={['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']}
+                                        />
+                                        <Button
+                                            onClick={toggleScalePlayback}
+                                            variant="play-stop"
+                                            size="icon"
+                                            className="!w-8 !h-8 flex items-center justify-center ml-1"
+                                            active={isPlayingScale}
+                                            title={isPlayingScale ? 'Stop scale' : `Play ${currentKey} ${mode} scale`}
+                                            disabled={!scaleNotes || scaleNotes.length === 0}
+                                        >
+                                            {isPlayingScale ? (
+                                                <PauseIcon className="w-6 h-6" />
+                                            ) : (
+                                                <PlayCircleIcon className="w-6 h-6" />
+                                            )}
+                                        </Button>
+                                    </div>
+                                    <label className="flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            className="w-3 h-3 text-blue-600 bg-[#3d434f] border-gray-600 rounded focus:ring-blue-500 focus:ring-1"
+                                            checked={transposeEnabled}
+                                            onChange={(e) => setTransposeEnabled(e.target.checked)}
+                                            title="When enabled, changing key or mode will transpose all added chords"
+                                        />
+                                        <span className="ml-2 text-xs text-slate-400 uppercase tracking-wide">Transpose chords</span>
+                                    </label>
                                 </div>
                             </div>
 
                             {/* Separator */}
-                            <div className="w-px h-8 bg-gray-600/50 mx-8"></div>
+                            <div className="w-px h-8 bg-gray-600/50 mx-8 mt-2"></div>
 
                             {/* Mode Control Group */}
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 mt-2">
                                 <span className="text-sm text-slate-300 font-medium whitespace-nowrap">Mode:</span>
                                 {modes && (
                                     <Dropdown
@@ -352,10 +476,10 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                             </div>
 
                             {/* Separator */}
-                            <div className="w-px h-8 bg-gray-600/50 mx-8"></div>
+                            <div className="w-px h-8 bg-gray-600/50 mx-8 mt-2"></div>
 
                             {/* Voice Control Group */}
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 mt-2">
                                 <span className="text-sm text-slate-300 font-medium whitespace-nowrap">Voice:</span>
                                 <Dropdown
                                     value={pianoSettings.instrumentName.replaceAll('_', ' ')}
@@ -372,33 +496,45 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                         {/* Mobile: Stack vertically */}
                         <div className="xl:hidden space-y-4">
                             {/* Key Control Group */}
-                            <div className="flex items-center gap-3">
-                                <span className="text-sm text-slate-300 font-medium whitespace-nowrap w-16 flex items-center">Key:</span>
-                                <div className="flex items-center gap-2">
-                                    <Dropdown
-                                        value={currentKey}
-                                        className='w-[6em]'
-                                        buttonClassName='px-3 py-1.5 text-center font-medium text-xs h-10 flex items-center justify-center'
-                                        menuClassName='min-w-[6rem]'
-                                        onChange={handleKeyChange}
-                                        showSearch={false}
-                                        options={['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']}
-                                    />
-                                    <Button
-                                        onClick={toggleScalePlayback}
-                                        variant="play-stop"
-                                        size="icon"
-                                        className="!w-8 !h-8 flex items-center justify-center ml-1"
-                                        active={isPlayingScale}
-                                        title={isPlayingScale ? 'Stop scale' : `Play ${currentKey} ${mode} scale`}
-                                        disabled={!scaleNotes || scaleNotes.length === 0}
-                                    >
-                                        {isPlayingScale ? (
-                                            <PauseIcon className="w-6 h-6" />
-                                        ) : (
-                                            <PlayCircleIcon className="w-6 h-6" />
-                                        )}
-                                    </Button>
+                            <div className="flex items-start gap-3">
+                                <span className="text-sm text-slate-300 font-medium whitespace-nowrap w-16 flex items-center mt-2">Key:</span>
+                                <div className="flex flex-col gap-2 flex-1">
+                                    <div className="flex items-center gap-2">
+                                        <Dropdown
+                                            value={currentKey}
+                                            className='w-[6em]'
+                                            buttonClassName='px-3 py-1.5 text-center font-medium text-xs h-10 flex items-center justify-center'
+                                            menuClassName='min-w-[6rem]'
+                                            onChange={handleKeyChange}
+                                            showSearch={false}
+                                            options={['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']}
+                                        />
+                                        <Button
+                                            onClick={toggleScalePlayback}
+                                            variant="play-stop"
+                                            size="icon"
+                                            className="!w-8 !h-8 flex items-center justify-center ml-1"
+                                            active={isPlayingScale}
+                                            title={isPlayingScale ? 'Stop scale' : `Play ${currentKey} ${mode} scale`}
+                                            disabled={!scaleNotes || scaleNotes.length === 0}
+                                        >
+                                            {isPlayingScale ? (
+                                                <PauseIcon className="w-6 h-6" />
+                                            ) : (
+                                                <PlayCircleIcon className="w-6 h-6" />
+                                            )}
+                                        </Button>
+                                    </div>
+                                    <label className="flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            className="w-3 h-3 text-blue-600 bg-[#3d434f] border-gray-600 rounded focus:ring-blue-500 focus:ring-1"
+                                            checked={transposeEnabled}
+                                            onChange={(e) => setTransposeEnabled(e.target.checked)}
+                                            title="When enabled, changing key or mode will transpose all added chords"
+                                        />
+                                        <span className="ml-2 text-xs text-slate-400 uppercase tracking-wide">Transpose chords</span>
+                                    </label>
                                 </div>
                             </div>
 

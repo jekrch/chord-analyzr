@@ -49,16 +49,15 @@ function App() {
         };
     }, []);
 
-    // Rest of the component remains exactly the same
     return (
-        <div className="select-none text-center bg-[#282c34] min-h-screen h-full">
+        <div className="select-none text-center bg-[#282c34] min-h-screen h-screen w-screen overflow-hidden flex flex-col">
             <audio ref={silentAudioRef} preload="auto">
                 <source src="/silence.mp3" type="audio/mp3" />
             </audio>
 
             <HeaderNav />
 
-            <div className={`mt-2 flex flex-col items-center justify-start text-[calc(10px+2vmin)] text-white p-4 space-y-6 pb-24 ${isLiveMode ? 'pointer-events-none opacity-30' : ''}`}>
+            <div className={`flex-1 overflow-y-auto mt-2 flex flex-col items-center justify-start text-[calc(10px+2vmin)] text-white p-4 space-y-6 pb-32 ${isLiveMode ? 'pointer-events-none opacity-30' : ''}`}>
 
                 <div className="w-full max-w-7xl">
                     <PianoControl hideConfigControls={true} />

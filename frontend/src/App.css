@@ -1,3 +1,75 @@
+/* Ensure full viewport coverage */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  background-color: #282c34;
+}
+
+/* Prevent horizontal scrolling globally */
+* {
+  box-sizing: border-box;
+}
+
+/* Root element full coverage */
+#root {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  background-color: #282c34;
+}
+
+/* Mobile-specific viewport handling */
+@media screen and (max-width: 768px) {
+  html, body, #root {
+    width: 100vw;
+    min-width: 100vw;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  
+  /* Handle safe areas on newer mobile devices */
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    margin-left: calc(-1 * env(safe-area-inset-left));
+    margin-right: calc(-1 * env(safe-area-inset-right));
+  }
+}
+
+/* Landscape mobile optimization */
+@media screen and (max-width: 768px) and (orientation: landscape) {
+  html, body {
+    height: 100vh;
+    min-height: 100vh;
+    width: 100vw;
+    min-width: 100vw;
+  }
+  
+  /* Prevent zoom on landscape orientation change */
+  meta[name="viewport"] {
+    content: "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
+  }
+}
+
+/* Additional mobile browser quirks */
+@supports (-webkit-appearance: none) {
+  /* iOS Safari specific fixes */
+  html, body {
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Prevent pull-to-refresh and overscroll */
+body {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Consistent slider styling for range inputs */
 .slider-thumb {
   -webkit-appearance: none;
@@ -26,18 +98,18 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-/* Add larger touch area for mobile */
+/* Add larger touch area for mobile with smaller visible thumb */
 @media (hover: none) and (pointer: coarse) {
   .slider-thumb::-webkit-slider-thumb {
-    /* Create a larger invisible touch area */
+    /* 32px hit box for easy touch */
     width: 32px;
     height: 32px;
-    /* But keep visual size the same with border/background positioning */
-    border: 9px solid transparent;
+    /* 12px transparent border creates 8px visible thumb (32px - 24px) */
+    border: 12px solid transparent;
     background-clip: content-box;
     background-color: #3b82f6;
     box-shadow: 
-      0 0 0 2px #1e40af,
+      0 0 0 1px #1e40af,
       0 2px 4px rgba(0, 0, 0, 0.2);
   }
   
@@ -74,11 +146,11 @@
   .slider-thumb::-moz-range-thumb {
     width: 32px;
     height: 32px;
-    border: 9px solid transparent;
+    border: 12px solid transparent;
     background-clip: content-box;
     background-color: #3b82f6;
     box-shadow: 
-      0 0 0 2px #1e40af,
+      0 0 0 1px #1e40af,
       0 2px 4px rgba(0, 0, 0, 0.2);
   }
   

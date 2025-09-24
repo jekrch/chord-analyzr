@@ -101,11 +101,8 @@ body {
 /* Add larger touch area for mobile with smaller visible thumb */
 @media (hover: none) and (pointer: coarse) {
   .slider-thumb::-webkit-slider-thumb {
-    /* 32px hit box for easy touch */
-    width: 32px;
-    height: 32px;
-    /* 12px transparent border creates 8px visible thumb (32px - 24px) */
-    border: 12px solid transparent;
+    width: 22px;
+    height: 22px;
     background-clip: content-box;
     background-color: #3b82f6;
     box-shadow: 
@@ -144,9 +141,8 @@ body {
 /* Mobile touch improvements for Firefox */
 @media (hover: none) and (pointer: coarse) {
   .slider-thumb::-moz-range-thumb {
-    width: 32px;
-    height: 32px;
-    border: 12px solid transparent;
+    width: 22px;
+    height: 22px;
     background-clip: content-box;
     background-color: #3b82f6;
     box-shadow: 
@@ -492,5 +488,54 @@ body {
     transform: scale(1.05) rotate(3deg);
     z-index: 1000;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  }
+}
+
+
+/* Smooth chord navigation transitions */
+.chord-navigation-container {
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  will-change: transform, opacity, height;
+}
+
+/* Live mode specific transitions */
+.chord-navigation-live {
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Collapsed mode specific transitions */
+.chord-navigation-collapsed {
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Prevent bouncing by controlling the transition timing */
+.chord-navigation-transitioning {
+  transition-timing-function: cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  transition-duration: 0.4s !important;
+}
+
+/* Override any conflicting transitions during mode changes */
+.chord-navigation-no-bounce {
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+              opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+              background-color 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+/* Ensure smooth height transitions specifically */
+.chord-nav-height-transition {
+  transition-property: height, min-height, max-height, transform, opacity;
+  transition-duration: 0.4s;
+  transition-timing-function: cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Mobile-specific smooth transitions */
+@media (max-width: 768px) {
+  .chord-navigation-container {
+    transition-duration: 0.3s;
+  }
+  
+  .chord-navigation-live,
+  .chord-navigation-collapsed {
+    transition-duration: 0.3s;
   }
 }

@@ -500,12 +500,6 @@ const ChordNavigation: React.FC = () => {
         </button>
     );
 
-    // Calculate responsive widths for live mode (not used in edit mode anymore)
-    const getLiveItemWidth = () => {
-        // This is only used for non-live mode now
-        return "w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5 xl:w-1/6";
-    };
-
     const nonEditModeView = (
         isLiveMode ? (
             // LIVE MODE - CSS Grid (non-edit)

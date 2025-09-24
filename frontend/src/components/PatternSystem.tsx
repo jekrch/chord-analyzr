@@ -4,6 +4,7 @@ import { PATTERN_PRESETS, PATTERN_CATEGORIES } from '../util/Pattern';
 import Dropdown from './Dropdown';
 import PatternNotationHelpModal from './PatternNotationHelpModal';
 import PatternPresetSelector from './PatternPresetSelector'; // New import
+import Slider from './Slider'; // Add shared slider import
 import { Button } from './Button';
 import { useMusicStore } from '../stores/musicStore';
 import { usePlaybackStore } from '../stores/playbackStore';
@@ -546,25 +547,17 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
                       <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Timing</label>
                     </div>
 
-                    <div>
-                      <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">
-                        BPM<span className="text-xs text-slate-400 ml-2 normal-case">({globalPatternState.bpm})</span>
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="range"
-                          min="60"
-                          max="200"
-                          value={globalPatternState.bpm}
-                          onChange={(e) => handlePatternChange({ bpm: parseInt(e.target.value) })}
-                          className="w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb"
-                        />
-                      </div>
-                      <div className="flex justify-between text-xs text-slate-500 mt-1">
-                        <span>60</span>
-                        <span>200</span>
-                      </div>
-                    </div>
+                    <Slider
+                      label="BPM"
+                      value={globalPatternState.bpm}
+                      min={60}
+                      max={200}
+                      step={1}
+                      onChange={(value) => handlePatternChange({ bpm: Math.round(value) })}
+                      showMinMax={true}
+                      minLabel="60"
+                      maxLabel="200"
+                    />
 
                     <div>
                       <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Subdivision</label>
@@ -582,25 +575,18 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
                       />
                     </div>
 
-                    <div>
-                      <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">
-                        Swing<span className="text-xs text-slate-400 ml-2 normal-case">({globalPatternState.swing}%)</span>
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="range"
-                          min="0"
-                          max="50"
-                          value={globalPatternState.swing}
-                          onChange={(e) => handlePatternChange({ swing: parseInt(e.target.value) })}
-                          className="w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb"
-                        />
-                      </div>
-                      <div className="flex justify-between text-xs text-slate-500 mt-1">
-                        <span>0%</span>
-                        <span>50%</span>
-                      </div>
-                    </div>
+                    <Slider
+                      label="Swing"
+                      value={globalPatternState.swing}
+                      min={0}
+                      max={50}
+                      step={1}
+                      suffix="%"
+                      onChange={(value) => handlePatternChange({ swing: Math.round(value) })}
+                      showMinMax={true}
+                      minLabel="0%"
+                      maxLabel="50%"
+                    />
                   </div>
 
                   {/* Pattern Presets - Now using the extracted component */}

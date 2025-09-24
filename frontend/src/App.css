@@ -1,24 +1,3 @@
-.slider-thumb::-webkit-slider-thumb {
-  appearance: none;
-  height: 16px;
-  width: 16px;
-  border-radius: 50%;
-  background: #3b82f6;
-  cursor: pointer;
-  border: 2px solid #1e293b;
-}
-
-.slider-thumb::-moz-range-thumb {
-  height: 16px;
-  width: 16px;
-  border-radius: 50%;
-  background: #3b82f6;
-  cursor: pointer;
-  border: 2px solid #1e293b;
-}
-
-/* Add this to your App.css or global CSS file */
-
 /* Consistent slider styling for range inputs */
 .slider-thumb {
   -webkit-appearance: none;
@@ -34,7 +13,7 @@
   height: 18px;
   width: 18px;
   border-radius: 50%;
-  background: #3b82f6;
+  background: #3b82f6 !important;
   cursor: pointer;
   border: 2px solid #1e40af;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -45,6 +24,32 @@
   background: #2563eb;
   transform: scale(1.1);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Add larger touch area for mobile */
+@media (hover: none) and (pointer: coarse) {
+  .slider-thumb::-webkit-slider-thumb {
+    /* Create a larger invisible touch area */
+    width: 32px;
+    height: 32px;
+    /* But keep visual size the same with border/background positioning */
+    border: 9px solid transparent;
+    background-clip: content-box;
+    background-color: #3b82f6;
+    box-shadow: 
+      0 0 0 2px #1e40af,
+      0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  
+  .slider-thumb::-webkit-slider-thumb:hover {
+    background-color: #2563eb;
+  }
+  
+  /* Make the track taller for easier interaction */
+  .slider-thumb {
+    height: 8px;
+    padding: 4px 0;
+  }
 }
 
 .slider-thumb::-moz-range-thumb {
@@ -62,6 +67,28 @@
   background: #2563eb;
   transform: scale(1.1);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Mobile touch improvements for Firefox */
+@media (hover: none) and (pointer: coarse) {
+  .slider-thumb::-moz-range-thumb {
+    width: 32px;
+    height: 32px;
+    border: 9px solid transparent;
+    background-clip: content-box;
+    background-color: #3b82f6;
+    box-shadow: 
+      0 0 0 2px #1e40af,
+      0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  
+  .slider-thumb::-moz-range-thumb:hover {
+    background-color: #2563eb;
+  }
+  
+  .slider-thumb::-moz-range-track {
+    height: 8px;
+  }
 }
 
 /* Remove default focus outline and add custom one */
@@ -185,46 +212,6 @@ body {
   ring-color: rgba(59, 130, 246, 0.5);
   ring-offset: 2px;
   ring-offset-color: #1e2329;
-}
-
-/* Improved slider styling */
-.slider {
-  background: linear-gradient(to right, #3b82f6 0%, #3b82f6 var(--value, 0%), #2a2f3a var(--value, 0%), #2a2f3a 100%);
-}
-
-.slider::-webkit-slider-thumb {
-  appearance: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #3b82f6;
-  border: 2px solid #1e2329;
-  cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  transition: all 0.2s ease;
-}
-
-.slider::-webkit-slider-thumb:hover {
-  background: #2563eb;
-  transform: scale(1.1);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
-.slider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #3b82f6;
-  border: 2px solid #1e2329;
-  cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  transition: all 0.2s ease;
-}
-
-.slider::-moz-range-thumb:hover {
-  background: #2563eb;
-  transform: scale(1.1);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* Loading animation improvements */

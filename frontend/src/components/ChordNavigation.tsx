@@ -25,7 +25,8 @@ import {
 } from '@dnd-kit/modifiers';
 import { CSS } from '@dnd-kit/utilities';
 import classNames from 'classnames';
-import { Button, ChordButton } from './Button';
+import { Button } from './Button';
+import { ChordButton } from './ChordButton';
 import ChordEditor from './ChordEditor';
 import { useMusicStore } from '../stores/musicStore';
 import { usePlaybackStore } from '../stores/playbackStore';

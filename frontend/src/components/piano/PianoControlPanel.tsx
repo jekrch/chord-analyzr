@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import { PlayCircleIcon, PauseIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
 import Dropdown from '../Dropdown';
 import { Button } from '../Button';
+import Slider from '../Slider';
 import { calculateTransposeSteps, transposeChordName, transposeNotes, useMusicStore } from '../../stores/musicStore';
 import { usePianoStore } from '../../stores/pianoStore';
 import { usePlaybackStore } from '../../stores/playbackStore';
@@ -443,16 +444,22 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                             )}
                                         </Button>
                                     </div>
-                                    <label className="flex items-center cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            className="w-3 h-3 text-blue-600 bg-[#3d434f] border-gray-600 rounded focus:ring-blue-500 focus:ring-1"
-                                            checked={transposeEnabled}
-                                            onChange={(e) => setTransposeEnabled(e.target.checked)}
-                                            title="When enabled, changing key or mode will transpose all added chords"
-                                        />
-                                        <span className="ml-2 text-xs text-slate-400 uppercase tracking-wide">Transpose chords</span>
-                                    </label>
+                                    <button
+                                        onClick={() => setTransposeEnabled(!transposeEnabled)}
+                                        className={`relative flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium uppercase tracking-wide transition-all duration-200 border ${
+                                            transposeEnabled 
+                                                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white border-blue-600 shadow-lg shadow-blue-600/25' 
+                                                : 'bg-[#3d434f] text-slate-400 border-gray-600 hover:bg-[#4a5262] hover:text-slate-300'
+                                        }`}
+                                        title="When enabled, changing key or mode will transpose all added chords"
+                                    >
+                                        <div className={`flex items-center gap-2 ${transposeEnabled ? 'text-white' : ''}`}>
+                                            <div className={`w-2 h-2 rounded-full transition-colors duration-200 ${
+                                                transposeEnabled ? 'bg-white' : 'bg-slate-500'
+                                            }`} />
+                                            <span>Transpose</span>
+                                        </div>
+                                    </button>
                                 </div>
                             </div>
 
@@ -525,16 +532,22 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                             )}
                                         </Button>
                                     </div>
-                                    <label className="flex items-center cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            className="w-3 h-3 text-blue-600 bg-[#3d434f] border-gray-600 rounded focus:ring-blue-500 focus:ring-1"
-                                            checked={transposeEnabled}
-                                            onChange={(e) => setTransposeEnabled(e.target.checked)}
-                                            title="When enabled, changing key or mode will transpose all added chords"
-                                        />
-                                        <span className="ml-2 text-xs text-slate-400 uppercase tracking-wide">Transpose chords</span>
-                                    </label>
+                                    <button
+                                        onClick={() => setTransposeEnabled(!transposeEnabled)}
+                                        className={`relative flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium uppercase tracking-wide transition-all duration-200 border max-w-[13em] ${
+                                            transposeEnabled 
+                                                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white border-blue-600 shadow-lg shadow-blue-600/25' 
+                                                : 'bg-[#3d434f] text-slate-400 border-gray-600 hover:bg-[#4a5262] hover:text-slate-300'
+                                        }`}
+                                        title="When enabled, changing key or mode will transpose all added chords"
+                                    >
+                                        <div className={`flex items-center gap-2 ${transposeEnabled ? 'text-white' : ''}`}>
+                                            <div className={`w-2 h-2 rounded-full transition-colors duration-200 ${
+                                                transposeEnabled ? 'bg-white' : 'bg-slate-500'
+                                            }`} />
+                                            <span>Transpose</span>
+                                        </div>
+                                    </button>
                                 </div>
                             </div>
 
@@ -585,22 +598,15 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8">
                                 {/* Left Column */}
                                 <div className="space-y-6">
-                                    <div>
-                                        <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">
-                                            Volume<span className="text-xs text-slate-400 ml-2 normal-case">({Math.round(pianoSettings.volume * 100)}%)</span>
-                                        </label>
-                                        <div className="relative">
-                                            <input
-                                                type="range"
-                                                min="0"
-                                                max="1.0"
-                                                step="0.05"
-                                                value={pianoSettings.volume}
-                                                onChange={(e) => setVolume(parseFloat(e.target.value))}
-                                                className="w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb"
-                                            />
-                                        </div>
-                                    </div>
+                                    <Slider
+                                        label="Volume"
+                                        value={pianoSettings.volume}
+                                        min={0}
+                                        max={1.0}
+                                        step={0.05}
+                                        onChange={setVolume}
+                                        showPercentage={true}
+                                    />
 
                                     <div>
                                         <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Octave Shift</label>
@@ -625,39 +631,25 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">
-                                            Reverb<span className="text-xs text-slate-400 ml-2 normal-case">({Math.round(pianoSettings.reverbLevel * 100)}%)</span>
-                                        </label>
-                                        <div className="relative">
-                                            <input
-                                                type="range"
-                                                min="0"
-                                                max="1.0"
-                                                step="0.05"
-                                                value={pianoSettings.reverbLevel}
-                                                onChange={(e) => setReverbLevel(parseFloat(e.target.value))}
-                                                className="w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb"
-                                            />
-                                        </div>
-                                    </div>
+                                    <Slider
+                                        label="Reverb"
+                                        value={pianoSettings.reverbLevel}
+                                        min={0}
+                                        max={1.0}
+                                        step={0.05}
+                                        onChange={setReverbLevel}
+                                        showPercentage={true}
+                                    />
 
-                                    <div>
-                                        <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">
-                                            Note Duration<span className="text-xs text-slate-400 ml-2 normal-case">({Math.round(pianoSettings.noteDuration * 100)}%)</span>
-                                        </label>
-                                        <div className="relative">
-                                            <input
-                                                type="range"
-                                                min="0.1"
-                                                max="1.0"
-                                                step="0.05"
-                                                value={pianoSettings.noteDuration}
-                                                onChange={(e) => setNoteDuration(parseFloat(e.target.value))}
-                                                className="w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb"
-                                            />
-                                        </div>
-                                    </div>
+                                    <Slider
+                                        label="Note Duration"
+                                        value={pianoSettings.noteDuration}
+                                        min={0.1}
+                                        max={1.0}
+                                        step={0.05}
+                                        onChange={setNoteDuration}
+                                        showPercentage={true}
+                                    />
 
                                     <div>
                                         <label className="flex items-center cursor-pointer">
@@ -675,70 +667,51 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                 {/* Right Column - Equalizer and Effects */}
                                 <div className="space-y-4 mt-6 lg:mt-0">
                                     <div>
-                                        <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Equalizer</label>
+                                        <div className="text-xs font-medium text-slate-200 mb-4 uppercase tracking-wide">Equalizer</div>
                                         <div className="space-y-3">
                                             {[
                                                 { label: 'Bass', key: 'bass' as keyof EqSettings },
                                                 { label: 'Mid', key: 'mid' as keyof EqSettings },
                                                 { label: 'Treble', key: 'treble' as keyof EqSettings }
                                             ].map(({ label, key }) => (
-                                                <div key={key}>
-                                                    <div className="flex justify-between items-center mb-1">
-                                                        <span className="text-xs text-slate-400 uppercase tracking-wide">{label}</span>
-                                                        <span className="text-xs text-slate-400 font-mono">{pianoSettings.eq[key] > 0 ? '+' : ''}{pianoSettings.eq[key].toFixed(1)}dB</span>
-                                                    </div>
-                                                    <input
-                                                        type="range"
-                                                        name={key}
-                                                        min="-24"
-                                                        max="24"
-                                                        step="0.5"
-                                                        value={pianoSettings.eq[key]}
-                                                        onChange={(e) => {
-                                                            const newEq = { ...pianoSettings.eq, [key]: parseFloat(e.target.value) };
-                                                            setEq(newEq);
-                                                        }}
-                                                        className="w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb"
-                                                    />
-                                                </div>
+                                                <Slider
+                                                    key={key}
+                                                    label={label}
+                                                    value={pianoSettings.eq[key]}
+                                                    min={-24}
+                                                    max={24}
+                                                    step={0.5}
+                                                    variant="split"
+                                                    onChange={(value) => {
+                                                        const newEq = { ...pianoSettings.eq, [key]: value };
+                                                        setEq(newEq);
+                                                    }}
+                                                    formatValue={(value) => `${value > 0 ? '+' : ''}${value.toFixed(1)}dB`}
+                                                />
                                             ))}
                                         </div>
                                     </div>
 
                                     <div className="space-y-4">
-                                        <div>
-                                            <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">
-                                                Chorus<span className="text-xs text-slate-400 ml-2 normal-case">({Math.round(pianoSettings.chorusLevel * 100)}%)</span>
-                                            </label>
-                                            <div className="relative">
-                                                <input
-                                                    type="range"
-                                                    min="0"
-                                                    max="1.0"
-                                                    step="0.05"
-                                                    value={pianoSettings.chorusLevel}
-                                                    onChange={(e) => setChorusLevel(parseFloat(e.target.value))}
-                                                    className="w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb"
-                                                />
-                                            </div>
-                                        </div>
+                                        <Slider
+                                            label="Chorus"
+                                            value={pianoSettings.chorusLevel}
+                                            min={0}
+                                            max={1.0}
+                                            step={0.05}
+                                            onChange={setChorusLevel}
+                                            showPercentage={true}
+                                        />
 
-                                        <div>
-                                            <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">
-                                                Delay<span className="text-xs text-slate-400 ml-2 normal-case">({Math.round(pianoSettings.delayLevel * 100)}%)</span>
-                                            </label>
-                                            <div className="relative">
-                                                <input
-                                                    type="range"
-                                                    min="0"
-                                                    max="1.0"
-                                                    step="0.05"
-                                                    value={pianoSettings.delayLevel}
-                                                    onChange={(e) => setDelayLevel(parseFloat(e.target.value))}
-                                                    className="w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb"
-                                                />
-                                            </div>
-                                        </div>
+                                        <Slider
+                                            label="Delay"
+                                            value={pianoSettings.delayLevel}
+                                            min={0}
+                                            max={1.0}
+                                            step={0.05}
+                                            onChange={setDelayLevel}
+                                            showPercentage={true}
+                                        />
                                     </div>
                                 </div>
                             </div>

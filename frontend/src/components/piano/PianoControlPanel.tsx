@@ -133,26 +133,126 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
     };
 
     const containerClass = isDesktop ? 
-        "flex items-start bg-[#3d434f]/30 border border-gray-600/30 rounded-lg px-6 py-4" :
+        "flex flex-col bg-[#3d434f]/30 border border-gray-600/30 rounded-lg px-6 py-4" :
         "space-y-4";
 
-    const separatorClass = isDesktop ? "w-px h-8 bg-gray-600/50 mx-8 mt-2" : "hidden";
+    const separatorClass = isDesktop ? "w-px h-8 bg-gray-600/50 mx-8" : "hidden";
     const labelClass = isDesktop ? 
         "text-sm text-slate-300 font-medium whitespace-nowrap" : 
         "text-sm text-slate-300 font-medium whitespace-nowrap w-16 flex items-center";
 
+    if (isDesktop) {
+        return (
+            <div className={containerClass}>
+                {/* First Row - All Dropdowns Aligned */}
+                <div className="flex items-center">
+                    {/* Key Control Group */}
+                    <div className="flex items-center gap-3">
+                        <span className={labelClass}>Key:</span>
+                        <div className="flex items-center gap-2">
+                            <Dropdown
+                                value={currentKey}
+                                className={commonDropdownClasses.key}
+                                buttonClassName='px-3 py-1.5 text-center font-medium text-xs h-10 flex items-center justify-center'
+                                menuClassName={`min-w-[${commonDropdownClasses.key}]`}
+                                onChange={onKeyChange}
+                                showSearch={false}
+                                options={['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']}
+                            />
+                            <Button
+                                onClick={onToggleScalePlayback}
+                                variant="play-stop"
+                                size="icon"
+                                className="!w-8 !h-8 flex items-center justify-center ml-1"
+                                active={isPlayingScale}
+                                title={isPlayingScale ? 'Stop scale' : `Play ${currentKey} ${mode} scale`}
+                                disabled={!scaleNotes || scaleNotes.length === 0}
+                            >
+                                {isPlayingScale ? (
+                                    <PauseIcon className="w-6 h-6" />
+                                ) : (
+                                    <PlayCircleIcon className="w-6 h-6" />
+                                )}
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* Separator */}
+                    <div className={separatorClass}></div>
+
+                    {/* Mode Control Group */}
+                    <div className="flex items-center gap-3">
+                        <span className={labelClass}>Mode:</span>
+                        {modes && (
+                            <Dropdown
+                                value={mode}
+                                className={commonDropdownClasses.mode}
+                                buttonClassName='px-3 py-1.5 text-left font-medium text-xs h-10 flex items-center'
+                                menuClassName={`min-w-[${commonDropdownClasses.mode}]`}
+                                onChange={onModeChange}
+                                showSearch={true}
+                                options={modes}
+                            />
+                        )}
+                    </div>
+
+                    {/* Separator */}
+                    <div className={separatorClass}></div>
+
+                    {/* Voice Control Group */}
+                    <div className="flex items-center gap-3">
+                        <span className={labelClass}>Voice:</span>
+                        <Dropdown
+                            value={pianoSettings.instrumentName.replaceAll('_', ' ')}
+                            className={commonDropdownClasses.voice}
+                            buttonClassName='px-3 py-1.5 text-left font-medium text-xs h-10 flex items-center'
+                            menuClassName='min-w-[11rem]'
+                            onChange={onInstrumentChange}
+                            showSearch={true}
+                            options={availableInstruments.map((name) => name.replaceAll('_', ' '))}
+                        />
+                    </div>
+                </div>
+
+                {/* Second Row - Transpose Button (aligned under Key section) */}
+                <div className="flex items-start mt-3">
+                    <div className="flex items-center gap-3">
+                        <span className="text-sm text-slate-300 font-medium whitespace-nowrap invisible">Key:</span>
+                        <button
+                            onClick={onToggleTranspose}
+                            className={`relative flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium uppercase tracking-wide transition-all duration-200 border ${
+                                transposeEnabled 
+                                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white border-blue-600 shadow-lg shadow-blue-600/25' 
+                                    : 'bg-[#3d434f] text-slate-400 border-gray-600 hover:bg-[#4a5262] hover:text-slate-300'
+                            }`}
+                            title="When enabled, changing key or mode will transpose all added chords"
+                        >
+                            <div className={`flex items-center gap-2 ${transposeEnabled ? 'text-white' : ''}`}>
+                                <div className={`w-2 h-2 rounded-full transition-colors duration-200 ${
+                                    transposeEnabled ? 'bg-white' : 'bg-slate-500'
+                                }`} />
+                                <span>Transpose</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Mobile layout (unchanged)
     return (
         <div className={containerClass}>
             {/* Key Control Group */}
-            <div className={isDesktop ? "flex items-start gap-3" : "flex items-start gap-3"}>
-                <span className={`${labelClass} ${isDesktop ? 'mt-2' : 'mt-2'}`}>Key:</span>
+            <div className="flex items-start gap-3">
+                <span className={`${labelClass} mt-2`}>Key:</span>
                 <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-2">
                         <Dropdown
                             value={currentKey}
                             className={commonDropdownClasses.key}
                             buttonClassName='px-3 py-1.5 text-center font-medium text-xs h-10 flex items-center justify-center'
-                            menuClassName={`min-w-[${isDesktop ? '5rem' : '6rem'}]`}
+                            menuClassName={`min-w-[6rem]`}
                             onChange={onKeyChange}
                             showSearch={false}
                             options={['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']}
@@ -175,9 +275,7 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
                     </div>
                     <button
                         onClick={onToggleTranspose}
-                        className={`relative flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium uppercase tracking-wide transition-all duration-200 border ${
-                            isDesktop ? '' : 'max-w-[13em]'
-                        } ${
+                        className={`relative flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium uppercase tracking-wide transition-all duration-200 border max-w-[13em] ${
                             transposeEnabled 
                                 ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white border-blue-600 shadow-lg shadow-blue-600/25' 
                                 : 'bg-[#3d434f] text-slate-400 border-gray-600 hover:bg-[#4a5262] hover:text-slate-300'
@@ -194,11 +292,8 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
                 </div>
             </div>
 
-            {/* Separator */}
-            <div className={separatorClass}></div>
-
             {/* Mode Control Group */}
-            <div className={`flex items-center gap-3 ${isDesktop ? 'mt-2' : ''}`}>
+            <div className="flex items-center gap-3">
                 <span className={labelClass}>Mode:</span>
                 {modes && (
                     <Dropdown
@@ -213,11 +308,8 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
                 )}
             </div>
 
-            {/* Separator */}
-            <div className={separatorClass}></div>
-
             {/* Voice Control Group */}
-            <div className={`flex items-center gap-3 ${isDesktop ? 'mt-2' : ''}`}>
+            <div className="flex items-center gap-3">
                 <span className={labelClass}>Voice:</span>
                 <Dropdown
                     value={pianoSettings.instrumentName.replaceAll('_', ' ')}

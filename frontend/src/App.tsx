@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { useIntegratedAppLogic } from './hooks/useIntegratedAppLogic';
 import ChordTable from './components/ChordTable';
 import PianoControl from './components/piano/PianoControl';
@@ -21,6 +21,37 @@ function App() {
 
     const silentAudioRef = useRef<HTMLAudioElement>(null);
     const audioInitializedRef = useRef(false);
+    const [isCompactHeight, setIsCompactHeight] = useState(false);
+    const lastCompactState = useRef(false);
+
+    // Optimized height check with RAF
+    const checkHeight = useCallback(() => {
+        const vh = window.innerHeight;
+        const em = parseFloat(getComputedStyle(document.documentElement).fontSize);
+        const newIsCompact = vh < 35 * em;
+        
+        if (newIsCompact !== lastCompactState.current) {
+            lastCompactState.current = newIsCompact;
+            setIsCompactHeight(newIsCompact);
+        }
+    }, []);
+
+    useEffect(() => {
+        let timeoutId: NodeJS.Timeout;
+        
+        const throttledCheck = () => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(checkHeight, 100);
+        };
+
+        checkHeight();
+        window.addEventListener('resize', throttledCheck, { passive: true });
+        
+        return () => {
+            clearTimeout(timeoutId);
+            window.removeEventListener('resize', throttledCheck);
+        };
+    }, [checkHeight]);
 
     // Audio initialization (unchanged)
     const initializeAudio = async () => {
@@ -55,29 +86,46 @@ function App() {
                 <source src="/silence.mp3" type="audio/mp3" />
             </audio>
 
-            <HeaderNav />
-
-            <div className={`flex-1 overflow-y-auto mt-2 flex flex-col items-center justify-start text-[calc(10px+2vmin)] text-white p-4 space-y-6 pb-32 ${isLiveMode ? 'pointer-events-none opacity-30' : ''}`}>
-
-                <div className="w-full max-w-7xl">
-                    <PianoControl hideConfigControls={true} />
+            {/* HeaderNav - fixed in normal mode, scrollable in compact mode */}
+            {!isCompactHeight && (
+                <div className="flex-shrink-0">
+                    <HeaderNav />
                 </div>
+            )}
 
-                <PianoControlPanel/>
+            {/* Main scrollable content */}
+            <div className="flex-1 overflow-y-auto flex flex-col">
+                {/* HeaderNav inside scroll area for compact mode */}
+                {isCompactHeight && (
+                    <div className="flex-shrink-0">
+                        <HeaderNav />
+                    </div>
+                )}
 
-                <PatternSystem/>
+                <div className={`flex flex-col items-center justify-start text-[calc(10px+2vmin)] text-white p-4 space-y-6 pb-32 ${!isCompactHeight ? 'mt-2' : ''} ${isLiveMode ? 'pointer-events-none opacity-30' : ''}`}>
+                    <div className="w-full max-w-7xl">
+                        <PianoControl hideConfigControls={true} />
+                    </div>
 
-                <SequenceStatusView />
+                    <PianoControlPanel/>
 
-                <div className="w-full max-w-7xl mb-20 mt-2">
-                    <ChordTable
-                        onChordClick={handleChordClick}
-                        addChordClick={addChordClick}
-                    />
+                    <PatternSystem/>
+
+                    <SequenceStatusView />
+
+                    <div className="w-full max-w-7xl mb-20 mt-2">
+                        <ChordTable
+                            onChordClick={handleChordClick}
+                            addChordClick={addChordClick}
+                        />
+                    </div>
                 </div>
             </div>
 
-            <ChordNavigation/>
+            {/* ChordNavigation - always fixed at bottom */}
+            <div className="flex-shrink-0">
+                <ChordNavigation/>
+            </div>
         </div>
     );
 }

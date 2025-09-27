@@ -23,8 +23,9 @@ function App() {
     const audioInitializedRef = useRef(false);
     const [isCompactHeight, setIsCompactHeight] = useState(false);
     const lastCompactState = useRef(false);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-    // Optimized height check with RAF
+    // Optimized height check with scroll restoration
     const checkHeight = useCallback(() => {
         const vh = window.innerHeight;
         const em = parseFloat(getComputedStyle(document.documentElement).fontSize);
@@ -33,6 +34,16 @@ function App() {
         if (newIsCompact !== lastCompactState.current) {
             lastCompactState.current = newIsCompact;
             setIsCompactHeight(newIsCompact);
+            
+            // Force scroll container refresh after state change
+            setTimeout(() => {
+                if (scrollContainerRef.current) {
+                    scrollContainerRef.current.style.overflow = 'hidden';
+                    // Force reflow
+                    scrollContainerRef.current.offsetHeight;
+                    scrollContainerRef.current.style.overflow = 'auto';
+                }
+            }, 50);
         }
     }, []);
 
@@ -44,14 +55,45 @@ function App() {
             timeoutId = setTimeout(checkHeight, 100);
         };
 
+        // Special handler for orientation changes that can break scroll
+        const handleOrientationChange = () => {
+            // Delay to let the browser finish orientation change
+            setTimeout(() => {
+                checkHeight();
+                // Force scroll container refresh on mobile after orientation change
+                if (scrollContainerRef.current && /Mobi|Android/i.test(navigator.userAgent)) {
+                    const container = scrollContainerRef.current;
+                    container.style.overflowY = 'hidden';
+                    container.style.touchAction = 'pan-y';
+                    // Force reflow
+                    container.offsetHeight;
+                    container.style.overflowY = 'auto';
+                    (container.style as any).WebkitOverflowScrolling = 'touch';
+                }
+            }, 250);
+        };
+
         checkHeight();
         window.addEventListener('resize', throttledCheck, { passive: true });
+        window.addEventListener('orientationchange', handleOrientationChange, { passive: true });
         
         return () => {
             clearTimeout(timeoutId);
             window.removeEventListener('resize', throttledCheck);
+            window.removeEventListener('orientationchange', handleOrientationChange);
         };
     }, [checkHeight]);
+
+    // Ensure proper scroll behavior on mount and state changes
+    useEffect(() => {
+        if (scrollContainerRef.current) {
+            const container = scrollContainerRef.current;
+            // Ensure scroll properties are properly set
+            (container.style as any).WebkitOverflowScrolling = 'touch';
+            container.style.touchAction = 'pan-y';
+            container.style.overscrollBehavior = 'contain';
+        }
+    }, [isCompactHeight]);
 
     // Audio initialization (unchanged)
     const initializeAudio = async () => {
@@ -94,7 +136,15 @@ function App() {
             )}
 
             {/* Main scrollable content */}
-            <div className="flex-1 overflow-y-auto flex flex-col">
+            <div 
+                ref={scrollContainerRef}
+                className="flex-1 overflow-y-auto flex flex-col"
+                style={{
+                    WebkitOverflowScrolling: 'touch' as any,
+                    touchAction: 'pan-y',
+                    overscrollBehavior: 'contain'
+                }}
+            >
                 {/* HeaderNav inside scroll area for compact mode */}
                 {isCompactHeight && (
                     <div className="flex-shrink-0">

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { TrashIcon, XCircleIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon, PlayIcon, PauseIcon, PlayCircleIcon, CogIcon } from '@heroicons/react/20/solid';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { 
@@ -117,25 +117,89 @@ const ChordNavigation: React.FC = () => {
     // Local state
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingChordIndex, setEditingChordIndex] = useState<number | null>(null);
+    const [isCompactHeight, setIsCompactHeight] = useState(false);
+    
+    // Refs
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-    // Prevent body scroll when in live mode
+    // Height detection for compact layout
+    useEffect(() => {
+        const checkHeight = () => {
+            const vh = window.innerHeight;
+            const em = parseFloat(getComputedStyle(document.documentElement).fontSize);
+            setIsCompactHeight(vh < 20 * em);
+        };
+
+        checkHeight();
+        window.addEventListener('resize', checkHeight, { passive: true });
+        window.addEventListener('orientationchange', checkHeight, { passive: true });
+        
+        return () => {
+            window.removeEventListener('resize', checkHeight);
+            window.removeEventListener('orientationchange', checkHeight);
+        };
+    }, []);
+
+    // Enhanced scroll prevention with orientation change handling
     useEffect(() => {
         if (isLiveMode) {
             // Store the current overflow style to restore later
             const originalOverflow = document.body.style.overflow;
             const originalOverscrollBehavior = document.body.style.overscrollBehavior;
+            const originalTouchAction = document.body.style.touchAction;
             
-            // Prevent body scroll
+            // Prevent body scroll with enhanced mobile support
             document.body.style.overflow = 'hidden';
             document.body.style.overscrollBehavior = 'none';
+            document.body.style.touchAction = 'none';
+            
+            // Handle orientation changes that can break scroll
+            const handleOrientationChange = () => {
+                setTimeout(() => {
+                    if (scrollContainerRef.current && isLiveMode) {
+                        const container = scrollContainerRef.current;
+                        // Force scroll container refresh, but respect edit mode
+                        if (isEditMode) {
+                            container.style.overflowY = 'hidden';
+                            container.style.touchAction = 'none';
+                        } else {
+                            container.style.overflowY = 'hidden';
+                            container.style.touchAction = 'pan-y';
+                            // Force reflow
+                            container.offsetHeight;
+                            container.style.overflowY = 'auto';
+                            (container.style as any).WebkitOverflowScrolling = 'touch';
+                        }
+                    }
+                }, 300);
+            };
+            
+            window.addEventListener('orientationchange', handleOrientationChange);
             
             // Cleanup function to restore original styles
             return () => {
                 document.body.style.overflow = originalOverflow;
                 document.body.style.overscrollBehavior = originalOverscrollBehavior;
+                document.body.style.touchAction = originalTouchAction;
+                window.removeEventListener('orientationchange', handleOrientationChange);
             };
         }
-    }, [isLiveMode]);
+    }, [isLiveMode, isEditMode]); // Added isEditMode to dependencies
+
+    // Handle edit mode changes - update scroll container immediately
+    useEffect(() => {
+        if (scrollContainerRef.current && isLiveMode) {
+            const container = scrollContainerRef.current;
+            if (isEditMode) {
+                container.style.overflowY = 'hidden';
+                container.style.touchAction = 'none';
+            } else {
+                container.style.overflowY = 'auto';
+                container.style.touchAction = 'pan-y';
+                (container.style as any).WebkitOverflowScrolling = 'touch';
+            }
+        }
+    }, [isEditMode, isLiveMode]);
 
     // Mobile-optimized sensors configuration
     const sensors = useSensors(
@@ -596,10 +660,16 @@ const ChordNavigation: React.FC = () => {
     );
 
     return (
-        <div className={baseClasses}>
+        <div 
+            className={baseClasses}
+            style={isLiveMode ? {
+                touchAction: 'none', // Prevent body scroll
+                overscrollBehavior: 'none'
+            } : undefined}
+        >
             {/* Top Control Bar */}
-            <div className={`${isLiveMode ? 'flex-shrink-0' : ''} max-w-7xl mx-auto px-4 ${isLiveMode ? 'pt-4 z-10' : 'pt-2'} w-full`}>
-                <div className={`flex items-center justify-between ${isLiveMode ? 'mb-3' : 'mb-2'}`}>
+            <div className={`${isLiveMode ? 'flex-shrink-0' : ''} max-w-7xl mx-auto px-4 ${isLiveMode ? (isCompactHeight ? 'pt-2 z-10' : 'pt-4 z-10') : 'pt-2'} w-full`}>
+                <div className={`flex items-center justify-between ${isLiveMode ? (isCompactHeight ? 'mb-1' : 'mb-3') : 'mb-2'}`}>
                     <div className="flex items-center space-x-4">
                         {!isLiveMode && <Button onClick={handleTogglePlayback} variant="icon" size="icon" active={globalPatternState.isPlaying} title={globalPatternState.isPlaying ? "Stop" : "Play"}>{globalPatternState.isPlaying ? <PauseIcon className="w-4 h-4" /> : <PlayIcon className="w-4 h-4" />}</Button>}
                         {isLiveMode && <Button onClick={handleTogglePlayback} variant="play-stop" size="sm" active={globalPatternState.isPlaying} className="shadow-lg">{globalPatternState.isPlaying ? (<><PauseIcon className="w-4 h-4" /> Stop</>) : (<><PlayCircleIcon className="w-4 h-4" /> Play</>)}</Button>}
@@ -616,11 +686,21 @@ const ChordNavigation: React.FC = () => {
                         </>)}
                     </div>
                 </div>
-                {isLiveMode && <div className="mb-4 text-sm text-center text-slate-400"><div>Use 1-{Math.min(addedChords.length, 9)} or click chords</div><div className="mt-2 text-xs"><span className="inline-block w-3 h-3 mr-2 bg-blue-500 rounded-full"></span> Active Chord{isEditMode && (<><span className="mx-2">•</span><span className="text-blue-400">Drag chords to reorder</span></>)}</div></div>}
+                {isLiveMode && !isCompactHeight && <div className="mb-4 text-sm text-center text-slate-400"><div>Use 1-{Math.min(addedChords.length, 9)} or click chords</div><div className="mt-2 text-xs"><span className="inline-block w-3 h-3 mr-2 bg-blue-500 rounded-full"></span> Active Chord{isEditMode && (<><span className="mx-2">•</span><span className="text-blue-400">Drag chords to reorder</span></>)}</div></div>}
             </div>
 
-            {/* Chord Display Area */}
-            <div className={`flex-1 max-w-7xl mx-auto w-full ${isLiveMode ? 'px-4 pb-8 pt-2 overflow-y-auto' : 'px-2 pb-1'}`}>
+            {/* Chord Display Area with Enhanced Mobile Scroll */}
+            <div 
+                ref={scrollContainerRef}
+                className={`flex-1 max-w-7xl mx-auto w-full ${isLiveMode ? `px-4 pb-8 ${isCompactHeight ? 'pt-1' : 'pt-2'} ${isEditMode ? 'overflow-hidden' : 'overflow-y-auto'}` : 'px-2 pb-1'}`}
+                style={isLiveMode ? {
+                    WebkitOverflowScrolling: 'touch' as any,
+                    touchAction: isEditMode ? 'none' : 'pan-y', // Allow drag when editing, restrict to vertical scroll when not
+                    overscrollBehavior: 'contain',
+                    position: 'relative',
+                    zIndex: 1
+                } : undefined}
+            >
                 {!isEditMode ? nonEditModeView : editModeView}
             </div>
 

@@ -126,7 +126,7 @@ const ChordNavigation: React.FC = () => {
         const checkHeight = () => {
             const vh = window.innerHeight;
             const em = parseFloat(getComputedStyle(document.documentElement).fontSize);
-            setIsCompactHeight(vh < 20 * em);
+            setIsCompactHeight(vh < 35 * em);
         };
 
         checkHeight();

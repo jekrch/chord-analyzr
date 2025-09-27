@@ -79,9 +79,8 @@ const SortableChordItem: React.FC<SortableChordItemProps> = ({
     // Enhanced attributes for mobile
     const enhancedAttributes = {
         ...attributes,
-        // Prevent default touch behaviors that interfere with dragging
+        // Let the drag system handle touch behaviors naturally
         style: {
-            touchAction: 'none' as const, // Prevent scrolling during drag
             userSelect: 'none' as const,  // Prevent text selection
             WebkitUserSelect: 'none' as const,
             ...style
@@ -156,20 +155,15 @@ const ChordNavigation: React.FC = () => {
             // Handle orientation changes that can break scroll
             const handleOrientationChange = () => {
                 setTimeout(() => {
-                    if (scrollContainerRef.current && isLiveMode) {
+                    if (scrollContainerRef.current && isLiveMode && !isEditMode) {
                         const container = scrollContainerRef.current;
-                        // Force scroll container refresh, but respect edit mode
-                        if (isEditMode) {
-                            container.style.overflowY = 'hidden';
-                            container.style.touchAction = 'none';
-                        } else {
-                            container.style.overflowY = 'hidden';
-                            container.style.touchAction = 'pan-y';
-                            // Force reflow
-                            container.offsetHeight;
-                            container.style.overflowY = 'auto';
-                            (container.style as any).WebkitOverflowScrolling = 'touch';
-                        }
+                        // Only apply scroll fixes when not in edit mode
+                        container.style.overflowY = 'hidden';
+                        container.style.touchAction = 'pan-y';
+                        // Force reflow
+                        container.offsetHeight;
+                        container.style.overflowY = 'auto';
+                        (container.style as any).WebkitOverflowScrolling = 'touch';
                     }
                 }, 300);
             };
@@ -191,9 +185,12 @@ const ChordNavigation: React.FC = () => {
         if (scrollContainerRef.current && isLiveMode) {
             const container = scrollContainerRef.current;
             if (isEditMode) {
-                container.style.overflowY = 'hidden';
-                container.style.touchAction = 'none';
+                // In edit mode, remove scroll restrictions and let drag system handle everything
+                container.style.removeProperty('touchAction');
+                container.style.overflowY = 'auto';
+                (container.style as any).WebkitOverflowScrolling = 'touch';
             } else {
+                // In non-edit mode, apply scroll optimizations
                 container.style.overflowY = 'auto';
                 container.style.touchAction = 'pan-y';
                 (container.style as any).WebkitOverflowScrolling = 'touch';
@@ -499,11 +496,12 @@ const ChordNavigation: React.FC = () => {
                         'cursor-grab active:cursor-grabbing': isEditMode && !isMobile(),
                         'opacity-80 shadow-2xl scale-105': isDragging,
                         // Mobile-specific styles
-                        'touch-none select-none': isEditMode,
+                        'select-none': isEditMode,
                     }
                 )}
                 style={{
-                    touchAction: isEditMode ? 'none' : 'auto',
+                    // Let the drag system handle touch actions naturally in edit mode
+                    touchAction: isEditMode ? undefined : 'auto',
                 }}
             >
                 {isDeleteMode && (
@@ -692,11 +690,16 @@ const ChordNavigation: React.FC = () => {
             {/* Chord Display Area with Enhanced Mobile Scroll */}
             <div 
                 ref={scrollContainerRef}
-                className={`flex-1 max-w-7xl mx-auto w-full ${isLiveMode ? `px-4 pb-8 ${isCompactHeight ? 'pt-1' : 'pt-2'} ${isEditMode ? 'overflow-hidden' : 'overflow-y-auto'}` : 'px-2 pb-1'}`}
-                style={isLiveMode ? {
+                className={`flex-1 max-w-7xl mx-auto w-full ${isLiveMode ? `px-4 pb-8 ${isCompactHeight ? 'pt-1' : 'pt-2'} overflow-y-auto` : 'px-2 pb-1'}`}
+                style={isLiveMode && !isEditMode ? {
                     WebkitOverflowScrolling: 'touch' as any,
-                    touchAction: isEditMode ? 'none' : 'pan-y', // Allow drag when editing, restrict to vertical scroll when not
+                    touchAction: 'pan-y',
                     overscrollBehavior: 'contain',
+                    position: 'relative',
+                    zIndex: 1
+                } : isLiveMode ? {
+                    // In edit mode, let the drag system handle everything naturally
+                    WebkitOverflowScrolling: 'touch' as any,
                     position: 'relative',
                     zIndex: 1
                 } : undefined}

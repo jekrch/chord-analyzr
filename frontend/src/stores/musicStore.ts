@@ -197,10 +197,10 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
     handleFetchOriginalChord: async (chordName: string, key: string, mode: string): Promise<string | null> => {
         try {
             const modeKeyChords = await dataService.getModeKeyChords(key, mode);
-            console.log('Fetching original chord for', chordName, 'in', key, mode);
-            console.log('Fetched modeKeyChords from dataService:', modeKeyChords);
+            //console.log('Fetching original chord for', chordName, 'in', key, mode);
+            //console.log('Fetched modeKeyChords from dataService:', modeKeyChords);
             const originalChord = modeKeyChords.find(chord => chord.chordName === chordName);
-            console.log('Fetched original chord from dataService:', originalChord);
+            //console.log('Fetched original chord from dataService:', originalChord);
             return originalChord?.chordNoteNames || null;
         } catch (error) {
             console.error('Failed to fetch original chord:', error);

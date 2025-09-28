@@ -1,9 +1,10 @@
 /**
- * Static Data Service
- * Handles loading data from static JSON files
+ * Updated Static Data Service
+ * Handles loading data from static JSON files and integrates with dynamic chord generation
  */
 
 import type { ModeDto, ModeScaleChordDto, ScaleNoteDto } from '../api';
+import { dynamicChordGenerator } from './DynamicChordService';
 
 interface StaticDataIndex {
   generated_at: string;
@@ -23,9 +24,9 @@ class StaticDataService {
   private baseUrl = `${import.meta.env.BASE_URL}data`;
   private indexCache: StaticDataIndex | null = null;
   private modesCache: ModeDto[] | null = null;
-  private chordsCache: Map<string, ModeScaleChordDto[]> = new Map();
   private scalesCache: Map<string, ScalesByKey> = new Map();
   private distinctChordsCache: ModeScaleChordDto[] | null = null;
+  private useDynamicChords = true; // Toggle between static and dynamic chord generation
 
   /**
    * Normalizes a musical key string to have the first letter capitalized
@@ -37,6 +38,15 @@ class StaticDataService {
       return '';
     }
     return trimmedKey.charAt(0).toUpperCase() + trimmedKey.slice(1).toLowerCase();
+  }
+
+  /**
+   * Toggle between dynamic and static chord generation
+   */
+  public setUseDynamicChords(useDynamic: boolean): void {
+    this.useDynamicChords = useDynamic;
+    // Clear chord cache when switching modes
+    this.distinctChordsCache = null;
   }
 
   /**
@@ -82,12 +92,35 @@ class StaticDataService {
   }
 
   /**
-   * Load chords for a specific mode and key from static data
+   * Load chords for a specific mode and key from static data OR generate dynamically
+   * By default, only returns chords that fit within the scale (compatible chords)
    */
-  async getModeKeyChords(key: string, mode: string): Promise<ModeScaleChordDto[]> {
-    try {
-      const normalizedKey = this.normalizeKey(key);
+  async getModeKeyChords(key: string, mode: string, includeAllChords: boolean = false): Promise<ModeScaleChordDto[]> {
+    const normalizedKey = this.normalizeKey(key);
 
+    if (this.useDynamicChords) {
+      try {
+        // Generate chords dynamically (compatible by default)
+        const dynamicChords = await dynamicChordGenerator.generateChordsForScale(normalizedKey, mode, includeAllChords);
+        
+        // Convert to ModeScaleChordDto format
+        return dynamicChords.map(chord => ({
+          keyName: chord.keyName,
+          modeId: chord.modeId,
+          chordNote: chord.chordNote,
+          chordNoteName: chord.chordNoteName,
+          chordName: chord.chordName,
+          chordNotes: chord.chordNotes,
+          chordNoteNames: chord.chordNoteNames
+        }));
+      } catch (error) {
+        console.warn('Dynamic chord generation failed, falling back to static data:', error);
+        // Fall back to static data if dynamic generation fails
+      }
+    }
+
+    // Static data fallback or when dynamic chords are disabled
+    try {
       // First, get the index to find available modes
       const index = await this.loadIndex();
 
@@ -100,26 +133,106 @@ class StaticDataService {
 
       const modeId = modeData.id.toString();
 
-      // Check cache for the entire mode's chord data first
-      if (this.chordsCache.has(modeId)) {
-        const allChordsForMode = this.chordsCache.get(modeId)!;
-        return allChordsForMode.filter(chord => chord.keyName === normalizedKey);
-      }
-
-      // Load chords for this mode
+      // Load chords for this mode (if static files exist)
       const response = await fetch(`${this.baseUrl}/chords-mode-${modeId}.json`);
       if (!response.ok) {
         throw new Error(`Failed to load chords for mode ${mode}: ${response.statusText}`);
       }
       const allChords: ModeScaleChordDto[] = await response.json();
-      this.chordsCache.set(modeId, allChords);
 
       // Filter by key
-      return allChords.filter(chord => chord.keyName === normalizedKey);
+      const keyChords = allChords.filter(chord => chord.keyName === normalizedKey);
+
+      // If includeAllChords is false, filter for compatibility (static files already filtered by default)
+      return keyChords;
     } catch (error) {
       console.error('Error loading chords from static data:', error);
       throw error;
     }
+  }
+
+  /**
+   * Get chords that fit perfectly within a scale (no notes outside the scale)
+   */
+  async getCompatibleChords(key: string, mode: string): Promise<ModeScaleChordDto[]> {
+    if (this.useDynamicChords) {
+      try {
+        const normalizedKey = this.normalizeKey(key);
+        const compatibleChords = await dynamicChordGenerator.getCompatibleChords(normalizedKey, mode);
+        
+        return compatibleChords.map(chord => ({
+          keyName: chord.keyName,
+          modeId: chord.modeId,
+          chordNote: chord.chordNote,
+          chordNoteName: chord.chordNoteName,
+          chordName: chord.chordName,
+          chordNotes: chord.chordNotes,
+          chordNoteNames: chord.chordNoteNames
+        }));
+      } catch (error) {
+        console.warn('Dynamic compatible chord generation failed:', error);
+      }
+    }
+
+    // Fallback: filter existing chords for compatibility
+    const allChords = await this.getModeKeyChords(key, mode);
+    const scaleNotes = await this.getScaleNotes(key, mode);
+    
+    const scaleNoteNumbers = scaleNotes.map(note => {
+      const noteMap: Record<string, number> = {
+        'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'E#': 5, 'Fb': 4,
+        'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10,
+        'B': 11, 'B#': 0, 'Cb': 11
+      };
+      const noteNum = noteMap[note.noteName!] ?? 0;
+      return ((noteNum % 12) + 12) % 12;
+    });
+
+    return allChords.filter(chord => {
+      if (!chord.chordNotes) return false;
+      
+      const chordNoteNumbers = chord.chordNotes.split(', ').map(n => 
+        ((parseInt(n.trim()) % 12) + 12) % 12
+      );
+      
+      return chordNoteNumbers.every(note => scaleNoteNumbers.includes(note));
+    });
+  }
+
+  /**
+   * Generate a specific chord
+   */
+  async generateSpecificChord(rootNote: string, chordType: string, key: string, mode: string): Promise<ModeScaleChordDto | null> {
+    if (!this.useDynamicChords) {
+      throw new Error('Dynamic chord generation is disabled');
+    }
+
+    try {
+      const normalizedKey = this.normalizeKey(key);
+      const chord = await dynamicChordGenerator.generateChord(rootNote, chordType, normalizedKey, mode);
+      
+      if (!chord) return null;
+
+      return {
+        keyName: chord.keyName,
+        modeId: chord.modeId,
+        chordNote: chord.chordNote,
+        chordNoteName: chord.chordNoteName,
+        chordName: chord.chordName,
+        chordNotes: chord.chordNotes,
+        chordNoteNames: chord.chordNoteNames
+      };
+    } catch (error) {
+      console.error('Error generating specific chord:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get all available chord types (when using dynamic generation)
+   */
+  getAvailableChordTypes(): string[] {
+    return dynamicChordGenerator.getChordTypes();
   }
 
   /**
@@ -171,12 +284,42 @@ class StaticDataService {
       return this.distinctChordsCache;
     }
 
+    if (this.useDynamicChords) {
+      try {
+        // Generate distinct chords dynamically across all modes and common keys
+        const modes = await this.getModes();
+        const commonKeys = ['C', 'D', 'E', 'F', 'G', 'A', 'B', 'C#', 'F#', 'Bb', 'Eb', 'Ab', 'Db'];
+        const allChords: ModeScaleChordDto[] = [];
+
+        for (const mode of modes) {
+          for (const key of commonKeys) {
+            try {
+              const chords = await dynamicChordGenerator.generateChordsForScale(key, mode.name!, true);
+              allChords.push(...chords.map(chord => ({
+                keyName: chord.keyName,
+                modeId: chord.modeId,
+                chordNote: chord.chordNote,
+                chordNoteName: chord.chordNoteName,
+                chordName: chord.chordName,
+                chordNotes: chord.chordNotes,
+                chordNoteNames: chord.chordNoteNames
+              })));
+            } catch (error) {
+              console.warn(`Error generating chords for ${key} ${mode.name}:`, error);
+            }
+          }
+        }
+
+        this.distinctChordsCache = this.deduplicateChords(allChords);
+        return this.distinctChordsCache;
+      } catch (error) {
+        console.warn('Dynamic distinct chord generation failed, falling back to static data:', error);
+      }
+    }
+
+    // Static data fallback
     try {
-      //console.log('Loading all distinct chords from static data...');
-      
-      // Get the index to find all available modes
       const index = await this.loadIndex();
-      
       const allChords: ModeScaleChordDto[] = [];
 
       // Load chord data for each mode
@@ -186,21 +329,14 @@ class StaticDataService {
         const modeId = mode.id.toString();
         
         try {
-          // Check if already cached
-          if (this.chordsCache.has(modeId)) {
-            allChords.push(...this.chordsCache.get(modeId)!);
-          } else {
-            // Load chord data for this mode
-            const response = await fetch(`${this.baseUrl}/chords-mode-${modeId}.json`);
-            if (!response.ok) {
-              console.warn(`Failed to load chords for mode ${mode.name} (ID: ${modeId}): ${response.statusText}`);
-              continue;
-            }
-            
-            const modeChords: ModeScaleChordDto[] = await response.json();
-            this.chordsCache.set(modeId, modeChords);
-            allChords.push(...modeChords);
+          const response = await fetch(`${this.baseUrl}/chords-mode-${modeId}.json`);
+          if (!response.ok) {
+            console.warn(`Failed to load chords for mode ${mode.name} (ID: ${modeId}): ${response.statusText}`);
+            continue;
           }
+          
+          const modeChords: ModeScaleChordDto[] = await response.json();
+          allChords.push(...modeChords);
         } catch (error) {
           console.warn(`Error loading chords for mode ${mode.name}:`, error);
         }
@@ -208,9 +344,6 @@ class StaticDataService {
 
       // Deduplicate chords
       this.distinctChordsCache = this.deduplicateChords(allChords);
-      
-      //console.log(`Loaded ${allChords.length} total chords, ${this.distinctChordsCache.length} distinct chords`);
-      
       return this.distinctChordsCache;
     } catch (error) {
       console.error('Error loading all distinct chords from static data:', error);
@@ -242,11 +375,21 @@ class StaticDataService {
   /**
    * Get generation metadata
    */
-  async getMetadata(): Promise<{ generatedAt: string; modesCount: number }> {
+  async getMetadata(): Promise<{ generatedAt: string; modesCount: number; usingDynamicChords: boolean }> {
+    if (this.useDynamicChords) {
+      const modes = await this.getModes();
+      return {
+        generatedAt: new Date().toISOString(),
+        modesCount: modes.length,
+        usingDynamicChords: true
+      };
+    }
+
     const index = await this.loadIndex();
     return {
       generatedAt: index.generated_at,
-      modesCount: index.modes.length
+      modesCount: index.modes.length,
+      usingDynamicChords: false
     };
   }
 
@@ -256,7 +399,6 @@ class StaticDataService {
   clearCache(): void {
     this.indexCache = null;
     this.modesCache = null;
-    this.chordsCache.clear();
     this.scalesCache.clear();
     this.distinctChordsCache = null;
   }

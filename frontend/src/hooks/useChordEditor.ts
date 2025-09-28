@@ -29,7 +29,7 @@ const notesToString = (notes: string[]): string => {
 
 const isValidNoteName = (note: string): boolean => {
     if (!note.trim()) return true; // Empty is valid (no slash note)
-    
+
     // Valid note pattern: A-G (case insensitive) + optional double/single sharp/flat + optional octave number
     // Supports: C, C#, C##, Cb, Cbb, C4, C#4, C##4, Cb4, Cbb4, etc.
     const notePattern = /^[a-gA-G](##|#|bb|b)?(\d+)?$/;
@@ -38,19 +38,19 @@ const isValidNoteName = (note: string): boolean => {
 
 const formatNoteName = (note: string): string => {
     if (!note.trim()) return note;
-    
+
     const trimmed = note.trim();
     if (!isValidNoteName(trimmed)) {
         return trimmed; // Return as-is if invalid, let validation handle it
     }
-    
+
     const match = trimmed.match(/^([a-gA-G])(##|#|bb|b)?(\d*)$/);
     if (match) {
         const [, noteLetter, accidental = '', octave] = match;
         const formattedNote = noteLetter.toUpperCase() + accidental.toLowerCase();
         return formattedNote + octave;
     }
-    
+
     return trimmed;
 };
 
@@ -66,40 +66,107 @@ export const useChordEditor = ({
     const [originalChordNotes, setOriginalChordNotes] = useState<string>('');
     const [slashNoteError, setSlashNoteError] = useState<string>('');
 
-    const findOriginalChordFromLibrary = async (chord: AddedChord): Promise<string | null> => {
-        const baseChordName = chord.name.replace(/\/[A-G](##|#|bb|b)?\d*/, '');
+    // Simplified findOriginalChordFromLibrary - just find the base chord definition
+const findOriginalChordFromLibrary = async (chord: AddedChord): Promise<string | null> => {
+    // Extract base chord name (remove slash note if present)
+    const baseChordName = chord.name.replace(/\/[A-G](##|#|bb|b)?\d*/, '');
+    
+    console.log('Looking for base chord:', baseChordName);
+    
+    // First try: Look in the current chords library for exact match
+    if (chords) {
+        const exactMatch = chords.find(c => c.chordName === baseChordName);
+        if (exactMatch?.chordNoteNames) {
+            console.log('Found exact match in library:', exactMatch.chordNoteNames);
+            return exactMatch.chordNoteNames;
+        }
+    }
+    
+    // Second try: Use API to fetch the base chord if we have context
+    if (chord.originalKey && chord.originalMode && onFetchOriginalChord) {
+        try {
+            console.log('Fetching base chord', baseChordName, 'from API');
+            const originalNotes = await onFetchOriginalChord(baseChordName, chord.originalKey, chord.originalMode);
+            if (originalNotes) {
+                console.log('Fetched base chord from API:', originalNotes);
+                return originalNotes;
+            }
+        } catch (error) {
+            console.warn('Failed to fetch base chord from API:', error);
+        }
+    }
+    
+    console.warn('Could not find base chord definition for:', baseChordName);
+    return null;
+};
+
+// Simplified removeSlashNote - just find and use the base chord
+const removeSlashNote = async () => {
+    setSlashNote('');
+    setSlashNoteError('');
+    
+    if (!editingChord) return;
+    
+    try {
+        //console.log('Removing slash note, finding base chord for:', editingChord.name);
         
-        if (chords) {
-            const currentChord = chords.find(c => c.chordName === baseChordName);
-            // Fixed: Use chordNoteNames instead of chordNotes to match the interface
-            if (currentChord?.chordNoteNames) {
-                return currentChord.chordNoteNames;
+        // Get the base chord definition
+        const baseChordNotes = await findOriginalChordFromLibrary(editingChord);
+        
+        if (baseChordNotes) {
+            // Validate the notes are in the correct format
+            const parsedNotes = parseNotes(baseChordNotes);
+            const hasValidNoteNames = parsedNotes.every(note => {
+                return /^[A-Ga-g]/.test(note.trim()) && isValidNoteName(note.trim());
+            });
+            
+            if (hasValidNoteNames) {
+                console.log('Reverting to base chord notes:', baseChordNotes);
+                setEditingChord({
+                    ...editingChord,
+                    notes: baseChordNotes
+                });
+                return;
+            } else {
+                console.warn('Base chord notes are in invalid format:', baseChordNotes);
             }
         }
         
-        if (chord.originalKey && chord.originalMode && onFetchOriginalChord) {
-            try {
-                //console.log('!!!Fetching original chord for', baseChordName, 'in', chord.originalKey, chord.originalMode);
-                const originalNotes = await onFetchOriginalChord(baseChordName, chord.originalKey, chord.originalMode);
-                //console.log('!!!Fetched original notes from props:', originalNotes);
-                if (originalNotes) {
-                    return originalNotes;
-                }
-            } catch (error) {
-                console.warn('Failed to fetch original chord:', error);
+        // If we can't find the base chord, just remove the first note (which should be the slash note)
+        const currentNotes = parseNotes(editingChord.notes);
+        if (currentNotes.length > 1) {
+            // Check if the first note matches our slash note
+            const firstNote = currentNotes[0];
+            const slashNoteNameOnly = slashNote.replace(/\d+/, '');
+            const firstNoteNameOnly = firstNote.replace(/\d+/, '');
+            
+            if (firstNoteNameOnly === slashNoteNameOnly) {
+                // Remove the first note (slash note) and keep the rest
+                const notesWithoutSlash = currentNotes.slice(1);
+                const revertedNotes = notesToString(notesWithoutSlash);
+                console.log('Removing slash note manually, result:', revertedNotes);
+                setEditingChord({
+                    ...editingChord,
+                    notes: revertedNotes
+                });
+                return;
             }
         }
         
-        return chord.originalNotes || null;
-    };
+        console.warn('Could not revert slash note - no base chord found and no obvious slash note to remove');
+        
+    } catch (error) {
+        console.error('Error removing slash note:', error);
+    }
+};
 
     // Check if a slash note is manually added (not from original chord)
     const isManualSlashNote = (note: string): boolean => {
         if (!slashNote.trim() || !originalChordNotes) return false;
-        
+
         const noteNameOnly = note.replace(/\d+/, '');
         const slashNoteNameOnly = slashNote.trim().replace(/\d+/, '');
-        
+
         // If this note matches the slash note
         if (noteNameOnly === slashNoteNameOnly) {
             // Check if it exists in the original chord
@@ -110,14 +177,14 @@ export const useChordEditor = ({
             });
             return !existsInOriginal;
         }
-        
+
         return false;
     };
 
     const handleEditChord = async (index: number, chord: AddedChord) => {
         setEditingChordIndex(index);
         setEditingChord({ ...chord });
-        
+
         try {
             const originalNotes = await findOriginalChordFromLibrary(chord);
             setOriginalChordNotes(originalNotes || chord.notes);
@@ -125,7 +192,7 @@ export const useChordEditor = ({
             console.warn('Failed to load original chord, using current notes:', error);
             setOriginalChordNotes(chord.originalNotes || chord.notes);
         }
-        
+
         const slashMatch = chord.name.match(/\/([A-G](##|#|bb|b)?\d*)/);
 
         if (slashMatch) {
@@ -147,16 +214,16 @@ export const useChordEditor = ({
 
             if (slashNote.trim()) {
                 updatedName += `/${slashNote.trim()}`;
-                
+
                 const currentNotes = parseNotes(updatedNotes);
                 const slashNoteFormatted = slashNote.trim();
-                
+
                 const slashNoteExists = currentNotes.some(note => {
                     const noteNameOnly = note.replace(/\d+/, '');
                     const slashNoteNameOnly = slashNoteFormatted.replace(/\d+/, '');
                     return noteNameOnly === slashNoteNameOnly;
                 });
-                
+
                 if (!slashNoteExists) {
                     const notesWithSlash = [slashNoteFormatted, ...currentNotes];
                     updatedNotes = notesToString(notesWithSlash);
@@ -193,16 +260,16 @@ export const useChordEditor = ({
 
     const moveNoteUp = async (noteIndex: number) => {
         if (!editingChord || noteIndex === 0) return;
-        
+
         const notes = parseNotes(editingChord.notes);
-        
+
         // Prevent moving manually added slash note from first position
         if (noteIndex === 1 && isManualSlashNote(notes[0])) {
             return;
         }
-        
+
         [notes[noteIndex], notes[noteIndex - 1]] = [notes[noteIndex - 1], notes[noteIndex]];
-        
+
         setEditingChord({
             ...editingChord,
             notes: notesToString(notes)
@@ -213,17 +280,17 @@ export const useChordEditor = ({
 
     const moveNoteDown = async (noteIndex: number) => {
         if (!editingChord) return;
-        
+
         const notes = parseNotes(editingChord.notes);
         if (noteIndex === notes.length - 1) return;
-        
+
         // Prevent moving manually added slash note from first position
         if (noteIndex === 0 && isManualSlashNote(notes[0])) {
             return;
         }
-        
+
         [notes[noteIndex], notes[noteIndex + 1]] = [notes[noteIndex + 1], notes[noteIndex]];
-        
+
         setEditingChord({
             ...editingChord,
             notes: notesToString(notes)
@@ -232,64 +299,13 @@ export const useChordEditor = ({
         await detectSlashNoteFromOrder(notes);
     };
 
-    const removeSlashNote = async () => {
-        setSlashNote('');
-        if (editingChord) {
-            try {
-                //console.log('Reverting to original chord notes');
-                console.log('Current editing chord:', editingChord);
-                const libraryOriginalNotes = await findOriginalChordFromLibrary(editingChord);
-                const originalNotes = libraryOriginalNotes || editingChord.originalNotes || originalChordNotes;
-                console.log('Reverting to original notes:', originalNotes);
-                // Ensure we're setting properly formatted note names, not MIDI numbers
-                if (originalNotes) {
-                    // Validate that originalNotes contains note names and not MIDI numbers
-                    const parsedOriginal = parseNotes(originalNotes);
-                    const hasValidNoteNames = parsedOriginal.every(note => {
-                        // Check if it looks like a note name (starts with A-G)
-                        return /^[A-Ga-g]/.test(note.trim());
-                    });
-                    
-                    if (hasValidNoteNames) {
-                        setEditingChord({
-                            ...editingChord,
-                            notes: originalNotes
-                        });
-                    } else {
-                        console.warn('Original notes appear to be in invalid format, keeping current notes:', originalNotes);
-                        // Keep the current notes if the original seems invalid
-                    }
-                } else {
-                    console.warn('No original notes found, keeping current notes');
-                }
-            } catch (error) {
-                console.warn('Failed to revert to original chord:', error);
-                const originalNotes = editingChord.originalNotes || originalChordNotes;
-                if (originalNotes) {
-                    // Same validation for fallback
-                    const parsedOriginal = parseNotes(originalNotes);
-                    const hasValidNoteNames = parsedOriginal.every(note => {
-                        return /^[A-Ga-g]/.test(note.trim());
-                    });
-                    
-                    if (hasValidNoteNames) {
-                        setEditingChord({
-                            ...editingChord,
-                            notes: originalNotes
-                        });
-                    }
-                }
-            }
-        }
-    };
-
     const updateChordNotesWithSlashNote = async (newSlashNote: string) => {
         if (!editingChord) return;
 
         try {
             const libraryOriginalNotes = await findOriginalChordFromLibrary(editingChord);
             const originalNotes = libraryOriginalNotes || editingChord.originalNotes || originalChordNotes;
-            
+
             if (!originalNotes) return;
 
             if (!newSlashNote.trim()) {
@@ -302,7 +318,7 @@ export const useChordEditor = ({
 
             const originalNotesArray = parseNotes(originalNotes);
             const slashNoteFormatted = newSlashNote.trim();
-            
+
             const existsInOriginal = originalNotesArray.some(note => {
                 const noteNameOnly = note.replace(/\d+/, '');
                 const slashNoteNameOnly = slashNoteFormatted.replace(/\d+/, '');
@@ -317,7 +333,7 @@ export const useChordEditor = ({
                     const slashNoteNameOnly = slashNoteFormatted.replace(/\d+/, '');
                     return noteNameOnly !== slashNoteNameOnly;
                 });
-                
+
                 const matchingNote = originalNotesArray.find(note => {
                     const noteNameOnly = note.replace(/\d+/, '');
                     const slashNoteNameOnly = slashNoteFormatted.replace(/\d+/, '');
@@ -363,7 +379,7 @@ export const useChordEditor = ({
         try {
             const libraryOriginalNotes = await findOriginalChordFromLibrary(editingChord);
             const originalNotes = libraryOriginalNotes || editingChord.originalNotes || originalChordNotes;
-            
+
             if (!originalNotes) return;
 
             const originalNotesArray = parseNotes(originalNotes);
@@ -394,7 +410,7 @@ export const useChordEditor = ({
 
     const handleSlashNoteChange = async (value: string) => {
         const trimmedValue = value.trim();
-        
+
         // Clear error if input is empty
         if (!trimmedValue) {
             setSlashNoteError('');
@@ -402,14 +418,14 @@ export const useChordEditor = ({
             await updateChordNotesWithSlashNote('');
             return;
         }
-        
+
         // Validate the note name
         if (!isValidNoteName(trimmedValue)) {
             setSlashNoteError('Invalid note. Use A-G with optional # or b (e.g., C, F#, Bb, D4)');
             setSlashNote(value); // Keep the invalid input visible
             return;
         }
-        
+
         // Clear error and format the valid note
         setSlashNoteError('');
         const formattedValue = formatNoteName(trimmedValue);
@@ -419,7 +435,7 @@ export const useChordEditor = ({
 
     const isSlashNote = (note: string): boolean => {
         if (!slashNote.trim()) return false;
-        
+
         const noteNameOnly = note.replace(/\d+/, '');
         const slashNoteNameOnly = slashNote.trim().replace(/\d+/, '');
         return noteNameOnly === slashNoteNameOnly;
@@ -431,12 +447,12 @@ export const useChordEditor = ({
         }
 
         const notes = parseNotes(editingChord.notes);
-        
+
         // Prevent dragging manually added slash note from first position
         if (result.source.index === 0 && isManualSlashNote(notes[0])) {
             return;
         }
-        
+
         // Prevent dropping anything into first position if there's a manually added slash note there
         if (result.destination.index === 0 && isManualSlashNote(notes[0])) {
             return;
@@ -466,7 +482,7 @@ export const useChordEditor = ({
         slashNote,
         originalChordNotes,
         slashNoteError,
-        
+
         // Actions
         handleEditChord,
         handleSaveEdit,
@@ -479,7 +495,7 @@ export const useChordEditor = ({
         handlePreviewChord,
         isSlashNote,
         isManualSlashNote,
-        
+
         // Utilities
         parseNotes,
         notesToString,

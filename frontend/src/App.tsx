@@ -3,7 +3,7 @@ import { useIntegratedAppLogic } from './hooks/useIntegratedAppLogic';
 import ChordTable from './components/ChordTable';
 import PianoControl from './components/piano/PianoControl';
 import PatternSystem from './components/PatternSystem';
-import ChordNavigation from './components/ChordNavigation';
+import ChordNavigation from './components/chordNav/ChordNavigation';
 import PianoControlPanel from './components/piano/PianoControlPanel';
 import HeaderNav from './components/HeaderNav';
 import './App.css';

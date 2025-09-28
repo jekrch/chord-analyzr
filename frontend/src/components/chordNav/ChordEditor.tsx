@@ -4,10 +4,10 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { Piano as ReactPiano, MidiNumbers } from 'react-piano';
 import 'react-piano/dist/styles.css';
 import classNames from 'classnames';
-import { Button } from './Button';
-import { useChordEditor, AddedChord } from '../hooks/useChordEditor';
-import { getMidiNotes } from '../util/ChordUtil'; // Import the proper octave calculation function
-import { ModeScaleChordDto } from '../api';
+import { Button } from '../Button';
+import { useChordEditor, AddedChord } from '../../hooks/useChordEditor';
+import { getMidiNotes } from '../../util/ChordUtil'; // Import the proper octave calculation function
+import { ModeScaleChordDto } from '../../api';
 
 // Constants matching your PianoControl
 const START_OCTAVE = 4;

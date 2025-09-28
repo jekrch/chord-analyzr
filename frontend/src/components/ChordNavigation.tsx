@@ -82,7 +82,7 @@ const SortableChordItem: React.FC<SortableChordItemProps> = ({
         // Let the drag system handle touch behaviors naturally
         style: {
             userSelect: 'none' as const,  // Prevent text selection
-            WebkitUserSelect: 'none' as const,
+            webkitUserSelect: 'none' as const,
             ...style
         } as React.CSSProperties
     };
@@ -92,8 +92,13 @@ const SortableChordItem: React.FC<SortableChordItemProps> = ({
             ref={setNodeRef}
             {...enhancedAttributes}
             {...listeners}
-            // Remove the width classes since we're now in a CSS Grid cell
             className="mobile-drag-item"
+            style={{
+                // Prevent mobile browser interference during drag
+                WebkitTouchCallout: 'none',
+                WebkitTapHighlightColor: 'transparent',
+                ...enhancedAttributes.style
+            }}
         >
             {renderChordButton(chord, index, isDragging, onEdit)}
         </div>
@@ -186,9 +191,17 @@ const ChordNavigation: React.FC = () => {
             const container = scrollContainerRef.current;
             if (isEditMode) {
                 // In edit mode, remove scroll restrictions and let drag system handle everything
-                container.style.removeProperty('touchAction');
-                container.style.overflowY = 'auto';
-                (container.style as any).WebkitOverflowScrolling = 'touch';
+                if (isMobile()) {
+                    // On mobile, be more restrictive during edit mode
+                    container.style.touchAction = 'pan-y';
+                    container.style.overflowY = 'auto';
+                    (container.style as any).WebkitOverflowScrolling = 'auto';
+                } else {
+                    // Desktop: more permissive
+                    container.style.removeProperty('touchAction');
+                    container.style.overflowY = 'auto';
+                    (container.style as any).WebkitOverflowScrolling = 'touch';
+                }
             } else {
                 // In non-edit mode, apply scroll optimizations
                 container.style.overflowY = 'auto';
@@ -202,9 +215,9 @@ const ChordNavigation: React.FC = () => {
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: isMobile() ? {
-                // For mobile: use delay to avoid conflicts with scrolling
-                delay: 200,
-                tolerance: 5,
+                // For mobile: use longer delay and higher tolerance to avoid conflicts
+                delay: 300,
+                tolerance: 8,
             } : {
                 // For desktop: use distance for immediate response
                 distance: 8,
@@ -212,8 +225,8 @@ const ChordNavigation: React.FC = () => {
         }),
         useSensor(TouchSensor, {
             activationConstraint: {
-                delay: 250,
-                tolerance: 8,
+                delay: 400, // Longer delay for mobile
+                tolerance: 10, // Higher tolerance
             },
         }),
         useSensor(KeyboardSensor, {
@@ -327,21 +340,55 @@ const ChordNavigation: React.FC = () => {
         }
     };
 
-    // Drag handlers with mobile cleanup
+    // Drag handlers with aggressive mobile behavior prevention
     const handleDragStart = () => {
         document.body.classList.add('dragging');
+        
+        // Aggressive mobile browser behavior prevention
         if (isMobile()) {
+            // Prevent all scrolling and browser behaviors
             document.body.style.overflow = 'hidden';
-            // Prevent pull-to-refresh on mobile
             document.body.style.overscrollBehavior = 'none';
+            document.body.style.touchAction = 'none';
+            document.body.style.userSelect = 'none';
+            document.body.style.webkitUserSelect = 'none';
+            
+            // Prevent pull-to-refresh
+            document.documentElement.style.overscrollBehavior = 'none';
+            document.documentElement.style.touchAction = 'none';
+            
+            // Prevent viewport manipulation
+            const viewport = document.querySelector('meta[name="viewport"]');
+            if (viewport) {
+                viewport.setAttribute('data-original-content', viewport.getAttribute('content') || '');
+                viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+            }
         }
     };
 
     const handleDragCancel = () => {
         document.body.classList.remove('dragging');
+        
         if (isMobile()) {
+            // Restore original behaviors
             document.body.style.overflow = '';
             document.body.style.overscrollBehavior = '';
+            document.body.style.touchAction = '';
+            document.body.style.userSelect = '';
+            document.body.style.webkitUserSelect = '';
+            
+            document.documentElement.style.overscrollBehavior = '';
+            document.documentElement.style.touchAction = '';
+            
+            // Restore viewport
+            const viewport = document.querySelector('meta[name="viewport"]');
+            if (viewport) {
+                const originalContent = viewport.getAttribute('data-original-content');
+                if (originalContent) {
+                    viewport.setAttribute('content', originalContent);
+                    viewport.removeAttribute('data-original-content');
+                }
+            }
         }
     };
 
@@ -349,11 +396,29 @@ const ChordNavigation: React.FC = () => {
     const handleDragEndDndKit = (event: DragEndEvent) => {
         const { active, over } = event;
         
-        // Clean up drag state immediately
+        // Clean up drag state immediately with same logic as handleDragCancel
         document.body.classList.remove('dragging');
+        
         if (isMobile()) {
+            // Restore original behaviors
             document.body.style.overflow = '';
             document.body.style.overscrollBehavior = '';
+            document.body.style.touchAction = '';
+            document.body.style.userSelect = '';
+            document.body.style.webkitUserSelect = '';
+            
+            document.documentElement.style.overscrollBehavior = '';
+            document.documentElement.style.touchAction = '';
+            
+            // Restore viewport
+            const viewport = document.querySelector('meta[name="viewport"]');
+            if (viewport) {
+                const originalContent = viewport.getAttribute('data-original-content');
+                if (originalContent) {
+                    viewport.setAttribute('content', originalContent);
+                    viewport.removeAttribute('data-original-content');
+                }
+            }
         }
         
         console.log('Drag end event:', { active: active.id, over: over?.id });
@@ -665,6 +730,31 @@ const ChordNavigation: React.FC = () => {
                 overscrollBehavior: 'none'
             } : undefined}
         >
+            {/* CSS to prevent mobile browser interference during drag */}
+            <style>{`
+                .dragging {
+                    overflow: hidden !important;
+                    touch-action: none !important;
+                    overscroll-behavior: none !important;
+                    -webkit-overflow-scrolling: auto !important;
+                }
+                
+                .dragging * {
+                    pointer-events: none !important;
+                }
+                
+                .dragging .mobile-drag-item,
+                .dragging .mobile-drag-item * {
+                    pointer-events: auto !important;
+                }
+                
+                @media (max-width: 768px) {
+                    .dragging {
+                        -webkit-user-select: none !important;
+                        user-select: none !important;
+                    }
+                }
+            `}</style>
             {/* Top Control Bar */}
             <div className={`${isLiveMode ? 'flex-shrink-0' : ''} max-w-7xl mx-auto px-4 ${isLiveMode ? (isCompactHeight ? 'pt-2 z-10' : 'pt-4 z-10') : 'pt-2'} w-full`}>
                 <div className={`flex items-center justify-between ${isLiveMode ? (isCompactHeight ? 'mb-1' : 'mb-3') : 'mb-2'}`}>
@@ -697,9 +787,11 @@ const ChordNavigation: React.FC = () => {
                     overscrollBehavior: 'contain',
                     position: 'relative',
                     zIndex: 1
-                } : isLiveMode ? {
-                    // In edit mode, let the drag system handle everything naturally
-                    WebkitOverflowScrolling: 'touch' as any,
+                } : isLiveMode && isEditMode ? {
+                    // In edit mode on mobile, be more restrictive to prevent conflicts
+                    WebkitOverflowScrolling: isMobile() ? 'auto' : 'touch' as any,
+                    touchAction: isMobile() ? 'pan-y' : 'auto',
+                    overscrollBehavior: 'contain',
                     position: 'relative',
                     zIndex: 1
                 } : undefined}

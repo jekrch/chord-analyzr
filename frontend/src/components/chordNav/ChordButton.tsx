@@ -139,11 +139,17 @@ export const ChordButton: React.FC<ChordButtonProps> = ({
 
         {/* Edit mode indicator */}
         {isEditMode && (
+          <>
           <CogIcon 
             className={`absolute top-1 right-1 text-white bg-blue-500 rounded-full shadow-sm p-0.5 ${
               isLiveMode ? 'h-6 w-6' : 'h-4 w-4'
             }`} 
           />
+          {/* DO NOT REMOVE: this opacity-0 icon enables the button to be grabbed. Without it drag and drop will not work properly. */}
+           <CogIcon 
+              className={`absolute rounded-md  right-0 h-full w-full opacity-0`} 
+          />
+          </>
         )}
 
         {/* Enhanced drag handle for mobile - make it more prominent */}

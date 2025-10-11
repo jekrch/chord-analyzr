@@ -386,10 +386,13 @@ export const useIntegratedAppLogic = () => {
         if (patternStore.globalPatternState.isPlaying) {
             if (!intervalRef.current) {
                 sequencerStartTimeRef.current = Date.now();
-                nextStepTimeRef.current = Date.now();
                 globalStepRef.current = 0;
 
                 patternStore.setGlobalPatternState({ currentStep: 0 });
+                
+                // Set nextStepTime to AFTER the first step duration
+                // This ensures step 0 plays for its full duration before incrementing
+                nextStepTimeRef.current = Date.now() + getSwingDuration(0);
 
                 const tick = () => {
                     const now = Date.now();
@@ -420,7 +423,7 @@ export const useIntegratedAppLogic = () => {
             }
         };
     }, [patternStore.globalPatternState.isPlaying, getSwingDuration]);
-
+    
     // Keep activeNotes in sync with sequencer
     useEffect(() => {
         if (patternStore.globalPatternState.isPlaying) {

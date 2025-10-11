@@ -160,56 +160,49 @@ const ChordTable: React.FC<ChordTableProps> = ({
     return Math.floor(index / currentColumns);
   }, [currentColumns]);
 
-  // Extract root note from chord name - memoized function
-  const extractRootNote = useCallback((chordName: string | undefined): string => {
-    if (!chordName) return '';
-    if (chordName.length >= 2 && (chordName[1] === 'b' || chordName[1] === '#')) {
-      return chordName.substring(0, 2);
-    }
-    return chordName[0] || '';
-  }, []);
-
   // Pre-filter valid chords once to avoid repeated filtering
   const validChords = useMemo(() => {
     if (!currentChords) return [];
     return currentChords.filter(chord => 
       chord.chordName && 
       chord.chordNoteNames &&
+      chord.chordNoteName && // Also ensure chordNoteName exists
       chord.chordName.trim() !== '' &&
-      chord.chordNoteNames.trim() !== ''
+      chord.chordNoteNames.trim() !== '' &&
+      chord.chordNoteName.trim() !== ''
     );
   }, [currentChords]);
 
-  // Get unique root notes from chords - optimized
+  // Get unique root notes from chords - now using chordNoteName directly
   const rootNotes = useMemo(() => {
     const noteSet = new Set<string>();
     validChords.forEach(chord => {
-      const root = extractRootNote(chord.chordName);
-      if (root) noteSet.add(root);
+      if (chord.chordNoteName) {
+        noteSet.add(chord.chordNoteName);
+      }
     });
     return Array.from(noteSet).sort();
-  }, [validChords, extractRootNote]);
+  }, [validChords]);
 
-  // Count chords per root note - optimized
+  // Count chords per root note - now using chordNoteName directly
   const chordCounts = useMemo(() => {
     const counts: { [key: string]: number } = {};
     validChords.forEach(chord => {
-      const root = extractRootNote(chord.chordName!);
-      if (root) {
-        counts[root] = (counts[root] || 0) + 1;
+      if (chord.chordNoteName) {
+        counts[chord.chordNoteName] = (counts[chord.chordNoteName] || 0) + 1;
       }
     });
     return counts;
-  }, [validChords, extractRootNote]);
+  }, [validChords]);
 
-  // Filter and sort chords - with alphabetical ordering
+  // Filter and sort chords - now using chordNoteName for filtering
   const filteredChords = useMemo(() => {
     let filtered = validChords;
     
-    // Filter by root note
+    // Filter by root note using chordNoteName
     if (selectedRootNote !== 'All') {
       filtered = filtered.filter(chord => 
-        extractRootNote(chord.chordName) === selectedRootNote
+        chord.chordNoteName === selectedRootNote
       );
     }
     
@@ -228,7 +221,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
       const nameB = b.chordName?.toLowerCase() || '';
       return nameA.localeCompare(nameB);
     });
-  }, [validChords, selectedRootNote, searchQuery, extractRootNote]);
+  }, [validChords, selectedRootNote, searchQuery]);
 
   // Clear expanded rows when columns change or filters change
   useEffect(() => {

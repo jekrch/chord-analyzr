@@ -352,25 +352,34 @@ class StaticDataService {
   }
 
   /**
-   * Helper method to deduplicate chords based on their musical properties
-   */
-  private deduplicateChords(chords: ModeScaleChordDto[]): ModeScaleChordDto[] {
-    const seen = new Map<string, ModeScaleChordDto>();
+ * Helper method to deduplicate chords based on their musical properties
+ */
+private deduplicateChords(chords: ModeScaleChordDto[]): ModeScaleChordDto[] {
+  const seen = new Map<string, ModeScaleChordDto>();
+  
+  for (const chord of chords) {
+    // Create a unique key based on the actual notes in the chord
+    let uniqueKey: string;
     
-    for (const chord of chords) {
-      // Create a unique key based on chord properties that define musical uniqueness
-      let uniqueKey: string;
+      // Fallback to chordNotes if chordNoteNames isn't available
+      // Assuming chordNotes is also a comma-separated string or similar
+      const notes = chord.chordNotes!
+        .split(',')
+        .map(note => note.trim())
+        .filter(note => note.length > 0)
+        .sort();
       
-      uniqueKey = chord.chordName!.trim();
+      uniqueKey = chord.chordName + notes.join(',');
 
-      // Only keep the first occurrence of each unique chord
-      if (!seen.has(uniqueKey)) {
-        seen.set(uniqueKey, chord);
-      }
+    // Only keep the first occurrence of each unique chord
+    // This will prefer chords that appear earlier in the list
+    if (uniqueKey && !seen.has(uniqueKey)) {
+      seen.set(uniqueKey, chord);
     }
-    
-    return Array.from(seen.values());
   }
+  
+  return Array.from(seen.values());
+}
 
   /**
    * Get generation metadata

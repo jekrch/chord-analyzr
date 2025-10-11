@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { DropResult } from '@hello-pangea/dnd';
 import { ModeScaleChordDto } from '../api';
+import { dataService } from '../services/DataService';
 
 export interface AddedChord {
     name: string;
@@ -54,6 +55,45 @@ const formatNoteName = (note: string): string => {
     return trimmed;
 };
 
+// Helper to convert note name to normalized MIDI number (0-11)
+const noteNameToNumber = (noteName: string): number | null => {
+    const noteMap: Record<string, number> = {
+        'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'E#': 5, 'Fb': 4,
+        'F': 5, 'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10,
+        'B': 11, 'B#': 0, 'Cb': 11
+    };
+    
+    // Extract just the note name without octave number
+    const match = noteName.match(/^([A-Ga-g])(##|#|bb|b)?/);
+    if (!match) return null;
+    
+    const [, letter, accidental = ''] = match;
+    const fullNote = letter.toUpperCase() + accidental.toLowerCase();
+    
+    return noteMap[fullNote] ?? null;
+};
+
+// Helper to parse chord notes string into normalized note numbers (0-11)
+const parseChordNotes = (notesString: string): number[] => {
+    const notes = parseNotes(notesString);
+    return notes.map(note => noteNameToNumber(note)).filter(n => n !== null) as number[];
+};
+
+// Helper to count shared notes between two sets of note numbers
+const countSharedNotes = (notes1: number[], notes2: number[]): number => {
+    const set1 = new Set(notes1);
+    const set2 = new Set(notes2);
+    
+    let count = 0;
+    for (const note of set1) {
+        if (set2.has(note)) {
+            count++;
+        }
+    }
+    
+    return count;
+};
+
 export const useChordEditor = ({
     chords,
     onUpdateChord,
@@ -66,99 +106,134 @@ export const useChordEditor = ({
     const [originalChordNotes, setOriginalChordNotes] = useState<string>('');
     const [slashNoteError, setSlashNoteError] = useState<string>('');
 
-    // Simplified findOriginalChordFromLibrary - just find the base chord definition
-const findOriginalChordFromLibrary = async (chord: AddedChord): Promise<string | null> => {
-    // Extract base chord name (remove slash note if present)
-    const baseChordName = chord.name.replace(/\/[A-G](##|#|bb|b)?\d*/, '');
-    
-    console.log('Looking for base chord:', baseChordName);
-    
-    // First try: Look in the current chords library for exact match
-    if (chords) {
-        const exactMatch = chords.find(c => c.chordName === baseChordName);
-        if (exactMatch?.chordNoteNames) {
-            console.log('Found exact match in library:', exactMatch.chordNoteNames);
-            return exactMatch.chordNoteNames;
-        }
-    }
-    
-    // Second try: Use API to fetch the base chord if we have context
-    if (chord.originalKey && chord.originalMode && onFetchOriginalChord) {
-        try {
-            console.log('Fetching base chord', baseChordName, 'from API');
-            const originalNotes = await onFetchOriginalChord(baseChordName, chord.originalKey, chord.originalMode);
-            if (originalNotes) {
-                console.log('Fetched base chord from API:', originalNotes);
-                return originalNotes;
-            }
-        } catch (error) {
-            console.warn('Failed to fetch base chord from API:', error);
-        }
-    }
-    
-    console.warn('Could not find base chord definition for:', baseChordName);
-    return null;
-};
-
-// Simplified removeSlashNote - just find and use the base chord
-const removeSlashNote = async () => {
-    setSlashNote('');
-    setSlashNoteError('');
-    
-    if (!editingChord) return;
-    
-    try {
-        //console.log('Removing slash note, finding base chord for:', editingChord.name);
+    // Find the original chord definition, handling duplicate names by comparing note numbers
+    const findOriginalChordFromLibrary = async (chord: AddedChord): Promise<string | null> => {
+        // Extract base chord name (remove slash note if present)
+        const baseChordName = chord.name.replace(/\/[A-G](##|#|bb|b)?\d*/, '');
         
-        // Get the base chord definition
-        const baseChordNotes = await findOriginalChordFromLibrary(editingChord);
+        console.log('Looking for base chord:', baseChordName);
         
-        if (baseChordNotes) {
-            // Validate the notes are in the correct format
-            const parsedNotes = parseNotes(baseChordNotes);
-            const hasValidNoteNames = parsedNotes.every(note => {
-                return /^[A-Ga-g]/.test(note.trim()) && isValidNoteName(note.trim());
-            });
+        const chords = await dataService.getAllDistinctChords();
+        
+        // First try: Look in the current chords library
+        if (chords) {
+            const matchingChords = chords.filter(c => c.chordName === baseChordName);
             
-            if (hasValidNoteNames) {
-                console.log('Reverting to base chord notes:', baseChordNotes);
-                setEditingChord({
-                    ...editingChord,
-                    notes: baseChordNotes
-                });
-                return;
+            if (matchingChords.length === 0) {
+                // No matches found, continue to API fallback
+                console.log('No matches found in library for:', baseChordName);
             } else {
-                console.warn('Base chord notes are in invalid format:', baseChordNotes);
+                // Always compare notes to find best match, even with single result
+                console.log(`Found ${matchingChords.length} chord(s) with name "${baseChordName}", comparing notes to find best match...`);
+                
+                // Get current chord's note numbers (excluding any manually added slash note)
+                const currentNoteNumbers = parseChordNotes(chord.originalNotes || chord.notes);
+                console.log('Current chord note numbers:', currentNoteNumbers, 'from:', chord.originalNotes || chord.notes);
+                
+                let bestMatch = matchingChords[0];
+                let maxSharedNotes = 0;
+                
+                for (const candidate of matchingChords) {
+                    if (candidate.chordNoteNames) {
+                        const candidateNoteNumbers = parseChordNotes(candidate.chordNoteNames);
+                        const sharedCount = countSharedNotes(currentNoteNumbers, candidateNoteNumbers);
+                        
+                        console.log(`  - Candidate notes: ${candidate.chordNoteNames} (note numbers: ${candidateNoteNumbers}) - ${sharedCount} shared notes`);
+                        
+                        if (sharedCount > maxSharedNotes) {
+                            maxSharedNotes = sharedCount;
+                            bestMatch = candidate;
+                        }
+                    }
+                }
+                
+                if (bestMatch?.chordNoteNames && maxSharedNotes > 0) {
+                    console.log(`✓ Best match selected (${maxSharedNotes} shared notes):`, bestMatch.chordNoteNames);
+                    return bestMatch.chordNoteNames;
+                } else {
+                    console.warn(`✗ No good match found (max shared notes: ${maxSharedNotes})`);
+                    // Continue to API fallback
+                }
             }
         }
         
-        // If we can't find the base chord, just remove the first note (which should be the slash note)
-        const currentNotes = parseNotes(editingChord.notes);
-        if (currentNotes.length > 1) {
-            // Check if the first note matches our slash note
-            const firstNote = currentNotes[0];
-            const slashNoteNameOnly = slashNote.replace(/\d+/, '');
-            const firstNoteNameOnly = firstNote.replace(/\d+/, '');
+        // Second try: Use API to fetch the base chord if we have context
+        if (chord.originalKey && chord.originalMode && onFetchOriginalChord) {
+            try {
+                console.log('Fetching base chord', baseChordName, 'from API');
+                const originalNotes = await onFetchOriginalChord(baseChordName, chord.originalKey, chord.originalMode);
+                if (originalNotes) {
+                    console.log('Fetched base chord from API:', originalNotes);
+                    return originalNotes;
+                }
+            } catch (error) {
+                console.warn('Failed to fetch base chord from API:', error);
+            }
+        }
+        
+        console.warn('Could not find base chord definition for:', baseChordName);
+        return null;
+    };
+
+    // Simplified removeSlashNote - just find and use the base chord
+    const removeSlashNote = async () => {
+        setSlashNote('');
+        setSlashNoteError('');
+        
+        if (!editingChord) return;
+        
+        try {
+            //console.log('Removing slash note, finding base chord for:', editingChord.name);
             
-            if (firstNoteNameOnly === slashNoteNameOnly) {
-                // Remove the first note (slash note) and keep the rest
-                const notesWithoutSlash = currentNotes.slice(1);
-                const revertedNotes = notesToString(notesWithoutSlash);
-                console.log('Removing slash note manually, result:', revertedNotes);
-                setEditingChord({
-                    ...editingChord,
-                    notes: revertedNotes
+            // Get the base chord definition
+            const baseChordNotes = await findOriginalChordFromLibrary(editingChord);
+            
+            if (baseChordNotes) {
+                // Validate the notes are in the correct format
+                const parsedNotes = parseNotes(baseChordNotes);
+                const hasValidNoteNames = parsedNotes.every(note => {
+                    return /^[A-Ga-g]/.test(note.trim()) && isValidNoteName(note.trim());
                 });
-                return;
+                
+                if (hasValidNoteNames) {
+                    console.log('Reverting to base chord notes:', baseChordNotes);
+                    setEditingChord({
+                        ...editingChord,
+                        notes: baseChordNotes
+                    });
+                    return;
+                } else {
+                    console.warn('Base chord notes are in invalid format:', baseChordNotes);
+                }
             }
+            
+            // If we can't find the base chord, just remove the first note (which should be the slash note)
+            const currentNotes = parseNotes(editingChord.notes);
+            if (currentNotes.length > 1) {
+                // Check if the first note matches our slash note
+                const firstNote = currentNotes[0];
+                const slashNoteNameOnly = slashNote.replace(/\d+/, '');
+                const firstNoteNameOnly = firstNote.replace(/\d+/, '');
+                
+                if (firstNoteNameOnly === slashNoteNameOnly) {
+                    // Remove the first note (slash note) and keep the rest
+                    const notesWithoutSlash = currentNotes.slice(1);
+                    const revertedNotes = notesToString(notesWithoutSlash);
+                    console.log('Removing slash note manually, result:', revertedNotes);
+                    setEditingChord({
+                        ...editingChord,
+                        notes: revertedNotes
+                    });
+                    return;
+                }
+            }
+            
+            console.warn('Could not revert slash note - no base chord found and no obvious slash note to remove');
+            
+        } catch (error) {
+            console.error('Error removing slash note:', error);
         }
-        
-        console.warn('Could not revert slash note - no base chord found and no obvious slash note to remove');
-        
-    } catch (error) {
-        console.error('Error removing slash note:', error);
-    }
-};
+    };
 
     // Check if a slash note is manually added (not from original chord)
     const isManualSlashNote = (note: string): boolean => {

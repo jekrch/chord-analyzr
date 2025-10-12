@@ -9,7 +9,6 @@ import { Button } from './Button';
 import { useMusicStore } from '../stores/musicStore';
 import { usePlaybackStore } from '../stores/playbackStore';
 import { usePatternStore } from '../stores/patternStore';
-import { useUIStore } from '../stores/uiStore';
 
 // FIXED: Define proper subdivisions with correct values and names
 const SUBDIVISIONS = [
@@ -156,8 +155,8 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
     if (activeChordIndex !== null && addedChords[activeChordIndex]) {
       const chord = addedChords[activeChordIndex];
       // Parse the chord notes and count DISTINCT notes (ignoring octave)
-      const notes = chord.notes.split(',').map(note => note.trim()).filter(note => note);
-      const distinctNotes = new Set(notes.map(note => {
+      const notes = chord.notes.split(',').map((note: any) => note.trim()).filter((note: any) => note);
+      const distinctNotes = new Set(notes.map((note: any) => {
         // Remove octave numbers to get just the note name (C4 -> C, Bb3 -> Bb)
         return note.replace(/\d+$/, '');
       }));

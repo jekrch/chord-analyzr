@@ -1,9 +1,92 @@
 import { create } from 'zustand';
-import { ActiveNoteInfo, AddedChord } from './types';
+import { ActiveNoteInfo, AddedChord, ModeScaleChordDto, ScaleNoteDto } from './types';
 import { dataService } from '../services/DataService';
+import { normalizeNoteName } from '../util/NoteUtil';
 
 const START_OCTAVE = 4;
 const END_OCTAVE = 7;
+
+// Helper functions for transposition
+const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+/**
+ * Calculate the number of semitone steps between two keys
+ */
+export const calculateTransposeSteps = (fromKey: string, toKey: string): number => {
+    // Handle flats by converting to sharps
+    const flatToSharp: { [key: string]: string } = {
+        'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#'
+    };
+    
+    const normalizedFrom = flatToSharp[fromKey] || fromKey;
+    const normalizedTo = flatToSharp[toKey] || toKey;
+    
+    const fromIndex = NOTES.indexOf(normalizedFrom);
+    const toIndex = NOTES.indexOf(normalizedTo);
+    
+    if (fromIndex === -1 || toIndex === -1) return 0;
+    
+    let steps = toIndex - fromIndex;
+    // Normalize to range [-5, 6] for shortest path
+    if (steps > 6) steps -= 12;
+    if (steps < -5) steps += 12;
+    
+    return steps;
+};
+
+/**
+ * Transpose a single note by the specified number of semitones
+ */
+const transposeNote = (note: string, steps: number): string => {
+    // Handle flats by converting to sharps
+    const flatToSharp: { [key: string]: string } = {
+        'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#'
+    };
+    
+    let normalizedNote = note;
+    if (flatToSharp[note]) {
+        normalizedNote = flatToSharp[note];
+    }
+    
+    const index = NOTES.indexOf(normalizedNote);
+    if (index === -1) return note; // Return original if not found
+    
+    const newIndex = (index + steps + 12) % 12;
+    return NOTES[newIndex];
+};
+
+/**
+ * Transpose a chord name by extracting and transposing the root note
+ */
+export const transposeChordName = (chordName: string, steps: number): string => {
+    // Extract root note (first 1-2 characters)
+    let rootNote = '';
+    let suffix = '';
+    
+    if (chordName.length >= 2 && (chordName[1] === '#' || chordName[1] === 'b')) {
+        rootNote = chordName.substring(0, 2);
+        suffix = chordName.substring(2);
+    } else if (chordName.length >= 1) {
+        rootNote = chordName[0];
+        suffix = chordName.substring(1);
+    }
+    
+    const transposedRoot = transposeNote(rootNote, steps);
+    return transposedRoot + suffix;
+};
+
+/**
+ * Transpose a space-separated list of notes
+ */
+export const transposeNotes = (notes: string, steps: number): string => {
+    return notes.split(' ')
+        .map(note => transposeNote(note, steps))
+        .join(' ');
+};
+
+// ============================================================================
+// PLAYBACK STORE
+// ============================================================================
 
 interface PlaybackState {
     // State
@@ -17,7 +100,7 @@ interface PlaybackState {
 
     // Actions
     setActiveNotes: (notes: ActiveNoteInfo[]) => void;
-    setAddedChords: (chords: AddedChord[]) => void; // Added this method signature
+    setAddedChords: (chords: AddedChord[]) => void;
     setActiveChordIndex: (index: number | null) => void;
     setHighlightedChordIndex: (index: number | null) => void;
     setTemporaryChord: (chord: { name: string; notes: string } | null) => void;
@@ -31,6 +114,7 @@ interface PlaybackState {
     handleFetchOriginalChord: (chordName: string, key: string, mode: string) => Promise<string | null>;
     addScalePlaybackTimeout: (timeout: NodeJS.Timeout) => void;
     clearScalePlaybackTimeouts: () => void;
+    transposeAddedChords: (fromKey: string, toKey: string, toMode: string) => Promise<void>;
 }
 
 export const usePlaybackStore = create<PlaybackState>((set, get) => ({
@@ -46,7 +130,7 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
     // Actions
     setActiveNotes: (notes: ActiveNoteInfo[]) => set({ activeNotes: notes }),
 
-    setAddedChords: (chords: AddedChord[]) => set({ addedChords: chords }), // Added this implementation
+    setAddedChords: (chords: AddedChord[]) => set({ addedChords: chords }),
 
     setActiveChordIndex: (index: number | null) => set({ activeChordIndex: index }),
 
@@ -131,5 +215,62 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
         const { scalePlaybackTimeouts } = get();
         scalePlaybackTimeouts.forEach(clearTimeout);
         set({ scalePlaybackTimeouts: [] });
+    },
+
+    /**
+     * Transpose all added chords from one key to another
+     * If the transposed chord exists in the new key/mode, use those notes
+     */
+    transposeAddedChords: async (fromKey: string, toKey: string, toMode: string) => {
+        const { addedChords, handleFetchOriginalChord } = get();
+        
+        console.log(`Transposing added chords from ${fromKey} to ${toKey} (${toMode})`);
+        console.log(addedChords)
+        // Calculate the number of semitone steps
+        const steps = calculateTransposeSteps(fromKey, toKey);
+        
+        // if (steps === 0 && addedChords.length > 0 && addedChords[0].originalKey === toKey) {
+        //     // No transposition needed
+        //     return;
+        // }
+        
+        const transposedChords = await Promise.all(
+            addedChords.map(async (chord) => {
+                // Transpose the chord name
+                const transposedChordName = transposeChordName(chord.name, steps);
+
+                console.log(`Transposing chord ${chord.name} (${chord.notes}) from ${fromKey} to ${toKey}: ${transposedChordName}`);
+                // Try to fetch the chord from the new key/mode
+                const newChordNotes = await handleFetchOriginalChord(transposedChordName, toKey, toMode);
+                
+                if (newChordNotes) {
+                    // Chord exists in new key, use those notes
+                    return {
+                        ...chord,
+                        name: transposedChordName,
+                        notes: newChordNotes,
+                        originalKey: toKey,
+                        originalMode: toMode,
+                        originalNotes: newChordNotes
+                    } as AddedChord;
+                } else {
+                    // Chord doesn't exist in new key, manually transpose the notes
+                    const transposedNotes = transposeNotes(chord.notes, steps);
+                    const transposedOriginalNotes = chord.originalNotes 
+                        ? transposeNotes(chord.originalNotes, steps) 
+                        : transposedNotes;
+                    
+                    return {
+                        ...chord,
+                        name: transposedChordName,
+                        notes: transposedNotes,
+                        originalNotes: transposedOriginalNotes
+                        // Keep originalKey and originalMode as they were
+                    } as AddedChord;
+                }
+            })
+        );
+        
+        set({ addedChords: transposedChords });
     },
 }));

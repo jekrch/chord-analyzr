@@ -3,12 +3,13 @@ import { PlayCircleIcon, PauseIcon, ChevronUpIcon, ChevronDownIcon } from '@hero
 import Dropdown from '../Dropdown';
 import { Button } from '../Button';
 import Slider from '../Slider';
-import { calculateTransposeSteps, transposeChordName, transposeNotes, useMusicStore } from '../../stores/musicStore';
+import { calculateTransposeSteps, transposeChordName, transposeNotes } from '../../stores/playbackStore';
 import { usePianoStore } from '../../stores/pianoStore';
 import { usePlaybackStore } from '../../stores/playbackStore';
 import { usePatternStore } from '../../stores/patternStore';
 import { normalizeNoteName } from '../../util/NoteUtil';
 import { dataService } from '../../services/DataService';
+import { useMusicStore } from '../../stores/musicStore';
 
 interface EqSettings {
     bass: number;
@@ -48,7 +49,7 @@ const useChordTranspose = () => {
         ]);
         
         // Transform each chord
-        const transformedChords = currentAddedChords.map(chord => {
+        const transformedChords = currentAddedChords.map((chord: any) => {
             // Get target chord name (transpose if key changed)
             const targetChordName = steps !== 0 ? transposeChordName(chord.name, steps) : chord.name;
             

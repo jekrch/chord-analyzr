@@ -3,6 +3,7 @@ import { InformationCircleIcon, QuestionMarkCircleIcon, EllipsisVerticalIcon } f
 import AboutModal from './AboutModal';
 import HelpModal from './HelpModal';
 import { useMusicStore } from '../stores/musicStore';
+import Logo from './Logo';
 
 
 const HeaderNav: React.FC = () => {
@@ -52,27 +53,7 @@ const HeaderNav: React.FC = () => {
                     <div className="flex items-center justify-between px-6 py-4">
                         {/* Left side - App Name with Geometric Logo */}
                         <div className="flex items-center space-x-4">
-                            {/* Hexagonal Geometric Logo */}
-                            <div className="relative flex items-center mt-2">
-                                <div className="relative w-12 h-12">
-                                    <svg viewBox="0 0 48 48" className="w-12 h-12">
-                                        <polygon 
-                                            points="24,2 38,12 38,28 24,38 10,28 10,12" 
-                                            fill="none" 
-                                            stroke="currentColor" 
-                                            strokeWidth="2" 
-                                            className="text-slate-300"
-                                        />
-                                        <circle cx="18" cy="20" r="2" fill="currentColor" className="text-slate-400"/>
-                                        <circle cx="30" cy="20" r="2" fill="currentColor" className="text-slate-400"/>
-                                        <circle cx="24" cy="28" r="2" fill="currentColor" className="text-slate-400"/>
-                                        <line x1="18" y1="20" x2="24" y2="28" stroke="currentColor" strokeWidth="1.5" className="text-slate-400"/>
-                                        <line x1="30" y1="20" x2="24" y2="28" stroke="currentColor" strokeWidth="1.5" className="text-slate-400"/>
-                                        <line x1="18" y1="20" x2="30" y2="20" stroke="currentColor" strokeWidth="1.5" className="text-slate-400"/>
-                                    </svg>
-                                </div>
-                                <div className="absolute -top-1 -right-0 w-2 h-2 border border-slate-400 transform rotate-39"></div>
-                            </div>
+                            <Logo className="mt-2"/> 
                             
                             {/* App Name */}
                             <div className="flex items-center space-x-3">

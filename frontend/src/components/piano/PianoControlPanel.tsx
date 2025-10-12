@@ -10,6 +10,7 @@ import { usePatternStore } from '../../stores/patternStore';
 import { normalizeNoteName } from '../../util/NoteUtil';
 import { dataService } from '../../services/DataService';
 import { useMusicStore } from '../../stores/musicStore';
+import Logo from '../Logo';
 
 interface EqSettings {
     bass: number;
@@ -558,29 +559,42 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
 
                 {/* Main Controls Content */}
                 <div className="p-6 py-4 bg-[#444b59]">
-                    <div className="flex flex-col xl:flex-row xl:items-start xl:justify-center gap-6">
+                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-center gap-6">
                         {/* Desktop Layout */}
-                        <div className="hidden xl:flex items-start">
-                            <ControlGroup
-                                currentKey={currentKey}
-                                mode={mode}
-                                modes={modes}
-                                pianoSettings={pianoSettings}
-                                availableInstruments={availableInstruments}
-                                isPlayingScale={isPlayingScale}
-                                scaleNotes={scaleNotes}
-                                transposeEnabled={transposeEnabled}
-                                isDesktop={true}
-                                onKeyChange={handleKeyChange}
-                                onModeChange={handleModeChange}
-                                onInstrumentChange={handleInstrumentChange}
-                                onToggleTranspose={() => setTransposeEnabled(!transposeEnabled)}
-                                onToggleScalePlayback={toggleScalePlayback}
-                            />
+                        <div className="hidden lg:flex items-center justify-between w-full">
+                            {/* Left Logo */}
+                            <div className="flex-shrink-0 opacity-30">
+                                <Logo size={80} />
+                            </div>
+                            
+                            {/* Centered Controls */}
+                            <div className="flex-shrink-0">
+                                <ControlGroup
+                                    currentKey={currentKey}
+                                    mode={mode}
+                                    modes={modes}
+                                    pianoSettings={pianoSettings}
+                                    availableInstruments={availableInstruments}
+                                    isPlayingScale={isPlayingScale}
+                                    scaleNotes={scaleNotes}
+                                    transposeEnabled={transposeEnabled}
+                                    isDesktop={true}
+                                    onKeyChange={handleKeyChange}
+                                    onModeChange={handleModeChange}
+                                    onInstrumentChange={handleInstrumentChange}
+                                    onToggleTranspose={() => setTransposeEnabled(!transposeEnabled)}
+                                    onToggleScalePlayback={toggleScalePlayback}
+                                />
+                            </div>
+                            
+                            {/* Right Logo */}
+                            <div className="hidden [@media(min-width:72em)]:flex flex-shrink-0 opacity-30">
+                                <Logo size={80} />
+                            </div>
                         </div>
 
                         {/* Mobile Layout */}
-                        <div className="xl:hidden">
+                        <div className="lg:hidden">
                             <ControlGroup
                                 currentKey={currentKey}
                                 mode={mode}

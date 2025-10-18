@@ -330,7 +330,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
         <div className="px-4 py-3">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider">Chord Explorer</h2>
-            <div className="text-sm text-gray-400">
+            <div className="text-xs text-gray-400">
               {filteredChords.length} of {validChords.length} chords
             </div>
           </div>
@@ -340,7 +340,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
             {/* Show All Chords Toggle */}
             <div className="flex items-center justify-between p-3 bg-[#444b59]x bg-[#363c46]  rounded-lg border border-gray-600">
               <div className="flex flex-col text-left">
-                <span className="text-sm font-medium text-gray-300 text-left">
+                <span className="text-xs uppercase font-medium text-gray-400 text-left">
                   Show All Chords
                 </span>
                 <span className="text-xs text-gray-400">

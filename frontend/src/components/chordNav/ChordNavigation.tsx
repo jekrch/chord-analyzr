@@ -3,7 +3,6 @@ import { useMusicStore } from '../../stores/musicStore';
 import { usePlaybackStore } from '../../stores/playbackStore';
 import { usePatternStore } from '../../stores/patternStore';
 import { useUIStore } from '../../stores/uiStore';
-import { getMidiNotes } from '../../util/ChordUtil';
 import ChordEditor from './ChordEditor';
 import { useChordNavigation } from '../../hooks/useChordNavigation';
 import { useMobileDrag } from '../../hooks/useMobileDrag';
@@ -88,7 +87,7 @@ const ChordNavigation: React.FC = () => {
 
     const baseClasses = isLiveMode
         ? "fixed inset-0 bg-[#1a1e24] bg-opacity-95 backdrop-blur-sm z-50 flex flex-col"
-        : "fixed bottom-0 left-0 right-0 bg-[#2a2f38] border-t border-gray-600 shadow-2xl z-50";
+        : "fixed bottom-0 left-0 right-0 bg-[#2a2f38] bg-[#363c46] border-t border-gray-600 shadow-2xl z-50";
 
     return (
         <div 

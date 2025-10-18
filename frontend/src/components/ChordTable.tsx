@@ -73,7 +73,7 @@ const ChordCard = memo<{
             </button>
             <button
               onClick={handleToggleClick}
-              className="p-1.5 sm:p-2 rounded-md hover:bg-[#555] text-gray-400 hover:text-white transition-colors"
+              className="p-1.5 sm:p-2 rounded-md hover:bg-[#565b6f] text-gray-400 hover:text-white transition-colors"
               title={isExpanded ? "Hide notes" : "Show notes"}
             >
               {isExpanded ? (
@@ -89,7 +89,7 @@ const ChordCard = memo<{
       {/* Expandable notes section */}
       {isExpanded && (
         <div className="px-3 pb-3 pt-0 sm:px-4 sm:pb-4">
-          <div className="bg-gray-800 rounded-md p-2 sm:p-3 border-t border-gray-600">
+          <div className="bg-gray-800x bg-[#363c46]  rounded-md p-2 sm:p-3 border-1 border-gray-600">
             <div className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">
               Notes
             </div>
@@ -326,7 +326,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
   return (
     <div className="w-full max-w-7xl mx-auto px-2">
       {/* Header Section */}
-      <div className="bg-[#3d434f] border border-gray-600 rounded-lg overflow-hidden mb-4">
+      <div className="bg-[#3d434f]  border border-gray-600 rounded-lg overflow-hidden mb-4">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider">Chord Explorer</h2>
@@ -338,7 +338,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
           {/* Toggle and Search Section */}
           <div className="space-y-4">
             {/* Show All Chords Toggle */}
-            <div className="flex items-center justify-between p-3 bg-[#444b59] rounded-lg border border-gray-600">
+            <div className="flex items-center justify-between p-3 bg-[#444b59]x bg-[#363c46]  rounded-lg border border-gray-600">
               <div className="flex flex-col text-left">
                 <span className="text-sm font-medium text-gray-300 text-left">
                   Show All Chords
@@ -375,7 +375,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
               </div>
               <input
                 type="text"
-                placeholder="Search chords or notes..."
+                placeholder="Search chords..."
                 value={searchQuery}
                 onChange={handleSearchChange}
                 className="w-full pl-10 pr-4 py-2 bg-[#444b59] border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none transition-colors !text-sm"

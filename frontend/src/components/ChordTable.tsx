@@ -327,7 +327,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
     <div className="w-full max-w-7xl mx-auto px-2">
       {/* Header Section */}
       <div className="bg-[#3d434f]  border border-gray-600 rounded-lg overflow-hidden mb-4">
-        <div className="px-4 py-3">
+        <div className="px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider">Chord Explorer</h2>
             <div className="text-xs text-gray-400">

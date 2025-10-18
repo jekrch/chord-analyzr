@@ -261,7 +261,7 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
   // ========== RENDER ==========
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-2 mt-6">
+    <div className="w-full max-w-7xl mx-auto px-2 mt-4">
       {/* Main Header - Clean and Simple */}
       <div className="bg-[#3d434f] border border-gray-600 rounded-lg overflow-hidden">
         <div className="px-4 py-3">

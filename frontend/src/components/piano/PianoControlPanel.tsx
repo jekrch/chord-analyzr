@@ -534,7 +534,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
     }, [clearScaleTimeouts]);
 
     return (
-        <div className={`w-full max-w-7xl mx-auto px-2 sm:mt-4 mt-0 mb-2 ${className}`}>
+        <div className={`w-full max-w-7xl mx-auto px-2 sm:mt-2 mt-0 mb-0 ${className}`}>
             <div className="bg-[#3d434f] border border-gray-600 rounded-lg overflow-hidden">
                 {/* Main Controls Header */}
                 <div className="px-4 py-3 border-b border-gray-600">

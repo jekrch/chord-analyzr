@@ -143,6 +143,8 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
         "text-sm text-slate-300 font-medium whitespace-nowrap" : 
         "text-sm text-slate-300 font-medium whitespace-nowrap w-16 flex items-center";
 
+    const supportedKeys = ['C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'G#', 'Ab', 'A', 'A#', 'Bb', 'B'];
+
     if (isDesktop) {
         return (
             <div className={containerClass}>
@@ -159,7 +161,7 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
                                 menuClassName={`min-w-[${commonDropdownClasses.key}]`}
                                 onChange={onKeyChange}
                                 showSearch={false}
-                                options={['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']}
+                                options={supportedKeys}
                             />
                             <Button
                                 onClick={onToggleScalePlayback}
@@ -257,7 +259,7 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
                             menuClassName={`min-w-[6rem]`}
                             onChange={onKeyChange}
                             showSearch={false}
-                            options={['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']}
+                            options={supportedKeys}
                         />
                         <Button
                             onClick={onToggleScalePlayback}
@@ -490,7 +492,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
         scaleNotesForPlayback.forEach((noteObj, index) => {
             const timeout = setTimeout(() => {
                 if (!scalePlaybackRef.current) return;
-                console.log(noteObj);
+                //console.log(noteObj);
                 setActiveNotes([noteObj]);
 
                 const noteOffTimeout = setTimeout(() => {

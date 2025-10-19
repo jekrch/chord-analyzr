@@ -4,7 +4,6 @@ import Dropdown from './Dropdown';
 import { AddedChord } from '../stores/types';
 import { usePlaybackStore } from '../stores/playbackStore';
 
-// Use the actual type from PATTERN_PRESETS instead of defining our own
 type PatternPreset = typeof PATTERN_PRESETS[0];
 
 interface PatternPresetSelectorProps {

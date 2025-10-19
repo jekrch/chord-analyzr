@@ -180,7 +180,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                             <div className="space-y-2">
                                 <div className="flex items-center space-x-3 p-2 rounded-md bg-[#2a2f38]">
                                     <code className="px-2 py-1 bg-gray-700 rounded text-xs font-mono text-white min-w-[4rem] text-center">—</code>
-                                    <span className="text-sm text-slate-300 text-left">Rest/silence</span>
+                                    <span className="text-sm text-slate-300 text-left">Rest/silence (represented as 'x' in custom patterns)</span>
                                 </div>
                                 <div className="flex items-center space-x-3 p-2 rounded-md bg-[#2a2f38]">
                                     <code className="px-2 py-1 bg-gray-700 rounded text-xs font-mono text-white min-w-[4rem] text-center">1, 2, 3...</code>
@@ -188,7 +188,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                                 </div>
                                 <div className="flex items-center space-x-3 p-2 rounded-md bg-[#2a2f38]">
                                     <code className="px-2 py-1 bg-gray-700 rounded text-xs font-mono text-white min-w-[4rem] text-center">1↑, 2↑...</code>
-                                    <span className="text-sm text-slate-300 text-left">Play the note one octave higher</span>
+                                    <span className="text-sm text-slate-300 text-left">Play the note one octave higher ('+' in custom patterns)</span>
                                 </div>
                             </div>
                         </div>
@@ -197,10 +197,106 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                             <div className="p-4 rounded-lg bg-[#3d434f]/30">
                                 <h5 className="text-white font-semibold mb-3 text-sm text-left">Pattern Controls</h5>
                                 <div className="space-y-2 text-sm text-left">
-                                    <div><strong className="text-white">Add/Remove Steps:</strong> Use the +/- buttons to change pattern length</div>
-                                    <div><strong className="text-white">Pattern Presets:</strong> Choose from pre-built patterns or create your own</div>
-                                    <div><strong className="text-white">Timing:</strong> Adjust BPM, subdivision, and swing feel</div>
+                                    <div><strong className="text-white">Add/Remove Steps:</strong> Use the +/- buttons to change pattern length (1-16 steps)</div>
+                                    <div><strong className="text-white">Pattern Presets:</strong> Choose from pre-built patterns organized by category and note count</div>
+                                    <div><strong className="text-white">Custom Patterns:</strong> Enter your own pattern using notation like "1,x,3,2+" and click Apply</div>
+                                    <div><strong className="text-white">Visual Feedback:</strong> Blue indicator shows the currently playing step</div>
                                 </div>
+                            </div>
+                            <div className="p-4 rounded-lg bg-[#3d434f]/30">
+                                <h5 className="text-white font-semibold mb-3 text-sm text-left">Timing Controls</h5>
+                                <div className="space-y-2 text-sm text-left">
+                                    <div><strong className="text-white">BPM:</strong> Set tempo from 60-200 beats per minute</div>
+                                    <div><strong className="text-white">Subdivision:</strong> Choose note duration (32nd, 16th, 8th, quarter, half notes)</div>
+                                    <div><strong className="text-white">Swing:</strong> Add groove by delaying alternate notes (0-50%)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-4 rounded-lg bg-[#3d434f]/30">
+                            <h5 className="text-white font-semibold mb-3 text-sm text-left">Chord-Specific Patterns</h5>
+                            <p className="text-sm mb-3 text-left">Each chord in your sequence can have its own unique pattern:</p>
+                            <div className="space-y-2 text-sm text-left">
+                                <div><strong className="text-white">Global Pattern:</strong> The default pattern that plays when no chord is selected (shown with cyan "Global Pattern" label)</div>
+                                <div><strong className="text-white">Chord Pattern:</strong> Select a chord from your sequence to edit its specific pattern (shown with purple chord name label)</div>
+                                <div><strong className="text-white">Automatic Switching:</strong> The sequencer automatically uses each chord's pattern during playback</div>
+                                <div><strong className="text-white">Visual Indicators:</strong> Pattern editor shows which chord you're currently editing</div>
+                            </div>
+                        </div>
+
+                        <div className="p-4 rounded-lg bg-[#3d434f]/30">
+                            <h5 className="text-white font-semibold mb-3 text-sm text-left">Pattern Presets</h5>
+                            <p className="text-sm mb-3 text-left">Browse categorized pattern presets to quickly create common rhythmic patterns:</p>
+                            <div className="space-y-2 text-sm text-left">
+                                <div><strong className="text-white">Filter by Note Count:</strong> Enable "Hide patterns with fewer notes" to show only patterns that use all available chord notes</div>
+                                <div><strong className="text-white">Categories:</strong> Patterns are organized by style (Arpeggios, Rhythmic, Bass Lines, etc.)</div>
+                                <div><strong className="text-white">Visual Preview:</strong> Each preset shows its pattern notation before applying</div>
+                            </div>
+                        </div>
+                    </div>
+                </HelpSection>
+
+                <HelpSection title="MIDI Recording & Export">
+                    <div className="space-y-4">
+                        <div className="p-4 rounded-lg bg-[#3d434f]/30">
+                            <h5 className="text-white font-semibold mb-3 text-sm text-left">Automatic MIDI Recording</h5>
+                            <p className="text-sm mb-3 text-left">The app automatically records your sequencer performances as standard MIDI files that you can export and use in any DAW or music software.</p>
+                            <div className="space-y-2">
+                                <div className="flex items-start space-x-3 p-2 rounded-md bg-[#2a2f38]">
+                                    <div className="w-2 h-2 rounded-full bg-blue-400 mt-2 flex-shrink-0"></div>
+                                    <div className="text-sm text-left">
+                                        <strong className="text-white">Start Recording:</strong> <span className="text-slate-300">Recording begins automatically when you press Play on the sequencer</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-start space-x-3 p-2 rounded-md bg-[#2a2f38]">
+                                    <div className="w-2 h-2 rounded-full bg-blue-400 mt-2 flex-shrink-0"></div>
+                                    <div className="text-sm text-left">
+                                        <strong className="text-white">Recording Indicator:</strong> <span className="text-slate-300">A red pulsing indicator appears showing "Recording MIDI" during playback</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-start space-x-3 p-2 rounded-md bg-[#2a2f38]">
+                                    <div className="w-2 h-2 rounded-full bg-blue-400 mt-2 flex-shrink-0"></div>
+                                    <div className="text-sm text-left">
+                                        <strong className="text-white">Stop Recording:</strong> <span className="text-slate-300">Recording stops when you press Stop or Pause on the sequencer</span>
+                                    </div>
+                                </div>
+                                <div className="flex items-start space-x-3 p-2 rounded-md bg-[#2a2f38]">
+                                    <div className="w-2 h-2 rounded-full bg-blue-400 mt-2 flex-shrink-0"></div>
+                                    <div className="text-sm text-left">
+                                        <strong className="text-white">Save MIDI:</strong> <span className="text-slate-300">After stopping, a green "Save MIDI" button appears - click to download your recording</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            <div className="p-4 rounded-lg bg-[#3d434f]/30">
+                                <h5 className="text-white font-semibold mb-3 text-sm text-left">What Gets Recorded</h5>
+                                <div className="space-y-2 text-sm text-left">
+                                    <div><strong className="text-white">Note Events:</strong> All notes played by the sequencer with accurate timing</div>
+                                    <div><strong className="text-white">Tempo:</strong> Your BPM setting is preserved in the MIDI file</div>
+                                    <div><strong className="text-white">Duration:</strong> Note lengths based on your note duration setting</div>
+                                    <div><strong className="text-white">Patterns:</strong> Records the full sequence including chord-specific patterns</div>
+                                </div>
+                            </div>
+                            <div className="p-4 rounded-lg bg-[#3d434f]/30">
+                                <h5 className="text-white font-semibold mb-3 text-sm text-left">Using MIDI Files</h5>
+                                <div className="space-y-2 text-sm text-left">
+                                    <div><strong className="text-white">Import to DAW:</strong> Drag the .mid file into any music production software</div>
+                                    <div><strong className="text-white">Change Instruments:</strong> Assign any virtual instrument or sound</div>
+                                    <div><strong className="text-white">Further Editing:</strong> Edit timing, velocities, and notes in your DAW</div>
+                                    <div><strong className="text-white">Timestamped Files:</strong> Each export is automatically named with a timestamp</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-4 rounded-lg bg-[#3d434f]/30">
+                            <h5 className="text-white font-semibold mb-3 text-sm text-left">Tips for MIDI Recording</h5>
+                            <div className="space-y-2 text-sm text-left">
+                                <div>Set your desired BPM and timing before starting playback</div>
+                                <div>Let the sequence play through completely for the best recording</div>
+                                <div>Multiple recordings can be made - each creates a new file</div>
+                                <div>The "Save MIDI" button remains available until you start a new recording</div>
                             </div>
                         </div>
                     </div>

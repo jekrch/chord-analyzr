@@ -132,6 +132,7 @@ Returns:
 - Customizable pattern length and timing controls
 - Multiple pattern presets and BPM adjustment
 - Visual step sequencer with rest and octave notation
+- Export sequencer output to MIDI 
 
 **Live Mode**
 - Full-screen chord buttons optimized for live performance

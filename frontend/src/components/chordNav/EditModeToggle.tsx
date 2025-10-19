@@ -25,7 +25,7 @@ export const EditModeToggle: React.FC<EditModeToggleProps> = ({
         <button
             onClick={onClick}
             className={classNames(
-                "flex items-center justify-center rounded-lg border-2 border-dashed transition-all duration-200 hover:scale-105",
+                "flex items-center justify-center rounded-lg border-2 border-dashed transition-all duration-200",
                 isLiveMode ? "w-full h-full min-h-[120px] py-8 px-6" : "w-12 h-12",
                 isEditMode ? 
                     "border-blue-500 text-blue-400 bg-blue-500/10 hover:bg-blue-500/20" : 

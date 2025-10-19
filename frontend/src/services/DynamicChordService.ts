@@ -49,10 +49,10 @@ class DynamicChordGenerator {
         '9': [0, 4, 7, 10, 14],
         'm9': [0, 3, 7, 10, 14],
         'maj9': [0, 4, 7, 11, 14],
-        'maj9#11': [0, 4, 7, 14, 18, 23],
+        'maj9#11': [0, 4, 7, 11, 14, 18],
         '7b9': [0, 4, 7, 10, 13],
         '7#9': [0, 4, 7, 10, 15],
-        '9#5': [0, 4, 8, 14, 22],
+        '9#5': [0, 4, 8, 10, 14],
         '9b5': [0, 4, 6, 10, 14],
 
         // Eleventh chords
@@ -62,16 +62,14 @@ class DynamicChordGenerator {
         '7#11': [0, 4, 7, 10, 18],
         'maj7#11': [0, 4, 7, 11, 18],
         'm7#11': [0, 3, 7, 10, 18],
-        '11b9': [0, 4, 7, 13, 14, 17, 22],
+        '11b9': [0, 4, 7, 10, 13, 14, 17],
 
         // Thirteenth chords
         '13': [0, 4, 7, 10, 14, 17, 21],
         'm13': [0, 3, 7, 10, 14, 17, 21],
         'maj13': [0, 4, 7, 11, 14, 17, 21],
-        '13#11': [0, 4, 7, 14, 18, 21, 22],
-        'maj13#11': [0, 4, 7, 14, 18, 21, 23],
-        '13#b9': [0, 4, 7, 13, 21, 22],
-        '13#sus4': [0, 2, 5, 7, 21, 22],
+        '13#11': [0, 4, 7, 10, 14, 18, 21],
+        'maj13#11': [0, 4, 7, 11, 14, 18, 21],
 
         // Suspended chords
         'sus2': [0, 2, 7],
@@ -88,17 +86,17 @@ class DynamicChordGenerator {
         'add(2) add(4)': [0, 2, 4, 5, 7],
         'm add(2)': [0, 2, 3, 7],
         'm add(4)': [0, 3, 5, 7],
-        'm add(9)': [0, 2, 3, 7],
+        'm add(9)': [0, 3, 7, 14],
         'm add(2) add(4)': [0, 2, 3, 5, 7],
-        '7 add(4)': [0, 4, 5, 7, 22],
-        'm7 add(4)': [0, 3, 5, 7, 22],
+        '7 add(4)': [0, 4, 5, 7, 10],
+        'm7 add(4)': [0, 3, 5, 7, 10],
 
         // Special chords
         '6/9': [0, 4, 7, 9, 14],
         'm6/9': [0, 3, 7, 9, 14],
-        'maj6/7': [0, 4, 7, 21, 23],
-        '7/6': [0, 4, 7, 21, 22],
-        'm7/6': [0, 3, 7, 21, 22],
+        'maj6/7': [0, 4, 7, 9, 11],
+        '7/6': [0, 4, 7, 9, 10],
+        'm7/6': [0, 3, 7, 9, 10],
         'm/Maj7': [0, 3, 7, 11],
         'm/Maj9': [0, 3, 7, 11, 14],
         'm/Maj11': [0, 3, 7, 11, 14, 17],
@@ -112,6 +110,53 @@ class DynamicChordGenerator {
         '7#5b9': [0, 4, 8, 10, 13],
         '7#5#9': [0, 4, 8, 10, 15],
         '7aug5': [0, 4, 8, 10],
+
+        // More suspended variations
+        'maj7sus2': [0, 2, 7, 11],
+        'maj7sus4': [0, 5, 7, 11],
+        '6sus2': [0, 2, 7, 9],
+        '6sus4': [0, 5, 7, 9],
+        '9sus2': [0, 2, 7, 10, 14],
+        '13sus4': [0, 5, 7, 10, 14, 21],
+
+        // More altered dominants
+        '7b13': [0, 4, 7, 10, 20],
+        '7#9#11': [0, 4, 7, 10, 15, 18],
+        '7b9#11': [0, 4, 7, 10, 13, 18],
+        '7b9b13': [0, 4, 7, 10, 13, 20],
+        '7#9b13': [0, 4, 7, 10, 15, 20],
+        '7alt': [0, 4, 6, 8, 10, 13, 15], // Altered scale chord
+
+        // Simplified add9 notation
+        'madd9': [0, 3, 7, 14],
+        '6add9': [0, 4, 7, 9, 14],
+
+        // Omit chords (no 5th)
+        '7no5': [0, 4, 10],
+        '9no5': [0, 4, 10, 14],
+        'maj7no5': [0, 4, 11],
+        'm7no5': [0, 3, 10],
+        'm9no5': [0, 3, 10, 14],
+
+        // More diminished
+        'dim9': [0, 3, 6, 9, 14],
+        'dim11': [0, 3, 6, 9, 14, 17],
+        'dimMaj7': [0, 3, 6, 11],
+
+        // Augmented variations
+        'augMaj7': [0, 4, 8, 11],
+        'aug9': [0, 4, 8, 10, 14],
+
+        // Quartal harmony
+        'sus4add9': [0, 5, 7, 14],
+        '4th': [0, 5, 10], // Stacked fourths
+        '4ths': [0, 5, 10, 15], // More stacked fourths
+
+        // Other useful voicings
+        'maj9no5': [0, 4, 11, 14],
+        '11no5': [0, 4, 10, 14, 17],
+        'maj6add4': [0, 4, 5, 7, 9],
+        '7b9#5': [0, 4, 8, 10, 13],
     };
 
     private chromaticNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -184,7 +229,7 @@ class DynamicChordGenerator {
         const rootLetter = this.getLetterName(rootNote);
         const rootLetterPos = this.getLetterPosition(rootLetter);
         const rootMidi = this.noteNameToNumber(rootNote);
-        
+
         // Map semitones to diatonic intervals (letter distance)
         const semitoneToLetterDistance: Record<number, number> = {
             0: 0,  // unison
@@ -225,7 +270,7 @@ class DynamicChordGenerator {
         const naturalMidiMap: Record<string, number> = {
             'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11
         };
-        
+
         // Find the closest octave of the natural note to targetMidi
         let naturalMidi = naturalMidiMap[targetLetter];
         const octaveDiff = Math.round((targetMidi - naturalMidi) / 12);

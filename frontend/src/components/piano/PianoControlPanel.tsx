@@ -398,12 +398,12 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                 }
             }
         };
-
+       
         loadMusicData();
     }, []); // only run on mount
 
-
     useEffect(() => {
+        
         // Ensure scale notes match the current key
         const verifyAndFixMusicData = async () => {
             // Wait a bit for any pending fetches to complete

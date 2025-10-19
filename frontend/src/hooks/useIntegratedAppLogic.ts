@@ -15,7 +15,7 @@ import {
 
 const START_OCTAVE = 4;
 const END_OCTAVE = 7;
-export const AVAILABLE_KEYS = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Gb', 'G#', 'A', 'Ab', 'A#', 'B'];
+export const AVAILABLE_KEYS = ['C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'G#', 'Ab', 'A', 'A#', 'Bb', 'B'];
 
 // Helper functions
 const shouldPlayAtCurrentStep = (pattern: string[], stepIndex: number): boolean => {
@@ -58,17 +58,21 @@ export const useIntegratedAppLogic = () => {
     const isInitialLoad = useRef(true);
     const hasInitialized = useRef(false); // Add flag to prevent infinite loops
 
-    // Set modes in music store when available and trigger initial data fetch
     useEffect(() => {
         if (modes && !hasInitialized.current) {
             hasInitialized.current = true;
             musicStore.setModes(modes);
-            // Only initialize if no chords are loaded
-            if (!musicStore.chords) {
+
+            // Check if we have URL state to load
+            const urlParams = new URLSearchParams(window.location.search);
+            const hasUrlState = urlParams.has('s');
+
+            // Only initialize with defaults if no chords AND no URL state
+            if (!musicStore.chords && !hasUrlState) {
                 musicStore.initialize();
             }
         }
-    }, [modes]); // Only depend on modes, not store state
+    }, [modes]);
 
     // Computed values
     const baseStepDuration = useMemo(() => {
@@ -130,9 +134,9 @@ export const useIntegratedAppLogic = () => {
                 musicStore.chords
             );
             if (decoded) {
-                musicStore.setKey(decoded.key);
-                musicStore.setMode(decoded.mode);
-                
+                // Use setKeyAndMode instead of calling setKey and setMode separately
+                musicStore.setKeyAndMode(decoded.key, decoded.mode);
+
                 // Clear and set added chords with proper fallbacks for optional properties
                 playbackStore.clearAllChords();
                 decoded.addedChords.forEach(chord => {
@@ -144,14 +148,14 @@ export const useIntegratedAppLogic = () => {
                         chord.originalMode || decoded.mode
                     );
                 });
-                
+
                 patternStore.setGlobalPatternState({
                     currentPattern: decoded.pattern,
                     bpm: decoded.bpm,
                     subdivision: decoded.subdivision,
                     swing: decoded.swing
                 });
-                
+
                 uiStore.setShowPatternSystem(decoded.showPattern);
                 uiStore.setIsLiveMode(decoded.liveMode);
                 pianoStore.updatePianoSettings(decoded.pianoSettings);
@@ -210,7 +214,7 @@ export const useIntegratedAppLogic = () => {
             originalMode: updatedChord.originalMode || musicStore.mode,
             originalNotes: updatedChord.originalNotes || updatedChord.notes
         };
-        
+
         playbackStore.updateChord(chordIndex, normalizedChord);
     }, [musicStore.key, musicStore.mode]);
 
@@ -219,8 +223,8 @@ export const useIntegratedAppLogic = () => {
         const [removed] = currentChords.splice(sourceIndex, 1);
         currentChords.splice(destinationIndex, 0, removed);
 
-        playbackStore.setAddedChords(currentChords); 
-        
+        playbackStore.setAddedChords(currentChords);
+
         const { activeChordIndex } = playbackStore;
         if (activeChordIndex === null) return;
 
@@ -389,7 +393,7 @@ export const useIntegratedAppLogic = () => {
                 globalStepRef.current = 0;
 
                 patternStore.setGlobalPatternState({ currentStep: 0 });
-                
+
                 // Set nextStepTime to AFTER the first step duration
                 // This ensures step 0 plays for its full duration before incrementing
                 nextStepTimeRef.current = Date.now() + getSwingDuration(0);
@@ -423,7 +427,7 @@ export const useIntegratedAppLogic = () => {
             }
         };
     }, [patternStore.globalPatternState.isPlaying, getSwingDuration]);
-    
+
     // Keep activeNotes in sync with sequencer
     useEffect(() => {
         if (patternStore.globalPatternState.isPlaying) {

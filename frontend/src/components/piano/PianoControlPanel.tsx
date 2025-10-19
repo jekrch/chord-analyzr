@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { PlayCircleIcon, PauseIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
 import Dropdown from '../Dropdown';
 import { Button } from '../Button';
@@ -11,6 +11,7 @@ import { normalizeNoteName } from '../../util/NoteUtil';
 import { dataService } from '../../services/DataService';
 import { useMusicStore } from '../../stores/musicStore';
 import Logo from '../Logo';
+import { AVAILABLE_KEYS } from '../../hooks/useIntegratedAppLogic';
 
 interface EqSettings {
     bass: number;
@@ -28,40 +29,40 @@ interface PianoControlPanelProps {
 // Extract chord transpose logic into reusable function
 const useChordTranspose = () => {
     const transposeChords = useCallback(async (
-        fromKey: string, 
-        fromMode: string, 
-        toKey: string, 
+        fromKey: string,
+        fromMode: string,
+        toKey: string,
         toMode: string
     ) => {
         console.log('Transposing from', fromKey, fromMode, 'to', toKey, toMode);
-        
+
         const currentAddedChords = usePlaybackStore.getState().addedChords;
         console.log('Current chords to transpose:', currentAddedChords.length);
-        
+
         if (currentAddedChords.length === 0) return;
 
         // Calculate transpose steps (only needed when key changes)
         const steps = fromKey !== toKey ? calculateTransposeSteps(fromKey, toKey) : 0;
-        
+
         // Fetch new music data and all distinct chords
         const [newChords, allChords] = await Promise.all([
             dataService.getModeKeyChords(toKey, toMode),
             dataService.getAllDistinctChords()
         ]);
-        
+
         // Transform each chord
         const transformedChords = currentAddedChords.map((chord: any) => {
             // Get target chord name (transpose if key changed)
             const targetChordName = steps !== 0 ? transposeChordName(chord.name, steps) : chord.name;
-            
+
             // Find matching chord in new key/mode, then in all chords
             let matchingChord = newChords.find(c => c.chordName === targetChordName) ||
-                               allChords.find(c => c.chordName === targetChordName);
-            
+                allChords.find(c => c.chordName === targetChordName);
+
             if (!matchingChord) {
                 console.log(`Chord ${targetChordName} not in ${toKey} ${toMode}, found in all chords:`, false);
             }
-            
+
             if (matchingChord?.chordNoteNames) {
                 return {
                     ...chord,
@@ -79,13 +80,13 @@ const useChordTranspose = () => {
                     ...chord,
                     name: targetChordName,
                     notes: transformedNotes,
-                    originalNotes: chord.originalNotes ? 
-                        (steps !== 0 ? transposeNotes(chord.originalNotes, steps) : chord.originalNotes) : 
+                    originalNotes: chord.originalNotes ?
+                        (steps !== 0 ? transposeNotes(chord.originalNotes, steps) : chord.originalNotes) :
                         transformedNotes
                 };
             }
         });
-        
+
         // Update the playback store
         usePlaybackStore.getState().setAddedChords(transformedChords);
         console.log('Transpose complete');
@@ -128,22 +129,24 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
     onToggleTranspose,
     onToggleScalePlayback
 }) => {
+
     const commonDropdownClasses = {
         key: isDesktop ? 'w-[5rem]' : 'w-[6em]',
         mode: isDesktop ? 'w-[11rem]' : 'w-[14rem]',
         voice: 'w-[14rem]'
     };
 
-    const containerClass = isDesktop ? 
+    const containerClass = isDesktop ?
         "flex flex-col bg-[#3d434f]/30 border border-gray-600/30 rounded-lg px-6 py-4" :
         "space-y-4";
 
     const separatorClass = isDesktop ? "w-px h-8 bg-gray-600/50 mx-8" : "hidden";
-    const labelClass = isDesktop ? 
-        "text-sm text-slate-300 font-medium whitespace-nowrap" : 
+    const labelClass = isDesktop ?
+        "text-sm text-slate-300 font-medium whitespace-nowrap" :
         "text-sm text-slate-300 font-medium whitespace-nowrap w-16 flex items-center";
 
-    const supportedKeys = ['C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'G#', 'Ab', 'A', 'A#', 'Bb', 'B'];
+    //const supportedKeys = ['C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'G#', 'Ab', 'A', 'A#', 'Bb', 'B'];
+
 
     if (isDesktop) {
         return (
@@ -161,7 +164,7 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
                                 menuClassName={`min-w-[${commonDropdownClasses.key}]`}
                                 onChange={onKeyChange}
                                 showSearch={false}
-                                options={supportedKeys}
+                                options={AVAILABLE_KEYS}
                             />
                             <Button
                                 onClick={onToggleScalePlayback}
@@ -224,17 +227,15 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
                         <span className="text-sm text-slate-300 font-medium whitespace-nowrap invisible">Key:</span>
                         <button
                             onClick={onToggleTranspose}
-                            className={`relative flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium uppercase tracking-wide transition-all duration-200 border ${
-                                transposeEnabled 
-                                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white border-blue-600 shadow-lg shadow-blue-600/25' 
-                                    : 'bg-[#3d434f] text-slate-400 border-gray-600 hover:bg-[#4a5262] hover:text-slate-300'
-                            }`}
+                            className={`relative flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium uppercase tracking-wide transition-all duration-200 border ${transposeEnabled
+                                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white border-blue-600 shadow-lg shadow-blue-600/25'
+                                : 'bg-[#3d434f] text-slate-400 border-gray-600 hover:bg-[#4a5262] hover:text-slate-300'
+                                }`}
                             title="When enabled, changing key or mode will transpose all added chords"
                         >
                             <div className={`flex items-center gap-2 ${transposeEnabled ? 'text-white' : ''}`}>
-                                <div className={`w-2 h-2 rounded-full transition-colors duration-200 ${
-                                    transposeEnabled ? 'bg-white' : 'bg-slate-500'
-                                }`} />
+                                <div className={`w-2 h-2 rounded-full transition-colors duration-200 ${transposeEnabled ? 'bg-white' : 'bg-slate-500'
+                                    }`} />
                                 <span>Transpose</span>
                             </div>
                         </button>
@@ -259,7 +260,7 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
                             menuClassName={`min-w-[6rem]`}
                             onChange={onKeyChange}
                             showSearch={false}
-                            options={supportedKeys}
+                            options={AVAILABLE_KEYS}
                         />
                         <Button
                             onClick={onToggleScalePlayback}
@@ -279,17 +280,15 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
                     </div>
                     <button
                         onClick={onToggleTranspose}
-                        className={`relative flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium uppercase tracking-wide transition-all duration-200 border max-w-[13em] ${
-                            transposeEnabled 
-                                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white border-blue-600 shadow-lg shadow-blue-600/25' 
-                                : 'bg-[#3d434f] text-slate-400 border-gray-600 hover:bg-[#4a5262] hover:text-slate-300'
-                        }`}
+                        className={`relative flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium uppercase tracking-wide transition-all duration-200 border max-w-[13em] ${transposeEnabled
+                            ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white border-blue-600 shadow-lg shadow-blue-600/25'
+                            : 'bg-[#3d434f] text-slate-400 border-gray-600 hover:bg-[#4a5262] hover:text-slate-300'
+                            }`}
                         title="When enabled, changing key or mode will transpose all added chords"
                     >
                         <div className={`flex items-center gap-2 ${transposeEnabled ? 'text-white' : ''}`}>
-                            <div className={`w-2 h-2 rounded-full transition-colors duration-200 ${
-                                transposeEnabled ? 'bg-white' : 'bg-slate-500'
-                            }`} />
+                            <div className={`w-2 h-2 rounded-full transition-colors duration-200 ${transposeEnabled ? 'bg-white' : 'bg-slate-500'
+                                }`} />
                             <span>Transpose</span>
                         </div>
                     </button>
@@ -385,6 +384,56 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
     // Refs for scale playback
     const scaleTimeoutsRef = useRef<NodeJS.Timeout[]>([]);
     const scalePlaybackRef = useRef<boolean>(false);
+
+    useEffect(() => {
+        // Ensure scale notes and other derived data are loaded for the current key/mode
+        const loadMusicData = async () => {
+            if (currentKey && mode) {
+
+
+                const defaultKey = 'C';
+                if (currentKey !== defaultKey && scaleNotes.length === 0) {
+                    console.log('Forcing data load for key:', currentKey);
+                    setKey(currentKey);
+                }
+            }
+        };
+
+        loadMusicData();
+    }, []); // only run on mount
+
+
+    useEffect(() => {
+        // Ensure scale notes match the current key
+        const verifyAndFixMusicData = async () => {
+            // Wait a bit for any pending fetches to complete
+            await new Promise(resolve => setTimeout(resolve, 200));
+
+            // Check if we have scale notes
+            if (!scaleNotes || scaleNotes.length === 0) {
+                console.log('No scale notes, fetching for', currentKey, mode);
+                await useMusicStore.getState().fetchMusicData(currentKey, mode);
+                return;
+            }
+
+            // Check if the scale notes match the current key
+            const firstScaleNote = scaleNotes[0]?.noteName;
+            if (firstScaleNote) {
+                const normalizedFirstNote = normalizeNoteName(firstScaleNote);
+                const normalizedCurrentKey = normalizeNoteName(currentKey);
+
+                if (normalizedFirstNote !== normalizedCurrentKey) {
+                    // console.log('MISMATCH DETECTED:');
+                    // console.log('  Current key:', currentKey, '(normalized:', normalizedCurrentKey + ')');
+                    // console.log('  First scale note:', firstScaleNote, '(normalized:', normalizedFirstNote + ')');
+                    // console.log('  Refetching music data...');
+                    await useMusicStore.getState().fetchMusicData(currentKey, mode);
+                }
+            }
+        };
+
+        verifyAndFixMusicData();
+    }, [currentKey, mode, scaleNotes]);
 
     // Unified handlers
     const handleInstrumentChange = (value: string) => {
@@ -568,7 +617,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                             <div className="flex-shrink-0 opacity-30">
                                 <Logo size={80} />
                             </div>
-                            
+
                             {/* Centered Controls */}
                             <div className="flex-shrink-0">
                                 <ControlGroup
@@ -588,7 +637,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                     onToggleScalePlayback={toggleScalePlayback}
                                 />
                             </div>
-                            
+
                             {/* Right Logo */}
                             <div className="hidden [@media(min-width:72em)]:flex flex-shrink-0 opacity-30">
                                 <Logo size={80} />

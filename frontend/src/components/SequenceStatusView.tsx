@@ -2,7 +2,11 @@ import React, { useMemo } from 'react';
 import { usePatternStore } from '../stores/patternStore';
 import { usePlaybackStore } from '../stores/playbackStore';
 import { AddedChord } from '../util/urlStateEncoder';
+import classNames from 'classnames';
 
+type SequenceStatusViewProps = {
+    className?: string;
+};
 
 /**
  * Helper function to determine the current pattern based on playback state.
@@ -24,11 +28,12 @@ const resolveCurrentPattern = (
 };
 
 
-const SequenceStatusView = () => {
+const SequenceStatusView: React.FC<SequenceStatusViewProps> = ({className = ""}) => {
     // Direct state access from stores
     const { globalPatternState, currentlyActivePattern } = usePatternStore();
     const { temporaryChord, activeChordIndex, addedChords } = usePlaybackStore();
 
+    
     const { isPlaying, bpm, currentStep } = globalPatternState;
 
     // Derived state using useMemo for performance
@@ -51,15 +56,15 @@ const SequenceStatusView = () => {
     const displayStep = (currentStep % patternLength) + 1;
 
     return (
-        <div className="w-full px-2 mx-auto items-center">
+        <div className={classNames("w-full px-2 mx-auto items-center", className)}>
             <div className="px-6 py-3 bg-green-900 bg-opacity-50 rounded-lg border border-green-700 w-full max-w-7xl mx-auto">
                 <div className="text-sm text-green-300 flex items-center justify-center space-x-4">
                     <div className="flex items-center">
                         <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-2"></div>
                         <span className="font-medium">Sequencer Active</span>
                     </div>
-                    <div className="text-xs opacity-80">
-                        Pattern: {currentPattern.join('-')} |
+                    <div className="text-xs opacity-80 font-mono">
+                        {currentPattern.join('-')} |
                         {` ${bpm}`} BPM |
                         Step {displayStep}/{patternLength}
                         
@@ -71,9 +76,6 @@ const SequenceStatusView = () => {
                              <span className="ml-2 text-purple-300">• {addedChords[activeChordIndex]?.name}</span>
                         )}
                         
-                        {!temporaryChord && activeChordIndex === null && (
-                             <span className="ml-2 text-cyan-300">• Global pattern</span>
-                        )}
                     </div>
                 </div>
             </div>

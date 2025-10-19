@@ -161,7 +161,7 @@ function App() {
 
                     <PatternSystem/>
 
-                    <SequenceStatusView />
+                    <SequenceStatusView className="mt-4" />
 
                     <div className="w-full max-w-7xl mb-20 mt-4">
                         <ChordTable

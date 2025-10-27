@@ -1,5 +1,6 @@
 import { MidiNumbers } from 'react-piano';
 import { normalizeNoteName } from './NoteUtil';
+import { ActiveNoteInfo } from '../stores/types';
 
 // The order of natural notes within an octave
 const noteOrder = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
@@ -18,7 +19,7 @@ export const getMidiNotes = (
   startOctave: number,
   endOctave: number,
   chordNoteNames: string
-): { note: string; octave: number }[] => {
+): ActiveNoteInfo[] => {
   
   const noteNames = chordNoteNames.split(', ');
 

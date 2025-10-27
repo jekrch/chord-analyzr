@@ -313,7 +313,7 @@ export const useIntegratedAppLogic = () => {
                 const noteName = normalizeNoteName(scaleNote.noteName);
                 if (!noteName) return;
 
-                let midiNumber = MidiNumbers.fromNote(noteName + currentOctave);
+                let midiNumber: number = MidiNumbers.fromNote(noteName + currentOctave);
 
                 if (midiNumber <= lastMidiNumber) {
                     currentOctave++;
@@ -325,7 +325,7 @@ export const useIntegratedAppLogic = () => {
                 const note = noteDetails.note.slice(0, -1);
                 const octave = parseInt(noteDetails.note.slice(-1), 10);
 
-                playbackStore.setActiveNotes([{ note, octave }]);
+                playbackStore.setActiveNotes([{ midiNote: midiNumber, note, octave }]);
             }, cumulativeDelay);
 
             playbackStore.addScalePlaybackTimeout(timeoutId);

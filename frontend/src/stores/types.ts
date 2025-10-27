@@ -2,6 +2,7 @@ export type { AddedChord, PianoSettings } from '../util/urlStateEncoder';
 export type { ModeScaleChordDto, ScaleNoteDto } from '../api';
 
 export interface ActiveNoteInfo {
+    midiNote?: number;
     note: string;
     octave: number;
 }

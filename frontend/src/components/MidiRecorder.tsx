@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ArrowDownTrayIcon } from '@heroicons/react/20/solid';
 import { MidiNumbers } from 'react-piano';
 import { useMidiRecording } from '../hooks/useMidiRecording';
@@ -34,6 +34,8 @@ const convertToStandardNoteName = (noteName: string): string => {
 };
 
 const MidiRecorder: React.FC<MidiRecorderProps> = ({ className = '' }) => {
+  const [midiRecordingEnabled, setMidiRecordingEnabled] = useState(false);
+  
   const { 
     isRecording, 
     startRecording, 
@@ -51,15 +53,15 @@ const MidiRecorder: React.FC<MidiRecorderProps> = ({ className = '' }) => {
   const lastStepRef = useRef<number>(-1);
   const pendingSaveRef = useRef<any>(null);
 
-  // Start/stop recording based on sequencer playback
+  // Start/stop recording based on sequencer playback AND toggle state
   useEffect(() => {
-    if (globalPatternState.isPlaying && !isRecording) {
-      // Sequencer started - begin recording
+    if (globalPatternState.isPlaying && !isRecording && midiRecordingEnabled) {
+      // Sequencer started and recording is enabled - begin recording
       startRecording(globalPatternState.bpm, globalPatternState.subdivision);
       pendingSaveRef.current = null;
       lastStepRef.current = -1;
-    } else if (!globalPatternState.isPlaying && isRecording) {
-      // Sequencer stopped - stop recording and prepare to save
+    } else if ((!globalPatternState.isPlaying || !midiRecordingEnabled) && isRecording) {
+      // Sequencer stopped OR recording disabled - stop recording and prepare to save
       const recording = stopRecording();
       if (recording && recording.notes.length > 0) {
         pendingSaveRef.current = recording;
@@ -72,7 +74,8 @@ const MidiRecorder: React.FC<MidiRecorderProps> = ({ className = '' }) => {
     globalPatternState.subdivision,
     isRecording, 
     startRecording, 
-    stopRecording
+    stopRecording,
+    midiRecordingEnabled
   ]);
 
   // Track note events during playback - STEP-BASED
@@ -159,31 +162,69 @@ const MidiRecorder: React.FC<MidiRecorderProps> = ({ className = '' }) => {
     }
   };
 
+  const handleToggleRecording = () => {
+    setMidiRecordingEnabled(!midiRecordingEnabled);
+    // If disabling while recording, stop immediately
+    if (midiRecordingEnabled && isRecording) {
+      const recording = stopRecording();
+      if (recording && recording.notes.length > 0) {
+        pendingSaveRef.current = recording;
+      }
+    }
+  };
+
   return (
-    <div className={`flex items-center space-x-3 ${className}`}>
-      {/* Recording Indicator */}
-      {isRecording && (
-        <div className="flex items-center space-x-2 px-3 py-1.5 bg-red-900/30 border border-red-700/50 rounded">
-          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-          <span className="text-xs font-medium text-red-300">Recording MIDI</span>
+    <div className={`space-t-4 ${className}`}>
+      {/* MIDI Recording Toggle */}
+      <div className="flex items-center justify-between p-3 bg-[#363c46] rounded-lg border border-gray-600">
+        <div className="flex flex-col text-left">
+          <span className="text-xs uppercase font-medium text-gray-400 text-left mr-6">
+            MIDI Recording
+          </span>
+          <div className="flex items-center space-x-2">
+            {isRecording && (
+              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse mt-[0.2em]" />
+            )}
+            <span className={`text-xs ${isRecording ? 'text-red-300 font-medium' : 'text-gray-400'}`}>
+              {midiRecordingEnabled
+                ? isRecording
+                  ? 'Recording MIDI'
+                  : pendingSaveRef.current
+                  ? 'Ready to record'
+                  : 'Ready to record'
+                : 'Disabled'
+              }
+            </span>
+          </div>
         </div>
-      )}
+        <button
+          onClick={handleToggleRecording}
+          className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 ${
+            midiRecordingEnabled ? 'bg-blue-600' : 'bg-gray-600'
+          }`}
+          role="switch"
+          aria-checked={midiRecordingEnabled}
+          aria-label="Toggle MIDI recording"
+        >
+          <span
+            aria-hidden="true"
+            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+              midiRecordingEnabled ? 'translate-x-5' : 'translate-x-0'
+            }`}
+          />
+        </button>
+      </div>
 
       {/* Download Button (shown when there's a recording to save) */}
       {!isRecording && pendingSaveRef.current && (
-        <button
-          onClick={handleDownload}
-          className="flex items-center space-x-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded transition-colors text-xs font-medium uppercase tracking-wide"
-        >
-          <ArrowDownTrayIcon className="w-4 h-4" />
-          <span>Save MIDI</span>
-        </button>
-      )}
-
-      {/* Info text when idle */}
-      {!isRecording && !pendingSaveRef.current && (
-        <div className="text-xs text-slate-400 italic">
-          Start sequencer to begin MIDI recording
+        <div className="mt-3">
+          <button
+            onClick={handleDownload}
+            className="flex items-center space-x-2 px-3 py-1.5 h-8 bg-green-600 hover:bg-green-700 text-white rounded transition-colors text-xs font-medium uppercase tracking-wide"
+          >
+            <ArrowDownTrayIcon className="w-4 h-4" />
+            <span>Save</span>
+          </button>
         </div>
       )}
     </div>

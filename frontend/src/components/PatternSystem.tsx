@@ -268,7 +268,6 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider">Sequencer</h2>
             <div className="flex items-center space-x-3">
-              <MidiRecorder className="hidden sm:flex" />
               <button
                 onClick={() => setIsSequencerExpanded(!isSequencerExpanded)}
                 className="w-[7em] h-8 flex items-center space-x-2 px-3 py-1.5 text-xs text-slate-300 hover:text-slate-200 bg-[#4a5262] hover:bg-[#525a6b] border border-gray-600 rounded transition-all duration-200"
@@ -307,8 +306,8 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
             </div>
           </div>
           
-          {/* Mobile MIDI Recorder Row */}
-          <div className="sm:hidden mt-3 pt-3 border-t border-gray-600">
+          {/* MIDI Recorder Row - Always visible */}
+          <div className="mt-3 pt-3 border-t border-gray-600">
             <MidiRecorder />
           </div>
         </div>

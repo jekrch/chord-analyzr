@@ -68,6 +68,9 @@ const PianoControl: React.FC<PianoProps> = ({
   const lastStepRef = useRef<number>(-1);
   const chordSustainTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
+  // Use ref instead of state to capture instrument list during render
+  const instrumentListRef = useRef<string[] | null>(null);
+  
   // Container ref for measuring width
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState<number>(500);
@@ -123,6 +126,14 @@ const PianoControl: React.FC<PianoProps> = ({
       window.removeEventListener('resize', handleResize);
     };
   }, []);
+
+  // Update store from ref after render completes
+  useEffect(() => {
+    if (instrumentListRef.current && instrumentListRef.current.length > 0 && 
+        JSON.stringify(instrumentListRef.current) !== JSON.stringify(availableInstruments)) {
+      setAvailableInstruments(instrumentListRef.current);
+    }
+  });
 
   const { firstNote, lastNote, keyboardShortcuts, midiOffset } = useMemo(() => {
     const anchorNote = 'c';
@@ -343,10 +354,9 @@ const PianoControl: React.FC<PianoProps> = ({
               <InstrumentListProvider
                 hostname={soundfontHostname}
                 render={(instrumentList) => {
-                  // Notify parent component about available instruments
-                  if (instrumentList && instrumentList.length > 0 && 
-                      JSON.stringify(instrumentList) !== JSON.stringify(availableInstruments)) {
-                    setAvailableInstruments(instrumentList);
+                  // Store in ref instead of triggering state update
+                  if (instrumentList && instrumentList.length > 0) {
+                    instrumentListRef.current = instrumentList;
                   }
                   
                   return (
@@ -384,10 +394,9 @@ const PianoControl: React.FC<PianoProps> = ({
           <InstrumentListProvider
             hostname={soundfontHostname}
             render={(instrumentList) => {
-              // Notify parent component about available instruments
-              if (instrumentList && instrumentList.length > 0 && 
-                  JSON.stringify(instrumentList) !== JSON.stringify(availableInstruments)) {
-                setAvailableInstruments(instrumentList);
+              // Store in ref instead of triggering state update
+              if (instrumentList && instrumentList.length > 0) {
+                instrumentListRef.current = instrumentList;
               }
               return <></>;
             }}

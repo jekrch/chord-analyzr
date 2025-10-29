@@ -4,7 +4,7 @@ import 'react-piano/dist/styles.css';
 import InstrumentListProvider from '../../piano/InstrumentListProvider';
 import PianoConfig from '../../piano/PianoConfig';
 import { SoundfontProvider } from '../../piano/SoundfontProvider';
-import { normalizeNoteName } from '../../util/NoteUtil';
+import { getMidiNote, normalizeNoteName } from '../../util/NoteUtil';
 import { useMusicStore } from '../../stores/musicStore';
 import { usePianoStore } from '../../stores/pianoStore';
 import { usePlaybackStore } from '../../stores/playbackStore';
@@ -24,37 +24,7 @@ export const endOctave = 7;
 const PianoControl: React.FC<PianoProps> = ({
   hideConfigControls = false
 }) => {
-  // Helper function to convert any note name (including double sharps/flats) to standard format
-  const convertToStandardNoteName = (noteName: string): string => {
-    if (!noteName || noteName.length === 0) return 'C';
-    
-    // Extract base note and accidentals
-    const baseNote = noteName.charAt(0).toUpperCase();
-    const accidentals = noteName.slice(1);
-    
-    // Base note values (in semitones from C)
-    const baseNoteMap: Record<string, number> = {
-      'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11
-    };
-    
-    let semitones = baseNoteMap[baseNote];
-    if (semitones === undefined) return 'C';
-    
-    // Count sharps and flats
-    const sharps = (accidentals.match(/#/g) || []).length;
-    const flats = (accidentals.match(/b/g) || []).length;
-    
-    // Apply accidentals
-    semitones += sharps - flats;
-    
-    // Normalize to 0-11 range
-    semitones = ((semitones % 12) + 12) % 12;
-    
-    // Convert back to note name (prefer sharps for simplicity)
-    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-    return noteNames[semitones];
-  };
-
+  
   // Direct store access
   const musicStore = useMusicStore();
   const pianoStore = usePianoStore();
@@ -156,8 +126,8 @@ const PianoControl: React.FC<PianoProps> = ({
 
   const { firstNote, lastNote, keyboardShortcuts, midiOffset } = useMemo(() => {
     const anchorNote = 'c';
-    const firstNote = MidiNumbers.fromNote(`${anchorNote}${startOctave}`);
-    const lastNote = MidiNumbers.fromNote(`${anchorNote}${endOctave}`);
+    const firstNote = getMidiNote(anchorNote, startOctave);
+    const lastNote = getMidiNote(anchorNote, endOctave);
     const midiOffset = pianoSettings.octaveOffset * 12;
 
     return {
@@ -195,7 +165,7 @@ const PianoControl: React.FC<PianoProps> = ({
     if (!globalPatternState.isPlaying && activeNotes.length > 0) {
       // Play all notes as a chord
       const chordMidiNotes = activeNotes.map(({ note, octave = 4 }) =>
-        MidiNumbers.fromNote(`${convertToStandardNoteName(note)}${octave}`)
+        getMidiNote(note, octave)
       );
       setActivePianoNotes(chordMidiNotes);
       
@@ -276,7 +246,7 @@ const PianoControl: React.FC<PianoProps> = ({
         finalOctave = Math.max(1, Math.min(8, finalOctave));
         
         // Convert note to standard format before passing to MidiNumbers.fromNote
-        const midiNote = MidiNumbers.fromNote(`${convertToStandardNoteName(note)}${finalOctave}`);
+        const midiNote = getMidiNote(note, finalOctave)
         
         if (!pianoSettings.cutOffPreviousNotes && stopAllNotesRef.current) {
           stopAllNotesRef.current();

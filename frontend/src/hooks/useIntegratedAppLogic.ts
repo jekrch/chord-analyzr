@@ -49,14 +49,13 @@ export const useIntegratedAppLogic = () => {
     const { modes } = useModes();
 
     // Refs for complex timing logic
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const intervalRef = useRef<number | null>(null);
     const globalStepRef = useRef<number>(0);
     const sequencerStartTimeRef = useRef<number>(0);
-    const nextStepTimeRef = useRef<number>(0);
     const hasLoadedFromUrl = useRef(false);
     const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const isInitialLoad = useRef(true);
-    const hasInitialized = useRef(false); // Add flag to prevent infinite loops
+    const hasInitialized = useRef(false);
 
     useEffect(() => {
         if (modes && !hasInitialized.current) {
@@ -95,6 +94,21 @@ export const useIntegratedAppLogic = () => {
             patternStore.currentlyActivePattern
         );
     }, [playbackStore.temporaryChord, playbackStore.activeChordIndex, playbackStore.addedChords, patternStore.currentlyActivePattern]);
+
+    // Memoize the current chord to reduce recalculations
+    const currentChord = useMemo(() => {
+        if (playbackStore.temporaryChord) {
+            return playbackStore.temporaryChord;
+        } else if (playbackStore.activeChordIndex !== null && playbackStore.addedChords[playbackStore.activeChordIndex]) {
+            return playbackStore.addedChords[playbackStore.activeChordIndex];
+        }
+        return null;
+    }, [playbackStore.temporaryChord, playbackStore.activeChordIndex, playbackStore.addedChords]);
+
+    // Memoize the current pattern
+    const currentPattern = useMemo(() => {
+        return getCurrentPattern();
+    }, [getCurrentPattern]);
 
     // URL State Management
     const saveStateToUrl = useCallback(() => {
@@ -176,9 +190,12 @@ export const useIntegratedAppLogic = () => {
             playbackStore.setTemporaryChord(null);
             playbackStore.setActiveChordIndex(chordIndex);
 
+            // If NOT playing, preview the chord immediately
             if (!patternStore.globalPatternState.isPlaying) {
                 playbackStore.playNotes(notesWithOctaves as any);
             }
+            // If IS playing, the chord will play on the next beat automatically
+            // via the activeNotes sync effect
 
             playbackStore.setHighlightedChordIndex(chordIndex);
             setTimeout(() => playbackStore.setHighlightedChordIndex(null), 150);
@@ -251,16 +268,10 @@ export const useIntegratedAppLogic = () => {
     const handlePatternChange = useCallback((newPatternState: Partial<any>) => {
         patternStore.updatePattern(newPatternState);
 
+        // Only reset timing when explicitly starting playback
         if (newPatternState.hasOwnProperty('isPlaying') && newPatternState.isPlaying) {
             globalStepRef.current = 0;
-            sequencerStartTimeRef.current = Date.now();
-            nextStepTimeRef.current = Date.now();
-        }
-
-        if (newPatternState.hasOwnProperty('currentStep') && newPatternState.currentStep === 0) {
-            globalStepRef.current = 0;
-            sequencerStartTimeRef.current = Date.now();
-            nextStepTimeRef.current = Date.now();
+            sequencerStartTimeRef.current = performance.now();
         }
     }, []);
 
@@ -270,8 +281,7 @@ export const useIntegratedAppLogic = () => {
 
         if (newIsPlaying) {
             globalStepRef.current = 0;
-            sequencerStartTimeRef.current = Date.now();
-            nextStepTimeRef.current = Date.now();
+            sequencerStartTimeRef.current = performance.now();
         }
     }, [patternStore.globalPatternState.isPlaying]);
 
@@ -389,40 +399,49 @@ export const useIntegratedAppLogic = () => {
     useEffect(() => {
         if (patternStore.globalPatternState.isPlaying) {
             if (!intervalRef.current) {
-                sequencerStartTimeRef.current = Date.now();
+                sequencerStartTimeRef.current = performance.now();
                 globalStepRef.current = 0;
-
                 patternStore.setGlobalPatternState({ currentStep: 0 });
 
-                // Set nextStepTime to AFTER the first step duration
-                // This ensures step 0 plays for its full duration before incrementing
-                nextStepTimeRef.current = Date.now() + getSwingDuration(0);
-
                 const tick = () => {
-                    const now = Date.now();
-
-                    if (now >= nextStepTimeRef.current) {
-                        globalStepRef.current++;
-                        const nextStepDuration = getSwingDuration(globalStepRef.current);
-                        nextStepTimeRef.current = now + nextStepDuration;
-                        patternStore.setGlobalPatternState({ currentStep: globalStepRef.current });
+                    const now = performance.now();
+                    const elapsed = now - sequencerStartTimeRef.current;
+                    
+                    // Calculate which step we SHOULD be on based on elapsed time
+                    // This prevents drift accumulation
+                    let totalTime = 0;
+                    let calculatedStep = 0;
+                    
+                    // Find the current step by summing swing durations
+                    while (totalTime < elapsed) {
+                        totalTime += getSwingDuration(calculatedStep);
+                        if (totalTime <= elapsed) {
+                            calculatedStep++;
+                        }
                     }
-
-                    intervalRef.current = setTimeout(tick, 5);
+                    
+                    // Only update if step actually changed
+                    if (calculatedStep !== globalStepRef.current) {
+                        globalStepRef.current = calculatedStep;
+                        patternStore.setGlobalPatternState({ currentStep: calculatedStep });
+                    }
+                    
+                    // Use requestAnimationFrame for smoother, more efficient updates
+                    intervalRef.current = requestAnimationFrame(tick);
                 };
 
-                tick();
+                intervalRef.current = requestAnimationFrame(tick);
             }
         } else {
             if (intervalRef.current) {
-                clearTimeout(intervalRef.current);
+                cancelAnimationFrame(intervalRef.current);
                 intervalRef.current = null;
             }
         }
 
         return () => {
             if (intervalRef.current) {
-                clearTimeout(intervalRef.current);
+                cancelAnimationFrame(intervalRef.current);
                 intervalRef.current = null;
             }
         };
@@ -430,40 +449,23 @@ export const useIntegratedAppLogic = () => {
 
     // Keep activeNotes in sync with sequencer
     useEffect(() => {
-        if (patternStore.globalPatternState.isPlaying) {
-            let currentChord = null;
+        if (!patternStore.globalPatternState.isPlaying || !currentChord) {
+            return;
+        }
 
-            if (playbackStore.temporaryChord) {
-                currentChord = playbackStore.temporaryChord;
-            } else if (playbackStore.activeChordIndex !== null && playbackStore.addedChords[playbackStore.activeChordIndex]) {
-                currentChord = playbackStore.addedChords[playbackStore.activeChordIndex];
-            }
+        const currentStepIndex = patternStore.globalPatternState.currentStep % currentPattern.length;
 
-            if (currentChord) {
-                const currentPattern = resolvePatternForPlayback(
-                    playbackStore.temporaryChord,
-                    playbackStore.activeChordIndex,
-                    playbackStore.addedChords,
-                    patternStore.currentlyActivePattern
-                );
-
-                const currentStepIndex = patternStore.globalPatternState.currentStep % currentPattern.length;
-
-                if (shouldPlayAtCurrentStep(currentPattern, currentStepIndex)) {
-                    const notesWithOctaves = getMidiNotes(START_OCTAVE, END_OCTAVE, currentChord.notes);
-                    playbackStore.setActiveNotes(notesWithOctaves as any);
-                } else {
-                    playbackStore.setActiveNotes([]);
-                }
-            }
+        if (shouldPlayAtCurrentStep(currentPattern, currentStepIndex)) {
+            const notesWithOctaves = getMidiNotes(START_OCTAVE, END_OCTAVE, currentChord.notes);
+            playbackStore.setActiveNotes(notesWithOctaves as any);
+        } else {
+            playbackStore.setActiveNotes([]);
         }
     }, [
         patternStore.globalPatternState.isPlaying,
         patternStore.globalPatternState.currentStep,
-        playbackStore.temporaryChord,
-        playbackStore.activeChordIndex,
-        playbackStore.addedChords,
-        patternStore.currentlyActivePattern
+        currentChord,
+        currentPattern
     ]);
 
     // Load state from URL when chords first become available

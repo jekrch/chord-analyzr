@@ -62,7 +62,7 @@ export const ChordDisplay = forwardRef<HTMLDivElement, ChordDisplayProps>(({
         const isHighlighted = index === highlightedChordIndex;
 
         const handleButtonClick = (e: React.MouseEvent) => {
-            console.log('Button clicked!', { isEditMode, hasOnEdit: !!onEdit, index });
+            //console.log('Button clicked!', { isEditMode, hasOnEdit: !!onEdit, index });
             
             // Prevent event bubbling to avoid conflicts with drag handlers
             e.stopPropagation();

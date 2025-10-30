@@ -227,6 +227,45 @@ body {
   padding-bottom: 0;
 }
 
+/* Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1f28;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4a5262;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #5a6272;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #4a5262 #1a1f28;
+}
+
+/* Optional: Thinner scrollbars for modal content */
+.modal-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-scrollbar::-webkit-scrollbar-thumb {
+  background: #3d434f;
+}
+
+.modal-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #4a5262;
+}
 /* Smooth scrolling for the chord sequence */
 .chord-sequence-scroll {
   scrollbar-width: thin;

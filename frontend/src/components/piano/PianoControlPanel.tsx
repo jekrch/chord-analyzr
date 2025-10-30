@@ -2,7 +2,6 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { PlayCircleIcon, PauseIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
 import Dropdown from '../Dropdown';
 import { Button } from '../Button';
-import Slider from '../Slider';
 import { calculateTransposeSteps, transposeChordName, transposeNotes } from '../../stores/playbackStore';
 import { usePianoStore } from '../../stores/pianoStore';
 import { usePlaybackStore } from '../../stores/playbackStore';
@@ -12,6 +11,8 @@ import { dataService } from '../../services/DataService';
 import { useMusicStore } from '../../stores/musicStore';
 import Logo from '../Logo';
 import { AVAILABLE_KEYS } from '../../hooks/useIntegratedAppLogic';
+import Slider from '../Slider';
+import { useChordTranspose } from '../../hooks/useChordTranspose';
 
 interface EqSettings {
     bass: number;
@@ -25,75 +26,6 @@ interface PianoControlPanelProps {
     onModeChange?: (mode: string) => void;
     onInstrumentChange?: (instrument: string) => void;
 }
-
-// Extract chord transpose logic into reusable function
-const useChordTranspose = () => {
-    const transposeChords = useCallback(async (
-        fromKey: string,
-        fromMode: string,
-        toKey: string,
-        toMode: string
-    ) => {
-        console.log('Transposing from', fromKey, fromMode, 'to', toKey, toMode);
-
-        const currentAddedChords = usePlaybackStore.getState().addedChords;
-        console.log('Current chords to transpose:', currentAddedChords.length);
-
-        if (currentAddedChords.length === 0) return;
-
-        // Calculate transpose steps (only needed when key changes)
-        const steps = fromKey !== toKey ? calculateTransposeSteps(fromKey, toKey) : 0;
-
-        // Fetch new music data and all distinct chords
-        const [newChords, allChords] = await Promise.all([
-            dataService.getModeKeyChords(toKey, toMode),
-            dataService.getAllDistinctChords()
-        ]);
-
-        // Transform each chord
-        const transformedChords = currentAddedChords.map((chord: any) => {
-            // Get target chord name (transpose if key changed)
-            const targetChordName = steps !== 0 ? transposeChordName(chord.name, steps) : chord.name;
-
-            // Find matching chord in new key/mode, then in all chords
-            let matchingChord = newChords.find(c => c.chordName === targetChordName) ||
-                allChords.find(c => c.chordName === targetChordName);
-
-            if (!matchingChord) {
-                console.log(`Chord ${targetChordName} not in ${toKey} ${toMode}, found in all chords:`, false);
-            }
-
-            if (matchingChord?.chordNoteNames) {
-                return {
-                    ...chord,
-                    name: targetChordName,
-                    notes: matchingChord.chordNoteNames,
-                    originalKey: toKey,
-                    originalMode: toMode,
-                    originalNotes: matchingChord.chordNoteNames
-                };
-            } else {
-                // Manually transpose notes if chord not found
-                console.log(`Chord ${targetChordName} not found, manually transposing notes`);
-                const transformedNotes = steps !== 0 ? transposeNotes(chord.notes, steps) : chord.notes;
-                return {
-                    ...chord,
-                    name: targetChordName,
-                    notes: transformedNotes,
-                    originalNotes: chord.originalNotes ?
-                        (steps !== 0 ? transposeNotes(chord.originalNotes, steps) : chord.originalNotes) :
-                        transformedNotes
-                };
-            }
-        });
-
-        // Update the playback store
-        usePlaybackStore.getState().setAddedChords(transformedChords);
-        console.log('Transpose complete');
-    }, []);
-
-    return { transposeChords };
-};
 
 // Reusable control group component
 interface ControlGroupProps {
@@ -144,9 +76,6 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
     const labelClass = isDesktop ?
         "text-sm text-slate-300 font-medium whitespace-nowrap" :
         "text-sm text-slate-300 font-medium whitespace-nowrap w-16 flex items-center";
-
-    //const supportedKeys = ['C', 'C#', 'Db', 'D', 'D#', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'G#', 'Ab', 'A', 'A#', 'Bb', 'B'];
-
 
     if (isDesktop) {
         return (
@@ -245,7 +174,7 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
         );
     }
 
-    // Mobile layout (unchanged)
+    // Mobile layout
     return (
         <div className={containerClass}>
             {/* Key Control Group */}
@@ -389,8 +318,6 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
         // Ensure scale notes and other derived data are loaded for the current key/mode
         const loadMusicData = async () => {
             if (currentKey && mode) {
-
-
                 const defaultKey = 'C';
                 if (currentKey !== defaultKey && scaleNotes.length === 0) {
                     console.log('Forcing data load for key:', currentKey);
@@ -403,7 +330,6 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
     }, []); // only run on mount
 
     useEffect(() => {
-        
         // Ensure scale notes match the current key
         const verifyAndFixMusicData = async () => {
             // Wait a bit for any pending fetches to complete
@@ -423,10 +349,6 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                 const normalizedCurrentKey = normalizeNoteName(currentKey);
 
                 if (normalizedFirstNote !== normalizedCurrentKey) {
-                    // console.log('MISMATCH DETECTED:');
-                    // console.log('  Current key:', currentKey, '(normalized:', normalizedCurrentKey + ')');
-                    // console.log('  First scale note:', firstScaleNote, '(normalized:', normalizedFirstNote + ')');
-                    // console.log('  Refetching music data...');
                     await useMusicStore.getState().fetchMusicData(currentKey, mode);
                 }
             }
@@ -492,7 +414,6 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
         scalePlaybackRef.current = true;
         setIsPlayingScale(true);
 
-        // [Rest of playScale implementation remains the same...]
         const scaleNotesWithFinalNote = [...scaleNotes];
         if (scaleNotes.length > 0) {
             const rootNote = scaleNotes[0];
@@ -520,7 +441,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
             return noteMap[noteName] ?? 0;
         };
 
-        const scaleNotesForPlayback = [];
+        const scaleNotesForPlayback: Array<{ note: string; octave: number }> = [];
         let currentOctave = 4;
         let previousNoteIndex = -1;
 
@@ -541,7 +462,6 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
         scaleNotesForPlayback.forEach((noteObj, index) => {
             const timeout = setTimeout(() => {
                 if (!scalePlaybackRef.current) return;
-                //console.log(noteObj);
                 setActiveNotes([noteObj]);
 
                 const noteOffTimeout = setTimeout(() => {

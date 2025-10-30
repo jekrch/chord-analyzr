@@ -76,12 +76,18 @@ export const transposeChordName = (chordName: string, steps: number): string => 
 };
 
 /**
- * Transpose a space-separated list of notes
+ * Transpose a comma-separated list of notes (with optional whitespace)
+ * Handles formats like "C, E, G, B" or "C,E,G,B" or "C E G B"
  */
 export const transposeNotes = (notes: string, steps: number): string => {
-    return notes.split(' ')
+    // Split by comma first (if present), otherwise by space
+    const delimiter = notes.includes(',') ? ',' : ' ';
+    
+    return notes.split(delimiter)
+        .map(note => note.trim()) // Remove whitespace
+        .filter(note => note.length > 0) // Remove empty strings
         .map(note => transposeNote(note, steps))
-        .join(' ');
+        .join(', '); // Always rejoin with comma + space for consistency
 };
 
 // ============================================================================

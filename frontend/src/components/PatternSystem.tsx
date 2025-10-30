@@ -253,7 +253,7 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
   // Subdivision options for dropdown
   const subdivisionOptions = SUBDIVISIONS.map(sub => `${sub.symbol} ${sub.name}`);
 
-  // FIXED: Get current subdivision display - ensure it matches the actual value
+  // Get current subdivision display - ensure it matches the actual value
   const currentSubdivision = SUBDIVISIONS.find(sub => sub.value === globalPatternState.subdivision);
   const currentSubdivisionDisplay = currentSubdivision ? `${currentSubdivision.symbol} ${currentSubdivision.name}` : `${SUBDIVISIONS[1].symbol} ${SUBDIVISIONS[1].name}`;
 

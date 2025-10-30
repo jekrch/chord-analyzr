@@ -95,7 +95,7 @@ function App() {
         }
     }, [isCompactHeight]);
 
-    // Audio initialization (unchanged)
+    // Audio initialization 
     const initializeAudio = async () => {
         if (!audioInitializedRef.current) {
             try {

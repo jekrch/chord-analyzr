@@ -17,7 +17,7 @@ interface SliderProps {
   showMinMax?: boolean;
   minLabel?: string;
   maxLabel?: string;
-  variant?: 'default' | 'split'; // New variant prop for split layout
+  variant?: 'default' | 'split'; 
   
   // Styling
   className?: string;
@@ -58,6 +58,29 @@ const Slider: React.FC<SliderProps> = ({
     onChange(newValue);
   };
 
+  // Only allow arrow keys to work with slider, let other keys fall through
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Allow arrow keys to control the slider
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.stopPropagation(); // Keep these for the slider only
+      return;
+    }
+    
+    // For all other keys, blur and re-dispatch to document
+    e.preventDefault();
+    e.currentTarget.blur();
+    
+    // Re-dispatch the key event to document so app keyboard shortcuts work
+    const keyEvent = new KeyboardEvent('keydown', {
+      key: e.key,
+      code: e.code,
+      keyCode: e.keyCode,
+      bubbles: true,
+      cancelable: true
+    });
+    document.dispatchEvent(keyEvent);
+  };
+
   if (variant === 'split') {
     return (
       <div className={className}>
@@ -77,6 +100,7 @@ const Slider: React.FC<SliderProps> = ({
           step={step}
           value={value}
           onChange={handleChange}
+          onKeyDown={handleKeyDown}
           className="w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb"
         />
         
@@ -108,6 +132,7 @@ const Slider: React.FC<SliderProps> = ({
           step={step}
           value={value}
           onChange={handleChange}
+          onKeyDown={handleKeyDown}
           className="slider-mobile w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb"
         />
       </div>

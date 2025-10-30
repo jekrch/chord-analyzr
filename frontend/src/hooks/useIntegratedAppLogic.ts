@@ -559,5 +559,14 @@ export const useIntegratedAppLogic = () => {
         setVolume: pianoStore.setVolume,
         setChorusLevel: pianoStore.setChorusLevel,
         setDelayLevel: pianoStore.setDelayLevel,
+        setDistortionLevel: pianoStore.setDistortionLevel,
+        setBitcrusherLevel: pianoStore.setBitcrusherLevel,
+        setPhaserLevel: pianoStore.setPhaserLevel,
+        setFlangerLevel: pianoStore.setFlangerLevel,
+        setRingModLevel: pianoStore.setRingModLevel,
+        setAutoFilterLevel: pianoStore.setAutoFilterLevel,
+        setTremoloLevel: pianoStore.setTremoloLevel,
+        setStereoWidthLevel: pianoStore.setStereoWidthLevel,
+        setCompressorLevel: pianoStore.setCompressorLevel,
     };
 };

@@ -320,6 +320,15 @@ const PianoControl: React.FC<PianoProps> = ({
       volume={pianoSettings.volume}
       chorusLevel={pianoSettings.chorusLevel}
       delayLevel={pianoSettings.delayLevel}
+      distortionLevel={pianoSettings.distortionLevel}
+      bitcrusherLevel={pianoSettings.bitcrusherLevel}
+      phaserLevel={pianoSettings.phaserLevel}
+      flangerLevel={pianoSettings.flangerLevel}
+      ringModLevel={pianoSettings.ringModLevel}
+      autoFilterLevel={pianoSettings.autoFilterLevel}
+      tremoloLevel={pianoSettings.tremoloLevel}
+      stereoWidthLevel={pianoSettings.stereoWidthLevel}
+      compressorLevel={pianoSettings.compressorLevel}
       render={({ isLoading, playNote, stopNote, stopAllNotes }) => {
         stopAllNotesRef.current = stopAllNotes;
         

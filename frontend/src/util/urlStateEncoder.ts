@@ -26,6 +26,15 @@ export interface PianoSettings {
     volume: number;
     chorusLevel: number;
     delayLevel: number;
+    distortionLevel: number;
+    bitcrusherLevel: number;
+    phaserLevel: number;
+    flangerLevel: number;
+    ringModLevel: number;
+    autoFilterLevel: number;
+    tremoloLevel: number;
+    stereoWidthLevel: number;
+    compressorLevel: number;
 }
 
 export interface EncodedState {
@@ -47,7 +56,7 @@ const fromBase36 = (str: string): number => parseInt(str, 36) || 0;
 
 /**
  * Encodes application state into a robust URL-safe string
- * Format: v7_{k}_{m}_{pattern}_{timing}_{piano}_{chords}
+ * Format: v8_{k}_{m}_{pattern}_{timing}_{piano}_{chords}
  */
 export const encodeState = (
     key: string,
@@ -70,8 +79,8 @@ export const encodeState = (
     }
     
     try {
-        // 1. Version identifier
-        const version = 'v7';
+        // 1. Version identifier - bumped to v8 for new effects
+        const version = 'v8';
         
         // 2. Key (index in available keys)
         const keyIndex = availableKeys.indexOf(key);
@@ -103,7 +112,7 @@ export const encodeState = (
         
         const timing = `${bpmEncoded}|${sub}|${swingEncoded}|${f}`;
         
-        // 6. Piano settings
+        // 6. Piano settings (EXPANDED with new effects)
         const instrumentIndex = availableInstruments.indexOf(pianoSettings.instrumentName);
         const inst = toBase36(Math.max(0, instrumentIndex));
         
@@ -117,16 +126,27 @@ export const encodeState = (
         // Octave: -3 to +3 -> 0 to 6
         const octave = toBase36(pianoSettings.octaveOffset + 3);
         
-        // Reverb, Volume, Chorus, Delay: 0-1 -> 0-35 (base36)
+        // All effects: 0-1 -> 0-35 (base36)
         const reverb = toBase36(Math.round(pianoSettings.reverbLevel * 35));
         const volume = toBase36(Math.round(pianoSettings.volume * 35));
         const chorus = toBase36(Math.round(pianoSettings.chorusLevel * 35));
         const delay = toBase36(Math.round(pianoSettings.delayLevel * 35));
         
+        // NEW EFFECTS
+        const distortion = toBase36(Math.round(pianoSettings.distortionLevel * 35));
+        const bitcrusher = toBase36(Math.round(pianoSettings.bitcrusherLevel * 35));
+        const phaser = toBase36(Math.round(pianoSettings.phaserLevel * 35));
+        const flanger = toBase36(Math.round(pianoSettings.flangerLevel * 35));
+        const ringMod = toBase36(Math.round(pianoSettings.ringModLevel * 35));
+        const autoFilter = toBase36(Math.round(pianoSettings.autoFilterLevel * 35));
+        const tremolo = toBase36(Math.round(pianoSettings.tremoloLevel * 35));
+        const stereoWidth = toBase36(Math.round(pianoSettings.stereoWidthLevel * 35));
+        const compressor = toBase36(Math.round(pianoSettings.compressorLevel * 35));
+        
         // Duration: 0.1-1.0 -> 1-10 -> 0-9
         const duration = toBase36(Math.max(0, Math.round(pianoSettings.noteDuration * 10) - 1));
         
-        const piano = `${inst}|${cutOff}|${eqBass}|${eqMid}|${eqTreble}|${octave}|${reverb}|${duration}|${volume}|${chorus}|${delay}`;
+        const piano = `${inst}|${cutOff}|${eqBass}|${eqMid}|${eqTreble}|${octave}|${reverb}|${duration}|${volume}|${chorus}|${delay}|${distortion}|${bitcrusher}|${phaser}|${flanger}|${ringMod}|${autoFilter}|${tremolo}|${stereoWidth}|${compressor}`;
         
         // 7. Chords (using absolute name and notes + original key/mode)
         const chordData = addedChords.map(ac => {
@@ -171,7 +191,7 @@ export const encodeState = (
 };
 
 /**
- * Decodes a v7 state string back into application state
+ * Decodes a v7/v8 state string back into application state
  */
 export const decodeState = (
     state: string,
@@ -190,10 +210,10 @@ export const decodeState = (
     try {
         const parts = state.split('_');
         
-        // Check version - only v7 supported
+        // Check version - support v7 (old) and v8 (new)
         const version = parts[0];
-        if (version !== 'v7' || parts.length < 6) {
-            console.log('Invalid state format - only v7 supported');
+        if ((version !== 'v7' && version !== 'v8') || parts.length < 6) {
+            console.log('Invalid state format - only v7/v8 supported');
             return null;
         }
         
@@ -240,9 +260,19 @@ export const decodeState = (
             volume: fromBase36(pianoParts[8] || 'p') / 35, // 'p' is ~28 in base36 (~0.8)
             chorusLevel: fromBase36(pianoParts[9] || '0') / 35,
             delayLevel: fromBase36(pianoParts[10] || '0') / 35,
+            // NEW EFFECTS (v8) - defaults to 0 for v7
+            distortionLevel: version === 'v8' ? fromBase36(pianoParts[11] || '0') / 35 : 0,
+            bitcrusherLevel: version === 'v8' ? fromBase36(pianoParts[12] || '0') / 35 : 0,
+            phaserLevel: version === 'v8' ? fromBase36(pianoParts[13] || '0') / 35 : 0,
+            flangerLevel: version === 'v8' ? fromBase36(pianoParts[14] || '0') / 35 : 0,
+            ringModLevel: version === 'v8' ? fromBase36(pianoParts[15] || '0') / 35 : 0,
+            autoFilterLevel: version === 'v8' ? fromBase36(pianoParts[16] || '0') / 35 : 0,
+            tremoloLevel: version === 'v8' ? fromBase36(pianoParts[17] || '0') / 35 : 0,
+            stereoWidthLevel: version === 'v8' ? fromBase36(pianoParts[18] || '0') / 35 : 0,
+            compressorLevel: version === 'v8' ? fromBase36(pianoParts[19] || '0') / 35 : 0,
         };
         
-        // 6. Chords (v7 format: {name}~{notes}[@origKey+origMode][:pattern])
+        // 6. Chords (v7/v8 format: {name}~{notes}[@origKey+origMode][:pattern])
         const addedChords: AddedChord[] = [];
         const chordsPart = parts[6] || '';
         
@@ -331,7 +361,16 @@ const getDefaultPianoSettings = (availableInstruments: string[]): PianoSettings 
     noteDuration: 0.8,
     volume: 0.8,
     chorusLevel: 0.0,
-    delayLevel: 0.0
+    delayLevel: 0.0,
+    distortionLevel: 0.0,
+    bitcrusherLevel: 0.0,
+    phaserLevel: 0.0,
+    flangerLevel: 0.0,
+    ringModLevel: 0.0,
+    autoFilterLevel: 0.0,
+    tremoloLevel: 0.0,
+    stereoWidthLevel: 0.0,
+    compressorLevel: 0.0,
 });
 
 /**

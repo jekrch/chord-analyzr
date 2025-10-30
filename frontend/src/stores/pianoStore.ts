@@ -16,6 +16,15 @@ const getDefaultPianoSettings = (): PianoSettings => ({
     volume: 0.8,
     chorusLevel: 0.0,
     delayLevel: 0.0,
+    distortionLevel: 0.0,
+    bitcrusherLevel: 0.0,
+    phaserLevel: 0.0,
+    flangerLevel: 0.0,
+    ringModLevel: 0.0,
+    autoFilterLevel: 0.0,
+    tremoloLevel: 0.0,
+    stereoWidthLevel: 0.0,
+    compressorLevel: 0.0,
 });
 
 interface PianoState {
@@ -34,6 +43,15 @@ interface PianoState {
     setVolume: (volume: number) => void;
     setChorusLevel: (chorusLevel: number) => void;
     setDelayLevel: (delayLevel: number) => void;
+    setDistortionLevel: (distortionLevel: number) => void;
+    setBitcrusherLevel: (bitcrusherLevel: number) => void;
+    setPhaserLevel: (phaserLevel: number) => void;
+    setFlangerLevel: (flangerLevel: number) => void;
+    setRingModLevel: (ringModLevel: number) => void;
+    setAutoFilterLevel: (autoFilterLevel: number) => void;
+    setTremoloLevel: (tremoloLevel: number) => void;
+    setStereoWidthLevel: (stereoWidthLevel: number) => void;
+    setCompressorLevel: (compressorLevel: number) => void;
     setAvailableInstruments: (instruments: string[]) => void;
 }
 
@@ -72,6 +90,33 @@ export const usePianoStore = create<PianoState>((set, get) => ({
 
     setDelayLevel: (delayLevel: number) =>
         get().updatePianoSettings({ delayLevel }),
+
+    setDistortionLevel: (distortionLevel: number) =>
+        get().updatePianoSettings({ distortionLevel }),
+
+    setBitcrusherLevel: (bitcrusherLevel: number) =>
+        get().updatePianoSettings({ bitcrusherLevel }),
+
+    setPhaserLevel: (phaserLevel: number) =>
+        get().updatePianoSettings({ phaserLevel }),
+
+    setFlangerLevel: (flangerLevel: number) =>
+        get().updatePianoSettings({ flangerLevel }),
+
+    setRingModLevel: (ringModLevel: number) =>
+        get().updatePianoSettings({ ringModLevel }),
+
+    setAutoFilterLevel: (autoFilterLevel: number) =>
+        get().updatePianoSettings({ autoFilterLevel }),
+
+    setTremoloLevel: (tremoloLevel: number) =>
+        get().updatePianoSettings({ tremoloLevel }),
+
+    setStereoWidthLevel: (stereoWidthLevel: number) =>
+        get().updatePianoSettings({ stereoWidthLevel }),
+
+    setCompressorLevel: (compressorLevel: number) =>
+        get().updatePianoSettings({ compressorLevel }),
 
     setAvailableInstruments: (instruments: string[]) =>
         set({ availableInstruments: instruments }),

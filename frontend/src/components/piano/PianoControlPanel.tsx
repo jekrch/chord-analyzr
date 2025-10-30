@@ -299,7 +299,16 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
         setNoteDuration,
         setVolume,
         setChorusLevel,
-        setDelayLevel
+        setDelayLevel,
+        setDistortionLevel,
+        setBitcrusherLevel,
+        setPhaserLevel,
+        setFlangerLevel,
+        setRingModLevel,
+        setAutoFilterLevel,
+        setTremoloLevel,
+        setStereoWidthLevel,
+        setCompressorLevel,
     } = usePianoStore();
     const { setIsPlayingScale, clearScalePlaybackTimeouts, setActiveNotes } = usePlaybackStore();
 
@@ -596,79 +605,77 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                         </div>
 
                         <div className="p-6 bg-[#444b59]">
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8">
-                                {/* Left Column */}
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-x-8 gap-y-8">
+                                {/* Column 1: Basic & Equalizer */}
                                 <div className="space-y-6">
-                                    <Slider
-                                        label="Volume"
-                                        value={pianoSettings.volume}
-                                        min={0}
-                                        max={1.0}
-                                        step={0.05}
-                                        onChange={setVolume}
-                                        showPercentage={true}
-                                    />
-
+                                    {/* Basic Section */}
                                     <div>
-                                        <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Octave Shift</label>
-                                        <div className="flex items-center justify-between bg-[#3d434f] border border-gray-600 rounded-md p-1.5">
-                                            <button
-                                                onClick={() => setOctaveOffset(Math.max(-3, pianoSettings.octaveOffset - 1))}
-                                                className="w-6 h-6 flex items-center justify-center text-slate-300 hover:text-slate-200 hover:bg-[#4a5262] rounded transition-colors"
-                                                disabled={pianoSettings.octaveOffset <= -3}
-                                            >
-                                                −
-                                            </button>
-                                            <span className="font-mono text-xs text-slate-200 px-2">
-                                                {pianoSettings.octaveOffset === 0 ? 'Normal' : `${pianoSettings.octaveOffset > 0 ? '+' : ''}${pianoSettings.octaveOffset} octave${Math.abs(pianoSettings.octaveOffset) > 1 ? 's' : ''}`}
-                                            </span>
-                                            <button
-                                                onClick={() => setOctaveOffset(Math.min(3, pianoSettings.octaveOffset + 1))}
-                                                className="w-6 h-6 flex items-center justify-center text-slate-300 hover:text-slate-200 hover:bg-[#4a5262] rounded transition-colors"
-                                                disabled={pianoSettings.octaveOffset >= 3}
-                                            >
-                                                +
-                                            </button>
+                                        <div className="bg-[#3d434f] border border-gray-600 rounded px-3 py-2 mb-4">
+                                            <h4 className="text-xs font-medium text-slate-200 uppercase tracking-wider">Basic</h4>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <Slider
+                                                label="Volume"
+                                                value={pianoSettings.volume}
+                                                min={0}
+                                                max={1.0}
+                                                step={0.05}
+                                                onChange={setVolume}
+                                                showPercentage={true}
+                                            />
+
+                                            <div>
+                                                <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Octave Shift</label>
+                                                <div className="flex items-center justify-between bg-[#3d434f] border border-gray-600 rounded-md p-1.5">
+                                                    <button
+                                                        onClick={() => setOctaveOffset(Math.max(-3, pianoSettings.octaveOffset - 1))}
+                                                        className="w-6 h-6 flex items-center justify-center text-slate-300 hover:text-slate-200 hover:bg-[#4a5262] rounded transition-colors"
+                                                        disabled={pianoSettings.octaveOffset <= -3}
+                                                    >
+                                                        −
+                                                    </button>
+                                                    <span className="font-mono text-xs text-slate-200 px-2">
+                                                        {pianoSettings.octaveOffset === 0 ? 'Normal' : `${pianoSettings.octaveOffset > 0 ? '+' : ''}${pianoSettings.octaveOffset} octave${Math.abs(pianoSettings.octaveOffset) > 1 ? 's' : ''}`}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => setOctaveOffset(Math.min(3, pianoSettings.octaveOffset + 1))}
+                                                        className="w-6 h-6 flex items-center justify-center text-slate-300 hover:text-slate-200 hover:bg-[#4a5262] rounded transition-colors"
+                                                        disabled={pianoSettings.octaveOffset >= 3}
+                                                    >
+                                                        +
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <Slider
+                                                label="Note Duration"
+                                                value={pianoSettings.noteDuration}
+                                                min={0.1}
+                                                max={1.0}
+                                                step={0.05}
+                                                onChange={setNoteDuration}
+                                                showPercentage={true}
+                                            />
+
+                                            <div>
+                                                <label className="flex items-center cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        className="w-3.5 h-3.5 text-blue-600 bg-[#3d434f] border-gray-600 rounded focus:ring-blue-500 focus:ring-1"
+                                                        checked={pianoSettings.cutOffPreviousNotes}
+                                                        onChange={(e) => setCutOffPreviousNotes(e.target.checked)}
+                                                    />
+                                                    <span className="ml-2 text-xs text-slate-300 uppercase tracking-wide">Cut off previous notes</span>
+                                                </label>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <Slider
-                                        label="Reverb"
-                                        value={pianoSettings.reverbLevel}
-                                        min={0}
-                                        max={1.0}
-                                        step={0.05}
-                                        onChange={setReverbLevel}
-                                        showPercentage={true}
-                                    />
-
-                                    <Slider
-                                        label="Note Duration"
-                                        value={pianoSettings.noteDuration}
-                                        min={0.1}
-                                        max={1.0}
-                                        step={0.05}
-                                        onChange={setNoteDuration}
-                                        showPercentage={true}
-                                    />
-
-                                    <div>
-                                        <label className="flex items-center cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                className="w-3.5 h-3.5 text-blue-600 bg-[#3d434f] border-gray-600 rounded focus:ring-blue-500 focus:ring-1"
-                                                checked={pianoSettings.cutOffPreviousNotes}
-                                                onChange={(e) => setCutOffPreviousNotes(e.target.checked)}
-                                            />
-                                            <span className="ml-2 text-xs text-slate-300 uppercase tracking-wide">Cut off previous notes</span>
-                                        </label>
-                                    </div>
-                                </div>
-
-                                {/* Right Column - Equalizer and Effects */}
-                                <div className="space-y-4 mt-6 lg:mt-0">
-                                    <div>
-                                        <div className="text-xs font-medium text-slate-200 mb-4 uppercase tracking-wide">Equalizer</div>
+                                    {/* Equalizer Section */}
+                                    <div className="pt-2">
+                                        <div className="bg-[#3d434f] border border-gray-600 rounded px-3 py-2 mb-4">
+                                            <h4 className="text-xs font-medium text-slate-200 uppercase tracking-wider">Equalizer</h4>
+                                        </div>
                                         <div className="space-y-3">
                                             {[
                                                 { label: 'Bass', key: 'bass' as keyof EqSettings },
@@ -692,28 +699,140 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                             ))}
                                         </div>
                                     </div>
+                                </div>
 
-                                    <div className="space-y-4">
-                                        <Slider
-                                            label="Chorus"
-                                            value={pianoSettings.chorusLevel}
-                                            min={0}
-                                            max={1.0}
-                                            step={0.05}
-                                            onChange={setChorusLevel}
-                                            showPercentage={true}
-                                        />
-
-                                        <Slider
-                                            label="Delay"
-                                            value={pianoSettings.delayLevel}
-                                            min={0}
-                                            max={1.0}
-                                            step={0.05}
-                                            onChange={setDelayLevel}
-                                            showPercentage={true}
-                                        />
+                                {/* Column 2: Effects */}
+                                <div className="space-y-4">
+                                    <div className="bg-[#3d434f] border border-gray-600 rounded px-3 py-2 mb-4">
+                                        <h4 className="text-xs font-medium text-slate-200 uppercase tracking-wider">Effects</h4>
                                     </div>
+
+                                    <Slider
+                                        label="Reverb"
+                                        value={pianoSettings.reverbLevel}
+                                        min={0}
+                                        max={1.0}
+                                        step={0.05}
+                                        onChange={setReverbLevel}
+                                        showPercentage={true}
+                                    />
+
+                                    <Slider
+                                        label="Chorus"
+                                        value={pianoSettings.chorusLevel}
+                                        min={0}
+                                        max={1.0}
+                                        step={0.05}
+                                        onChange={setChorusLevel}
+                                        showPercentage={true}
+                                    />
+
+                                    <Slider
+                                        label="Delay"
+                                        value={pianoSettings.delayLevel}
+                                        min={0}
+                                        max={1.0}
+                                        step={0.05}
+                                        onChange={setDelayLevel}
+                                        showPercentage={true}
+                                    />
+
+                                    <Slider
+                                        label="Phaser"
+                                        value={pianoSettings.phaserLevel}
+                                        min={0}
+                                        max={1.0}
+                                        step={0.05}
+                                        onChange={setPhaserLevel}
+                                        showPercentage={true}
+                                    />
+
+                                    <Slider
+                                        label="Flanger"
+                                        value={pianoSettings.flangerLevel}
+                                        min={0}
+                                        max={1.0}
+                                        step={0.05}
+                                        onChange={setFlangerLevel}
+                                        showPercentage={true}
+                                    />
+
+                                    <Slider
+                                        label="Tremolo"
+                                        value={pianoSettings.tremoloLevel}
+                                        min={0}
+                                        max={1.0}
+                                        step={0.05}
+                                        onChange={setTremoloLevel}
+                                        showPercentage={true}
+                                    />
+                                </div>
+
+                                {/* Column 3: Extended */}
+                                <div className="space-y-4">
+                                    <div className="bg-[#3d434f] border border-gray-600 rounded px-3 py-2 mb-4">
+                                        <h4 className="text-xs font-medium text-slate-200 uppercase tracking-wider">Extended</h4>
+                                    </div>
+
+                                    <Slider
+                                        label="Distortion"
+                                        value={pianoSettings.distortionLevel}
+                                        min={0}
+                                        max={1.0}
+                                        step={0.05}
+                                        onChange={setDistortionLevel}
+                                        showPercentage={true}
+                                    />
+
+                                    <Slider
+                                        label="Bitcrusher"
+                                        value={pianoSettings.bitcrusherLevel}
+                                        min={0}
+                                        max={1.0}
+                                        step={0.05}
+                                        onChange={setBitcrusherLevel}
+                                        showPercentage={true}
+                                    />
+
+                                    <Slider
+                                        label="Ring Mod"
+                                        value={pianoSettings.ringModLevel}
+                                        min={0}
+                                        max={1.0}
+                                        step={0.05}
+                                        onChange={setRingModLevel}
+                                        showPercentage={true}
+                                    />
+
+                                    <Slider
+                                        label="Auto-Filter"
+                                        value={pianoSettings.autoFilterLevel}
+                                        min={0}
+                                        max={1.0}
+                                        step={0.05}
+                                        onChange={setAutoFilterLevel}
+                                        showPercentage={true}
+                                    />
+
+                                    <Slider
+                                        label="Stereo Width"
+                                        value={pianoSettings.stereoWidthLevel}
+                                        min={0}
+                                        max={1.0}
+                                        step={0.05}
+                                        onChange={setStereoWidthLevel}
+                                        showPercentage={true}
+                                    />
+
+                                    <Slider
+                                        label="Compressor"
+                                        value={pianoSettings.compressorLevel}
+                                        min={0}
+                                        max={1.0}
+                                        step={0.05}
+                                        onChange={setCompressorLevel}
+                                        showPercentage={true}
+                                    />
                                 </div>
                             </div>
                         </div>

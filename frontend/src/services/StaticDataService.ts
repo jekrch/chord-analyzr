@@ -86,7 +86,7 @@ class StaticDataService {
       this.modesCache = await response.json();
       return this.modesCache!;
     } catch (error) {
-      console.error('Error loading modes from static data:', error);
+      //console.error('Error loading modes from static data:', error);
       throw error;
     }
   }

@@ -42,10 +42,10 @@ class DataService {
    */
   async getModes(): Promise<ModeDto[]> {
     if (this.config.useStaticData) {
-      console.log('Loading modes from static data');
+      //console.log('Loading modes from static data');
       return staticDataService.getModes();
     } else {
-      console.log('Loading modes from API');
+      //console.log('Loading modes from API');
       return ModeControllerService.getModes();
     }
   }

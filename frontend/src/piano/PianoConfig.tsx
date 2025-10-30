@@ -50,6 +50,24 @@ interface PianoConfigProps {
     delayLevel: number;
     setDelayLevel: (level: number) => void;
     onInstrumentChange: (instrumentName: string) => void;
+    distortionLevel: number;
+    setDistortionLevel: (level: number) => void;
+    bitcrusherLevel: number;
+    setBitcrusherLevel: (level: number) => void;
+    phaserLevel: number;
+    setPhaserLevel: (level: number) => void;
+    flangerLevel: number;
+    setFlangerLevel: (level: number) => void;
+    ringModLevel: number;
+    setRingModLevel: (level: number) => void;
+    autoFilterLevel: number;
+    setAutoFilterLevel: (level: number) => void;
+    tremoloLevel: number;
+    setTremoloLevel: (level: number) => void;
+    stereoWidthLevel: number;
+    setStereoWidthLevel: (level: number) => void;
+    compressorLevel: number;
+    setCompressorLevel: (level: number) => void;
     // hideControls?: boolean;
 }
 
@@ -182,6 +200,24 @@ class PianoConfig extends Component<PianoConfigProps, PianoConfigState> {
                         setChorusLevel={this.props.setChorusLevel}
                         delayLevel={this.props.delayLevel}
                         setDelayLevel={this.props.setDelayLevel}
+                        distortionLevel={this.props.distortionLevel}
+                        setDistortionLevel={this.props.setDistortionLevel}
+                        bitcrusherLevel={this.props.bitcrusherLevel}
+                        setBitcrusherLevel={this.props.setBitcrusherLevel}
+                        phaserLevel={this.props.phaserLevel}
+                        setPhaserLevel={this.props.setPhaserLevel}
+                        flangerLevel={this.props.flangerLevel}
+                        setFlangerLevel={this.props.setFlangerLevel}
+                        ringModLevel={this.props.ringModLevel}
+                        setRingModLevel={this.props.setRingModLevel}
+                        autoFilterLevel={this.props.autoFilterLevel}
+                        setAutoFilterLevel={this.props.setAutoFilterLevel}
+                        tremoloLevel={this.props.tremoloLevel}
+                        setTremoloLevel={this.props.setTremoloLevel}
+                        stereoWidthLevel={this.props.stereoWidthLevel}
+                        setStereoWidthLevel={this.props.setStereoWidthLevel}
+                        compressorLevel={this.props.compressorLevel}
+                        setCompressorLevel={this.props.setCompressorLevel}
                     />
                 </div>
             </div>

@@ -157,8 +157,7 @@ const MidiRecorder: React.FC<MidiRecorderProps> = ({ className = '' }) => {
   const handleDownload = () => {
     if (pendingSaveRef.current) {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-      downloadMidi(pendingSaveRef.current, `recording-${timestamp}.mid`);
-      pendingSaveRef.current = null;
+      downloadMidi(pendingSaveRef.current, `modal-chordbuildr-${timestamp}.mid`);
     }
   };
 
@@ -183,7 +182,7 @@ const MidiRecorder: React.FC<MidiRecorderProps> = ({ className = '' }) => {
           </span>
           <div className="flex items-center space-x-2">
             {isRecording && (
-              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse mt-[0.2em]" />
+              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse mt-[0.1em] mr-[0.25em]" />
             )}
             <span className={`text-xs ${isRecording ? 'text-red-300 font-medium' : 'text-gray-400'}`}>
               {midiRecordingEnabled

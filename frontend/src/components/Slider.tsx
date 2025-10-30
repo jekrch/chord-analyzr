@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface SliderProps {
   label: string;
@@ -19,6 +19,9 @@ interface SliderProps {
   maxLabel?: string;
   variant?: 'default' | 'split'; 
   
+  // Bypass functionality
+  showBypass?: boolean;
+  
   // Styling
   className?: string;
   labelClassName?: string;
@@ -38,24 +41,55 @@ const Slider: React.FC<SliderProps> = ({
   minLabel,
   maxLabel,
   variant = 'default',
+  showBypass = false,
   className = "",
   labelClassName = ""
 }) => {
+  const [enabled, setEnabled] = useState(true);
+  const [storedValue, setStoredValue] = useState(value);
+
+  // Keep storedValue in sync with incoming value prop when enabled
+  useEffect(() => {
+    if (enabled) {
+      setStoredValue(value);
+    }
+  }, [value, enabled]);
+
   // Format the display value
   const getDisplayValue = () => {
+    const displayVal = enabled ? value : storedValue;
     if (formatValue) {
-      return formatValue(value);
+      return formatValue(displayVal);
     }
     if (showPercentage) {
-      return `${Math.round(value * 100)}%`;
+      return `${Math.round(displayVal * 100)}%`;
     }
-    return `${value}${suffix || ''}`;
+    return `${displayVal}${suffix || ''}`;
   };
 
   // Handle change event
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = parseFloat(e.target.value);
-    onChange(newValue);
+    setStoredValue(newValue);
+    if (enabled) {
+      onChange(newValue);
+    }
+  };
+
+  // Handle bypass toggle
+  const handleBypassToggle = () => {
+    const newEnabled = !enabled;
+    
+    if (newEnabled) {
+      // Re-enable: use stored value
+      setEnabled(true);
+      onChange(storedValue);
+    } else {
+      // Disable: store current value first, then send 0 to parent
+      setStoredValue(value);
+      setEnabled(false);
+      onChange(0);
+    }
   };
 
   // Only allow arrow keys to work with slider, let other keys fall through
@@ -81,6 +115,9 @@ const Slider: React.FC<SliderProps> = ({
     document.dispatchEvent(keyEvent);
   };
 
+  // Get the current slider position value
+  const sliderValue = enabled ? value : storedValue;
+
   if (variant === 'split') {
     return (
       <div className={className}>
@@ -88,9 +125,27 @@ const Slider: React.FC<SliderProps> = ({
           <span className={`text-xs text-slate-400 uppercase tracking-wide ${labelClassName}`}>
             {label}
           </span>
-          <span className="text-xs text-slate-400 font-mono">
-            {getDisplayValue()}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className={`text-xs font-mono transition-colors ${enabled ? 'text-slate-400' : 'text-slate-600'}`}>
+              {getDisplayValue()}
+            </span>
+            {showBypass && (
+              <button
+                onClick={handleBypassToggle}
+                className={`w-5 h-5 rounded flex items-center justify-center transition-all ${
+                  enabled 
+                    ? 'bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30' 
+                    : 'bg-slate-700/50 text-slate-500 hover:bg-slate-700/70'
+                }`}
+                title={enabled ? 'Bypass effect' : 'Enable effect'}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+                  <line x1="12" y1="2" x2="12" y2="12"></line>
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
         
         <input
@@ -98,10 +153,12 @@ const Slider: React.FC<SliderProps> = ({
           min={min}
           max={max}
           step={step}
-          value={value}
+          value={sliderValue}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          className="w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb"
+          className={`w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb transition-opacity ${
+            enabled ? 'opacity-100' : 'opacity-40'
+          }`}
         />
         
         {showMinMax && (
@@ -117,12 +174,30 @@ const Slider: React.FC<SliderProps> = ({
   // Default variant
   return (
     <div className={className}>
-      <label className={`block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide ${labelClassName}`}>
-        {label}
-        <span className="text-xs text-slate-400 ml-2 normal-case">
-          ({getDisplayValue()})
-        </span>
-      </label>
+      <div className="flex justify-between items-center mb-2">
+        <label className={`block text-xs font-medium text-slate-200 uppercase tracking-wide ${labelClassName}`}>
+          {label}
+          <span className={`text-xs ml-2 normal-case font-mono transition-colors ${enabled ? 'text-slate-400' : 'text-slate-600'}`}>
+            ({getDisplayValue()})
+          </span>
+        </label>
+        {showBypass && (
+          <button
+            onClick={handleBypassToggle}
+            className={`w-5 h-5 rounded flex items-center justify-center transition-all flex-shrink-0 ${
+              enabled 
+                ? 'bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30' 
+                : 'bg-slate-700/50 text-slate-500 hover:bg-slate-700/70'
+            }`}
+            title={enabled ? 'Bypass effect' : 'Enable effect'}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+              <line x1="12" y1="2" x2="12" y2="12"></line>
+            </svg>
+          </button>
+        )}
+      </div>
       
       <div className="relative">
         <input
@@ -130,10 +205,12 @@ const Slider: React.FC<SliderProps> = ({
           min={min}
           max={max}
           step={step}
-          value={value}
+          value={sliderValue}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          className="slider-mobile w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb"
+          className={`slider-mobile w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb transition-opacity ${
+            enabled ? 'opacity-100' : 'opacity-40'
+          }`}
         />
       </div>
       

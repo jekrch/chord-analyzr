@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { Piano, KeyboardShortcuts, MidiNumbers } from 'react-piano';
 import 'react-piano/dist/styles.css';
 import InstrumentListProvider from '../../piano/InstrumentListProvider';
-import PianoConfig from '../../piano/PianoConfig';
 import { SoundfontProvider } from '../../piano/SoundfontProvider';
 import { getMidiNote, normalizeNoteName } from '../../util/NoteUtil';
 import { useMusicStore } from '../../stores/musicStore';
@@ -50,15 +49,6 @@ const PianoControl: React.FC<PianoProps> = ({
   const {
     pianoSettings,
     availableInstruments,
-    setPianoInstrument,
-    setCutOffPreviousNotes,
-    setEq,
-    setOctaveOffset,
-    setReverbLevel,
-    setNoteDuration,
-    setVolume,
-    setChorusLevel,
-    setDelayLevel,
     setAvailableInstruments,
   } = pianoStore;
 
@@ -357,47 +347,6 @@ const PianoControl: React.FC<PianoProps> = ({
             </div>
           </div>
 
-          {/* Only show config controls if not hidden */}
-          {!hideConfigControls && (
-            <div className="mt-5">
-              <InstrumentListProvider
-                hostname={soundfontHostname}
-                render={(instrumentList) => {
-                  // Store in ref instead of triggering state update
-                  if (instrumentList && instrumentList.length > 0) {
-                    instrumentListRef.current = instrumentList;
-                  }
-                  
-                  return (
-                    <PianoConfig
-                      config={pianoConfig}
-                      setConfig={setPianoConfig}
-                      instrumentList={instrumentList || availableInstruments}
-                      keyboardShortcuts={keyboardShortcuts}
-                      // Pass piano settings props
-                      cutOffPreviousNotes={pianoSettings.cutOffPreviousNotes}
-                      setCutOffPreviousNotes={setCutOffPreviousNotes}
-                      eq={pianoSettings.eq}
-                      setEq={setEq}
-                      octaveOffset={pianoSettings.octaveOffset}
-                      setOctaveOffset={setOctaveOffset}
-                      reverbLevel={pianoSettings.reverbLevel}
-                      setReverbLevel={setReverbLevel}
-                      noteDuration={pianoSettings.noteDuration}
-                      setNoteDuration={setNoteDuration}
-                      volume={pianoSettings.volume}
-                      setVolume={setVolume}
-                      chorusLevel={pianoSettings.chorusLevel}
-                      setChorusLevel={setChorusLevel}
-                      delayLevel={pianoSettings.delayLevel}
-                      setDelayLevel={setDelayLevel}
-                      onInstrumentChange={setPianoInstrument}
-                    />
-                  )
-                }}
-              />
-            </div>
-          )}
 
           {/* Always ensure instrument list is available for the main controls */}
           <InstrumentListProvider

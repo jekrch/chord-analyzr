@@ -622,6 +622,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                                 step={0.05}
                                                 onChange={setVolume}
                                                 showPercentage={true}
+                                                showBypass={true}
                                             />
 
                                             <div>
@@ -685,6 +686,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                                 <Slider
                                                     key={key}
                                                     label={label}
+                                                    showBypass={true}
                                                     value={pianoSettings.eq[key]}
                                                     min={-24}
                                                     max={24}
@@ -715,6 +717,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                         step={0.05}
                                         onChange={setReverbLevel}
                                         showPercentage={true}
+                                        showBypass={true}
                                     />
 
                                     <Slider
@@ -725,6 +728,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                         step={0.05}
                                         onChange={setChorusLevel}
                                         showPercentage={true}
+                                        showBypass={true}
                                     />
 
                                     <Slider
@@ -735,6 +739,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                         step={0.05}
                                         onChange={setDelayLevel}
                                         showPercentage={true}
+                                        showBypass={true}
                                     />
 
                                     <Slider
@@ -745,6 +750,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                         step={0.05}
                                         onChange={setPhaserLevel}
                                         showPercentage={true}
+                                        showBypass={true}
                                     />
 
                                     <Slider
@@ -755,6 +761,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                         step={0.05}
                                         onChange={setFlangerLevel}
                                         showPercentage={true}
+                                        showBypass={true}
                                     />
 
                                     <Slider
@@ -765,6 +772,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                         step={0.05}
                                         onChange={setTremoloLevel}
                                         showPercentage={true}
+                                        showBypass={true}
                                     />
                                 </div>
 
@@ -782,6 +790,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                         step={0.05}
                                         onChange={setDistortionLevel}
                                         showPercentage={true}
+                                        showBypass={true}
                                     />
 
                                     <Slider
@@ -792,6 +801,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                         step={0.05}
                                         onChange={setBitcrusherLevel}
                                         showPercentage={true}
+                                        showBypass={true}
                                     />
 
                                     <Slider
@@ -802,6 +812,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                         step={0.05}
                                         onChange={setRingModLevel}
                                         showPercentage={true}
+                                        showBypass={true}
                                     />
 
                                     <Slider
@@ -812,6 +823,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                         step={0.05}
                                         onChange={setAutoFilterLevel}
                                         showPercentage={true}
+                                        showBypass={true}
                                     />
 
                                     <Slider
@@ -822,6 +834,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                         step={0.05}
                                         onChange={setStereoWidthLevel}
                                         showPercentage={true}
+                                        showBypass={true}
                                     />
 
                                     <Slider
@@ -832,6 +845,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                         step={0.05}
                                         onChange={setCompressorLevel}
                                         showPercentage={true}
+                                        showBypass={true}
                                     />
                                 </div>
                             </div>

@@ -27,14 +27,16 @@ const resolveCurrentPattern = (
     return globalPattern;
 };
 
+const SequenceStatusView: React.FC<SequenceStatusViewProps> = ({ className = "" }) => {
+   
+    const isPlaying = usePatternStore(state => state.globalPatternState.isPlaying);
+    const bpm = usePatternStore(state => state.globalPatternState.bpm);
+    const currentStep = usePatternStore(state => state.globalPatternState.currentStep);
+    const currentlyActivePattern = usePatternStore(state => state.currentlyActivePattern);
 
-const SequenceStatusView: React.FC<SequenceStatusViewProps> = ({className = ""}) => {
-    // Direct state access from stores
-    const { globalPatternState, currentlyActivePattern } = usePatternStore();
-    const { temporaryChord, activeChordIndex, addedChords } = usePlaybackStore();
-
-    
-    const { isPlaying, bpm, currentStep } = globalPatternState;
+    const temporaryChord = usePlaybackStore(state => state.temporaryChord);
+    const activeChordIndex = usePlaybackStore(state => state.activeChordIndex);
+    const addedChords = usePlaybackStore(state => state.addedChords);
 
     // Derived state using useMemo for performance
     const currentPattern = useMemo(() => 
@@ -47,13 +49,25 @@ const SequenceStatusView: React.FC<SequenceStatusViewProps> = ({className = ""})
         [temporaryChord, activeChordIndex, addedChords, currentlyActivePattern]
     );
 
+    // Memoize the active chord to avoid unnecessary recalculations
+    const activeChord = useMemo(() => 
+        activeChordIndex !== null ? addedChords[activeChordIndex] : null,
+        [activeChordIndex, addedChords]
+    );
+
+    // Memoize the pattern string to avoid re-joining on every render
+    const patternString = useMemo(() => 
+        currentPattern.join('-'), 
+        [currentPattern]
+    );
+
+    const patternLength = currentPattern.length > 0 ? currentPattern.length : 1;
+    const displayStep = (currentStep % patternLength) + 1;
+
     // If the sequencer isn't playing, the component renders nothing
     if (!isPlaying) {
         return null;
     }
-
-    const patternLength = currentPattern.length > 0 ? currentPattern.length : 1;
-    const displayStep = (currentStep % patternLength) + 1;
 
     return (
         <div className={classNames("w-full px-2 mx-auto items-center", className)}>
@@ -64,7 +78,7 @@ const SequenceStatusView: React.FC<SequenceStatusViewProps> = ({className = ""})
                         <span className="font-medium">Sequencer Active</span>
                     </div>
                     <div className="text-xs opacity-80 font-mono">
-                        {currentPattern.join('-')} |
+                        {patternString} |
                         {` ${bpm}`} BPM |
                         Step {displayStep}/{patternLength}
                         
@@ -72,8 +86,8 @@ const SequenceStatusView: React.FC<SequenceStatusViewProps> = ({className = ""})
                             <span className="ml-2 text-yellow-300">• {temporaryChord.name}</span>
                         )}
 
-                        {!temporaryChord && activeChordIndex !== null && (
-                             <span className="ml-2 text-purple-300">• {addedChords[activeChordIndex]?.name}</span>
+                        {!temporaryChord && activeChord && (
+                             <span className="ml-2 text-purple-300">• {activeChord.name}</span>
                         )}
                         
                     </div>
@@ -83,4 +97,4 @@ const SequenceStatusView: React.FC<SequenceStatusViewProps> = ({className = ""})
     );
 };
 
-export default SequenceStatusView;
+export default React.memo(SequenceStatusView);

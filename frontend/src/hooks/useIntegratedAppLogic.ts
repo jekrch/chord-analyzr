@@ -12,6 +12,7 @@ import {
     encodeAndSaveToUrl,
     loadAndDecodeFromUrl,
 } from '../util/urlStateEncoder';
+import { dynamicChordGenerator } from '../services/DynamicChordService';
 
 const START_OCTAVE = 4;
 const END_OCTAVE = 7;
@@ -127,7 +128,8 @@ export const useIntegratedAppLogic = () => {
                 AVAILABLE_KEYS,
                 modes,
                 pianoStore.availableInstruments,
-                musicStore.chords
+                musicStore.chords,
+                dynamicChordGenerator.chordTypes
             );
         }
     }, [
@@ -145,7 +147,8 @@ export const useIntegratedAppLogic = () => {
                 AVAILABLE_KEYS,
                 modes || [],
                 pianoStore.availableInstruments,
-                musicStore.chords
+                musicStore.chords,
+                dynamicChordGenerator.chordTypes
             );
             if (decoded) {
                 // Use setKeyAndMode instead of calling setKey and setMode separately

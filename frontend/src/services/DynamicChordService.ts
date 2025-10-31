@@ -22,7 +22,7 @@ interface GeneratedChord {
 }
 
 class DynamicChordGenerator {
-    private chordTypes: Record<string, number[]> = {
+    public chordTypes: Record<string, number[]> = {
         // Basic triads
         '': [0, 4, 7],
         'm': [0, 3, 7],

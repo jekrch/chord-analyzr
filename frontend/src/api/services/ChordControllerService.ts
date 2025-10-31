@@ -6,7 +6,9 @@ import type { ModeScaleChordDto } from '../models/ModeScaleChordDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
+
 export class ChordControllerService {
+    
     /**
      * Get chords by mode and key name
      * Get chords by mode and key name

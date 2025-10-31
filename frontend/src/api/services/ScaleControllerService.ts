@@ -6,7 +6,9 @@ import type { ScaleNoteDto } from '../models/ScaleNoteDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
+
 export class ScaleControllerService {
+    
     /**
      * Get scale notes
      * Get scale notes

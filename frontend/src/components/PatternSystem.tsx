@@ -1,15 +1,18 @@
-import React, { useState, useMemo, useEffect, memo, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, memo, useCallback, useRef, lazy } from 'react';
 import { PlayCircleIcon, PauseIcon, ArrowPathIcon, ChevronUpIcon, ChevronDownIcon, PlusIcon, MinusIcon } from '@heroicons/react/20/solid';
 import { PATTERN_PRESETS, PATTERN_CATEGORIES } from '../util/Pattern';
+import debounce from 'lodash/debounce';
 import Dropdown from './Dropdown';
-import PatternNotationHelpModal from './PatternNotationHelpModal';
-import PatternPresetSelector from './PatternPresetSelector'; // New import
-import Slider from './Slider'; // Add shared slider import
+import PatternPresetSelector from './PatternPresetSelector';
+import Slider from './Slider';
 import { Button } from './Button';
 import { useMusicStore } from '../stores/musicStore';
 import { usePlaybackStore } from '../stores/playbackStore';
 import { usePatternStore } from '../stores/patternStore';
 import MidiRecorder from './MidiRecorder';
+
+// Lazy load heavy modal component
+const PatternNotationHelpModal = lazy(() => import('./PatternNotationHelpModal'));
 
 const SUBDIVISIONS = [
   { value: 0.125, symbol: '♬', name: '32nd notes' },
@@ -91,70 +94,71 @@ const StepEditor = memo(({
 StepEditor.displayName = 'StepEditor';
 
 const PatternSystem: React.FC<PatternSystemProps> = () => {
-  // Direct store access
-  const musicStore = useMusicStore();
-  const playbackStore = usePlaybackStore();
-  const patternStore = usePatternStore();
+  // Optimized store subscriptions with individual selectors
+  const addedChords = usePlaybackStore((state: any) => state.addedChords);
+  const activeChordIndex = usePlaybackStore((state: any) => state.activeChordIndex);
+  const updateChordPattern = usePlaybackStore((state: any) => state.updateChordPattern);
 
-  // Extract state from stores
-  const {
-    addedChords,
-    activeChordIndex,
-  } = playbackStore;
-
-  const {
-    currentlyActivePattern,
-    globalPatternState,
-  } = patternStore;
+  const currentlyActivePattern = usePatternStore((state: any) => state.currentlyActivePattern);
+  const globalPatternState = usePatternStore((state: any) => state.globalPatternState);
+  const setGlobalPatternState = usePatternStore((state: any) => state.setGlobalPatternState);
+  const updatePattern = usePatternStore((state: any) => state.updatePattern);
 
   // ========== LOCAL STATE ==========
-  const [isSequencerExpanded, setIsSequencerExpanded] = useState(false); // Default to collapsed
-  const [isSettingsExpanded, setIsSettingsExpanded] = useState(true); // Settings shown by default when sequencer is open
+  const [isSequencerExpanded, setIsSequencerExpanded] = useState(false);
+  const [isSettingsExpanded, setIsSettingsExpanded] = useState(true);
   const [customPattern, setCustomPattern] = useState<string>('1,2,3,4');
   const [hideFewerNotePatterns, setHideFewerNotePatterns] = useState(false);
 
+  // Refs for stable callbacks
+  const activeChordIndexRef = useRef(activeChordIndex);
+  const updateChordPatternRef = useRef(updateChordPattern);
+  const setGlobalPatternStateRef = useRef(setGlobalPatternState);
+
+  useEffect(() => {
+    activeChordIndexRef.current = activeChordIndex;
+  }, [activeChordIndex]);
+
+  useEffect(() => {
+    updateChordPatternRef.current = updateChordPattern;
+  }, [updateChordPattern]);
+
+  useEffect(() => {
+    setGlobalPatternStateRef.current = setGlobalPatternState;
+  }, [setGlobalPatternState]);
+
   // ========== PATTERN MANAGEMENT ==========
 
-  // Get current active pattern (same logic as in useIntegratedAppLogic)
-  const getCurrentPattern = useCallback(() => {
-    // If a chord is selected, use its pattern; otherwise use currently active pattern
-    if (activeChordIndex !== null && addedChords[activeChordIndex]) {
-      return addedChords[activeChordIndex].pattern;
-    }
-    return currentlyActivePattern;
-  }, [activeChordIndex, addedChords, currentlyActivePattern]);
+  // Get current chord data
+  const currentChord = useMemo(() => 
+    activeChordIndex !== null ? addedChords[activeChordIndex] : null,
+    [activeChordIndex, addedChords]
+  );
 
-  const { currentPattern, editingContext } = useMemo(() => {
-    if (activeChordIndex !== null && addedChords[activeChordIndex]) {
-      const chord = addedChords[activeChordIndex];
+  const currentPattern = currentChord?.pattern ?? globalPatternState.currentPattern;
+
+  const editingContext = useMemo(() => {
+    if (currentChord) {
       return {
-        currentPattern: chord.pattern,
-        editingContext: {
-          type: 'chord' as const,
-          title: `Pattern for "${chord.name}"`,
-          description: `Editing pattern for this specific chord`,
-          chordName: chord.name
-        }
-      };
-    } else {
-      return {
-        currentPattern: globalPatternState.currentPattern,
-        editingContext: {
-          type: 'current' as const,
-          title: 'Global Pattern',
-          description: 'Base pattern - becomes active when no chord is selected',
-          chordName: null
-        }
+        type: 'chord' as const,
+        title: `Pattern for "${currentChord.name}"`,
+        description: `Editing pattern for this specific chord`,
+        chordName: currentChord.name
       };
     }
-  }, [activeChordIndex, addedChords, globalPatternState.currentPattern]);
+    return {
+      type: 'current' as const,
+      title: 'Global Pattern',
+      description: 'Base pattern - becomes active when no chord is selected',
+      chordName: null
+    };
+  }, [currentChord]);
 
   // Calculate chord note count (number of distinct notes in the chord)
   const chordNoteCount = useMemo(() => {
-    if (activeChordIndex !== null && addedChords[activeChordIndex]) {
-      const chord = addedChords[activeChordIndex];
+    if (currentChord) {
       // Parse the chord notes and count DISTINCT notes (ignoring octave)
-      const notes = chord.notes.split(',').map((note: any) => note.trim()).filter((note: any) => note);
+      const notes = currentChord.notes.split(',').map((note: any) => note.trim()).filter((note: any) => note);
       const distinctNotes = new Set(notes.map((note: any) => {
         // Remove octave numbers to get just the note name (C4 -> C, Bb3 -> Bb)
         return note.replace(/\d+$/, '');
@@ -163,7 +167,7 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
     }
     // For global pattern, use a reasonable default
     return 4;
-  }, [activeChordIndex, addedChords]);
+  }, [currentChord]);
 
   // Calculate maximum notes based on chord definition
   const maxAvailableNotes = useMemo(() => {
@@ -184,25 +188,25 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
 
   const togglePlayback = useCallback(() => {
     const newIsPlaying = !globalPatternState.isPlaying;
-    patternStore.setGlobalPatternState({ isPlaying: newIsPlaying });
+    setGlobalPatternStateRef.current({ isPlaying: newIsPlaying });
   }, [globalPatternState.isPlaying]);
 
   const resetPattern = useCallback(() => {
-    patternStore.setGlobalPatternState({
+    setGlobalPatternStateRef.current({
       isPlaying: false,
       currentStep: 0
     });
   }, []);
 
+  // Stable callback using refs
   const updateCurrentPattern = useCallback((newPattern: string[]) => {
-    if (editingContext.type === 'current') {
-      // Update the global current pattern
-      patternStore.setGlobalPatternState({ currentPattern: newPattern });
-    } else if (editingContext.type === 'chord' && activeChordIndex !== null) {
-      // Update the specific chord's pattern
-      playbackStore.updateChordPattern(activeChordIndex, newPattern);
+    const idx = activeChordIndexRef.current;
+    if (idx !== null) {
+      updateChordPatternRef.current(idx, newPattern);
+    } else {
+      setGlobalPatternStateRef.current({ currentPattern: newPattern });
     }
-  }, [editingContext.type, activeChordIndex]);
+  }, []);
 
   const handleStepChange = useCallback((stepIndex: number, value: string) => {
     const newPattern = [...currentPattern];
@@ -239,10 +243,13 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
     updateCurrentPattern(preset.pattern);
   }, [updateCurrentPattern]);
 
-  // Handler for pattern changes (BPM, subdivision, swing, etc.)
-  const handlePatternChange = useCallback((newPatternState: Partial<any>) => {
-    patternStore.updatePattern(newPatternState);
-  }, []);
+  // Debounced handler for pattern changes
+  const debouncedPatternChange = useMemo(
+    () => debounce((newPatternState: Partial<any>) => {
+      updatePattern(newPatternState);
+    }, 50),
+    [updatePattern]
+  );
 
   // Calculate which step is currently playing
   const currentStepIndex = useMemo(() => {
@@ -256,6 +263,25 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
   // Get current subdivision display - ensure it matches the actual value
   const currentSubdivision = SUBDIVISIONS.find(sub => sub.value === globalPatternState.subdivision);
   const currentSubdivisionDisplay = currentSubdivision ? `${currentSubdivision.symbol} ${currentSubdivision.name}` : `${SUBDIVISIONS[1].symbol} ${SUBDIVISIONS[1].name}`;
+
+  // Memoize step grid rows
+  const stepGridConfig = useMemo(() => {
+    // You might want to use a proper media query hook here
+    const cols = window.innerWidth >= 768 ? 8 : 4;
+    const rows = Array.from(
+      { length: Math.ceil(currentPattern.length / cols) },
+      (_, rowIndex) => {
+        const startIndex = rowIndex * cols;
+        const endIndex = Math.min(startIndex + cols, currentPattern.length);
+        return {
+          startIndex,
+          endIndex,
+          steps: currentPattern.slice(startIndex, endIndex)
+        };
+      }
+    );
+    return { cols, rows };
+  }, [currentPattern]);
 
   // ========== RENDER ==========
 
@@ -416,98 +442,86 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
             <div className="p-6 px-3 sm:px-4">
               {/* Mobile Layout: 4 columns */}
               <div className="block md:hidden">
-                {Array.from({ length: Math.ceil(currentPattern.length / 4) }, (_, rowIndex) => {
-                  const startIndex = rowIndex * 4;
-                  const endIndex = Math.min(startIndex + 4, currentPattern.length);
-                  const rowSteps = currentPattern.slice(startIndex, endIndex);
-
-                  return (
-                    <div key={`mobile-row-${rowIndex}`} className="mb-4 last:mb-0">
-                      <div className="grid grid-cols-4 gap-2">
-                        {rowSteps.map((step, stepIndex) => {
-                          const globalIndex = startIndex + stepIndex;
-                          return (
-                            <StepEditor
-                              key={`pattern-${editingContext.type}-${activeChordIndex}-${globalIndex}`}
-                              stepIndex={globalIndex}
-                              stepValue={step}
-                              maxNotes={maxAvailableNotes}
-                              onStepChange={handleStepChange}
-                            />
-                          );
-                        })}
-                        {Array.from({ length: 4 - rowSteps.length }, (_, i) => (
-                          <div key={`empty-${i}`} />
-                        ))}
-                      </div>
-
-                      <div className="grid grid-cols-4 gap-2 mt-2">
-                        {rowSteps.map((_, stepIndex) => {
-                          const globalIndex = startIndex + stepIndex;
-                          return (
-                            <div key={`indicator-${globalIndex}`} className="flex justify-center">
-                              <div className={`transition-all duration-200 ${currentStepIndex === globalIndex
-                                ? 'w-full h-1 bg-blue-400 rounded-full'
-                                : 'w-full h-1 bg-gray-600 rounded-full'
-                                }`}></div>
-                            </div>
-                          );
-                        })}
-                        {Array.from({ length: 4 - rowSteps.length }, (_, i) => (
-                          <div key={`empty-indicator-${i}`} />
-                        ))}
-                      </div>
+                {stepGridConfig.rows.map((row, rowIndex) => (
+                  <div key={`mobile-row-${rowIndex}`} className="mb-4 last:mb-0">
+                    <div className="grid grid-cols-4 gap-2">
+                      {row.steps.map((step: any, stepIndex: any) => {
+                        const globalIndex = row.startIndex + stepIndex;
+                        return (
+                          <StepEditor
+                            key={globalIndex}
+                            stepIndex={globalIndex}
+                            stepValue={step}
+                            maxNotes={maxAvailableNotes}
+                            onStepChange={handleStepChange}
+                          />
+                        );
+                      })}
+                      {Array.from({ length: 4 - row.steps.length }, (_, i) => (
+                        <div key={`empty-${i}`} />
+                      ))}
                     </div>
-                  );
-                })}
+
+                    <div className="grid grid-cols-4 gap-2 mt-2">
+                      {row.steps.map((_: any, stepIndex: any) => {
+                        const globalIndex = row.startIndex + stepIndex;
+                        return (
+                          <div key={`indicator-${globalIndex}`} className="flex justify-center">
+                            <div className={`transition-all duration-200 ${currentStepIndex === globalIndex
+                              ? 'w-full h-1 bg-blue-400 rounded-full'
+                              : 'w-full h-1 bg-gray-600 rounded-full'
+                              }`}></div>
+                          </div>
+                        );
+                      })}
+                      {Array.from({ length: 4 - row.steps.length }, (_, i) => (
+                        <div key={`empty-indicator-${i}`} />
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
 
               {/* Desktop Layout: 8 columns */}
               <div className="hidden md:block">
-                {Array.from({ length: Math.ceil(currentPattern.length / 8) }, (_, rowIndex) => {
-                  const startIndex = rowIndex * 8;
-                  const endIndex = Math.min(startIndex + 8, currentPattern.length);
-                  const rowSteps = currentPattern.slice(startIndex, endIndex);
-
-                  return (
-                    <div key={`desktop-row-${rowIndex}`} className="mb-4 last:mb-0">
-                      <div className="grid grid-cols-8 gap-2">
-                        {rowSteps.map((step, stepIndex) => {
-                          const globalIndex = startIndex + stepIndex;
-                          return (
-                            <StepEditor
-                              key={`pattern-${editingContext.type}-${activeChordIndex}-${globalIndex}`}
-                              stepIndex={globalIndex}
-                              stepValue={step}
-                              maxNotes={maxAvailableNotes}
-                              onStepChange={handleStepChange}
-                            />
-                          );
-                        })}
-                        {Array.from({ length: 8 - rowSteps.length }, (_, i) => (
-                          <div key={`empty-${i}`} />
-                        ))}
-                      </div>
-
-                      <div className="grid grid-cols-8 gap-2 mt-2">
-                        {rowSteps.map((_, stepIndex) => {
-                          const globalIndex = startIndex + stepIndex;
-                          return (
-                            <div key={`indicator-${globalIndex}`} className="flex justify-center">
-                              <div className={`transition-all duration-200 ${currentStepIndex === globalIndex
-                                ? 'w-full h-1 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50'
-                                : 'w-full h-1 bg-gray-600 rounded-full'
-                                }`}></div>
-                            </div>
-                          );
-                        })}
-                        {Array.from({ length: 8 - rowSteps.length }, (_, i) => (
-                          <div key={`empty-indicator-${i}`} />
-                        ))}
-                      </div>
+                {stepGridConfig.rows.map((row, rowIndex) => (
+                  <div key={`desktop-row-${rowIndex}`} className="mb-4 last:mb-0">
+                    <div className="grid grid-cols-8 gap-2">
+                      {row.steps.map((step: any, stepIndex: any) => {
+                        const globalIndex = row.startIndex + stepIndex;
+                        return (
+                          <StepEditor
+                            key={globalIndex}
+                            stepIndex={globalIndex}
+                            stepValue={step}
+                            maxNotes={maxAvailableNotes}
+                            onStepChange={handleStepChange}
+                          />
+                        );
+                      })}
+                      {Array.from({ length: 8 - row.steps.length }, (_, i) => (
+                        <div key={`empty-${i}`} />
+                      ))}
                     </div>
-                  );
-                })}
+
+                    <div className="grid grid-cols-8 gap-2 mt-2">
+                      {row.steps.map((_: any, stepIndex: any) => {
+                        const globalIndex = row.startIndex + stepIndex;
+                        return (
+                          <div key={`indicator-${globalIndex}`} className="flex justify-center">
+                            <div className={`transition-all duration-200 ${currentStepIndex === globalIndex
+                              ? 'w-full h-1 bg-blue-400 rounded-full shadow-lg shadow-blue-400/50'
+                              : 'w-full h-1 bg-gray-600 rounded-full'
+                              }`}></div>
+                          </div>
+                        );
+                      })}
+                      {Array.from({ length: 8 - row.steps.length }, (_, i) => (
+                        <div key={`empty-indicator-${i}`} />
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -557,7 +571,7 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
                       min={60}
                       max={200}
                       step={1}
-                      onChange={(value) => handlePatternChange({ bpm: Math.round(value) })}
+                      onChange={(value) => debouncedPatternChange({ bpm: Math.round(value) })}
                       showMinMax={true}
                       minLabel="60"
                       maxLabel="200"
@@ -570,7 +584,7 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
                         onChange={(value) => {
                           const subdivision = SUBDIVISIONS.find(sub => `${sub.symbol} ${sub.name}` === value);
                           if (subdivision) {
-                            handlePatternChange({ subdivision: subdivision.value });
+                            debouncedPatternChange({ subdivision: subdivision.value });
                           }
                         }}
                         options={subdivisionOptions}
@@ -586,7 +600,7 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
                       max={50}
                       step={1}
                       suffix="%"
-                      onChange={(value) => handlePatternChange({ swing: Math.round(value) })}
+                      onChange={(value) => debouncedPatternChange({ swing: Math.round(value) })}
                       showMinMax={true}
                       minLabel="0%"
                       maxLabel="50%"
@@ -607,7 +621,9 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
                   <div className="space-y-4">
                     <div className="flex items-center space-x-2">
                       <label className="block text-xs font-medium text-slate-200 uppercase tracking-wide">Custom</label>
-                      <PatternNotationHelpModal />
+                      <React.Suspense fallback={<div className="w-4 h-4" />}>
+                        <PatternNotationHelpModal />
+                      </React.Suspense>
                     </div>
 
                     <div className="space-y-3">

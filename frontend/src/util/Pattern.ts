@@ -24,20 +24,6 @@ export type PatternCategory = typeof PATTERN_CATEGORIES[keyof typeof PATTERN_CAT
 export const PATTERN_PRESETS = [
   // ========== BASIC PATTERNS (3-4 notes) ==========
   {
-    name: "Root Only",
-    pattern: ["1", "x", "1", "x"],
-    desc: "Simple root note emphasis",
-    icon: "🎯",
-    category: PATTERN_CATEGORIES.BASIC
-  },
-  {
-    name: "Root Bass",
-    pattern: ["1", "x", "x", "x", "1", "x", "x", "x"],
-    desc: "Steady root note bass line",
-    icon: "🎸",
-    category: PATTERN_CATEGORIES.BASIC
-  },
-  {
     name: "Up Down",
     pattern: ["1", "2", "3", "4", "3", "2"],
     desc: "Classic ascending and descending",
@@ -79,13 +65,6 @@ export const PATTERN_PRESETS = [
     pattern: ["x", "1", "x", "2", "x", "3", "1", "x"],
     desc: "Off-beat emphasis",
     icon: "⚡",
-    category: PATTERN_CATEGORIES.RHYTHMIC
-  },
-  {
-    name: "Dotted Rhythm",
-    pattern: ["1", "x", "x", "2", "x", "x"],
-    desc: "Long-short rhythm pattern",
-    icon: "🎵",
     category: PATTERN_CATEGORIES.RHYTHMIC
   },
   {
@@ -134,7 +113,7 @@ export const PATTERN_PRESETS = [
   },
   {
     name: "Quintet Roll",
-    pattern: ["1", "x", "2", "3", "x", "4", "5", "x"],
+    pattern: ["1", "4", "2", "3", "2+", "4", "5", "3"],
     desc: "Rolled chord with gaps",
     icon: "🎲",
     category: PATTERN_CATEGORIES.RHYTHMIC
@@ -1395,14 +1374,7 @@ export const PATTERN_PRESETS = [
     desc: "6-note jazz with octave sophistication",
     icon: "🎷",
     category: PATTERN_CATEGORIES.ADVANCED
-  },
-    {
-    name: "Empty 4-Step",
-    pattern: ["x", "x", "x", "x"],
-    desc: "Let's do this!",
-    icon: "✨",
-    category: PATTERN_CATEGORIES.CUSTOM
-  },
+  }
 ];
 
 // Category display information for UI

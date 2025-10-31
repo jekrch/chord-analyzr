@@ -24,33 +24,19 @@ const PianoControl: React.FC<PianoProps> = ({
   hideConfigControls = false
 }) => {
   
-  // Direct store access
-  const musicStore = useMusicStore();
-  const pianoStore = usePianoStore();
-  const playbackStore = usePlaybackStore();
-  const patternStore = usePatternStore();
-
-  // Extract state from stores
-  const {
-    activeNotes,
-    activeChordIndex,
-    addedChords,
-  } = playbackStore;
-
-  const {
-    normalizedScaleNotes,
-  } = musicStore;
-
-  const {
-    currentlyActivePattern,
-    globalPatternState,
-  } = patternStore;
-
-  const {
-    pianoSettings,
-    availableInstruments,
-    setAvailableInstruments,
-  } = pianoStore;
+  // Optimized store selectors - only subscribe to what we need
+  const normalizedScaleNotes = useMusicStore(state => state.normalizedScaleNotes);
+  
+  const pianoSettings = usePianoStore(state => state.pianoSettings);
+  const availableInstruments = usePianoStore(state => state.availableInstruments);
+  const setAvailableInstruments = usePianoStore(state => state.setAvailableInstruments);
+  
+  const activeNotes = usePlaybackStore(state => state.activeNotes);
+  const activeChordIndex = usePlaybackStore(state => state.activeChordIndex);
+  const addedChords = usePlaybackStore(state => state.addedChords);
+  
+  const currentlyActivePattern = usePatternStore(state => state.currentlyActivePattern);
+  const globalPatternState = usePatternStore(state => state.globalPatternState);
 
   const soundfontHostname = 'https://d1pzp51pvbm36p.cloudfront.net';
   const stopAllNotesRef = useRef<(() => void) | null>(null);
@@ -85,16 +71,25 @@ const PianoControl: React.FC<PianoProps> = ({
     }
   }, [containerWidth]);
 
+  // Debounced measure function
+  const measureWidth = useMemo(() => {
+    let timeoutId: number;
+    return () => {
+      clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(() => {
+        if (containerRef.current) {
+          setContainerWidth(containerRef.current.offsetWidth);
+        }
+      }, 100);
+    };
+  }, []);
+
   // Measure container width and set up resize observer
   useEffect(() => {
-    const measureWidth = () => {
-      if (containerRef.current) {
-        setContainerWidth(containerRef.current.offsetWidth);
-      }
-    };
-
     // Initial measurement
-    measureWidth();
+    if (containerRef.current) {
+      setContainerWidth(containerRef.current.offsetWidth);
+    }
 
     // Set up ResizeObserver for dynamic updates
     const resizeObserver = new ResizeObserver(() => {
@@ -106,24 +101,22 @@ const PianoControl: React.FC<PianoProps> = ({
     }
 
     // Fallback: window resize listener
-    const handleResize = () => {
-      measureWidth();
-    };
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', measureWidth);
 
     return () => {
       resizeObserver.disconnect();
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', measureWidth);
     };
-  }, []);
+  }, [measureWidth]);
 
-  // Update store from ref after render completes
+  // Update store from ref after render completes - FIXED with deps array
   useEffect(() => {
-    if (instrumentListRef.current && instrumentListRef.current.length > 0 && 
-        JSON.stringify(instrumentListRef.current) !== JSON.stringify(availableInstruments)) {
+    if (instrumentListRef.current && 
+        instrumentListRef.current.length > 0 && 
+        instrumentListRef.current !== availableInstruments) {
       setAvailableInstruments(instrumentListRef.current);
     }
-  });
+  }, [availableInstruments, setAvailableInstruments]);
 
   const { firstNote, lastNote, keyboardShortcuts, midiOffset } = useMemo(() => {
     const anchorNote = 'c';
@@ -283,18 +276,49 @@ const PianoControl: React.FC<PianoProps> = ({
     parsePatternStep
   ]);
 
-  const playNoteWithOffset = (playNote: (midiNumber: number) => void) =>
+  const playNoteWithOffset = useCallback((playNote: (midiNumber: number) => void) =>
     (midiNumber: number) => {
       if (!pianoSettings.cutOffPreviousNotes && stopAllNotesRef.current) {
         stopAllNotesRef.current();
       }
       playNote(midiNumber + midiOffset);
-    };
+    }, [pianoSettings.cutOffPreviousNotes, midiOffset]);
 
-  const stopNoteWithOffset = (stopNote: (midiNumber: number) => void) =>
+  const stopNoteWithOffset = useCallback((stopNote: (midiNumber: number) => void) =>
     (midiNumber: number) => {
       stopNote(midiNumber + midiOffset);
-    };
+    }, [midiOffset]);
+
+  // Memoized render note label function
+  const renderNoteLabel = useCallback(({ midiNumber, isAccidental }: any) => {
+    const noteNameWithoutOctave = MidiNumbers.getAttributes(midiNumber).note.slice(0, -1);
+    const isScaleNote = normalizedScaleNotes.includes(normalizeNoteName(noteNameWithoutOctave)!);
+    if (isScaleNote) {
+      return <div className={`mx-auto mb-2 w-2 h-2 rounded-full ${isAccidental ? 'bg-blue-300' : 'bg-blue-500'}`} />;
+    }
+    return null;
+  }, [normalizedScaleNotes]);
+
+  // Memoize SoundfontProvider props to prevent unnecessary re-renders
+  const soundfontProps = useMemo(() => ({
+    instrumentName: pianoSettings.instrumentName,
+    audioContext: audioContext!,
+    hostname: soundfontHostname,
+    eq: pianoSettings.eq,
+    reverbLevel: pianoSettings.reverbLevel,
+    volume: pianoSettings.volume,
+    chorusLevel: pianoSettings.chorusLevel,
+    delayLevel: pianoSettings.delayLevel,
+    distortionLevel: pianoSettings.distortionLevel,
+    bitcrusherLevel: pianoSettings.bitcrusherLevel,
+    phaserLevel: pianoSettings.phaserLevel,
+    flangerLevel: pianoSettings.flangerLevel,
+    ringModLevel: pianoSettings.ringModLevel,
+    autoFilterLevel: pianoSettings.autoFilterLevel,
+    tremoloLevel: pianoSettings.tremoloLevel,
+    stereoWidthLevel: pianoSettings.stereoWidthLevel,
+    compressorLevel: pianoSettings.compressorLevel,
+  }), [pianoSettings]);
 
   if (!audioContext) {
     return <div>Audio context is not available.</div>;
@@ -302,23 +326,7 @@ const PianoControl: React.FC<PianoProps> = ({
 
   return (
     <SoundfontProvider
-      instrumentName={pianoSettings.instrumentName}
-      audioContext={audioContext}
-      hostname={soundfontHostname}
-      eq={pianoSettings.eq}
-      reverbLevel={pianoSettings.reverbLevel}
-      volume={pianoSettings.volume}
-      chorusLevel={pianoSettings.chorusLevel}
-      delayLevel={pianoSettings.delayLevel}
-      distortionLevel={pianoSettings.distortionLevel}
-      bitcrusherLevel={pianoSettings.bitcrusherLevel}
-      phaserLevel={pianoSettings.phaserLevel}
-      flangerLevel={pianoSettings.flangerLevel}
-      ringModLevel={pianoSettings.ringModLevel}
-      autoFilterLevel={pianoSettings.autoFilterLevel}
-      tremoloLevel={pianoSettings.tremoloLevel}
-      stereoWidthLevel={pianoSettings.stereoWidthLevel}
-      compressorLevel={pianoSettings.compressorLevel}
+      {...soundfontProps}
       render={({ isLoading, playNote, stopNote, stopAllNotes }) => {
         stopAllNotesRef.current = stopAllNotes;
         
@@ -334,15 +342,7 @@ const PianoControl: React.FC<PianoProps> = ({
                 width={pianoWidth}
                 className={"mx-auto w-full"}
                 activeNotes={activePianoNotes}
-                renderNoteLabel={({ midiNumber, isAccidental }:any) => {
-                  const noteNameWithoutOctave = MidiNumbers.getAttributes(midiNumber).note.slice(0, -1);
-                  const isScaleNote = normalizedScaleNotes.includes(normalizeNoteName(noteNameWithoutOctave)!);
-                  if (isScaleNote) {
-                    return <div className={`mx-auto mb-2 w-2 h-2 rounded-full ${isAccidental ? 'bg-blue-300' : 'bg-blue-500'}`} />;
-                  }
-                  return null;
-                }
-                }
+                renderNoteLabel={renderNoteLabel}
               />
             </div>
           </div>

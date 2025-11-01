@@ -4,7 +4,7 @@
  */
 
 import { staticDataService } from './StaticDataService';
-import type { ModeScaleChordDto, ScaleNoteDto } from '../api';
+import type { ScaleNoteDto } from '../api';
 
 interface ChordDefinition {
     name: string;
@@ -230,6 +230,7 @@ class DynamicChordGenerator {
         const rootLetterPos = this.getLetterPosition(rootLetter);
         const rootMidi = this.noteNameToNumber(rootNote);
 
+        //console.log(`Calculating interval note name: Root=${rootNote}, Semitones=${semitones}`);
         // Map semitones to diatonic intervals (letter distance)
         const semitoneToLetterDistance: Record<number, number> = {
             0: 0,  // unison
@@ -291,13 +292,9 @@ class DynamicChordGenerator {
 
     /**
      * Find the best note name for a chord tone within the scale context
+     * Priority: 1) Scale notes, 2) Chromatic naming (simplified for readability)
      */
     private findBestNoteName(targetNote: number, scaleNotes: ScaleNoteDto[], keyName: string, rootNote?: string, intervalFromRoot?: number): string {
-        // If we have root note context, use proper interval-based naming
-        if (rootNote !== undefined && intervalFromRoot !== undefined) {
-            return this.calculateIntervalNoteName(rootNote, intervalFromRoot);
-        }
-
         const normalizedTarget = ((targetNote % 12) + 12) % 12;
 
         // First, try to find the note in the scale context
@@ -310,7 +307,8 @@ class DynamicChordGenerator {
             return scaleNote.noteName!;
         }
 
-        // Fall back to chromatic naming based on key context
+        // For notes outside the scale, use simple chromatic naming
+        // This avoids double sharps/flats (e.g., G instead of F##)
         return this.getChromaticNoteName(normalizedTarget, keyName);
     }
 

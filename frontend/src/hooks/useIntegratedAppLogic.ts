@@ -57,6 +57,148 @@ export const useIntegratedAppLogic = () => {
     const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const isInitialLoad = useRef(true);
     const hasInitialized = useRef(false);
+    const shouldRegenerateChords = useRef(true);
+
+    /**
+ * Parse chord name into root note and chord type, handling slash chords
+ * Examples: 
+ *   "C#m7" -> {rootNote: "C#", chordType: "m7", slashNote: null}
+ *   "D#6/F##" -> {rootNote: "D#", chordType: "6", slashNote: "F##"}
+ *   "Abmaj7/Cb" -> {rootNote: "Ab", chordType: "maj7", slashNote: "Cb"}
+ */
+    function parseChordName(chordName: string): {
+        rootNote: string;
+        chordType: string;
+        slashNote: string | null;
+    } {
+        // First, extract slash note if present
+        // Use lastIndexOf to handle chord types that might contain slashes
+        const slashIndex = chordName.lastIndexOf('/');
+        let mainChord = chordName;
+        let slashNote: string | null = null;
+
+        if (slashIndex !== -1) {
+            mainChord = chordName.substring(0, slashIndex);
+            slashNote = chordName.substring(slashIndex + 1);
+        }
+
+        // Now parse the main chord (without slash note)
+        // Pattern: A-G followed by optional ##, bb, #, or b (check doubles first!)
+        const match = mainChord.match(/^([A-G](?:##|bb|#|b)?)(.*)$/);
+
+        if (!match) {
+            throw new Error(`Cannot parse chord name: ${chordName}`);
+        }
+
+        return {
+            rootNote: match[1],
+            chordType: match[2],
+            slashNote: slashNote
+        };
+    }
+
+
+    // Regenerate chords when key or mode changes
+    useEffect(() => {
+        // Skip regeneration during initial load
+        if (isInitialLoad.current || !shouldRegenerateChords.current) {
+            return;
+        }
+
+        // Skip if no chords to regenerate
+        if (playbackStore.addedChords.length === 0) {
+            return;
+        }
+
+        const regenerateChords = async () => {
+            const regeneratedChords = [];
+
+            for (const chord of playbackStore.addedChords) {
+                try {
+                    // Parse the chord name (handles slash chords automatically)
+                    const { rootNote, chordType, slashNote } = parseChordName(chord.name);
+
+                    // Regenerate the base chord in the new key/mode context
+                    const regenerated = await dynamicChordGenerator.generateChord(
+                        rootNote,
+                        chordType,  // This is now guaranteed to NOT include the slash note
+                        musicStore.key,
+                        musicStore.mode
+                    );
+
+                    if (regenerated) {
+                        let newNotes = regenerated.chordNoteNames;
+                        let newName = regenerated.chordName;
+
+                        // If there's a slash note, regenerate it and add it back
+                        if (slashNote) {
+                            const slashNoteRegenerated = await dynamicChordGenerator.generateChord(
+                                slashNote,
+                                '', // Empty for single note
+                                musicStore.key,
+                                musicStore.mode
+                            );
+
+                            if (slashNoteRegenerated) {
+                                // Get the regenerated slash note with proper enharmonic spelling
+                                const regeneratedSlashNote = slashNoteRegenerated.chordNoteNames.split(',')[0].trim();
+                                newName = `${regenerated.chordName}/${regeneratedSlashNote}`;
+
+                                // Check if slash note exists in chord
+                                const chordNotesArray = newNotes.split(',').map(n => n.trim());
+                                const slashNoteExists = chordNotesArray.some(note => {
+                                    const noteNameOnly = note.replace(/\d+/, '');
+                                    const slashNoteNameOnly = regeneratedSlashNote.replace(/\d+/, '');
+                                    return noteNameOnly === slashNoteNameOnly;
+                                });
+
+                                if (slashNoteExists) {
+                                    // Remove existing and move to front
+                                    const filteredNotes = chordNotesArray.filter(note => {
+                                        const noteNameOnly = note.replace(/\d+/, '');
+                                        const slashNoteNameOnly = regeneratedSlashNote.replace(/\d+/, '');
+                                        return noteNameOnly !== slashNoteNameOnly;
+                                    });
+                                    newNotes = [regeneratedSlashNote, ...filteredNotes].join(', ');
+                                } else {
+                                    // Add new slash note to front
+                                    newNotes = `${regeneratedSlashNote}, ${newNotes}`;
+                                }
+                            }
+                        }
+
+                        // Preserve all original properties, just update name and notes
+                        regeneratedChords.push({
+                            ...chord,
+                            name: newName,
+                            notes: newNotes,
+                        });
+                    } else {
+                        // If regeneration fails, keep the original chord
+                        console.warn(`Could not regenerate chord: ${chord.name}`);
+                        regeneratedChords.push(chord);
+                    }
+                } catch (error) {
+                    console.error('Error regenerating chord:', chord.name, error);
+                    // Keep original chord if regeneration fails
+                    regeneratedChords.push(chord);
+                }
+            }
+
+            // Temporarily disable regeneration to avoid infinite loop
+            shouldRegenerateChords.current = false;
+
+            // Update all chords at once
+            playbackStore.setAddedChords(regeneratedChords);
+
+            // Re-enable regeneration after a brief delay
+            setTimeout(() => {
+                shouldRegenerateChords.current = true;
+            }, 100);
+        };
+
+        regenerateChords();
+    }, [musicStore.key, musicStore.mode]);
 
     useEffect(() => {
         if (modes && !hasInitialized.current) {
@@ -73,6 +215,7 @@ export const useIntegratedAppLogic = () => {
             }
         }
     }, [modes]);
+
 
     // Computed values
     const baseStepDuration = useMemo(() => {
@@ -139,16 +282,16 @@ export const useIntegratedAppLogic = () => {
         patternStore.globalPatternState.bpm,
         patternStore.globalPatternState.subdivision,
         patternStore.globalPatternState.swing,
-        uiStore.showPatternSystem, 
+        uiStore.showPatternSystem,
         uiStore.isLiveMode,
-        pianoStore.pianoSettings, 
+        pianoStore.pianoSettings,
         pianoStore.availableInstruments,
         modes
     ]);
 
-    const loadStateFromUrl = useCallback(() => {
+    const loadStateFromUrl = useCallback(async () => {
         if (musicStore.chords?.length) {
-            const decoded = loadAndDecodeFromUrl(
+            const decoded = await loadAndDecodeFromUrl(
                 AVAILABLE_KEYS,
                 modes || [],
                 pianoStore.availableInstruments,
@@ -414,12 +557,12 @@ export const useIntegratedAppLogic = () => {
                 const tick = () => {
                     const now = performance.now();
                     const elapsed = now - sequencerStartTimeRef.current;
-                    
+
                     // Calculate which step we SHOULD be on based on elapsed time
                     // This prevents drift accumulation
                     let totalTime = 0;
                     let calculatedStep = 0;
-                    
+
                     // Find the current step by summing swing durations
                     while (totalTime < elapsed) {
                         totalTime += getSwingDuration(calculatedStep);
@@ -427,13 +570,13 @@ export const useIntegratedAppLogic = () => {
                             calculatedStep++;
                         }
                     }
-                    
+
                     // Only update if step actually changed
                     if (calculatedStep !== globalStepRef.current) {
                         globalStepRef.current = calculatedStep;
                         patternStore.setGlobalPatternState({ currentStep: calculatedStep });
                     }
-                    
+
                     // Use requestAnimationFrame for smoother, more efficient updates
                     intervalRef.current = requestAnimationFrame(tick);
                 };
@@ -481,10 +624,13 @@ export const useIntegratedAppLogic = () => {
         if (musicStore.chords?.length && !hasLoadedFromUrl.current) {
             hasLoadedFromUrl.current = true;
             isInitialLoad.current = true;
-            loadStateFromUrl();
-            setTimeout(() => {
-                isInitialLoad.current = false;
-            }, 100);
+
+            // Handle async load
+            loadStateFromUrl().then(() => {
+                setTimeout(() => {
+                    isInitialLoad.current = false;
+                }, 100);
+            });
         }
     }, [musicStore.chords, loadStateFromUrl]);
 
@@ -511,12 +657,12 @@ export const useIntegratedAppLogic = () => {
         patternStore.globalPatternState.currentPattern,
         patternStore.globalPatternState.bpm,
         patternStore.globalPatternState.subdivision,
-        patternStore.globalPatternState.swing, 
-        uiStore.showPatternSystem, 
+        patternStore.globalPatternState.swing,
+        uiStore.showPatternSystem,
         uiStore.isLiveMode,
         pianoStore.pianoSettings,
-        musicStore.chords?.length, 
-        modes?.length, 
+        musicStore.chords?.length,
+        modes?.length,
         saveStateToUrl
     ]);
 
@@ -525,6 +671,7 @@ export const useIntegratedAppLogic = () => {
         document.addEventListener('keydown', handleKeyPress);
         return () => document.removeEventListener('keydown', handleKeyPress);
     }, [handleKeyPress]);
+
 
     // Return a consolidated interface similar to the original useAppState
     return {

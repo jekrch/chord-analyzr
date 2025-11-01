@@ -1,3 +1,5 @@
+import { dynamicChordGenerator } from "../services/DynamicChordService";
+
 export interface AddedChord {
     name: string;
     notes: string;
@@ -687,6 +689,38 @@ const decodeTiming = (encoded: string): {
 };
 
 // ============================================================================
+// CHORD NAME PARSING UTILITY
+// ============================================================================
+
+/**
+ * Parse chord name into root note and chord type
+ * Properly handles double sharps/flats (##, bb)
+ * Examples: "C#m7" -> {rootNote: "C#", chordType: "m7"}
+ *           "Abmaj7" -> {rootNote: "Ab", chordType: "maj7"}
+ *           "F##dim7" -> {rootNote: "F##", chordType: "dim7"}
+ *           "D#6/F##" -> {rootNote: "D#", chordType: "6"} (slash note excluded)
+ */
+function parseChordNameForGeneration(chordName: string): { rootNote: string; chordType: string } {
+    // Handle slash chords by taking only the main chord part
+    const slashIndex = chordName.lastIndexOf('/');
+    const mainChord = slashIndex > 0 ? chordName.substring(0, slashIndex) : chordName;
+
+    // Extract root note (letter + accidentals)
+    // Use non-capturing group (?:) with explicit double sharp/flat check first
+    // Pattern: A-G followed by optional ##, bb, #, or b (in that order for greedy matching)
+    const match = mainChord.match(/^([A-G](?:##|bb|#|b)?)(.*)$/);
+
+    if (!match) {
+        throw new Error(`Cannot parse chord name: ${chordName}`);
+    }
+
+    const rootNote = match[1];
+    const chordType = match[2];
+
+    return { rootNote, chordType };
+}
+
+// ============================================================================
 // MAIN ENCODE/DECODE FUNCTIONS
 // ============================================================================
 
@@ -804,15 +838,16 @@ export const encodeState = (
 /**
  * Decodes a state string back into application state
  * Supports v7, v8, and v9 formats
+ * Uses DynamicChordGenerator to regenerate chord notes with proper scale-aware naming
  */
-export const decodeState = (
+export const decodeState = async (
     state: string,
     availableKeys: string[],
     availableModes: string[],
     availableInstruments: string[],
     chords: ModeScaleChordDto[] | undefined,
     chordTypes: ChordTypesMap
-): EncodedState | null => {
+): Promise<EncodedState | null> => {
     console.log('Decoding state:', state);
 
     if (!state || !chords?.length || !availableKeys.length || !availableModes.length) {
@@ -850,7 +885,7 @@ export const decodeState = (
         // 5. Piano settings
         const pianoSettings = decodePianoSettings(parts[5] || '', availableInstruments, version);
 
-        // 6. Chords
+        // 6. Chords (with regeneration for proper note naming)
         const addedChords: AddedChord[] = [];
         const chordsPart = parts[6] || '';
 
@@ -866,7 +901,8 @@ export const decodeState = (
                 if (entry.includes('p')) {
                     // New format: split on last 'p' that comes after 'n'
                     const pIndex = entry.lastIndexOf('p');
-                    if (pIndex > entry.indexOf('n')) {
+                    const nIndex = entry.indexOf('n');
+                    if (pIndex > nIndex && nIndex >= 0) {
                         chordIdPart = entry.substring(0, pIndex);
                         patternPart = entry.substring(pIndex + 1);
                     } else {
@@ -931,17 +967,6 @@ export const decodeState = (
                         name = decodeURIComponent(compactOrEncodedName);
                     }
 
-                    // Decode chord notes
-                    let notes: string;
-
-                    if (version === VERSION && compactOrEncodedNotes.includes('-') && !compactOrEncodedNotes.includes('%')) {
-                        // v9 format - compact note indices (e.g., "0-4-7")
-                        notes = decodeChordNotes(compactOrEncodedNotes);
-                    } else {
-                        // v7/v8 format - URL encoded notes
-                        notes = decodeURIComponent(compactOrEncodedNotes);
-                    }
-
                     // Pattern: use custom if provided, otherwise use global
                     let chordPattern: string[];
                     if (patternPart) {
@@ -950,16 +975,118 @@ export const decodeState = (
                         chordPattern = [...pattern];
                     }
 
+
+                    // Regenerate chord notes with proper scale-aware naming
+                    // ALWAYS use current key/mode for proper enharmonic spelling
+                    let notes: string = '';
+
+                    try {
+                        // Parse the slash note if present
+                        const slashMatch = name.match(/\/([A-G](##|#|bb|b)?)/);
+                        const slashNoteName = slashMatch ? slashMatch[1] : null;
+
+                        const { rootNote, chordType } = parseChordNameForGeneration(name);
+
+                        if (rootNote && chordType !== undefined) {
+                            // Use CURRENT key/mode, not original
+                            // This ensures proper enharmonic spelling for the current key
+                            const generated = await dynamicChordGenerator.generateChord(
+                                rootNote,
+                                chordType,
+                                key,  // <-- Use current key
+                                mode  // <-- Use current mode
+                            );
+
+                            if (generated) {
+                                let chordNotes = generated.chordNoteNames;
+
+                                // If there's a slash note, add it to the beginning
+                                if (slashNoteName) {
+                                    // Regenerate the slash note with proper enharmonic spelling
+                                    const slashNoteGenerated = await dynamicChordGenerator.generateChord(
+                                        slashNoteName,
+                                        '', // Empty string for single note
+                                        key,
+                                        mode
+                                    );
+
+                                    if (slashNoteGenerated) {
+                                        // Get just the first note (the root) from the generated chord
+                                        const regeneratedSlashNote = slashNoteGenerated.chordNoteNames.split(',')[0].trim();
+
+                                        // Check if the slash note already exists in the chord
+                                        const chordNotesArray = chordNotes.split(',').map(n => n.trim());
+                                        const slashNoteExists = chordNotesArray.some(note => {
+                                            const noteNameOnly = note.replace(/\d+/, '');
+                                            const slashNoteNameOnly = regeneratedSlashNote.replace(/\d+/, '');
+                                            return noteNameOnly === slashNoteNameOnly;
+                                        });
+
+                                        if (slashNoteExists) {
+                                            // Remove existing occurrence and add to front
+                                            const filteredNotes = chordNotesArray.filter(note => {
+                                                const noteNameOnly = note.replace(/\d+/, '');
+                                                const slashNoteNameOnly = regeneratedSlashNote.replace(/\d+/, '');
+                                                return noteNameOnly !== slashNoteNameOnly;
+                                            });
+                                            chordNotes = [regeneratedSlashNote, ...filteredNotes].join(', ');
+                                        } else {
+                                            // Add new slash note to front
+                                            chordNotes = `${regeneratedSlashNote}, ${chordNotes}`;
+                                        }
+                                    }
+                                }
+
+                                notes = chordNotes;
+                            }
+                        }
+                    } catch (error) {
+                        console.warn('Failed to regenerate chord notes for:', name, error);
+                    }
+
+                    // Fallback: decode notes from URL if regeneration failed
+                    if (!notes) {
+                        if (version === VERSION && compactOrEncodedNotes.includes('-') && !compactOrEncodedNotes.includes('%')) {
+                            // v9 format - compact note indices (e.g., "0-4-7")
+                            notes = decodeChordNotes(compactOrEncodedNotes);
+                        } else {
+                            // v7/v8 format - URL encoded notes
+                            notes = decodeURIComponent(compactOrEncodedNotes);
+                        }
+                    }
+
                     if (name && notes) {
                         addedChords.push({
                             name,
                             notes,
                             pattern: chordPattern,
                             originalKey: originalKey || key,
-                            originalMode,
+                            originalMode: originalMode || mode,
                             originalNotes: notes
                         });
                     }
+
+                    // Fallback: decode notes from URL if regeneration failed
+                    // if (!notes) {
+                    //     if (version === VERSION && compactOrEncodedNotes.includes('-') && !compactOrEncodedNotes.includes('%')) {
+                    //         // v9 format - compact note indices (e.g., "0-4-7")
+                    //         notes = decodeChordNotes(compactOrEncodedNotes);
+                    //     } else {
+                    //         // v7/v8 format - URL encoded notes
+                    //         notes = decodeURIComponent(compactOrEncodedNotes);
+                    //     }
+                    // }
+
+                    // if (name && notes) {
+                    //     addedChords.push({
+                    //         name,
+                    //         notes,
+                    //         pattern: chordPattern,
+                    //         originalKey: contextKey,
+                    //         originalMode: contextMode,
+                    //         originalNotes: notes
+                    //     });
+                    // }
                 } else {
                     console.warn('Invalid chord format:', entry);
                 }
@@ -1024,15 +1151,15 @@ export const encodeAndSaveToUrl = (
     saveStateToUrl(encoded, paramName);
 };
 
-export const loadAndDecodeFromUrl = (
+export const loadAndDecodeFromUrl = async (
     availableKeys: string[],
     availableModes: string[],
     availableInstruments: string[],
     chords: ModeScaleChordDto[] | undefined,
     chordTypes: ChordTypesMap,
     paramName: string = 's'
-): EncodedState | null => {
+): Promise<EncodedState | null> => {
     const stateString = loadStateFromUrl(paramName);
     if (!stateString) return null;
-    return decodeState(stateString, availableKeys, availableModes, availableInstruments, chords, chordTypes);
+    return await decodeState(stateString, availableKeys, availableModes, availableInstruments, chords, chordTypes);
 };

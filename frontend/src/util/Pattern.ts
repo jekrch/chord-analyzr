@@ -16,7 +16,7 @@ export const PATTERN_CATEGORIES = {
   RHYTHMIC: 'rhythmic', 
   ADVANCED: 'advanced',
   GENRE: 'genre',
-  CUSTOM: 'custom',
+  CUSTOM: 'custom'
 } as const;
 
 export type PatternCategory = typeof PATTERN_CATEGORIES[keyof typeof PATTERN_CATEGORIES];
@@ -1408,7 +1408,7 @@ export const CATEGORY_INFO = {
 
 // Helper function to get patterns by category
 export const getPatternsByCategory = (category: PatternCategory) => {
-  return PATTERN_PRESETS.filter(pattern => pattern.category === category);
+  return category; //PATTERN_PRESETS.filter(pattern => pattern.category === category);
 };
 
 // Helper function to get all categories with pattern counts

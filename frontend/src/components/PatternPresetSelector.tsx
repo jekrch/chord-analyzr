@@ -4,13 +4,19 @@ import Dropdown from './Dropdown';
 import { AddedChord } from '../stores/types';
 import { usePlaybackStore } from '../stores/playbackStore';
 
-type PatternPreset = typeof PATTERN_PRESETS[0];
+type PatternPreset =  {
+    name: string;
+    pattern: string[];
+    desc: string;
+    icon: string;
+    category: "basic" | "custom" | "genre" | "advanced" | "rhythmic";
+};
 
 interface PatternPresetSelectorProps {
   chordNoteCount: number;
   maxAvailableNotes: number;
   hideFewerNotePatterns: boolean;
-  currentPattern?: string[]; // Add current pattern prop
+  currentPattern?: string[]; 
   onHideFewerNotePatternsChange: (value: boolean) => void;
   onApplyPreset: (preset: PatternPreset) => void;
   className?: string;

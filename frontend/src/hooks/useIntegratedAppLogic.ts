@@ -135,9 +135,14 @@ export const useIntegratedAppLogic = () => {
     }, [
         musicStore.key, musicStore.mode, musicStore.chords,
         playbackStore.addedChords,
-        patternStore.globalPatternState,
-        uiStore.showPatternSystem, uiStore.isLiveMode,
-        pianoStore.pianoSettings, pianoStore.availableInstruments,
+        patternStore.globalPatternState.currentPattern,
+        patternStore.globalPatternState.bpm,
+        patternStore.globalPatternState.subdivision,
+        patternStore.globalPatternState.swing,
+        uiStore.showPatternSystem, 
+        uiStore.isLiveMode,
+        pianoStore.pianoSettings, 
+        pianoStore.availableInstruments,
         modes
     ]);
 
@@ -491,6 +496,7 @@ export const useIntegratedAppLogic = () => {
             }
 
             saveTimeoutRef.current = setTimeout(() => {
+                //console.log('saving state to url')
                 saveStateToUrl();
             }, 100);
         }
@@ -502,8 +508,16 @@ export const useIntegratedAppLogic = () => {
         };
     }, [
         musicStore.key, musicStore.mode, playbackStore.addedChords,
-        patternStore.globalPatternState, uiStore.showPatternSystem, uiStore.isLiveMode,
-        pianoStore.pianoSettings, musicStore.chords?.length, modes?.length, saveStateToUrl
+        patternStore.globalPatternState.currentPattern,
+        patternStore.globalPatternState.bpm,
+        patternStore.globalPatternState.subdivision,
+        patternStore.globalPatternState.swing, 
+        uiStore.showPatternSystem, 
+        uiStore.isLiveMode,
+        pianoStore.pianoSettings,
+        musicStore.chords?.length, 
+        modes?.length, 
+        saveStateToUrl
     ]);
 
     // Keyboard event listener

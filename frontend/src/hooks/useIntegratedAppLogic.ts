@@ -11,8 +11,8 @@ import { normalizeNoteName } from '../util/NoteUtil';
 import {
     encodeAndSaveToUrl,
     loadAndDecodeFromUrl,
-} from '../util/urlStateEncoder';
-import { dynamicChordGenerator } from '../services/DynamicChordService';
+} from '../util/url/stateSerializer';
+import { dynamicChordGenerator, GeneratedChord } from '../services/DynamicChordService';
 
 const START_OCTAVE = 4;
 const END_OCTAVE = 7;
@@ -40,14 +40,203 @@ const resolvePatternForPlayback = (
     return currentlyActivePattern;
 };
 
+/**
+ * Update chord name to match the enharmonic spelling of regenerated notes
+ */
+function updateChordNameFromNotes(chordName: string, regeneratedNotes: string): string {
+    const slashIndex = chordName.lastIndexOf('/');
+    let mainPart: string;
+    let slashPart: string | null = null;
+
+    if (slashIndex >= 0) {
+        mainPart = chordName.substring(0, slashIndex);
+        const potentialSlashNote = chordName.substring(slashIndex + 1);
+        
+        if (/^[A-G](?:##|#|bb|b)?$/.test(potentialSlashNote)) {
+            slashPart = potentialSlashNote;
+        } else {
+            mainPart = chordName;
+        }
+    } else {
+        mainPart = chordName;
+    }
+
+    const notesArray = regeneratedNotes.split(',').map(n => n.trim());
+    const rootNoteIndex = slashPart ? 1 : 0;
+    
+    if (rootNoteIndex >= notesArray.length) {
+        return chordName;
+    }
+    
+    const rootNoteWithOctave = notesArray[rootNoteIndex];
+    const newRootNote = rootNoteWithOctave.replace(/\d+/g, '');
+
+    const rootMatch = mainPart.match(/^([A-G](?:##|#|bb|b)?)/);
+    if (!rootMatch) {
+        return chordName;
+    }
+
+    const oldRootNote = rootMatch[1];
+    const chordSuffix = mainPart.substring(oldRootNote.length);
+
+    let updatedName = newRootNote + chordSuffix;
+
+    if (slashPart) {
+        const slashNoteWithOctave = notesArray[0];
+        const regeneratedSlashNote = slashNoteWithOctave.replace(/\d+/g, '');
+        updatedName += '/' + regeneratedSlashNote;
+    }
+
+    return updatedName;
+}
+
+function parseChordName(chordName: string): {
+    rootNote: string;
+    chordType: string;
+    slashNote: string | null;
+} {
+    const slashIndex = chordName.lastIndexOf('/');
+    let mainChord = chordName;
+    let slashNote: string | null = null;
+
+    if (slashIndex !== -1) {
+        const potentialSlashNote = chordName.substring(slashIndex + 1);
+        
+        if (/^[A-G](?:##|#|bb|b)?$/.test(potentialSlashNote)) {
+            mainChord = chordName.substring(0, slashIndex);
+            slashNote = potentialSlashNote;
+        }
+    }
+
+    const match = mainChord.match(/^([A-G](?:##|bb|#|b)?)(.*)$/);
+
+    if (!match) {
+        throw new Error(`Cannot parse chord name: ${chordName}`);
+    }
+
+    return {
+        rootNote: match[1],
+        chordType: match[2],
+        slashNote: slashNote
+    };
+}
+
+async function regenerateSlashNote(slashNote: string, newName: string, regenerated: GeneratedChord, newNotes: string, key: string, mode: string) {
+    const slashNoteRegenerated = await dynamicChordGenerator.generateChord(
+        slashNote,
+        '',
+        key,
+        mode
+    );
+
+    if (slashNoteRegenerated) {
+        const regeneratedSlashNote = slashNoteRegenerated.chordNoteNames.split(',')[0].trim();
+        newName = `${regenerated.chordName}/${regeneratedSlashNote}`;
+
+        const chordNotesArray = newNotes.split(',').map(n => n.trim());
+        const slashNoteExists = chordNotesArray.some(note => {
+            const noteNameOnly = note.replace(/\d+/, '');
+            const slashNoteNameOnly = regeneratedSlashNote.replace(/\d+/, '');
+            return noteNameOnly === slashNoteNameOnly;
+        });
+
+        if (slashNoteExists) {
+            const filteredNotes = chordNotesArray.filter(note => {
+                const noteNameOnly = note.replace(/\d+/, '');
+                const slashNoteNameOnly = regeneratedSlashNote.replace(/\d+/, '');
+                return noteNameOnly !== slashNoteNameOnly;
+            });
+            newNotes = [regeneratedSlashNote, ...filteredNotes].join(', ');
+        } else {
+            newNotes = `${regeneratedSlashNote}, ${newNotes}`;
+        }
+    }
+    return { newName, newNotes };
+}
+
 export const useIntegratedAppLogic = () => {
-    // Store access
-    const musicStore = useMusicStore();
-    const pianoStore = usePianoStore();
-    const playbackStore = usePlaybackStore();
-    const patternStore = usePatternStore();
-    const uiStore = useUIStore();
-    const { modes } = useModes();
+
+    // musicStore selectors
+    const chords = useMusicStore((state) => state.chords);
+    const key = useMusicStore((state) => state.key);
+    const mode = useMusicStore((state) => state.mode);
+    const modes = useMusicStore((state) => state.modes);
+    const scaleNotes = useMusicStore((state) => state.scaleNotes);
+    const normalizedScaleNotes = useMusicStore((state) => state.normalizedScaleNotes);
+    const loadingChords = useMusicStore((state) => state.loadingChords);
+    const setKey = useMusicStore((state) => state.setKey);
+    const setMode = useMusicStore((state) => state.setMode);
+    const setKeyAndMode = useMusicStore((state) => state.setKeyAndMode);
+    const setModes = useMusicStore((state) => state.setModes);
+    const initialize = useMusicStore((state) => state.initialize);
+
+    // playbackStore selectors
+    const activeNotes = usePlaybackStore((state) => state.activeNotes);
+    const activeChordIndex = usePlaybackStore((state) => state.activeChordIndex);
+    const highlightedChordIndex = usePlaybackStore((state) => state.highlightedChordIndex);
+    const addedChords = usePlaybackStore((state) => state.addedChords);
+    const temporaryChord = usePlaybackStore((state) => state.temporaryChord);
+    const isPlayingScale = usePlaybackStore((state) => state.isPlayingScale);
+    const setActiveNotes = usePlaybackStore((state) => state.setActiveNotes);
+    const setActiveChordIndex = usePlaybackStore((state) => state.setActiveChordIndex);
+    const setHighlightedChordIndex = usePlaybackStore((state) => state.setHighlightedChordIndex);
+    const setTemporaryChord = usePlaybackStore((state) => state.setTemporaryChord);
+    const setIsPlayingScale = usePlaybackStore((state) => state.setIsPlayingScale);
+    const addChord = usePlaybackStore((state) => state.addChord);
+    const removeChord = usePlaybackStore((state) => state.removeChord);
+    const updateChord = usePlaybackStore((state) => state.updateChord);
+    const setAddedChords = usePlaybackStore((state) => state.setAddedChords);
+    const clearAllChordsAction = usePlaybackStore((state) => state.clearAllChords);
+    const updateChordPattern = usePlaybackStore((state) => state.updateChordPattern);
+    const playNotes = usePlaybackStore((state) => state.playNotes);
+    const clearScalePlaybackTimeouts = usePlaybackStore((state) => state.clearScalePlaybackTimeouts);
+    const addScalePlaybackTimeout = usePlaybackStore((state) => state.addScalePlaybackTimeout);
+    const handleFetchOriginalChord = usePlaybackStore((state) => state.handleFetchOriginalChord);
+
+    // patternStore selectors
+    const globalPatternState = usePatternStore((state) => state.globalPatternState);
+    const isPlaying = usePatternStore((state) => state.globalPatternState.isPlaying); // Individual selector for stable reference
+    const bpm = usePatternStore((state) => state.globalPatternState.bpm); // Individual selector for stable reference
+    const currentlyActivePattern = usePatternStore((state) => state.currentlyActivePattern);
+    const setGlobalPatternState = usePatternStore((state) => state.setGlobalPatternState);
+    const setCurrentlyActivePattern = usePatternStore((state) => state.setCurrentlyActivePattern);
+    const updatePattern = usePatternStore((state) => state.updatePattern);
+
+    // uiStore selectors
+    const isDeleteMode = useUIStore((state) => state.isDeleteMode);
+    const isLiveMode = useUIStore((state) => state.isLiveMode);
+    const showPatternSystem = useUIStore((state) => state.showPatternSystem);
+    const setIsDeleteMode = useUIStore((state) => state.setIsDeleteMode);
+    const setIsLiveMode = useUIStore((state) => state.setIsLiveMode);
+    const setShowPatternSystem = useUIStore((state) => state.setShowPatternSystem);
+    const togglePatternSystem = useUIStore((state) => state.togglePatternSystem);
+    const toggleLiveMode = useUIStore((state) => state.toggleLiveMode);
+
+    // pianoStore selectors
+    const pianoSettings = usePianoStore((state) => state.pianoSettings);
+    const availableInstruments = usePianoStore((state) => state.availableInstruments);
+    const setPianoInstrument = usePianoStore((state) => state.setPianoInstrument);
+    const setCutOffPreviousNotes = usePianoStore((state) => state.setCutOffPreviousNotes);
+    const setEq = usePianoStore((state) => state.setEq);
+    const setOctaveOffset = usePianoStore((state) => state.setOctaveOffset);
+    const setReverbLevel = usePianoStore((state) => state.setReverbLevel);
+    const setNoteDuration = usePianoStore((state) => state.setNoteDuration);
+    const setVolume = usePianoStore((state) => state.setVolume);
+    const setChorusLevel = usePianoStore((state) => state.setChorusLevel);
+    const setDelayLevel = usePianoStore((state) => state.setDelayLevel);
+    const setDistortionLevel = usePianoStore((state) => state.setDistortionLevel);
+    const setBitcrusherLevel = usePianoStore((state) => state.setBitcrusherLevel);
+    const setPhaserLevel = usePianoStore((state) => state.setPhaserLevel);
+    const setFlangerLevel = usePianoStore((state) => state.setFlangerLevel);
+    const setRingModLevel = usePianoStore((state) => state.setRingModLevel);
+    const setAutoFilterLevel = usePianoStore((state) => state.setAutoFilterLevel);
+    const setTremoloLevel = usePianoStore((state) => state.setTremoloLevel);
+    const setStereoWidthLevel = usePianoStore((state) => state.setStereoWidthLevel);
+    const setCompressorLevel = usePianoStore((state) => state.setCompressorLevel);
+    const updatePianoSettings = usePianoStore((state) => state.updatePianoSettings);
+    const setAvailableInstruments = usePianoStore((state) => state.setAvailableInstruments);
+
+    const { modes: modesFromHook } = useModes();
 
     // Refs for complex timing logic
     const intervalRef = useRef<number | null>(null);
@@ -59,195 +248,116 @@ export const useIntegratedAppLogic = () => {
     const hasInitialized = useRef(false);
     const shouldRegenerateChords = useRef(true);
 
-    /**
- * Parse chord name into root note and chord type, handling slash chords
- * Examples: 
- *   "C#m7" -> {rootNote: "C#", chordType: "m7", slashNote: null}
- *   "D#6/F##" -> {rootNote: "D#", chordType: "6", slashNote: "F##"}
- *   "Abmaj7/Cb" -> {rootNote: "Ab", chordType: "maj7", slashNote: "Cb"}
- */
-    function parseChordName(chordName: string): {
-        rootNote: string;
-        chordType: string;
-        slashNote: string | null;
-    } {
-        // First, extract slash note if present
-        // Use lastIndexOf to handle chord types that might contain slashes
-        const slashIndex = chordName.lastIndexOf('/');
-        let mainChord = chordName;
-        let slashNote: string | null = null;
-
-        if (slashIndex !== -1) {
-            mainChord = chordName.substring(0, slashIndex);
-            slashNote = chordName.substring(slashIndex + 1);
-        }
-
-        // Now parse the main chord (without slash note)
-        // Pattern: A-G followed by optional ##, bb, #, or b (check doubles first!)
-        const match = mainChord.match(/^([A-G](?:##|bb|#|b)?)(.*)$/);
-
-        if (!match) {
-            throw new Error(`Cannot parse chord name: ${chordName}`);
-        }
-
-        return {
-            rootNote: match[1],
-            chordType: match[2],
-            slashNote: slashNote
-        };
-    }
-
-
     // Regenerate chords when key or mode changes
     useEffect(() => {
-        // Skip regeneration during initial load
         if (isInitialLoad.current || !shouldRegenerateChords.current) {
             return;
         }
 
-        // Skip if no chords to regenerate
-        if (playbackStore.addedChords.length === 0) {
+        if (addedChords.length === 0) {
             return;
         }
 
         const regenerateChords = async () => {
             const regeneratedChords = [];
 
-            for (const chord of playbackStore.addedChords) {
+            for (const chord of addedChords) {
                 try {
-                    // Parse the chord name (handles slash chords automatically)
                     const { rootNote, chordType, slashNote } = parseChordName(chord.name);
+                    
+                    console.log('Regenerating chord:', chord.name, '→ root:', rootNote, 'type:', chordType, 'slash:', slashNote);
 
-                    // Regenerate the base chord in the new key/mode context
-                    const regenerated = await dynamicChordGenerator.generateChord(
+                    const regeneratedChord: GeneratedChord | null = await dynamicChordGenerator.generateChord(
                         rootNote,
-                        chordType,  // This is now guaranteed to NOT include the slash note
-                        musicStore.key,
-                        musicStore.mode
+                        chordType,
+                        key,
+                        mode
                     );
 
-                    if (regenerated) {
-                        let newNotes = regenerated.chordNoteNames;
-                        let newName = regenerated.chordName;
+                    if (regeneratedChord) {
+                        console.log('Generated notes:', regeneratedChord.chordNoteNames);
+                        
+                        let newNotes = regeneratedChord.chordNoteNames;
+                        let newName = regeneratedChord.chordName;
 
-                        // If there's a slash note, regenerate it and add it back
                         if (slashNote) {
-                            const slashNoteRegenerated = await dynamicChordGenerator.generateChord(
-                                slashNote,
-                                '', // Empty for single note
-                                musicStore.key,
-                                musicStore.mode
-                            );
-
-                            if (slashNoteRegenerated) {
-                                // Get the regenerated slash note with proper enharmonic spelling
-                                const regeneratedSlashNote = slashNoteRegenerated.chordNoteNames.split(',')[0].trim();
-                                newName = `${regenerated.chordName}/${regeneratedSlashNote}`;
-
-                                // Check if slash note exists in chord
-                                const chordNotesArray = newNotes.split(',').map(n => n.trim());
-                                const slashNoteExists = chordNotesArray.some(note => {
-                                    const noteNameOnly = note.replace(/\d+/, '');
-                                    const slashNoteNameOnly = regeneratedSlashNote.replace(/\d+/, '');
-                                    return noteNameOnly === slashNoteNameOnly;
-                                });
-
-                                if (slashNoteExists) {
-                                    // Remove existing and move to front
-                                    const filteredNotes = chordNotesArray.filter(note => {
-                                        const noteNameOnly = note.replace(/\d+/, '');
-                                        const slashNoteNameOnly = regeneratedSlashNote.replace(/\d+/, '');
-                                        return noteNameOnly !== slashNoteNameOnly;
-                                    });
-                                    newNotes = [regeneratedSlashNote, ...filteredNotes].join(', ');
-                                } else {
-                                    // Add new slash note to front
-                                    newNotes = `${regeneratedSlashNote}, ${newNotes}`;
-                                }
-                            }
+                            ({ newName, newNotes } = await regenerateSlashNote(slashNote, newName, regeneratedChord, newNotes, key, mode));
                         }
 
-                        // Preserve all original properties, just update name and notes
+                        const finalName = updateChordNameFromNotes(chord.name, newNotes);
+                        console.log('Final chord name:', chord.name, '→', finalName);
+
                         regeneratedChords.push({
                             ...chord,
-                            name: newName,
+                            name: finalName,
                             notes: newNotes,
                         });
                     } else {
-                        // If regeneration fails, keep the original chord
-                        console.warn(`Could not regenerate chord: ${chord.name}`);
+                        console.warn(`Could not regenerate chord: ${chord.name} (generation returned null)`);
                         regeneratedChords.push(chord);
                     }
                 } catch (error) {
                     console.error('Error regenerating chord:', chord.name, error);
-                    // Keep original chord if regeneration fails
                     regeneratedChords.push(chord);
                 }
             }
 
-            // Temporarily disable regeneration to avoid infinite loop
             shouldRegenerateChords.current = false;
+            setAddedChords(regeneratedChords);
 
-            // Update all chords at once
-            playbackStore.setAddedChords(regeneratedChords);
-
-            // Re-enable regeneration after a brief delay
             setTimeout(() => {
                 shouldRegenerateChords.current = true;
             }, 100);
         };
 
         regenerateChords();
-    }, [musicStore.key, musicStore.mode]);
+    }, [key, mode, addedChords, setAddedChords]);
 
     useEffect(() => {
-        if (modes && !hasInitialized.current) {
+        if (modesFromHook && !hasInitialized.current) {
             hasInitialized.current = true;
-            musicStore.setModes(modes);
+            setModes(modesFromHook);
 
-            // Check if we have URL state to load
             const urlParams = new URLSearchParams(window.location.search);
             const hasUrlState = urlParams.has('s');
 
-            // Only initialize with defaults if no chords AND no URL state
-            if (!musicStore.chords && !hasUrlState) {
-                musicStore.initialize();
+            if (!chords && !hasUrlState) {
+                initialize();
             }
         }
-    }, [modes]);
-
+    }, [modesFromHook, chords]); // FIXED: Removed actions from dependencies
 
     // Computed values
     const baseStepDuration = useMemo(() => {
-        const quarterNoteDuration = 60000 / patternStore.globalPatternState.bpm;
-        return quarterNoteDuration * patternStore.globalPatternState.subdivision;
-    }, [patternStore.globalPatternState.bpm, patternStore.globalPatternState.subdivision]);
+        const quarterNoteDuration = 60000 / globalPatternState.bpm;
+        return quarterNoteDuration * globalPatternState.subdivision;
+    }, [globalPatternState.bpm, globalPatternState.subdivision]);
 
     const getSwingDuration = useCallback((stepIndex: number) => {
-        if (patternStore.globalPatternState.swing === 0) return baseStepDuration;
+        if (globalPatternState.swing === 0) return baseStepDuration;
         const isOffBeat = stepIndex % 2 === 1;
-        const swingRatio = 1 + (patternStore.globalPatternState.swing / 100);
+        const swingRatio = 1 + (globalPatternState.swing / 100);
         return isOffBeat ? baseStepDuration * swingRatio : baseStepDuration / swingRatio;
-    }, [baseStepDuration, patternStore.globalPatternState.swing]);
+    }, [baseStepDuration, globalPatternState.swing]);
 
     const getCurrentPattern = useCallback(() => {
         return resolvePatternForPlayback(
-            playbackStore.temporaryChord,
-            playbackStore.activeChordIndex,
-            playbackStore.addedChords,
-            patternStore.currentlyActivePattern
+            temporaryChord,
+            activeChordIndex,
+            addedChords,
+            currentlyActivePattern
         );
-    }, [playbackStore.temporaryChord, playbackStore.activeChordIndex, playbackStore.addedChords, patternStore.currentlyActivePattern]);
+    }, [temporaryChord, activeChordIndex, addedChords, currentlyActivePattern]);
 
     // Memoize the current chord to reduce recalculations
     const currentChord = useMemo(() => {
-        if (playbackStore.temporaryChord) {
-            return playbackStore.temporaryChord;
-        } else if (playbackStore.activeChordIndex !== null && playbackStore.addedChords[playbackStore.activeChordIndex]) {
-            return playbackStore.addedChords[playbackStore.activeChordIndex];
+        if (temporaryChord) {
+            return temporaryChord;
+        } else if (activeChordIndex !== null && addedChords[activeChordIndex]) {
+            return addedChords[activeChordIndex];
         }
         return null;
-    }, [playbackStore.temporaryChord, playbackStore.activeChordIndex, playbackStore.addedChords]);
+    }, [temporaryChord, activeChordIndex, addedChords]);
 
     // Memoize the current pattern
     const currentPattern = useMemo(() => {
@@ -256,56 +366,54 @@ export const useIntegratedAppLogic = () => {
 
     // URL State Management
     const saveStateToUrl = useCallback(() => {
-        if (musicStore.chords?.length && modes?.length && !isInitialLoad.current) {
+        if (chords?.length && modes?.length && !isInitialLoad.current) {
             encodeAndSaveToUrl(
-                musicStore.key,
-                musicStore.mode,
-                playbackStore.addedChords,
-                patternStore.globalPatternState.currentPattern,
-                patternStore.globalPatternState.bpm,
-                patternStore.globalPatternState.subdivision,
-                patternStore.globalPatternState.swing,
-                uiStore.showPatternSystem,
-                uiStore.isLiveMode,
-                pianoStore.pianoSettings,
+                key,
+                mode,
+                addedChords,
+                globalPatternState.currentPattern,
+                globalPatternState.bpm,
+                globalPatternState.subdivision,
+                globalPatternState.swing,
+                showPatternSystem,
+                isLiveMode,
+                pianoSettings,
                 AVAILABLE_KEYS,
                 modes,
-                pianoStore.availableInstruments,
-                musicStore.chords,
+                availableInstruments,
+                chords,
                 dynamicChordGenerator.chordTypes
             );
         }
     }, [
-        musicStore.key, musicStore.mode, musicStore.chords,
-        playbackStore.addedChords,
-        patternStore.globalPatternState.currentPattern,
-        patternStore.globalPatternState.bpm,
-        patternStore.globalPatternState.subdivision,
-        patternStore.globalPatternState.swing,
-        uiStore.showPatternSystem,
-        uiStore.isLiveMode,
-        pianoStore.pianoSettings,
-        pianoStore.availableInstruments,
+        key, mode, chords,
+        addedChords,
+        globalPatternState.currentPattern,
+        globalPatternState.bpm,
+        globalPatternState.subdivision,
+        globalPatternState.swing,
+        showPatternSystem,
+        isLiveMode,
+        pianoSettings,
+        availableInstruments,
         modes
     ]);
 
     const loadStateFromUrl = useCallback(async () => {
-        if (musicStore.chords?.length) {
+        if (chords?.length) {
             const decoded = await loadAndDecodeFromUrl(
                 AVAILABLE_KEYS,
                 modes || [],
-                pianoStore.availableInstruments,
-                musicStore.chords,
+                availableInstruments,
+                chords,
                 dynamicChordGenerator.chordTypes
             );
             if (decoded) {
-                // Use setKeyAndMode instead of calling setKey and setMode separately
-                musicStore.setKeyAndMode(decoded.key, decoded.mode);
+                setKeyAndMode(decoded.key, decoded.mode);
 
-                // Clear and set added chords with proper fallbacks for optional properties
-                playbackStore.clearAllChords();
+                clearAllChordsAction();
                 decoded.addedChords.forEach(chord => {
-                    playbackStore.addChord(
+                    addChord(
                         chord.name,
                         chord.notes,
                         chord.pattern || ['1', '2', '3', '4'],
@@ -314,86 +422,80 @@ export const useIntegratedAppLogic = () => {
                     );
                 });
 
-                patternStore.setGlobalPatternState({
+                setGlobalPatternState({
                     currentPattern: decoded.pattern,
                     bpm: decoded.bpm,
                     subdivision: decoded.subdivision,
                     swing: decoded.swing
                 });
 
-                uiStore.setShowPatternSystem(decoded.showPattern);
-                uiStore.setIsLiveMode(decoded.liveMode);
-                pianoStore.updatePianoSettings(decoded.pianoSettings);
+                setShowPatternSystem(decoded.showPattern);
+                setIsLiveMode(decoded.liveMode);
+                updatePianoSettings(decoded.pianoSettings);
             }
         }
-    }, [musicStore.chords, modes, pianoStore.availableInstruments]);
+    }, [chords, modes, availableInstruments]); // FIXED: Removed all actions from dependencies
 
     // Complex handlers that need to coordinate between stores
     const handleChordClick = useCallback((chordNoteNames: string, chordIndex?: number, chordName?: string) => {
-        if (uiStore.isDeleteMode && chordIndex !== undefined) {
-            playbackStore.removeChord(chordIndex);
+        if (isDeleteMode && chordIndex !== undefined) {
+            removeChord(chordIndex);
             return;
         }
 
         const notesWithOctaves = getMidiNotes(START_OCTAVE, END_OCTAVE, chordNoteNames);
 
         if (chordIndex !== undefined) {
-            playbackStore.setTemporaryChord(null);
-            playbackStore.setActiveChordIndex(chordIndex);
+            setTemporaryChord(null);
+            setActiveChordIndex(chordIndex);
 
-            // If NOT playing, preview the chord immediately
-            if (!patternStore.globalPatternState.isPlaying) {
-                playbackStore.playNotes(notesWithOctaves as any);
+            if (!isPlaying) {
+                playNotes(notesWithOctaves as any);
             }
-            // If IS playing, the chord will play on the next beat automatically
-            // via the activeNotes sync effect
 
-            playbackStore.setHighlightedChordIndex(chordIndex);
-            setTimeout(() => playbackStore.setHighlightedChordIndex(null), 150);
+            setHighlightedChordIndex(chordIndex);
+            setTimeout(() => setHighlightedChordIndex(null), 150);
         } else {
             if (chordName) {
-                playbackStore.setTemporaryChord({ name: chordName, notes: chordNoteNames });
+                setTemporaryChord({ name: chordName, notes: chordNoteNames });
             }
 
-            if (!patternStore.globalPatternState.isPlaying) {
-                playbackStore.playNotes(notesWithOctaves as any);
+            if (!isPlaying) {
+                playNotes(notesWithOctaves as any);
             }
         }
-    }, [uiStore.isDeleteMode, patternStore.globalPatternState.isPlaying]);
+    }, [isDeleteMode, isPlaying]); // FIXED: Removed Zustand actions from dependencies
 
     const addChordClick = useCallback((chordName: string, chordNotes: string, key: string, mode: string) => {
-        //console.log('Adding chord:', { chordName, chordNotes, key, mode })
-        playbackStore.addChord(
+        addChord(
             chordName,
             chordNotes,
-            patternStore.currentlyActivePattern,
+            currentlyActivePattern,
             key,
             mode
         );
-    }, [patternStore.currentlyActivePattern, musicStore.key, musicStore.mode]);
+    }, [currentlyActivePattern]); // FIXED: Removed Zustand action from dependencies
 
     const updateChordWithFallbacks = useCallback((chordIndex: number, updatedChord: any) => {
-        // Ensure all required properties are present with fallbacks
         const normalizedChord = {
             name: updatedChord.name,
             notes: updatedChord.notes,
             pattern: updatedChord.pattern || ['1', '2', '3', '4'],
-            originalKey: updatedChord.originalKey || musicStore.key,
-            originalMode: updatedChord.originalMode || musicStore.mode,
+            originalKey: updatedChord.originalKey || key,
+            originalMode: updatedChord.originalMode || mode,
             originalNotes: updatedChord.originalNotes || updatedChord.notes
         };
 
-        playbackStore.updateChord(chordIndex, normalizedChord);
-    }, [musicStore.key, musicStore.mode]);
+        updateChord(chordIndex, normalizedChord);
+    }, [key, mode, updateChord]);
 
     const reorderChords = useCallback((sourceIndex: number, destinationIndex: number) => {
-        const currentChords = Array.from(playbackStore.addedChords);
+        const currentChords = Array.from(addedChords);
         const [removed] = currentChords.splice(sourceIndex, 1);
         currentChords.splice(destinationIndex, 0, removed);
 
-        playbackStore.setAddedChords(currentChords);
+        setAddedChords(currentChords);
 
-        const { activeChordIndex } = playbackStore;
         if (activeChordIndex === null) return;
 
         let newActiveIndex = activeChordIndex;
@@ -406,65 +508,64 @@ export const useIntegratedAppLogic = () => {
         }
 
         if (newActiveIndex !== activeChordIndex) {
-            playbackStore.setActiveChordIndex(newActiveIndex);
+            setActiveChordIndex(newActiveIndex);
         }
-    }, [playbackStore]);
+    }, [addedChords, activeChordIndex, setAddedChords, setActiveChordIndex]);
 
     const clearAllChords = useCallback(() => {
-        playbackStore.clearAllChords();
-        patternStore.setGlobalPatternState({ isPlaying: false });
-        uiStore.setIsLiveMode(false);
-    }, []);
+        clearAllChordsAction();
+        setGlobalPatternState({ isPlaying: false });
+        setIsLiveMode(false);
+    }, [clearAllChordsAction, setGlobalPatternState, setIsLiveMode]);
 
     const handlePatternChange = useCallback((newPatternState: Partial<any>) => {
-        patternStore.updatePattern(newPatternState);
+        updatePattern(newPatternState);
 
-        // Only reset timing when explicitly starting playback
         if (newPatternState.hasOwnProperty('isPlaying') && newPatternState.isPlaying) {
             globalStepRef.current = 0;
             sequencerStartTimeRef.current = performance.now();
         }
-    }, []);
+    }, [updatePattern]);
 
     const handleTogglePlayback = useCallback(() => {
-        const newIsPlaying = !patternStore.globalPatternState.isPlaying;
-        patternStore.setGlobalPatternState({ isPlaying: newIsPlaying });
+        const newIsPlaying = !isPlaying;
+        setGlobalPatternState({ isPlaying: newIsPlaying });
 
         if (newIsPlaying) {
             globalStepRef.current = 0;
             sequencerStartTimeRef.current = performance.now();
         }
-    }, [patternStore.globalPatternState.isPlaying]);
+    }, [isPlaying]); 
 
     const toggleScalePlayback = useCallback(() => {
-        if (playbackStore.isPlayingScale) {
-            playbackStore.clearScalePlaybackTimeouts();
-            playbackStore.setActiveNotes([]);
-            playbackStore.setIsPlayingScale(false);
+        if (isPlayingScale) {
+            clearScalePlaybackTimeouts();
+            setActiveNotes([]);
+            setIsPlayingScale(false);
             return;
         }
 
-        if (!musicStore.scaleNotes?.length) return;
+        if (!scaleNotes?.length) return;
 
-        playbackStore.setIsPlayingScale(true);
+        setIsPlayingScale(true);
 
-        const wasPlaying = patternStore.globalPatternState.isPlaying;
+        const wasPlaying = isPlaying;
         if (wasPlaying) {
-            patternStore.setGlobalPatternState({ isPlaying: false });
+            setGlobalPatternState({ isPlaying: false });
         }
 
-        playbackStore.setActiveNotes([]);
+        setActiveNotes([]);
 
-        const quarterNoteDuration = 60000 / patternStore.globalPatternState.bpm;
+        const quarterNoteDuration = 60000 / bpm;
         const noteDuration = quarterNoteDuration * 0.8;
 
         let cumulativeDelay = 100;
         let currentOctave = 4;
         let lastMidiNumber = 0;
 
-        const scaleNotesWithTonic = [...musicStore.scaleNotes];
-        if (musicStore.scaleNotes[0]?.noteName) {
-            scaleNotesWithTonic.push({ noteName: musicStore.scaleNotes[0].noteName });
+        const scaleNotesWithTonic = [...scaleNotes];
+        if (scaleNotes[0]?.noteName) {
+            scaleNotesWithTonic.push({ noteName: scaleNotes[0].noteName });
         }
 
         scaleNotesWithTonic.forEach((scaleNote) => {
@@ -486,36 +587,36 @@ export const useIntegratedAppLogic = () => {
                 const note = noteDetails.note.slice(0, -1);
                 const octave = parseInt(noteDetails.note.slice(-1), 10);
 
-                playbackStore.setActiveNotes([{ midiNote: midiNumber, note, octave }]);
+                setActiveNotes([{ midiNote: midiNumber, note, octave }]);
             }, cumulativeDelay);
 
-            playbackStore.addScalePlaybackTimeout(timeoutId);
+            addScalePlaybackTimeout(timeoutId);
             cumulativeDelay += noteDuration;
         });
 
         const finalTimeoutId = setTimeout(() => {
-            playbackStore.setActiveNotes([]);
-            playbackStore.setIsPlayingScale(false);
-            playbackStore.clearScalePlaybackTimeouts();
+            setActiveNotes([]);
+            setIsPlayingScale(false);
+            clearScalePlaybackTimeouts();
             if (wasPlaying) {
-                patternStore.setGlobalPatternState({ isPlaying: true });
+                setGlobalPatternState({ isPlaying: true });
             }
         }, cumulativeDelay + noteDuration);
 
-        playbackStore.addScalePlaybackTimeout(finalTimeoutId);
-    }, [musicStore.scaleNotes, playbackStore.isPlayingScale, patternStore.globalPatternState.bpm, patternStore.globalPatternState.isPlaying]);
+        addScalePlaybackTimeout(finalTimeoutId);
+    }, [scaleNotes, isPlayingScale, bpm, isPlaying]); // FIXED: Removed actions from dependencies
 
     // Keyboard handlers
     const handleKeyPress = useCallback((event: KeyboardEvent) => {
         if (event.target instanceof HTMLInputElement) return;
 
         if (event.key.toLowerCase() === 'p') {
-            uiStore.togglePatternSystem();
+            togglePatternSystem();
             return;
         }
 
         if (event.key.toLowerCase() === 'l') {
-            uiStore.toggleLiveMode();
+            toggleLiveMode();
             return;
         }
 
@@ -526,44 +627,41 @@ export const useIntegratedAppLogic = () => {
         }
 
         const keyMapIndex = event.key === '0' ? 9 : parseInt(event.key, 10) - 1;
-        if (!isNaN(keyMapIndex) && keyMapIndex >= 0 && keyMapIndex < playbackStore.addedChords.length) {
-            const chordToPlay = playbackStore.addedChords[keyMapIndex];
+        if (!isNaN(keyMapIndex) && keyMapIndex >= 0 && keyMapIndex < addedChords.length) {
+            const chordToPlay = addedChords[keyMapIndex];
             if (chordToPlay) {
-                playbackStore.setTemporaryChord(null);
+                setTemporaryChord(null);
                 handleChordClick(chordToPlay.notes, keyMapIndex);
             }
         }
-    }, [playbackStore.addedChords, handleChordClick, handleTogglePlayback]);
+    }, [addedChords, handleChordClick, handleTogglePlayback, togglePatternSystem, toggleLiveMode, setTemporaryChord]);
 
     // Effects
 
     // Update currently active pattern
     useEffect(() => {
-        if (playbackStore.activeChordIndex !== null && playbackStore.addedChords[playbackStore.activeChordIndex]) {
-            patternStore.setCurrentlyActivePattern([...playbackStore.addedChords[playbackStore.activeChordIndex].pattern]);
+        if (activeChordIndex !== null && addedChords[activeChordIndex]) {
+            setCurrentlyActivePattern([...addedChords[activeChordIndex].pattern]);
         } else {
-            patternStore.setCurrentlyActivePattern([...patternStore.globalPatternState.currentPattern]);
+            setCurrentlyActivePattern([...globalPatternState.currentPattern]);
         }
-    }, [playbackStore.activeChordIndex, playbackStore.addedChords, patternStore.globalPatternState.currentPattern]);
+    }, [activeChordIndex, addedChords, globalPatternState.currentPattern]); // FIXED: Removed action from dependencies
 
     // Sequencer timing
     useEffect(() => {
-        if (patternStore.globalPatternState.isPlaying) {
+        if (globalPatternState.isPlaying) {
             if (!intervalRef.current) {
                 sequencerStartTimeRef.current = performance.now();
                 globalStepRef.current = 0;
-                patternStore.setGlobalPatternState({ currentStep: 0 });
+                setGlobalPatternState({ currentStep: 0 });
 
                 const tick = () => {
                     const now = performance.now();
                     const elapsed = now - sequencerStartTimeRef.current;
 
-                    // Calculate which step we SHOULD be on based on elapsed time
-                    // This prevents drift accumulation
                     let totalTime = 0;
                     let calculatedStep = 0;
 
-                    // Find the current step by summing swing durations
                     while (totalTime < elapsed) {
                         totalTime += getSwingDuration(calculatedStep);
                         if (totalTime <= elapsed) {
@@ -571,13 +669,11 @@ export const useIntegratedAppLogic = () => {
                         }
                     }
 
-                    // Only update if step actually changed
                     if (calculatedStep !== globalStepRef.current) {
                         globalStepRef.current = calculatedStep;
-                        patternStore.setGlobalPatternState({ currentStep: calculatedStep });
+                        setGlobalPatternState({ currentStep: calculatedStep });
                     }
 
-                    // Use requestAnimationFrame for smoother, more efficient updates
                     intervalRef.current = requestAnimationFrame(tick);
                 };
 
@@ -596,53 +692,51 @@ export const useIntegratedAppLogic = () => {
                 intervalRef.current = null;
             }
         };
-    }, [patternStore.globalPatternState.isPlaying, getSwingDuration]);
+    }, [globalPatternState.isPlaying, getSwingDuration]); // FIXED: Removed action from dependencies
 
     // Keep activeNotes in sync with sequencer
     useEffect(() => {
-        if (!patternStore.globalPatternState.isPlaying || !currentChord) {
+        if (!globalPatternState.isPlaying || !currentChord) {
             return;
         }
 
-        const currentStepIndex = patternStore.globalPatternState.currentStep % currentPattern.length;
+        const currentStepIndex = globalPatternState.currentStep % currentPattern.length;
 
         if (shouldPlayAtCurrentStep(currentPattern, currentStepIndex)) {
             const notesWithOctaves = getMidiNotes(START_OCTAVE, END_OCTAVE, currentChord.notes);
-            playbackStore.setActiveNotes(notesWithOctaves as any);
+            setActiveNotes(notesWithOctaves as any);
         } else {
-            playbackStore.setActiveNotes([]);
+            setActiveNotes([]);
         }
     }, [
-        patternStore.globalPatternState.isPlaying,
-        patternStore.globalPatternState.currentStep,
+        globalPatternState.isPlaying,
+        globalPatternState.currentStep,
         currentChord,
         currentPattern
-    ]);
+    ]); // FIXED: Removed action from dependencies
 
     // Load state from URL when chords first become available
     useEffect(() => {
-        if (musicStore.chords?.length && !hasLoadedFromUrl.current) {
+        if (chords?.length && !hasLoadedFromUrl.current) {
             hasLoadedFromUrl.current = true;
             isInitialLoad.current = true;
 
-            // Handle async load
             loadStateFromUrl().then(() => {
                 setTimeout(() => {
                     isInitialLoad.current = false;
                 }, 100);
             });
         }
-    }, [musicStore.chords, loadStateFromUrl]);
+    }, [chords, loadStateFromUrl]);
 
     // Save state to URL when relevant state changes
     useEffect(() => {
-        if (musicStore.chords?.length && modes?.length && !isInitialLoad.current) {
+        if (chords?.length && modes?.length && !isInitialLoad.current) {
             if (saveTimeoutRef.current) {
                 clearTimeout(saveTimeoutRef.current);
             }
 
             saveTimeoutRef.current = setTimeout(() => {
-                //console.log('saving state to url')
                 saveStateToUrl();
             }, 100);
         }
@@ -653,15 +747,15 @@ export const useIntegratedAppLogic = () => {
             }
         };
     }, [
-        musicStore.key, musicStore.mode, playbackStore.addedChords,
-        patternStore.globalPatternState.currentPattern,
-        patternStore.globalPatternState.bpm,
-        patternStore.globalPatternState.subdivision,
-        patternStore.globalPatternState.swing,
-        uiStore.showPatternSystem,
-        uiStore.isLiveMode,
-        pianoStore.pianoSettings,
-        musicStore.chords?.length,
+        key, mode, addedChords,
+        globalPatternState.currentPattern,
+        globalPatternState.bpm,
+        globalPatternState.subdivision,
+        globalPatternState.swing,
+        showPatternSystem,
+        isLiveMode,
+        pianoSettings,
+        chords?.length,
         modes?.length,
         saveStateToUrl
     ]);
@@ -672,65 +766,64 @@ export const useIntegratedAppLogic = () => {
         return () => document.removeEventListener('keydown', handleKeyPress);
     }, [handleKeyPress]);
 
-
-    // Return a consolidated interface similar to the original useAppState
+    // Return a consolidated interface
     return {
         // State from stores
-        chords: musicStore.chords,
-        key: musicStore.key,
-        mode: musicStore.mode,
-        modes: musicStore.modes,
-        activeNotes: playbackStore.activeNotes,
-        activeChordIndex: playbackStore.activeChordIndex,
-        highlightedChordIndex: playbackStore.highlightedChordIndex,
-        addedChords: playbackStore.addedChords,
-        loadingChords: musicStore.loadingChords,
-        isDeleteMode: uiStore.isDeleteMode,
-        isPlayingScale: playbackStore.isPlayingScale,
-        isLiveMode: uiStore.isLiveMode,
-        globalPatternState: patternStore.globalPatternState,
-        currentlyActivePattern: patternStore.currentlyActivePattern,
-        temporaryChord: playbackStore.temporaryChord,
-        normalizedScaleNotes: musicStore.normalizedScaleNotes,
-        pianoSettings: pianoStore.pianoSettings,
-        availableInstruments: pianoStore.availableInstruments,
+        chords,
+        key,
+        mode,
+        modes,
+        activeNotes,
+        activeChordIndex,
+        highlightedChordIndex,
+        addedChords,
+        loadingChords,
+        isDeleteMode,
+        isPlayingScale,
+        isLiveMode,
+        globalPatternState,
+        currentlyActivePattern,
+        temporaryChord,
+        normalizedScaleNotes,
+        pianoSettings,
+        availableInstruments,
 
         // Handlers that coordinate between stores
-        setKey: musicStore.setKey,
-        setMode: musicStore.setMode,
-        setIsDeleteMode: uiStore.setIsDeleteMode,
-        setIsLiveMode: uiStore.setIsLiveMode,
-        setAvailableInstruments: pianoStore.setAvailableInstruments,
+        setKey,
+        setMode,
+        setIsDeleteMode,
+        setIsLiveMode,
+        setAvailableInstruments,
         handleChordClick,
         addChordClick,
         updateChord: updateChordWithFallbacks,
         reorderChords,
         clearAllChords,
-        updateChordPattern: playbackStore.updateChordPattern,
+        updateChordPattern,
         toggleScalePlayback,
         handlePatternChange,
         handleTogglePlayback,
         getCurrentPattern,
-        handleFetchOriginalChord: playbackStore.handleFetchOriginalChord,
+        handleFetchOriginalChord,
 
         // Piano settings handlers
-        setPianoInstrument: pianoStore.setPianoInstrument,
-        setCutOffPreviousNotes: pianoStore.setCutOffPreviousNotes,
-        setEq: pianoStore.setEq,
-        setOctaveOffset: pianoStore.setOctaveOffset,
-        setReverbLevel: pianoStore.setReverbLevel,
-        setNoteDuration: pianoStore.setNoteDuration,
-        setVolume: pianoStore.setVolume,
-        setChorusLevel: pianoStore.setChorusLevel,
-        setDelayLevel: pianoStore.setDelayLevel,
-        setDistortionLevel: pianoStore.setDistortionLevel,
-        setBitcrusherLevel: pianoStore.setBitcrusherLevel,
-        setPhaserLevel: pianoStore.setPhaserLevel,
-        setFlangerLevel: pianoStore.setFlangerLevel,
-        setRingModLevel: pianoStore.setRingModLevel,
-        setAutoFilterLevel: pianoStore.setAutoFilterLevel,
-        setTremoloLevel: pianoStore.setTremoloLevel,
-        setStereoWidthLevel: pianoStore.setStereoWidthLevel,
-        setCompressorLevel: pianoStore.setCompressorLevel,
+        setPianoInstrument,
+        setCutOffPreviousNotes,
+        setEq,
+        setOctaveOffset,
+        setReverbLevel,
+        setNoteDuration,
+        setVolume,
+        setChorusLevel,
+        setDelayLevel,
+        setDistortionLevel,
+        setBitcrusherLevel,
+        setPhaserLevel,
+        setFlangerLevel,
+        setRingModLevel,
+        setAutoFilterLevel,
+        setTremoloLevel,
+        setStereoWidthLevel,
+        setCompressorLevel,
     };
 };

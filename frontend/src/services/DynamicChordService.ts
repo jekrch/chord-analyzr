@@ -6,12 +6,8 @@
 import { staticDataService } from './StaticDataService';
 import type { ScaleNoteDto } from '../api';
 
-interface ChordDefinition {
-    name: string;
-    intervals: number[];
-}
 
-interface GeneratedChord {
+export interface GeneratedChord {
     keyName: string;
     modeId: number;
     chordNote: number;
@@ -203,90 +199,6 @@ class DynamicChordGenerator {
             return this.chromaticNotesFlat[normalizedNote];
         } else {
             return this.chromaticNotes[normalizedNote];
-        }
-    }
-
-    /**
-     * Get the letter name from a note (e.g., "C##" -> "C", "Abb" -> "A")
-     */
-    private getLetterName(noteName: string): string {
-        return noteName.charAt(0).toUpperCase();
-    }
-
-    /**
-     * Get the letter position (C=0, D=1, E=2, F=3, G=4, A=5, B=6)
-     */
-    private getLetterPosition(letter: string): number {
-        const letters = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
-        return letters.indexOf(letter.toUpperCase());
-    }
-
-    /**
-     * Calculate the proper note name for an interval above a root note
-     * This preserves enharmonic spelling (e.g., Abb + major 3rd = Cb, not B)
-     */
-    private calculateIntervalNoteName(rootNote: string, semitones: number): string {
-        const rootLetter = this.getLetterName(rootNote);
-        const rootLetterPos = this.getLetterPosition(rootLetter);
-        const rootMidi = this.noteNameToNumber(rootNote);
-
-        //console.log(`Calculating interval note name: Root=${rootNote}, Semitones=${semitones}`);
-        // Map semitones to diatonic intervals (letter distance)
-        const semitoneToLetterDistance: Record<number, number> = {
-            0: 0,  // unison
-            1: 0,  // minor 2nd (same letter, will need sharp/flat)
-            2: 1,  // major 2nd
-            3: 2,  // minor 3rd
-            4: 2,  // major 3rd
-            5: 3,  // perfect 4th
-            6: 3,  // augmented 4th / tritone
-            7: 4,  // perfect 5th
-            8: 5,  // minor 6th
-            9: 5,  // major 6th
-            10: 6, // minor 7th
-            11: 6, // major 7th
-            12: 0, // octave
-            13: 0, // minor 9th
-            14: 1, // major 9th
-            15: 2, // augmented 9th
-            16: 2, // diminished 11th
-            17: 3, // perfect 11th
-            18: 3, // augmented 11th
-            19: 4, // diminished 12th
-            20: 4, // perfect 12th
-            21: 5, // minor 13th
-            22: 5, // major 13th
-            23: 6  // augmented 13th
-        };
-
-        const letterDistance = semitoneToLetterDistance[semitones] ?? 0;
-        const targetLetterPos = (rootLetterPos + letterDistance) % 7;
-        const letters = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
-        const targetLetter = letters[targetLetterPos];
-
-        // Calculate what MIDI note we should hit
-        const targetMidi = rootMidi + semitones;
-
-        // Calculate the natural MIDI value of the target letter
-        const naturalMidiMap: Record<string, number> = {
-            'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11
-        };
-
-        // Find the closest octave of the natural note to targetMidi
-        let naturalMidi = naturalMidiMap[targetLetter];
-        const octaveDiff = Math.round((targetMidi - naturalMidi) / 12);
-        naturalMidi += octaveDiff * 12;
-
-        // Calculate how many semitones of accidentals we need
-        const accidentalSemitones = targetMidi - naturalMidi;
-
-        // Build the note name with appropriate accidentals
-        if (accidentalSemitones === 0) {
-            return targetLetter;
-        } else if (accidentalSemitones > 0) {
-            return targetLetter + '#'.repeat(accidentalSemitones);
-        } else {
-            return targetLetter + 'b'.repeat(-accidentalSemitones);
         }
     }
 

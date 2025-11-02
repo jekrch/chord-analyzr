@@ -1066,27 +1066,6 @@ export const decodeState = async (
                         });
                     }
 
-                    // Fallback: decode notes from URL if regeneration failed
-                    // if (!notes) {
-                    //     if (version === VERSION && compactOrEncodedNotes.includes('-') && !compactOrEncodedNotes.includes('%')) {
-                    //         // v9 format - compact note indices (e.g., "0-4-7")
-                    //         notes = decodeChordNotes(compactOrEncodedNotes);
-                    //     } else {
-                    //         // v7/v8 format - URL encoded notes
-                    //         notes = decodeURIComponent(compactOrEncodedNotes);
-                    //     }
-                    // }
-
-                    // if (name && notes) {
-                    //     addedChords.push({
-                    //         name,
-                    //         notes,
-                    //         pattern: chordPattern,
-                    //         originalKey: contextKey,
-                    //         originalMode: contextMode,
-                    //         originalNotes: notes
-                    //     });
-                    // }
                 } else {
                     console.warn('Invalid chord format:', entry);
                 }

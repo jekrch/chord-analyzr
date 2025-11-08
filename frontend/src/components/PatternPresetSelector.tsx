@@ -4,7 +4,7 @@ import Dropdown from './Dropdown';
 import { AddedChord } from '../stores/types';
 import { usePlaybackStore } from '../stores/playbackStore';
 
-type PatternPreset =  {
+export type PatternPreset =  {
     name: string;
     pattern: string[];
     desc: string;

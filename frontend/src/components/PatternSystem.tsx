@@ -3,7 +3,7 @@ import { PlayCircleIcon, PauseIcon, ArrowPathIcon, ChevronUpIcon, ChevronDownIco
 import { PATTERN_PRESETS, PATTERN_CATEGORIES } from '../util/Pattern';
 import debounce from 'lodash/debounce';
 import Dropdown from './Dropdown';
-import PatternPresetSelector from './PatternPresetSelector';
+import PatternPresetSelector, { PatternPreset } from './PatternPresetSelector';
 import Slider from './Slider';
 import { Button } from './Button';
 import { useMusicStore } from '../stores/musicStore';
@@ -239,7 +239,7 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
     }
   }, [customPattern, updateCurrentPattern]);
 
-  const applyPreset = useCallback((preset: typeof PATTERN_PRESETS[0]) => {
+  const applyPreset = useCallback((preset: PatternPreset) => {
     updateCurrentPattern(preset.pattern);
   }, [updateCurrentPattern]);
 

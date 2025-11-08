@@ -154,6 +154,10 @@ async function regenerateSlashNote(slashNote: string, newName: string, regenerat
     return { newName, newNotes };
 }
 
+/**
+ * Main hook that handles all app logic and effects.
+ * This hook should always be called to ensure effects run.
+ */
 export const useIntegratedAppLogic = () => {
 
     // musicStore selectors
@@ -691,6 +695,78 @@ export const useIntegratedAppLogic = () => {
     }, [handleKeyPress]);
 
     // Return only what you're using
+    return {
+        isLiveMode,
+        handleChordClick,
+        addChordClick,
+    };
+};
+
+/**
+ * Minimal hook for App.tsx that only subscribes to what's needed for rendering.
+ * This prevents unnecessary re-renders when sequencer state changes.
+ * 
+ * CRITICAL: This hook uses NO subscriptions except isLiveMode. All other state
+ * is read directly via getState() in callbacks to avoid triggering re-renders.
+ */
+export const useAppState = () => {
+    // Only subscribe to isLiveMode for rendering - nothing else!
+    const isLiveMode = useUIStore((state) => state.isLiveMode);
+    
+    // Get stable action references (these never change, so no re-renders)
+    const removeChord = usePlaybackStore((state) => state.removeChord);
+    const setTemporaryChord = usePlaybackStore((state) => state.setTemporaryChord);
+    const setActiveChordIndex = usePlaybackStore((state) => state.setActiveChordIndex);
+    const playNotes = usePlaybackStore((state) => state.playNotes);
+    const setHighlightedChordIndex = usePlaybackStore((state) => state.setHighlightedChordIndex);
+    const addChord = usePlaybackStore((state) => state.addChord);
+
+    const handleChordClick = useCallback((chordNoteNames: string, chordIndex?: number, chordName?: string) => {
+        // Read state directly without subscribing
+        const isDeleteMode = useUIStore.getState().isDeleteMode;
+        const isPlaying = usePatternStore.getState().globalPatternState.isPlaying;
+        
+        if (isDeleteMode && chordIndex !== undefined) {
+            removeChord(chordIndex);
+            return;
+        }
+
+        const notesWithOctaves = getMidiNotes(START_OCTAVE, END_OCTAVE, chordNoteNames);
+
+        if (chordIndex !== undefined) {
+            setTemporaryChord(null);
+            setActiveChordIndex(chordIndex);
+
+            if (!isPlaying) {
+                playNotes(notesWithOctaves as any);
+            }
+
+            setHighlightedChordIndex(chordIndex);
+            setTimeout(() => setHighlightedChordIndex(null), 150);
+        } else {
+            if (chordName) {
+                setTemporaryChord({ name: chordName, notes: chordNoteNames });
+            }
+
+            if (!isPlaying) {
+                playNotes(notesWithOctaves as any);
+            }
+        }
+    }, [removeChord, setTemporaryChord, setActiveChordIndex, playNotes, setHighlightedChordIndex]);
+
+    const addChordClick = useCallback((chordName: string, chordNotes: string, key: string, mode: string) => {
+        // Read state directly without subscribing
+        const currentlyActivePattern = usePatternStore.getState().currentlyActivePattern;
+        
+        addChord(
+            chordName,
+            chordNotes,
+            currentlyActivePattern,
+            key,
+            mode
+        );
+    }, [addChord]);
+
     return {
         isLiveMode,
         handleChordClick,

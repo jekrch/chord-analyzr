@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useCallback, useState } from 'react';
-import { useIntegratedAppLogic } from './hooks/useIntegratedAppLogic';
+import { useAppState } from './hooks/useIntegratedAppLogic';
+import EffectsManager from './EffectsManager';
 import ChordTable from './components/ChordTable';
 import PianoControl from './components/piano/PianoControl';
 import PatternSystem from './components/PatternSystem';
@@ -10,14 +11,12 @@ import './App.css';
 import SequenceStatusView from './components/SequenceStatusView';
 
 function App() {
+    // Use the minimal hook for rendering - only subscribes to isLiveMode
     const {
-        // State
         isLiveMode,
-        
-        // Handlers
         handleChordClick,
         addChordClick,
-    } = useIntegratedAppLogic();
+    } = useAppState();
 
     const silentAudioRef = useRef<HTMLAudioElement>(null);
     const audioInitializedRef = useRef(false);
@@ -122,10 +121,13 @@ function App() {
         };
     }, []);
 
-    //console.log('test App render');
+    console.log('test App render');
 
     return (
         <div className="select-none text-center bg-[#282c34] min-h-screen h-screen w-screen overflow-hidden flex flex-col">
+            {/* Invisible component that runs all effects without causing App re-renders */}
+            <EffectsManager />
+            
             <audio ref={silentAudioRef} preload="auto">
                 <source src="/silence.mp3" type="audio/mp3" />
             </audio>

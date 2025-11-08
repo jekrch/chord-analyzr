@@ -51,7 +51,7 @@ function updateChordNameFromNotes(chordName: string, regeneratedNotes: string): 
     if (slashIndex >= 0) {
         mainPart = chordName.substring(0, slashIndex);
         const potentialSlashNote = chordName.substring(slashIndex + 1);
-        
+
         if (/^[A-G](?:##|#|bb|b)?$/.test(potentialSlashNote)) {
             slashPart = potentialSlashNote;
         } else {
@@ -63,11 +63,11 @@ function updateChordNameFromNotes(chordName: string, regeneratedNotes: string): 
 
     const notesArray = regeneratedNotes.split(',').map(n => n.trim());
     const rootNoteIndex = slashPart ? 1 : 0;
-    
+
     if (rootNoteIndex >= notesArray.length) {
         return chordName;
     }
-    
+
     const rootNoteWithOctave = notesArray[rootNoteIndex];
     const newRootNote = rootNoteWithOctave.replace(/\d+/g, '');
 
@@ -101,7 +101,7 @@ function parseChordName(chordName: string): {
 
     if (slashIndex !== -1) {
         const potentialSlashNote = chordName.substring(slashIndex + 1);
-        
+
         if (/^[A-G](?:##|#|bb|b)?$/.test(potentialSlashNote)) {
             mainChord = chordName.substring(0, slashIndex);
             slashNote = potentialSlashNote;
@@ -194,9 +194,12 @@ export const useIntegratedAppLogic = () => {
     const handleFetchOriginalChord = usePlaybackStore((state) => state.handleFetchOriginalChord);
 
     // patternStore selectors
-    const globalPatternState = usePatternStore((state) => state.globalPatternState);
-    const isPlaying = usePatternStore((state) => state.globalPatternState.isPlaying); // Individual selector for stable reference
-    const bpm = usePatternStore((state) => state.globalPatternState.bpm); // Individual selector for stable reference
+    const subdivision = usePatternStore((state) => state.globalPatternState.subdivision);
+    const currentStep = usePatternStore((state) => state.globalPatternState.currentStep);
+    const swing = usePatternStore((state) => state.globalPatternState.swing);
+    const isPlaying = usePatternStore((state) => state.globalPatternState.isPlaying);
+    const bpm = usePatternStore((state) => state.globalPatternState.bpm);
+    const globalCurrentPattern = usePatternStore((state) => state.globalPatternState.currentPattern);
     const currentlyActivePattern = usePatternStore((state) => state.currentlyActivePattern);
     const setGlobalPatternState = usePatternStore((state) => state.setGlobalPatternState);
     const setCurrentlyActivePattern = usePatternStore((state) => state.setCurrentlyActivePattern);
@@ -264,7 +267,7 @@ export const useIntegratedAppLogic = () => {
             for (const chord of addedChords) {
                 try {
                     const { rootNote, chordType, slashNote } = parseChordName(chord.name);
-                    
+
                     console.log('Regenerating chord:', chord.name, '→ root:', rootNote, 'type:', chordType, 'slash:', slashNote);
 
                     const regeneratedChord: GeneratedChord | null = await dynamicChordGenerator.generateChord(
@@ -276,7 +279,7 @@ export const useIntegratedAppLogic = () => {
 
                     if (regeneratedChord) {
                         console.log('Generated notes:', regeneratedChord.chordNoteNames);
-                        
+
                         let newNotes = regeneratedChord.chordNoteNames;
                         let newName = regeneratedChord.chordName;
 
@@ -329,16 +332,16 @@ export const useIntegratedAppLogic = () => {
 
     // Computed values
     const baseStepDuration = useMemo(() => {
-        const quarterNoteDuration = 60000 / globalPatternState.bpm;
-        return quarterNoteDuration * globalPatternState.subdivision;
-    }, [globalPatternState.bpm, globalPatternState.subdivision]);
+        const quarterNoteDuration = 60000 / bpm;
+        return quarterNoteDuration * subdivision;
+    }, [bpm, subdivision]);
 
     const getSwingDuration = useCallback((stepIndex: number) => {
-        if (globalPatternState.swing === 0) return baseStepDuration;
+        if (swing === 0) return baseStepDuration;
         const isOffBeat = stepIndex % 2 === 1;
-        const swingRatio = 1 + (globalPatternState.swing / 100);
+        const swingRatio = 1 + (swing / 100);
         return isOffBeat ? baseStepDuration * swingRatio : baseStepDuration / swingRatio;
-    }, [baseStepDuration, globalPatternState.swing]);
+    }, [baseStepDuration, swing]);
 
     const getCurrentPattern = useCallback(() => {
         return resolvePatternForPlayback(
@@ -371,10 +374,10 @@ export const useIntegratedAppLogic = () => {
                 key,
                 mode,
                 addedChords,
-                globalPatternState.currentPattern,
-                globalPatternState.bpm,
-                globalPatternState.subdivision,
-                globalPatternState.swing,
+                globalCurrentPattern, 
+                bpm,
+                subdivision,
+                swing,
                 showPatternSystem,
                 isLiveMode,
                 pianoSettings,
@@ -388,10 +391,10 @@ export const useIntegratedAppLogic = () => {
     }, [
         key, mode, chords,
         addedChords,
-        globalPatternState.currentPattern,
-        globalPatternState.bpm,
-        globalPatternState.subdivision,
-        globalPatternState.swing,
+        globalCurrentPattern, 
+        bpm,
+        subdivision,
+        swing,
         showPatternSystem,
         isLiveMode,
         pianoSettings,
@@ -535,7 +538,7 @@ export const useIntegratedAppLogic = () => {
             globalStepRef.current = 0;
             sequencerStartTimeRef.current = performance.now();
         }
-    }, [isPlaying]); 
+    }, [isPlaying]);
 
     const toggleScalePlayback = useCallback(() => {
         if (isPlayingScale) {
@@ -643,13 +646,13 @@ export const useIntegratedAppLogic = () => {
         if (activeChordIndex !== null && addedChords[activeChordIndex]) {
             setCurrentlyActivePattern([...addedChords[activeChordIndex].pattern]);
         } else {
-            setCurrentlyActivePattern([...globalPatternState.currentPattern]);
+            setCurrentlyActivePattern([...globalCurrentPattern]); 
         }
-    }, [activeChordIndex, addedChords, globalPatternState.currentPattern]); // FIXED: Removed action from dependencies
+    }, [activeChordIndex, addedChords, globalCurrentPattern, setCurrentlyActivePattern]);
 
     // Sequencer timing
     useEffect(() => {
-        if (globalPatternState.isPlaying) {
+        if (isPlaying) {
             if (!intervalRef.current) {
                 sequencerStartTimeRef.current = performance.now();
                 globalStepRef.current = 0;
@@ -692,15 +695,15 @@ export const useIntegratedAppLogic = () => {
                 intervalRef.current = null;
             }
         };
-    }, [globalPatternState.isPlaying, getSwingDuration]); // FIXED: Removed action from dependencies
+    }, [isPlaying, getSwingDuration]); // FIXED: Removed action from dependencies
 
     // Keep activeNotes in sync with sequencer
     useEffect(() => {
-        if (!globalPatternState.isPlaying || !currentChord) {
+        if (!isPlaying || !currentChord) {
             return;
         }
 
-        const currentStepIndex = globalPatternState.currentStep % currentPattern.length;
+        const currentStepIndex = currentStep % currentPattern.length;
 
         if (shouldPlayAtCurrentStep(currentPattern, currentStepIndex)) {
             const notesWithOctaves = getMidiNotes(START_OCTAVE, END_OCTAVE, currentChord.notes);
@@ -709,11 +712,11 @@ export const useIntegratedAppLogic = () => {
             setActiveNotes([]);
         }
     }, [
-        globalPatternState.isPlaying,
-        globalPatternState.currentStep,
+        isPlaying,
+        currentStep,
         currentChord,
         currentPattern
-    ]); // FIXED: Removed action from dependencies
+    ]);
 
     // Load state from URL when chords first become available
     useEffect(() => {
@@ -748,10 +751,10 @@ export const useIntegratedAppLogic = () => {
         };
     }, [
         key, mode, addedChords,
-        globalPatternState.currentPattern,
-        globalPatternState.bpm,
-        globalPatternState.subdivision,
-        globalPatternState.swing,
+        globalCurrentPattern, 
+        bpm,
+        subdivision,
+        swing,
         showPatternSystem,
         isLiveMode,
         pianoSettings,
@@ -781,7 +784,6 @@ export const useIntegratedAppLogic = () => {
         isDeleteMode,
         isPlayingScale,
         isLiveMode,
-        globalPatternState,
         currentlyActivePattern,
         temporaryChord,
         normalizedScaleNotes,

@@ -122,6 +122,7 @@ function App() {
         };
     }, []);
 
+    //console.log('test App render');
     return (
         <div className="select-none text-center bg-[#282c34] min-h-screen h-screen w-screen overflow-hidden flex flex-col">
             <audio ref={silentAudioRef} preload="auto">

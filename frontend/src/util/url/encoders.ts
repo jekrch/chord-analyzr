@@ -67,7 +67,7 @@ export const generateChordTypeCodes = (chordTypes: ChordTypesMap): {
 export const parseNoteFromChordName = (chordName: string): ParsedNote | null => {
     let pos = 0;
     const root = chordName[pos++];
-        console.log('test')
+        //console.log('test')
     if (!NOTE_TO_PITCH[root]) {
         console.warn('Unknown root note:', root, 'in chord:', chordName);
         return null;

@@ -105,7 +105,7 @@ const ChordCard = memo<{
 
 ChordCard.displayName = 'ChordCard';
 
-const ChordTable: React.FC<ChordTableProps> = ({
+const ChordTableComponent: React.FC<ChordTableProps> = ({
   onChordClick,
   addChordClick
 }) => {
@@ -116,18 +116,15 @@ const ChordTable: React.FC<ChordTableProps> = ({
   const [addingChords, setAddingChords] = useState<Set<number>>(new Set());
   const [currentColumns, setCurrentColumns] = useState<number>(1);
 
-  const musicStore = useMusicStore();
-
-  const {
-    chords,
-    loadingChords,
-    allDistinctChords,
-    loadingAllChords,
-    showAllChords,
-    toggleShowAllChords,
-    key,
-    mode
-  } = musicStore;
+  const chords = useMusicStore((state) => state.chords);
+  const loadingChords = useMusicStore((state) => state.loadingChords);
+  const allDistinctChords = useMusicStore((state) => state.allDistinctChords);
+  const loadingAllChords = useMusicStore((state) => state.loadingAllChords);
+  const showAllChords = useMusicStore((state) => state.showAllChords);
+  const toggleShowAllChords = useMusicStore((state) => state.toggleShowAllChords);
+  const key = useMusicStore((state) => state.key);
+  const mode = useMusicStore((state) => state.mode);
+  const modes = useMusicStore((state) => state.modes);
 
   // Determine which chord set to use
   const currentChords = showAllChords ? allDistinctChords : chords;
@@ -248,7 +245,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
     // Trigger add animation
     setAddingChords(prev => new Set(prev).add(index));
 
-    const mode = musicStore.modes[modeId - 1];
+    const mode = modes[modeId - 1];
 
     // Call the original function
     addChordClick?.(chordName, chordNotes, key, mode);
@@ -263,7 +260,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
     }, 600);
 
     return () => clearTimeout(timeoutId);
-  }, [addChordClick, musicStore.modes]);
+  }, [addChordClick, modes]);
 
   // Updated expansion toggle to work with rows
   const handleToggleExpansion = useCallback((index: number) => {
@@ -323,6 +320,8 @@ const ChordTable: React.FC<ChordTableProps> = ({
     </div>
   ), [selectedRootNote, validChords.length, rootNotes, chordCounts]);
 
+  //console.log(`Rendering chord table`);
+  
   return (
     <div className="w-full max-w-7xl mx-auto px-2">
       {/* Header Section */}
@@ -514,5 +513,7 @@ const ChordTable: React.FC<ChordTableProps> = ({
     </div>
   );
 };
+
+const ChordTable = memo(ChordTableComponent);
 
 export default ChordTable;

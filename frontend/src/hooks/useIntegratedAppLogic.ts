@@ -162,10 +162,6 @@ export const useIntegratedAppLogic = () => {
     const mode = useMusicStore((state) => state.mode);
     const modes = useMusicStore((state) => state.modes);
     const scaleNotes = useMusicStore((state) => state.scaleNotes);
-    const normalizedScaleNotes = useMusicStore((state) => state.normalizedScaleNotes);
-    const loadingChords = useMusicStore((state) => state.loadingChords);
-    const setKey = useMusicStore((state) => state.setKey);
-    const setMode = useMusicStore((state) => state.setMode);
     const setKeyAndMode = useMusicStore((state) => state.setKeyAndMode);
     const setModes = useMusicStore((state) => state.setModes);
     const initialize = useMusicStore((state) => state.initialize);
@@ -173,7 +169,6 @@ export const useIntegratedAppLogic = () => {
     // playbackStore selectors
     const activeNotes = usePlaybackStore((state) => state.activeNotes);
     const activeChordIndex = usePlaybackStore((state) => state.activeChordIndex);
-    const highlightedChordIndex = usePlaybackStore((state) => state.highlightedChordIndex);
     const addedChords = usePlaybackStore((state) => state.addedChords);
     const temporaryChord = usePlaybackStore((state) => state.temporaryChord);
     const isPlayingScale = usePlaybackStore((state) => state.isPlayingScale);
@@ -184,14 +179,11 @@ export const useIntegratedAppLogic = () => {
     const setIsPlayingScale = usePlaybackStore((state) => state.setIsPlayingScale);
     const addChord = usePlaybackStore((state) => state.addChord);
     const removeChord = usePlaybackStore((state) => state.removeChord);
-    const updateChord = usePlaybackStore((state) => state.updateChord);
     const setAddedChords = usePlaybackStore((state) => state.setAddedChords);
     const clearAllChordsAction = usePlaybackStore((state) => state.clearAllChords);
-    const updateChordPattern = usePlaybackStore((state) => state.updateChordPattern);
     const playNotes = usePlaybackStore((state) => state.playNotes);
     const clearScalePlaybackTimeouts = usePlaybackStore((state) => state.clearScalePlaybackTimeouts);
     const addScalePlaybackTimeout = usePlaybackStore((state) => state.addScalePlaybackTimeout);
-    const handleFetchOriginalChord = usePlaybackStore((state) => state.handleFetchOriginalChord);
 
     // patternStore selectors
     const subdivision = usePatternStore((state) => state.globalPatternState.subdivision);
@@ -209,7 +201,6 @@ export const useIntegratedAppLogic = () => {
     const isDeleteMode = useUIStore((state) => state.isDeleteMode);
     const isLiveMode = useUIStore((state) => state.isLiveMode);
     const showPatternSystem = useUIStore((state) => state.showPatternSystem);
-    const setIsDeleteMode = useUIStore((state) => state.setIsDeleteMode);
     const setIsLiveMode = useUIStore((state) => state.setIsLiveMode);
     const setShowPatternSystem = useUIStore((state) => state.setShowPatternSystem);
     const togglePatternSystem = useUIStore((state) => state.togglePatternSystem);
@@ -218,26 +209,7 @@ export const useIntegratedAppLogic = () => {
     // pianoStore selectors
     const pianoSettings = usePianoStore((state) => state.pianoSettings);
     const availableInstruments = usePianoStore((state) => state.availableInstruments);
-    const setPianoInstrument = usePianoStore((state) => state.setPianoInstrument);
-    const setCutOffPreviousNotes = usePianoStore((state) => state.setCutOffPreviousNotes);
-    const setEq = usePianoStore((state) => state.setEq);
-    const setOctaveOffset = usePianoStore((state) => state.setOctaveOffset);
-    const setReverbLevel = usePianoStore((state) => state.setReverbLevel);
-    const setNoteDuration = usePianoStore((state) => state.setNoteDuration);
-    const setVolume = usePianoStore((state) => state.setVolume);
-    const setChorusLevel = usePianoStore((state) => state.setChorusLevel);
-    const setDelayLevel = usePianoStore((state) => state.setDelayLevel);
-    const setDistortionLevel = usePianoStore((state) => state.setDistortionLevel);
-    const setBitcrusherLevel = usePianoStore((state) => state.setBitcrusherLevel);
-    const setPhaserLevel = usePianoStore((state) => state.setPhaserLevel);
-    const setFlangerLevel = usePianoStore((state) => state.setFlangerLevel);
-    const setRingModLevel = usePianoStore((state) => state.setRingModLevel);
-    const setAutoFilterLevel = usePianoStore((state) => state.setAutoFilterLevel);
-    const setTremoloLevel = usePianoStore((state) => state.setTremoloLevel);
-    const setStereoWidthLevel = usePianoStore((state) => state.setStereoWidthLevel);
-    const setCompressorLevel = usePianoStore((state) => state.setCompressorLevel);
     const updatePianoSettings = usePianoStore((state) => state.updatePianoSettings);
-    const setAvailableInstruments = usePianoStore((state) => state.setAvailableInstruments);
 
     const { modes: modesFromHook } = useModes();
 
@@ -328,7 +300,7 @@ export const useIntegratedAppLogic = () => {
                 initialize();
             }
         }
-    }, [modesFromHook, chords]); // FIXED: Removed actions from dependencies
+    }, [modesFromHook, chords]);
 
     // Computed values
     const baseStepDuration = useMemo(() => {
@@ -437,7 +409,7 @@ export const useIntegratedAppLogic = () => {
                 updatePianoSettings(decoded.pianoSettings);
             }
         }
-    }, [chords, modes, availableInstruments]); // FIXED: Removed all actions from dependencies
+    }, [chords, modes, availableInstruments]);
 
     // Complex handlers that need to coordinate between stores
     const handleChordClick = useCallback((chordNoteNames: string, chordIndex?: number, chordName?: string) => {
@@ -467,7 +439,7 @@ export const useIntegratedAppLogic = () => {
                 playNotes(notesWithOctaves as any);
             }
         }
-    }, [isDeleteMode, isPlaying]); // FIXED: Removed Zustand actions from dependencies
+    }, [isDeleteMode, isPlaying]);
 
     const addChordClick = useCallback((chordName: string, chordNotes: string, key: string, mode: string) => {
         addChord(
@@ -477,58 +449,7 @@ export const useIntegratedAppLogic = () => {
             key,
             mode
         );
-    }, [currentlyActivePattern]); // FIXED: Removed Zustand action from dependencies
-
-    const updateChordWithFallbacks = useCallback((chordIndex: number, updatedChord: any) => {
-        const normalizedChord = {
-            name: updatedChord.name,
-            notes: updatedChord.notes,
-            pattern: updatedChord.pattern || ['1', '2', '3', '4'],
-            originalKey: updatedChord.originalKey || key,
-            originalMode: updatedChord.originalMode || mode,
-            originalNotes: updatedChord.originalNotes || updatedChord.notes
-        };
-
-        updateChord(chordIndex, normalizedChord);
-    }, [key, mode, updateChord]);
-
-    const reorderChords = useCallback((sourceIndex: number, destinationIndex: number) => {
-        const currentChords = Array.from(addedChords);
-        const [removed] = currentChords.splice(sourceIndex, 1);
-        currentChords.splice(destinationIndex, 0, removed);
-
-        setAddedChords(currentChords);
-
-        if (activeChordIndex === null) return;
-
-        let newActiveIndex = activeChordIndex;
-        if (activeChordIndex === sourceIndex) {
-            newActiveIndex = destinationIndex;
-        } else if (sourceIndex < activeChordIndex && destinationIndex >= activeChordIndex) {
-            newActiveIndex = activeChordIndex - 1;
-        } else if (sourceIndex > activeChordIndex && destinationIndex <= activeChordIndex) {
-            newActiveIndex = activeChordIndex + 1;
-        }
-
-        if (newActiveIndex !== activeChordIndex) {
-            setActiveChordIndex(newActiveIndex);
-        }
-    }, [addedChords, activeChordIndex, setAddedChords, setActiveChordIndex]);
-
-    const clearAllChords = useCallback(() => {
-        clearAllChordsAction();
-        setGlobalPatternState({ isPlaying: false });
-        setIsLiveMode(false);
-    }, [clearAllChordsAction, setGlobalPatternState, setIsLiveMode]);
-
-    const handlePatternChange = useCallback((newPatternState: Partial<any>) => {
-        updatePattern(newPatternState);
-
-        if (newPatternState.hasOwnProperty('isPlaying') && newPatternState.isPlaying) {
-            globalStepRef.current = 0;
-            sequencerStartTimeRef.current = performance.now();
-        }
-    }, [updatePattern]);
+    }, [currentlyActivePattern]);
 
     const handleTogglePlayback = useCallback(() => {
         const newIsPlaying = !isPlaying;
@@ -607,7 +528,7 @@ export const useIntegratedAppLogic = () => {
         }, cumulativeDelay + noteDuration);
 
         addScalePlaybackTimeout(finalTimeoutId);
-    }, [scaleNotes, isPlayingScale, bpm, isPlaying]); // FIXED: Removed actions from dependencies
+    }, [scaleNotes, isPlayingScale, bpm, isPlaying]);
 
     // Keyboard handlers
     const handleKeyPress = useCallback((event: KeyboardEvent) => {
@@ -695,7 +616,7 @@ export const useIntegratedAppLogic = () => {
                 intervalRef.current = null;
             }
         };
-    }, [isPlaying, getSwingDuration]); // FIXED: Removed action from dependencies
+    }, [isPlaying, getSwingDuration]);
 
     // Keep activeNotes in sync with sequencer
     useEffect(() => {
@@ -769,63 +690,10 @@ export const useIntegratedAppLogic = () => {
         return () => document.removeEventListener('keydown', handleKeyPress);
     }, [handleKeyPress]);
 
-    // Return a consolidated interface
+    // Return only what you're using
     return {
-        // State from stores
-        chords,
-        key,
-        mode,
-        modes,
-        activeNotes,
-        activeChordIndex,
-        highlightedChordIndex,
-        addedChords,
-        loadingChords,
-        isDeleteMode,
-        isPlayingScale,
         isLiveMode,
-        currentlyActivePattern,
-        temporaryChord,
-        normalizedScaleNotes,
-        pianoSettings,
-        availableInstruments,
-
-        // Handlers that coordinate between stores
-        setKey,
-        setMode,
-        setIsDeleteMode,
-        setIsLiveMode,
-        setAvailableInstruments,
         handleChordClick,
         addChordClick,
-        updateChord: updateChordWithFallbacks,
-        reorderChords,
-        clearAllChords,
-        updateChordPattern,
-        toggleScalePlayback,
-        handlePatternChange,
-        handleTogglePlayback,
-        getCurrentPattern,
-        handleFetchOriginalChord,
-
-        // Piano settings handlers
-        setPianoInstrument,
-        setCutOffPreviousNotes,
-        setEq,
-        setOctaveOffset,
-        setReverbLevel,
-        setNoteDuration,
-        setVolume,
-        setChorusLevel,
-        setDelayLevel,
-        setDistortionLevel,
-        setBitcrusherLevel,
-        setPhaserLevel,
-        setFlangerLevel,
-        setRingModLevel,
-        setAutoFilterLevel,
-        setTremoloLevel,
-        setStereoWidthLevel,
-        setCompressorLevel,
     };
 };

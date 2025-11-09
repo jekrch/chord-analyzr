@@ -70,7 +70,7 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
         "flex flex-col bg-mcb-secondary/30 border border-mcb-primary/30 rounded-lg px-6 py-4" :
         "space-y-4";
 
-    const separatorClass = isDesktop ? "w-px h-8 bg-gray-600/50 mx-8" : "hidden";
+    const separatorClass = isDesktop ? "w-px h-8 bg-[var(--mcb-border-primary)]/50 mx-8" : "hidden";
     const labelClass = isDesktop ?
         "text-sm text-mcb-secondary font-medium whitespace-nowrap" :
         "text-sm text-mcb-secondary font-medium whitespace-nowrap w-16 flex items-center";
@@ -155,13 +155,13 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
                         <button
                             onClick={onToggleTranspose}
                             className={`relative flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium uppercase tracking-wide transition-all duration-200 border ${transposeEnabled
-                                ? 'bg-gradient-to-r from-[var(--mcb-accent-secondary)] to-[var(--mcb-accent-tertiary)] text-white border-[var(--mcb-accent-secondary)] shadow-lg shadow-[var(--mcb-accent-secondary)]/25'
+                                ? 'bg-gradient-to-r from-[var(--mcb-accent-secondary)] to-[var(--mcb-accent-tertiary)] text-white border-[var(--mcb-accent-secondary)] shadow-lg shadow-blue-600/25'
                                 : 'bg-mcb-secondary text-mcb-tertiary border-mcb-primary hover:bg-mcb-hover hover:text-mcb-secondary'
                                 }`}
                             title="When enabled, changing key or mode will transpose all added chords"
                         >
                             <div className={`flex items-center gap-2 ${transposeEnabled ? 'text-white' : ''}`}>
-                                <div className={`w-2 h-2 rounded-full transition-colors duration-200 ${transposeEnabled ? 'bg-white' : 'bg-slate-500'
+                                <div className={`w-2 h-2 rounded-full transition-colors duration-200 ${transposeEnabled ? 'bg-white' : 'bg-[var(--mcb-text-disabled)]'
                                     }`} />
                                 <span>Transpose</span>
                             </div>
@@ -208,13 +208,13 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
                     <button
                         onClick={onToggleTranspose}
                         className={`relative flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium uppercase tracking-wide transition-all duration-200 border max-w-[13em] ${transposeEnabled
-                            ? 'bg-gradient-to-r from-[var(--mcb-accent-secondary)] to-[var(--mcb-accent-tertiary)] text-white border-[var(--mcb-accent-secondary)] shadow-lg shadow-[var(--mcb-accent-secondary)]/25'
+                            ? 'bg-gradient-to-r from-[var(--mcb-accent-secondary)] to-[var(--mcb-accent-tertiary)] text-white border-[var(--mcb-accent-secondary)] shadow-lg shadow-blue-600/25'
                             : 'bg-mcb-secondary text-mcb-tertiary border-mcb-primary hover:bg-mcb-hover hover:text-mcb-secondary'
                             }`}
                         title="When enabled, changing key or mode will transpose all added chords"
                     >
                         <div className={`flex items-center gap-2 ${transposeEnabled ? 'text-white' : ''}`}>
-                            <div className={`w-2 h-2 rounded-full transition-colors duration-200 ${transposeEnabled ? 'bg-white' : 'bg-slate-500'
+                            <div className={`w-2 h-2 rounded-full transition-colors duration-200 ${transposeEnabled ? 'bg-white' : 'bg-[var(--mcb-text-disabled)]'
                                 }`} />
                             <span>Transpose</span>
                         </div>
@@ -660,7 +660,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                                 <label className="flex items-center cursor-pointer">
                                                     <input
                                                         type="checkbox"
-                                                        className="w-3.5 h-3.5 text-[var(--mcb-accent-secondary)] bg-mcb-secondary border-mcb-primary rounded focus:ring-[var(--mcb-accent-primary)] focus:ring-1"
+                                                        className="w-3.5 h-3.5 text-blue-600 bg-mcb-secondary border-mcb-primary rounded focus:ring-[var(--mcb-accent-primary)] focus:ring-1"
                                                         checked={pianoSettings.cutOffPreviousNotes}
                                                         onChange={(e) => setCutOffPreviousNotes(e.target.checked)}
                                                     />

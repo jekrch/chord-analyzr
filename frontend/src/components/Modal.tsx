@@ -55,7 +55,7 @@ const Modal: React.FC<ModalProps> = ({
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-slate-600 text-mcb-tertiary hover:text-mcb-primary transition-colors ml-auto"
+                className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-[var(--mcb-text-subtle)] text-mcb-tertiary hover:text-mcb-primary transition-colors ml-auto"
               >
                 <XMarkIcon className="w-4 h-4" />
               </button>

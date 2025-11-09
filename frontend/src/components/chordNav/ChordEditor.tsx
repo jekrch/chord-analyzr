@@ -274,7 +274,7 @@ const ChordEditor: React.FC<ChordEditorProps> = ({
                         <h2 className="text-lg sm:text-xl font-bold text-white truncate">
                             Edit: {editingChord.name.replace(/\/[A-G](##|#|bb|b)?\d*/, '')}
                         </h2>
-                        <span className="px-2 py-1 text-xs bg-slate-700 text-mcb-secondary rounded font-mono flex-shrink-0">
+                        <span className="px-2 py-1 text-xs bg-[var(--mcb-text-subtle)] text-mcb-secondary rounded font-mono flex-shrink-0">
                             {editingChordIndex + 1} / {totalChords}
                         </span>
                     </div>

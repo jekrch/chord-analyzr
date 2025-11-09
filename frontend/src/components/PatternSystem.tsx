@@ -469,7 +469,7 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
                           <div key={`indicator-${globalIndex}`} className="flex justify-center">
                             <div className={`transition-all duration-200 ${currentStepIndex === globalIndex
                               ? 'w-full h-1 bg-[var(--mcb-accent-text-primary)] rounded-full'
-                              : 'w-full h-1 bg-gray-600 rounded-full'
+                              : 'w-full h-1 bg-[var(--mcb-border-primary)] rounded-full'
                               }`}></div>
                           </div>
                         );
@@ -511,7 +511,7 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
                           <div key={`indicator-${globalIndex}`} className="flex justify-center">
                             <div className={`transition-all duration-200 ${currentStepIndex === globalIndex
                               ? 'w-full h-1 bg-[var(--mcb-accent-text-primary)] rounded-full shadow-lg shadow-[var(--mcb-accent-text-primary)]/50'
-                              : 'w-full h-1 bg-gray-600 rounded-full'
+                              : 'w-full h-1 bg-[var(--mcb-border-primary)] rounded-full'
                               }`}></div>
                           </div>
                         );
@@ -633,7 +633,7 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
                         onChange={(e) => setCustomPattern(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && applyCustomPattern()}
                         placeholder="1,x,3,2+"
-                        className="w-full p-2 bg-mcb-secondary border border-mcb-primary rounded text-mcb-primary text-xs focus:border-[var(--mcb-accent-primary)] transition-colors placeholder-slate-500"
+                        className="w-full p-2 bg-mcb-secondary border border-mcb-primary rounded text-mcb-primary text-xs focus:border-[var(--mcb-accent-primary)] transition-colors placeholder-[var(--mcb-text-disabled)]"
                       />
                       <button
                         onClick={applyCustomPattern}

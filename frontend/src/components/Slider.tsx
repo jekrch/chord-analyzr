@@ -135,7 +135,7 @@ const Slider: React.FC<SliderProps> = ({
                 className={`w-5 h-5 rounded flex items-center justify-center transition-all ${
                   enabled 
                     ? 'bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30' 
-                    : 'bg-slate-700/50 text-mcb-disabled hover:bg-slate-700/70'
+                    : 'bg-[var(--mcb-text-subtle)]/50 text-mcb-disabled hover:bg-[var(--mcb-text-subtle)]/70'
                 }`}
                 title={enabled ? 'Bypass effect' : 'Enable effect'}
               >
@@ -187,7 +187,7 @@ const Slider: React.FC<SliderProps> = ({
             className={`w-5 h-5 rounded flex items-center justify-center transition-all flex-shrink-0 ${
               enabled 
                 ? 'bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30' 
-                : 'bg-slate-700/50 text-mcb-disabled hover:bg-slate-700/70'
+                : 'bg-[var(--mcb-text-subtle)]/50 text-mcb-disabled hover:bg-[var(--mcb-text-subtle)]/70'
             }`}
             title={enabled ? 'Bypass effect' : 'Enable effect'}
           >

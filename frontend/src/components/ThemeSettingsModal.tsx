@@ -130,7 +130,7 @@ const ThemeSettingsModal: React.FC<ThemeSettingsModalProps> = ({ isOpen, onClose
                                 {/* Theme Name */}
                                 <div className="mb-2 pr-6">
                                     <h4 className="text-sm font-bold text-white">{theme.name}</h4>
-                                    <p className="text-xs text-slate-400 mt-0.5 leading-tight">{theme.description}</p>
+                                    <p className="text-xs text-[var(--mcb-text-tertiary)] mt-0.5 leading-tight">{theme.description}</p>
                                 </div>
 
                                 {/* Color Preview */}
@@ -168,7 +168,7 @@ const ThemeSettingsModal: React.FC<ThemeSettingsModalProps> = ({ isOpen, onClose
                             <div className="text-sm text-[var(--mcb-text-primary)] mb-2">Sample Content</div>
                             <div className="flex items-center space-x-2">
                                 <Button variant="primary" size="sm">
-                                    Accent Button
+                                    Accent
                                 </Button>
                                 <Button variant="secondary" size="sm">
                                     Secondary

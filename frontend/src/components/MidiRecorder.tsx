@@ -199,7 +199,7 @@ const MidiRecorder: React.FC<MidiRecorderProps> = ({ className = '' }) => {
         <button
           onClick={handleToggleRecording}
           className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[var(--mcb-accent-primary)] focus:ring-offset-2 focus:ring-offset-gray-800 ${
-            midiRecordingEnabled ? 'bg-[var(--mcb-accent-secondary)]' : 'bg-gray-600'
+            midiRecordingEnabled ? 'bg-[var(--mcb-accent-secondary)]' : 'bg-[var(--mcb-border-secondary)]'
           }`}
           role="switch"
           aria-checked={midiRecordingEnabled}

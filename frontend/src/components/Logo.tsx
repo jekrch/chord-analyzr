@@ -29,7 +29,7 @@ const Logo: React.FC<LogoProps> = ({ size = 48, className = '' }) => {
         </svg>
       </div>
       {/* Decorative accent */}
-      <div className="absolute -top-1 -right-0 w-2 h-2 border border-slate-400 transform rotate-45"></div>
+      <div className="absolute -top-1 -right-0 w-2 h-2 border border-[var(--mcb-text-tertiary)] transform rotate-45"></div>
     </div>
   );
 };

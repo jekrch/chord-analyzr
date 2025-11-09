@@ -296,7 +296,7 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
 
   // Memoized filter buttons
   const mobileFilterButtons = useMemo(() => (
-    <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent px-1">
+    <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-[var(--mcb-border-primary)] scrollbar-track-transparent px-1">
       <button
         onClick={() => setSelectedRootNote('All')}
         className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-colors ${selectedRootNote === 'All'

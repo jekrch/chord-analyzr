@@ -21,7 +21,7 @@ const TextInput: React.FC<TextInputProps> = ({ label, value, placeholder, onChan
         id="keyInput"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="px-2 py-1 block w-20 rounded-md bg-slate-100 border-slate-400 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-slate-800"
+        className="px-2 py-1 block w-20 rounded-md bg-[var(--mcb-text-primary)] border-[var(--mcb-text-tertiary)] shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-slate-800"
         placeholder={placeholder}
       />
     </div>

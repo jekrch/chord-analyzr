@@ -178,7 +178,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                       className="w-full text-mcb-primary pl-9 pr-3 py-2 text-sm font-normal 
                         bg-mcb-primary border border-mcb-primary rounded-md 
                         focus:outline-none focus:ring-2 focus:ring-[var(--mcb-accent-primary)]/50 focus:border-[var(--mcb-accent-primary)] 
-                        placeholder-slate-500 
+                        placeholder-[var(--mcb-text-disabled)] 
                         transition-all duration-200
                         hover:bg-[#333844] hover:border-mcb-secondary"
                       placeholder="Search options..."
@@ -204,7 +204,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                       className={`
                         relative block w-full px-4 py-2.5 text-left text-sm font-medium 
                         transition-all duration-200
-                        text-mcb-secondary hover:text-slate-100
+                        text-mcb-secondary hover:text-[var(--mcb-text-primary)]
                         hover:bg-mcb-hover
                         border-l-2 border-l-transparent hover:border-l-[var(--mcb-accent-text-primary)]
                       `}

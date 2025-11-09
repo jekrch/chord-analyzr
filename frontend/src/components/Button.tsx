@@ -53,14 +53,14 @@ export const Button: React.FC<ButtonProps> = ({
   const variantClasses = {
     primary: `
       ${active 
-        ? 'bg-mcb-active border-mcb-secondary text-slate-100' 
+        ? 'bg-mcb-active border-mcb-secondary text-[var(--mcb-text-primary)]' 
         : 'bg-mcb-secondary border-mcb-primary text-mcb-primary hover:bg-mcb-hover hover:border-mcb-secondary'
       }
       focus:ring-[var(--mcb-accent-primary)]/50
     `,
     secondary: `
       ${active 
-        ? 'bg-mcb-active border-mcb-secondary text-slate-100' 
+        ? 'bg-mcb-active border-mcb-secondary text-[var(--mcb-text-primary)]' 
         : 'bg-mcb-hover border-mcb-secondary text-mcb-primary hover:bg-mcb-active hover:border-gray-400'
       }
       focus:ring-gray-400/50

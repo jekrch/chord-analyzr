@@ -65,7 +65,7 @@ const HeaderNav: React.FC = () => {
                                     </h1>
                                     <div className="flex items-center space-x-0.5">
                                         <span className="text-xs text-mcb-tertiary font-medium uppercase tracking-widest">chord</span>
-                                        <div className="w-1 h-1 mr-[0.2em] bg-slate-400"></div>
+                                        <div className="w-1 h-1 mr-[0.2em] bg-[var(--mcb-text-tertiary)]"></div>
                                         <span className="text-xs text-mcb-tertiary font-medium uppercase tracking-widest">buildr</span>
                                     </div>
                                 </div>
@@ -80,7 +80,7 @@ const HeaderNav: React.FC = () => {
                                 <div className="px-2 py-0.5 bg-mcb-tertiary border border-mcb-primary rounded text-mcb-secondary font-mono">
                                     {key}
                                 </div>
-                                <div className="w-px h-4 bg-slate-600"></div>
+                                <div className="w-px h-4 bg-[var(--mcb-text-subtle)]"></div>
                                 <div className="px-2 py-1 bg-mcb-tertiary border border-mcb-primary rounded text-mcb-secondary text-xs font-mono">
                                     {mode}
                                 </div>

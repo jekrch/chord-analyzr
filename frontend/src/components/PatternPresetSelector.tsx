@@ -203,7 +203,7 @@ useEffect(() => {
             type="checkbox"
             checked={hideFewerNotePatterns}
             onChange={(e) => onHideFewerNotePatternsChange(e.target.checked)}
-            className="w-3 h-3 rounded border-mcb-primary bg-mcb-secondary text-[var(--mcb-accent-secondary)] focus:ring-[var(--mcb-accent-primary)] focus:ring-1"
+            className="w-3 h-3 rounded border-mcb-primary bg-mcb-secondary text-blue-600 focus:ring-[var(--mcb-accent-primary)] focus:ring-1"
           />
           <span className="text-xs text-mcb-primary">Hide patterns with fewer notes</span>
         </label>
@@ -259,7 +259,7 @@ useEffect(() => {
                 onClick={() => onApplyPreset(preset)}
                 className={`p-2 rounded text-xs transition-colors text-left border ${
                   isSelected 
-                    ? 'bg-[var(--mcb-accent-secondary)]/20 text-slate-100 border-[var(--mcb-accent-primary)] ring-1 ring-[var(--mcb-accent-primary)]/50' 
+                    ? 'bg-[var(--mcb-accent-secondary)]/20 text-[var(--mcb-text-primary)] border-[var(--mcb-accent-primary)] ring-1 ring-[var(--mcb-accent-primary)]/50' 
                     : 'bg-mcb-secondary text-mcb-secondary hover:bg-mcb-hover hover:text-mcb-primary border-mcb-primary hover:border-mcb-secondary'
                 }`}
               >

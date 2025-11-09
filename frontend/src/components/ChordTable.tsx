@@ -378,7 +378,7 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
                 placeholder="Search chords..."
                 value={searchQuery}
                 onChange={handleSearchChange}
-                className="w-full pl-10 pr-4 py-2 bg-mcb-tertiary border border-mcb-primary rounded-lg text-white placeholder-gray-400 focus:border-[var(--mcb-accent-primary)] focus:outline-none transition-colors !text-sm"
+                className="w-full pl-10 pr-4 py-2 bg-mcb-tertiary border border-mcb-primary rounded-lg text-white placeholder-[var(--mcb-text-tertiary)] focus:border-[var(--mcb-accent-primary)] focus:outline-none transition-colors !text-sm"
               />
             </div>
 

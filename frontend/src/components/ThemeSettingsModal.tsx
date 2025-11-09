@@ -44,7 +44,7 @@ const THEMES: Theme[] = [
     {
         id: 'neon',
         name: 'Neon',
-        description: 'Synthwave purple for late-night sessions',
+        description: 'Synthwave purple and pink vibes',
         colors: {
             primary: '#a855f7',
             secondary: '#2d1f3d',
@@ -54,7 +54,7 @@ const THEMES: Theme[] = [
     {
         id: 'sunset',
         name: 'Sunset',
-        description: 'Warm orange vibes for studio sessions',
+        description: 'Warm orange vibes for a cozy feel',
         colors: {
             primary: '#f97316',
             secondary: '#3d2a21',

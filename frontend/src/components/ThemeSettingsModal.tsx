@@ -92,7 +92,7 @@ const ThemeSettingsModal: React.FC<ThemeSettingsModalProps> = ({ isOpen, onClose
             title="Theme Settings"
             className="max-w-2xl"
         >
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-6 overflow-y-auto max-h-[80vh]">
                 {/* Description */}
                 <div className="bg-mcb-primary rounded-lg border border-[var(--mcb-border-primary)] p-4">
                     <p className="text-sm text-[var(--mcb-text-secondary)] text-left leading-relaxed">
@@ -105,17 +105,16 @@ const ThemeSettingsModal: React.FC<ThemeSettingsModalProps> = ({ isOpen, onClose
                     <h3 className="text-sm font-semibold text-white uppercase tracking-wide text-left">
                         Available Themes
                     </h3>
-                    
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {THEMES.map((theme) => (
                             <button
                                 key={theme.id}
                                 onClick={() => handleThemeChange(theme.id)}
-                                className={`relative p-4 rounded-lg border-2 transition-all duration-200 text-left ${
-                                    currentTheme === theme.id
+                                className={`relative p-4 rounded-lg border-2 transition-all duration-200 text-left ${currentTheme === theme.id
                                         ? 'border-[var(--mcb-accent-primary)] bg-[var(--mcb-bg-secondary)] shadow-lg shadow-[var(--mcb-accent-light)]'
                                         : ' border-[var(--mcb-border-primary)] bg-[var(--mcb-bg-primary)] hover:border-[var(--mcb-border-secondary)] hover:bg-[var(--mcb-bg-secondary)]'
-                                }`}
+                                    }`}
                             >
                                 {/* Selected Indicator */}
                                 {currentTheme === theme.id && (
@@ -124,8 +123,8 @@ const ThemeSettingsModal: React.FC<ThemeSettingsModalProps> = ({ isOpen, onClose
                                             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                                             </svg>
-                                        </div>
-                                    </div>
+
+                                        </div> </div>
                                 )}
 
                                 {/* Theme Name */}

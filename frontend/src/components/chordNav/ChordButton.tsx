@@ -78,17 +78,17 @@ export const ChordButton: React.FC<ChordButtonProps> = ({
 
   const variantClasses = {
     primary: active 
-      ? 'bg-blue-600 border-blue-500 text-white focus:ring-blue-500'
-      : 'bg-blue-700 border-blue-600 hover:bg-blue-600 hover:border-blue-500 text-white focus:ring-blue-500',
+      ? 'bg-[var(--mcb-accent-secondary)] border-[var(--mcb-accent-primary)] text-white focus:ring-[var(--mcb-accent-primary)]'
+      : 'bg-[var(--mcb-accent-tertiary)] border-[var(--mcb-accent-secondary)] hover:bg-[var(--mcb-accent-secondary)] hover:border-[var(--mcb-accent-primary)] text-white focus:ring-[var(--mcb-accent-primary)]',
     secondary: active
-      ? 'bg-[#525a6b] border-gray-500 text-white focus:ring-gray-500'
-      : 'bg-[#4a5262] border-gray-600 hover:bg-[#525a6b] hover:border-gray-500 text-white focus:ring-gray-500',
+      ? 'bg-mcb-active border-mcb-secondary text-white focus:ring-gray-500'
+      : 'bg-mcb-hover border-mcb-primary hover:bg-mcb-active hover:border-mcb-secondary text-white focus:ring-gray-500',
     danger: active
-      ? 'bg-red-600 border-red-500 text-white focus:ring-red-500'
-      : 'bg-red-700 border-red-600 hover:bg-red-600 hover:border-red-500 text-white focus:ring-red-500',
+      ? 'bg-[var(--mcb-danger-primary)] border-[var(--mcb-danger-border)] text-white focus:ring-red-500'
+      : 'bg-[var(--mcb-danger-secondary)] border-red-600 hover:bg-[var(--mcb-danger-primary)] hover:border-[var(--mcb-danger-border)] text-white focus:ring-red-500',
     success: active
-      ? 'bg-green-600 border-green-500 text-white focus:ring-green-500'
-      : 'bg-green-700 border-green-600 hover:bg-green-600 hover:border-green-500 text-white focus:ring-green-500'
+      ? 'bg-[var(--mcb-success-primary)] border-green-500 text-white focus:ring-green-500'
+      : 'bg-[var(--mcb-success-secondary)] border-green-600 hover:bg-[var(--mcb-success-primary)] hover:border-green-500 text-white focus:ring-green-500'
   };
 
   // Enhanced classes for chord-specific functionality
@@ -100,7 +100,7 @@ export const ChordButton: React.FC<ChordButtonProps> = ({
     {
       'transform': isHighlighted,
       'shadow-xl': isLiveMode,
-      'border-blue-500 hover:border-blue-400': isEditMode,
+      'border-[var(--mcb-accent-primary)] hover:border-[var(--mcb-accent-text-primary)]': isEditMode,
       'cursor-grab active:cursor-grabbing': isEditMode && !isMobile(),
       'opacity-80 shadow-2xl scale-105': isDragging,
       'select-none': isEditMode,
@@ -141,7 +141,7 @@ export const ChordButton: React.FC<ChordButtonProps> = ({
         {isEditMode && (
           <>
           <CogIcon 
-            className={`absolute top-1 right-1 text-white bg-blue-500 rounded-full shadow-sm p-0.5 ${
+            className={`absolute top-1 right-1 text-white bg-[var(--mcb-accent-primary)] rounded-full shadow-sm p-0.5 ${
               isLiveMode ? 'h-6 w-6' : 'h-4 w-4'
             }`} 
           />
@@ -154,11 +154,11 @@ export const ChordButton: React.FC<ChordButtonProps> = ({
 
         {/* Enhanced drag handle for mobile - make it more prominent */}
         {isEditMode && isMobile() && (
-          <div className="absolute inset-0 w-full bg-blue-500/5 border-2 border-blue-500/20 rounded-lg pointer-events-none" />
+          <div className="absolute inset-0 w-full bg-[var(--mcb-accent-primary)]/5 border-2 border-[var(--mcb-accent-primary)]/20 rounded-lg pointer-events-none" />
         )}
         
         {/* Chord number */}
-        <div className={`text-blue-200 font-bold ${sizeConfig?.number || 'text-xl mb-2'}`}>
+        <div className={`text-[var(--mcb-accent-text-light)] font-bold ${sizeConfig?.number || 'text-xl mb-2'}`}>
           {index + 1}
         </div>
 
@@ -170,10 +170,10 @@ export const ChordButton: React.FC<ChordButtonProps> = ({
         {/* Live mode additional info */}
         {isLiveMode && (
           <>
-            <div className="mt-4 text-xs text-center text-slate-300">
+            <div className="mt-4 text-xs text-center text-mcb-secondary">
               {chord.notes.replace(/,/g, ' • ')}
             </div>
-            <div className="mt-1 font-mono text-xs text-center text-slate-300">
+            <div className="mt-1 font-mono text-xs text-center text-mcb-secondary">
               {chord.pattern.join('-')}
             </div>
           </>

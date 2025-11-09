@@ -68,11 +68,11 @@ export const ControlBar: React.FC<ControlBarProps> = ({
                 </div>
                 
                 <div className="text-center sm:w-full sm:text-left sm:mx-4">
-                    <div className="hidden sm:block text-xs font-bold text-slate-300 uppercase tracking-wider">
-                        chords {isEditMode && <span className="text-blue-400">(drag to reorder)</span>}
+                    <div className="hidden sm:block text-xs font-bold text-mcb-secondary uppercase tracking-wider">
+                        chords {isEditMode && <span className="text-[var(--mcb-accent-text-primary)]">(drag to reorder)</span>}
                     </div>
-                    <div className="block sm:hidden text-xs text-slate-300 uppercase tracking-wider">
-                        chords {isEditMode && <span className="text-blue-400">(drag)</span>}
+                    <div className="block sm:hidden text-xs text-mcb-secondary uppercase tracking-wider">
+                        chords {isEditMode && <span className="text-[var(--mcb-accent-text-primary)]">(drag)</span>}
                     </div>
                 </div>
                 
@@ -82,8 +82,8 @@ export const ControlBar: React.FC<ControlBarProps> = ({
                         className={classNames(
                             "w-[7em] h-8 flex items-center space-x-2 px-3 py-1.5 text-xs border rounded transition-all duration-200", 
                             isLiveMode ? 
-                                "text-slate-200 bg-[#4a5262] border-gray-600 hover:bg-[#525a6b]" : 
-                                "text-slate-300 hover:text-slate-200 bg-[#4a5262] hover:bg-[#525a6b] border-gray-600"
+                                "text-mcb-primary bg-mcb-hover border-mcb-primary hover:bg-mcb-active" : 
+                                "text-mcb-secondary hover:text-mcb-primary bg-mcb-hover hover:bg-mcb-active border-mcb-primary"
                         )}
                     >
                         {isLiveMode ? (
@@ -106,7 +106,7 @@ export const ControlBar: React.FC<ControlBarProps> = ({
                                     if (isLiveMode) onToggleLiveMode(); 
                                     onClearAll(); 
                                 }} 
-                                className="w-[5em] h-8 flex items-center justify-center px-3 py-1.5 text-xs text-slate-300 hover:text-slate-200 bg-[#4a5262] hover:bg-[#525a6b] border border-gray-600 rounded transition-all duration-200"
+                                className="w-[5em] h-8 flex items-center justify-center px-3 py-1.5 text-xs text-mcb-secondary hover:text-mcb-primary bg-mcb-hover hover:bg-mcb-active border border-mcb-primary rounded transition-all duration-200"
                             >
                                 Clear
                             </button>
@@ -115,8 +115,8 @@ export const ControlBar: React.FC<ControlBarProps> = ({
                                 className={classNames(
                                     "w-[7em] h-8 flex items-center space-x-2 px-3 py-1.5 text-xs border rounded transition-all duration-200", 
                                     isDeleteMode ? 
-                                        "text-white bg-red-600 border-red-500 hover:bg-red-700" : 
-                                        "text-slate-300 hover:text-slate-200 bg-[#4a5262] hover:bg-[#525a6b] border-gray-600"
+                                        "text-white bg-[var(--mcb-danger-primary)] border-[var(--mcb-danger-border)] hover:bg-[var(--mcb-danger-secondary)]" : 
+                                        "text-mcb-secondary hover:text-mcb-primary bg-mcb-hover hover:bg-mcb-active border-mcb-primary"
                                 )}
                             >
                                 <TrashIcon className="h-3 w-3" />
@@ -128,15 +128,15 @@ export const ControlBar: React.FC<ControlBarProps> = ({
             </div>
             
             {isLiveMode && !isCompactHeight && (
-                <div className="mb-4 text-sm text-center text-slate-400">
+                <div className="mb-4 text-sm text-center text-mcb-tertiary">
                     <div>Use 1-{Math.min(addedChords.length, 9)} or click chords</div>
                     <div className="mt-2 text-xs">
-                        <span className="inline-block w-3 h-3 mr-2 bg-blue-500 rounded-full"></span> 
+                        <span className="inline-block w-3 h-3 mr-2 bg-[var(--mcb-accent-primary)] rounded-full"></span> 
                         Active Chord
                         {isEditMode && (
                             <>
                                 <span className="mx-2">•</span>
-                                <span className="text-blue-400">Drag chords to reorder</span>
+                                <span className="text-[var(--mcb-accent-text-primary)]">Drag chords to reorder</span>
                             </>
                         )}
                     </div>

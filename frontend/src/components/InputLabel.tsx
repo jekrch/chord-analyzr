@@ -8,7 +8,7 @@ interface InputLabelProps {
 
 const InputLabel: React.FC<InputLabelProps> = (props: InputLabelProps) => {
     return (
-        <label className={classNames("mr-[1em] flex-1 text-right text-sm font-medium text-slate-400", props.className)}>
+        <label className={classNames("mr-[1em] flex-1 text-right text-sm font-medium text-mcb-tertiary", props.className)}>
             {props.value}
         </label>
     );

@@ -28,8 +28,8 @@ export const EditModeToggle: React.FC<EditModeToggleProps> = ({
                 "flex items-center justify-center rounded-lg border-2 border-dashed transition-all duration-200",
                 isLiveMode ? "w-full h-full min-h-[120px] py-8 px-6" : "w-12 h-12",
                 isEditMode ? 
-                    "border-blue-500 text-blue-400 bg-blue-500/10 hover:bg-blue-500/20" : 
-                    "border-gray-500 text-gray-400 hover:border-gray-400 hover:text-gray-300 hover:bg-gray-500/10"
+                    "border-[var(--mcb-accent-primary)] text-[var(--mcb-accent-text-primary)] bg-[var(--mcb-accent-primary)]/10 hover:bg-[var(--mcb-accent-primary)]/20" : 
+                    "border-mcb-secondary text-[var(--mcb-text-tertiary)] hover:border-gray-400 hover:text-mcb-secondary hover:bg-gray-500/10"
             )}
             title={isEditMode ? "Exit edit mode" : "Edit chords"}
             style={{

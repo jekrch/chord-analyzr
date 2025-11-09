@@ -16,16 +16,16 @@ const Logo: React.FC<LogoProps> = ({ size = 48, className = '' }) => {
             fill="none" 
             stroke="currentColor" 
             strokeWidth="2" 
-            className="text-slate-300"
+            className="text-mcb-secondary"
           />
           {/* Three nodes forming a triangle */}
-          <circle cx="18" cy="20" r="2" fill="currentColor" className="text-slate-400"/>
-          <circle cx="30" cy="20" r="2" fill="currentColor" className="text-slate-400"/>
-          <circle cx="24" cy="28" r="2" fill="currentColor" className="text-slate-400"/>
+          <circle cx="18" cy="20" r="2" fill="currentColor" className="text-mcb-tertiary"/>
+          <circle cx="30" cy="20" r="2" fill="currentColor" className="text-mcb-tertiary"/>
+          <circle cx="24" cy="28" r="2" fill="currentColor" className="text-mcb-tertiary"/>
           {/* Connecting lines */}
-          <line x1="18" y1="20" x2="24" y2="28" stroke="currentColor" strokeWidth="1.5" className="text-slate-400"/>
-          <line x1="30" y1="20" x2="24" y2="28" stroke="currentColor" strokeWidth="1.5" className="text-slate-400"/>
-          <line x1="18" y1="20" x2="30" y2="20" stroke="currentColor" strokeWidth="1.5" className="text-slate-400"/>
+          <line x1="18" y1="20" x2="24" y2="28" stroke="currentColor" strokeWidth="1.5" className="text-mcb-tertiary"/>
+          <line x1="30" y1="20" x2="24" y2="28" stroke="currentColor" strokeWidth="1.5" className="text-mcb-tertiary"/>
+          <line x1="18" y1="20" x2="30" y2="20" stroke="currentColor" strokeWidth="1.5" className="text-mcb-tertiary"/>
         </svg>
       </div>
       {/* Decorative accent */}

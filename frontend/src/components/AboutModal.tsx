@@ -23,8 +23,8 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose, onOpenHelp }) 
         >
             <div className="p-6 space-y-6">
                 {/* Overview Section */}
-                <div className="bg-[#2a2f38] rounded-lg border border-gray-600 overflow-hidden">
-                    <div className="p-4 text-sm leading-relaxed space-y-3 text-slate-300 text-left">
+                <div className="bg-mcb-primary rounded-lg border border-mcb-primary overflow-hidden">
+                    <div className="p-4 text-sm leading-relaxed space-y-3 text-mcb-secondary text-left">
                         <p>
                             Modal Chord Buildr is a music learning, composition, and performance tool built with React. The app provides an intuitive interface for exploring musical scales and building chord progressions, while also offering basic synth and sequencer functionality.
                         </p>
@@ -32,7 +32,7 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose, onOpenHelp }) 
                             For more details on how to use this app, please refer to the{' '}
                             <button 
                                 onClick={handleHelpClick}
-                                className="font-semibold text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors cursor-pointer"
+                                className="font-semibold text-[var(--mcb-accent-text-primary)] hover:text-[var(--mcb-accent-text-secondary)] underline underline-offset-2 transition-colors cursor-pointer"
                             >
                                 Help & Guide
                             </button>{' '}
@@ -42,46 +42,46 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose, onOpenHelp }) 
                 </div>
 
                 {/* Key Features Section */}
-                <div className="bg-[#2a2f38] rounded-lg border border-gray-600 overflow-hidden">
-                    <div className="bg-[#444b59] px-4 py-3 border-b border-gray-600">
+                <div className="bg-mcb-primary rounded-lg border border-mcb-primary overflow-hidden">
+                    <div className="bg-mcb-tertiary px-4 py-3 border-b border-mcb-primary">
                         <h4 className="text-sm font-semibold text-white uppercase tracking-wide">
                             Key Features
                         </h4>
                     </div>
                     <div className="p-4">
                         <div className="space-y-3">
-                            <div className="flex items-start space-x-3 p-2 rounded-md hover:bg-[#3d434f]/50 transition-colors">
-                                <div className="w-2 h-2 rounded-full bg-blue-400 mt-2 flex-shrink-0"></div>
-                                <span className="text-sm text-slate-300 text-left">Interactive piano with multiple instruments and audio effects</span>
+                            <div className="flex items-start space-x-3 p-2 rounded-md hover:bg-mcb-secondary/50 transition-colors">
+                                <div className="w-2 h-2 rounded-full bg-[var(--mcb-accent-text-primary)] mt-2 flex-shrink-0"></div>
+                                <span className="text-sm text-mcb-secondary text-left">Interactive piano with multiple instruments and audio effects</span>
                             </div>
-                            <div className="flex items-start space-x-3 p-2 rounded-md hover:bg-[#3d434f]/50 transition-colors">
-                                <div className="w-2 h-2 rounded-full bg-blue-400 mt-2 flex-shrink-0"></div>
-                                <span className="text-sm text-slate-300 text-left">Pattern sequencer with customizable rhythmic patterns</span>
+                            <div className="flex items-start space-x-3 p-2 rounded-md hover:bg-mcb-secondary/50 transition-colors">
+                                <div className="w-2 h-2 rounded-full bg-[var(--mcb-accent-text-primary)] mt-2 flex-shrink-0"></div>
+                                <span className="text-sm text-mcb-secondary text-left">Pattern sequencer with customizable rhythmic patterns</span>
                             </div>
-                            <div className="flex items-start space-x-3 p-2 rounded-md hover:bg-[#3d434f]/50 transition-colors">
-                                <div className="w-2 h-2 rounded-full bg-blue-400 mt-2 flex-shrink-0"></div>
-                                <span className="text-sm text-slate-300 text-left">Extensive chord explorer with mode-based chord generation</span>
+                            <div className="flex items-start space-x-3 p-2 rounded-md hover:bg-mcb-secondary/50 transition-colors">
+                                <div className="w-2 h-2 rounded-full bg-[var(--mcb-accent-text-primary)] mt-2 flex-shrink-0"></div>
+                                <span className="text-sm text-mcb-secondary text-left">Extensive chord explorer with mode-based chord generation</span>
                             </div>
-                            <div className="flex items-start space-x-3 p-2 rounded-md hover:bg-[#3d434f]/50 transition-colors">
-                                <div className="w-2 h-2 rounded-full bg-blue-400 mt-2 flex-shrink-0"></div>
-                                <span className="text-sm text-slate-300 text-left">Real-time visualization of scale notes and chord relationships</span>
+                            <div className="flex items-start space-x-3 p-2 rounded-md hover:bg-mcb-secondary/50 transition-colors">
+                                <div className="w-2 h-2 rounded-full bg-[var(--mcb-accent-text-primary)] mt-2 flex-shrink-0"></div>
+                                <span className="text-sm text-mcb-secondary text-left">Real-time visualization of scale notes and chord relationships</span>
                             </div>
-                            <div className="flex items-start space-x-3 p-2 rounded-md hover:bg-[#3d434f]/50 transition-colors">
-                                <div className="w-2 h-2 rounded-full bg-blue-400 mt-2 flex-shrink-0"></div>
-                                <span className="text-sm text-slate-300 text-left">Live mode for performance and improvisation</span>
+                            <div className="flex items-start space-x-3 p-2 rounded-md hover:bg-mcb-secondary/50 transition-colors">
+                                <div className="w-2 h-2 rounded-full bg-[var(--mcb-accent-text-primary)] mt-2 flex-shrink-0"></div>
+                                <span className="text-sm text-mcb-secondary text-left">Live mode for performance and improvisation</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Database Context Section */}
-                {/* <div className="bg-[#2a2f38] rounded-lg border border-gray-600 overflow-hidden">
-                    <div className="bg-[#444b59] px-4 py-3 border-b border-gray-600">
+                {/* <div className="bg-mcb-primary rounded-lg border border-mcb-primary overflow-hidden">
+                    <div className="bg-mcb-tertiary px-4 py-3 border-b border-mcb-primary">
                         <h4 className="text-sm font-semibold text-white uppercase tracking-wide">
                             Music Theory Database
                         </h4>
                     </div>
-                    <div className="p-4 text-sm leading-relaxed text-slate-300 text-left">
+                    <div className="p-4 text-sm leading-relaxed text-mcb-secondary text-left">
                         <p>
                             This application is powered by a comprehensive PostgreSQL database that maps and analyzes complex relationships between chords, modes, and scales. The database enables sophisticated music theory calculations and provides the harmonic foundation for the chord generation and analysis features.
                         </p>
@@ -89,8 +89,8 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose, onOpenHelp }) 
                 </div> */}
 
                 {/* Links Section */}
-                <div className="bg-[#2a2f38] rounded-lg border border-gray-600 overflow-hidden">
-                    <div className="bg-[#444b59] px-4 py-3 border-b border-gray-600">
+                <div className="bg-mcb-primary rounded-lg border border-mcb-primary overflow-hidden">
+                    <div className="bg-mcb-tertiary px-4 py-3 border-b border-mcb-primary">
                         <h4 className="text-sm font-semibold text-white uppercase tracking-wide">
                             Links
                         </h4>
@@ -100,7 +100,7 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose, onOpenHelp }) 
                             href="https://github.com/jekrch/chord-analyzr"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center space-x-3 p-3 rounded-lg bg-[#3d434f]/50 hover:bg-[#4a5262]/70 transition-all duration-200 group"
+                            className="flex items-center space-x-3 p-3 rounded-lg bg-mcb-secondary/50 hover:bg-mcb-hover/70 transition-all duration-200 group"
                         >
                             <div className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-700 group-hover:bg-gray-600 transition-colors">
                                 <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -108,10 +108,10 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose, onOpenHelp }) 
                                 </svg>
                             </div>
                             <div className="flex-1 text-left">
-                                <div className="text-sm font-medium text-white group-hover:text-blue-200 transition-colors">
+                                <div className="text-sm font-medium text-white group-hover:text-[var(--mcb-accent-text-light)] transition-colors">
                                     GitHub Repository
                                 </div>
-                                <div className="text-xs text-slate-400">
+                                <div className="text-xs text-mcb-tertiary">
                                     View source code and documentation
                                 </div>
                             </div>
@@ -120,15 +120,15 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose, onOpenHelp }) 
                             href="https://jacobkrch.com"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center space-x-3 p-3 rounded-lg bg-[#3d434f]/50 hover:bg-[#4a5262]/70 transition-all duration-200 group"
+                            className="flex items-center space-x-3 p-3 rounded-lg bg-mcb-secondary/50 hover:bg-mcb-hover/70 transition-all duration-200 group"
                         >
-                            <div className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-600 group-hover:bg-blue-500 transition-colors">
+                            <div className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--mcb-accent-secondary)] group-hover:bg-[var(--mcb-accent-primary)] transition-colors">
                                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                 </svg>
                             </div>
                             <div className="flex-1 text-left">
-                                <div className="text-sm font-medium text-white group-hover:text-blue-200 transition-colors">
+                                <div className="text-sm font-medium text-white group-hover:text-[var(--mcb-accent-text-light)] transition-colors">
                                     jacobkrch.com
                                 </div>
 
@@ -138,8 +138,8 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose, onOpenHelp }) 
                 </div>
 
                 {/* Copyright */}
-                <div className="pt-4 border-t border-gray-600/50">
-                    <p className="text-xs text-slate-400 text-left">
+                <div className="pt-4 border-t border-mcb-primary/50">
+                    <p className="text-xs text-mcb-tertiary text-left">
                         © 2025 Jacob Krch. All rights reserved.
                     </p>
                 </div>

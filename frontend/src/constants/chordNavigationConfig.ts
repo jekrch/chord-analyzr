@@ -63,12 +63,12 @@ export const CHORD_NAVIGATION_CONFIG = {
         SECONDARY_BG: '#2a2f38',
         ACCENT_BG: '#4a5262',
         ACCENT_HOVER: '#525a6b',
-        BORDER: 'border-gray-600',
+        BORDER: 'border-mcb-primary',
         TEXT_PRIMARY: 'text-white',
-        TEXT_SECONDARY: 'text-slate-300',
-        TEXT_MUTED: 'text-slate-400',
-        BLUE_PRIMARY: 'text-blue-200',
-        BLUE_ACCENT: 'text-blue-400'
+        TEXT_SECONDARY: 'text-mcb-secondary',
+        TEXT_MUTED: 'text-mcb-tertiary',
+        BLUE_PRIMARY: 'text-[var(--mcb-accent-text-light)]',
+        BLUE_ACCENT: 'text-[var(--mcb-accent-text-primary)]'
     },
 
     // Responsive breakpoints for compact height

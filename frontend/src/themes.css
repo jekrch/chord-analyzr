@@ -1,0 +1,295 @@
+/* Base Theme Variables - Matches Current Blue/Gray Theme */
+:root,
+[data-theme="default"] {
+  /* Background Colors */
+  --mcb-bg-app: #282c34;           /* Main app background - currently bg-[#282c34] */
+  --mcb-bg-primary: #2a2f38;       /* Primary container background - currently bg-[#2a2f38] */
+  --mcb-bg-secondary: #3d434f;     /* Secondary container/card background - currently bg-[#3d434f] */
+  --mcb-bg-tertiary: #444b59;      /* Header/elevated panel background - currently bg-[#444b59] */
+  --mcb-bg-elevated: #363c46;      /* Alternative elevated background - currently bg-[#363c46] */
+  --mcb-bg-hover: #4a5262;         /* Hover state background - currently bg-[#4a5262] */
+  --mcb-bg-active: #525a6b;        /* Active/pressed state background - currently bg-[#525a6b] */
+  --mcb-bg-input: #1a1e24;         /* Input field background - currently bg-[#1a1e24] */
+  
+  /* Border Colors */
+  --mcb-border-primary: rgb(75 85 99);    /* Primary border - currently border-gray-600 */
+  --mcb-border-secondary: rgb(107 114 128); /* Secondary border - currently border-gray-500 */
+  --mcb-border-subtle: rgba(75, 85, 99, 0.3); /* Subtle borders - currently border-gray-600/30 */
+  --mcb-border-hover: rgb(107 114 128);   /* Hover border - currently border-gray-500 */
+  
+  /* Text Colors */
+  --mcb-text-primary: rgb(226 232 240);   /* Primary text - currently text-slate-200 */
+  --mcb-text-secondary: rgb(203 213 225); /* Secondary text - currently text-slate-300 */
+  --mcb-text-tertiary: rgb(148 163 184);  /* Tertiary/muted text - currently text-slate-400 */
+  --mcb-text-disabled: rgb(100 116 139);  /* Disabled text - currently text-slate-500 */
+  --mcb-text-subtle: rgb(71 85 105);      /* Very subtle text - currently text-slate-600 */
+  
+  /* Accent Colors - Blue */
+  --mcb-accent-primary: #3b82f6;          /* Primary accent - currently bg-blue-500 */
+  --mcb-accent-secondary: #2563eb;        /* Secondary accent - currently bg-blue-600 */
+  --mcb-accent-tertiary: #1d4ed8;         /* Darker accent - currently bg-blue-700 */
+  --mcb-accent-light: #60a5fa;            /* Light accent - currently bg-blue-400 */
+  --mcb-accent-subtle: #1e40af;           /* Subtle accent - currently bg-blue-800 */
+  
+  /* Accent Text Colors */
+  --mcb-accent-text-primary: #60a5fa;     /* Primary accent text - currently text-blue-400 */
+  --mcb-accent-text-secondary: #93c5fd;   /* Secondary accent text - currently text-blue-300 */
+  --mcb-accent-text-light: #dbeafe;       /* Light accent text - currently text-blue-200 */
+  
+  /* Success Colors - Green */
+  --mcb-success-primary: #16a34a;         /* Primary success - currently bg-green-600 */
+  --mcb-success-secondary: #15803d;       /* Secondary success - currently bg-green-700 */
+  --mcb-success-hover: #16a34a;           /* Success hover - currently hover:bg-green-600 */
+  --mcb-success-text: #bbf7d0;            /* Success text - currently text-green-100 */
+  
+  /* Danger Colors - Red */
+  --mcb-danger-primary: #dc2626;          /* Primary danger - currently bg-red-600 */
+  --mcb-danger-secondary: #b91c1c;        /* Secondary danger - currently bg-red-700 */
+  --mcb-danger-hover: #dc2626;            /* Danger hover - currently hover:bg-red-600 */
+  --mcb-danger-text: #fecaca;             /* Danger text - currently text-red-400 */
+  --mcb-danger-border: #b91c1c;           /* Danger border - currently border-red-500 */
+  
+  /* Warning Colors - Amber */
+  --mcb-warning-primary: rgba(245, 158, 11, 0.1);  /* Warning background - currently bg-amber-500/10 */
+  --mcb-warning-border: rgba(245, 158, 11, 0.3);   /* Warning border - currently border-amber-500/30 */
+  --mcb-warning-text: #fcd34d;                     /* Warning text - currently text-amber-300 */
+  --mcb-warning-text-alt: #fde68a;                 /* Alt warning text - currently text-amber-200 */
+  
+  /* Special States */
+  --mcb-purple-bg: rgba(147, 51, 234, 0.3);   /* Purple background - currently bg-purple-900/30 */
+  --mcb-purple-border: rgba(126, 34, 206, 0.5); /* Purple border - currently border-purple-700/50 */
+  --mcb-purple-text: #e9d5ff;                  /* Purple text - currently text-purple-300 */
+  
+  --mcb-cyan-bg: rgba(6, 182, 212, 0.3);      /* Cyan background - currently bg-cyan-900/30 */
+  --mcb-cyan-border: rgba(14, 116, 144, 0.5); /* Cyan border - currently border-cyan-700/50 */
+  --mcb-cyan-text: #a5f3fc;                   /* Cyan text - currently text-cyan-300 */
+}
+
+/* Green Forest Theme */
+[data-theme="forest"] {
+  /* Background Colors - Green-tinted grays */
+  --mcb-bg-app: #1a2e1f;           
+  --mcb-bg-primary: #1f3329;       
+  --mcb-bg-secondary: #2d4436;     
+  --mcb-bg-tertiary: #445d4d;      
+  --mcb-bg-elevated: #1f3026;      
+  --mcb-bg-hover: #3d5847;         
+  --mcb-bg-active: #475e50;        
+  --mcb-bg-input: #151f1a;         
+  
+  /* Border Colors - Green-tinted */
+  --mcb-border-primary: rgb(52, 83, 65);    
+  --mcb-border-secondary: rgb(74, 107, 88); 
+  --mcb-border-subtle: rgba(52, 83, 65, 0.3);
+  --mcb-border-hover: rgb(74, 107, 88);   
+  
+  /* Text Colors - Slightly warmer */
+  --mcb-text-primary: rgb(220, 240, 230);   
+  --mcb-text-secondary: rgb(200, 230, 215); 
+  --mcb-text-tertiary: rgb(150, 185, 165);  
+  --mcb-text-disabled: rgb(100, 130, 115);  
+  --mcb-text-subtle: rgb(70, 95, 80);      
+  
+  /* Accent Colors - Emerald/Green */
+  --mcb-accent-primary: #10b981;          /* emerald-500 */
+  --mcb-accent-secondary: #059669;        /* emerald-600 */
+  --mcb-accent-tertiary: #047857;         /* emerald-700 */
+  --mcb-accent-light: #34d399;            /* emerald-400 */
+  --mcb-accent-subtle: #065f46;           /* emerald-800 */
+  
+  /* Accent Text Colors */
+  --mcb-accent-text-primary: #34d399;     
+  --mcb-accent-text-secondary: #6ee7b7;   
+  --mcb-accent-text-light: #d1fae5;       
+  
+  /* Success Colors - Brighter Green */
+  --mcb-success-primary: #22c55e;         
+  --mcb-success-secondary: #16a34a;       
+  --mcb-success-hover: #22c55e;           
+  --mcb-success-text: #bbf7d0;            
+  
+  /* Danger Colors - Red (unchanged) */
+  --mcb-danger-primary: #dc2626;          
+  --mcb-danger-secondary: #b91c1c;        
+  --mcb-danger-hover: #dc2626;            
+  --mcb-danger-text: #fecaca;             
+  --mcb-danger-border: #b91c1c;           
+  
+  /* Warning Colors - Amber (unchanged) */
+  --mcb-warning-primary: rgba(245, 158, 11, 0.1);  
+  --mcb-warning-border: rgba(245, 158, 11, 0.3);   
+  --mcb-warning-text: #fcd34d;                     
+  --mcb-warning-text-alt: #fde68a;                 
+  
+  /* Special States - Adjusted for green theme */
+  --mcb-purple-bg: rgba(139, 92, 246, 0.2);   
+  --mcb-purple-border: rgba(124, 58, 237, 0.4); 
+  --mcb-purple-text: #e9d5ff;                  
+  
+  --mcb-cyan-bg: rgba(20, 184, 166, 0.2);     /* More teal */
+  --mcb-cyan-border: rgba(13, 148, 136, 0.4); 
+  --mcb-cyan-text: #99f6e4;                   
+}
+
+/* Neon Purple Theme - Synthwave/Club vibes */
+[data-theme="neon"] {
+  /* Background Colors - Deep purple-tinted darks */
+  --mcb-bg-app: #1a1625;           
+  --mcb-bg-primary: #221930;       
+  --mcb-bg-secondary: #2d1f3d;     
+  --mcb-bg-tertiary: #3d2855;      
+  --mcb-bg-elevated: #2a1f3a;      
+  --mcb-bg-hover: #433159;         
+  --mcb-bg-active: #513a6b;        
+  --mcb-bg-input: #16111f;         
+  
+  /* Border Colors - Purple-tinted */
+  --mcb-border-primary: rgb(75, 50, 100);    
+  --mcb-border-secondary: rgb(100, 70, 130); 
+  --mcb-border-subtle: rgba(75, 50, 100, 0.3);
+  --mcb-border-hover: rgb(110, 80, 140);   
+  
+  /* Text Colors - Cooler tones */
+  --mcb-text-primary: rgb(230, 220, 245);   
+  --mcb-text-secondary: rgb(215, 200, 235); 
+  --mcb-text-tertiary: rgb(170, 150, 200);  
+  --mcb-text-disabled: rgb(120, 100, 145);  
+  --mcb-text-subtle: rgb(85, 70, 105);      
+  
+  /* Accent Colors - Bright Purple/Magenta */
+  --mcb-accent-primary: #a855f7;          /* purple-500 */
+  --mcb-accent-secondary: #9333ea;        /* purple-600 */
+  --mcb-accent-tertiary: #7e22ce;         /* purple-700 */
+  --mcb-accent-light: #c084fc;            /* purple-400 */
+  --mcb-accent-subtle: #6b21a8;           /* purple-800 */
+  
+  /* Accent Text Colors */
+  --mcb-accent-text-primary: #c084fc;     
+  --mcb-accent-text-secondary: #d8b4fe;   
+  --mcb-accent-text-light: #e9d5ff;       
+  
+  /* Success Colors - Neon Green */
+  --mcb-success-primary: #22c55e;         
+  --mcb-success-secondary: #16a34a;       
+  --mcb-success-hover: #22c55e;           
+  --mcb-success-text: #bbf7d0;            
+  
+  /* Danger Colors - Hot Pink */
+  --mcb-danger-primary: #ec4899;          /* pink-500 */
+  --mcb-danger-secondary: #db2777;        /* pink-600 */
+  --mcb-danger-hover: #ec4899;            
+  --mcb-danger-text: #fbcfe8;             
+  --mcb-danger-border: #db2777;           
+  
+  /* Warning Colors - Neon Yellow */
+  --mcb-warning-primary: rgba(250, 204, 21, 0.1);  
+  --mcb-warning-border: rgba(250, 204, 21, 0.3);   
+  --mcb-warning-text: #fde047;                     
+  --mcb-warning-text-alt: #fef08a;                 
+  
+  /* Special States - Enhanced for neon theme */
+  --mcb-purple-bg: rgba(168, 85, 247, 0.2);   
+  --mcb-purple-border: rgba(147, 51, 234, 0.4); 
+  --mcb-purple-text: #e9d5ff;                  
+  
+  --mcb-cyan-bg: rgba(34, 211, 238, 0.2);     /* Bright cyan */
+  --mcb-cyan-border: rgba(6, 182, 212, 0.4); 
+  --mcb-cyan-text: #a5f3fc;                   
+}
+
+/* Sunset Orange Theme - Warm studio vibes */
+[data-theme="sunset"] {
+  /* Background Colors - Warm orange-tinted darks */
+  --mcb-bg-app: #251a16;           
+  --mcb-bg-primary: #2d1f1a;       
+  --mcb-bg-secondary: #3d2a21;     
+  --mcb-bg-tertiary: #4d3528;      
+  --mcb-bg-elevated: #362620;      
+  --mcb-bg-hover: #4d3830;         
+  --mcb-bg-active: #5d4438;        
+  --mcb-bg-input: #1a1310;         
+  
+  /* Border Colors - Warm tinted */
+  --mcb-border-primary: rgb(80, 60, 50);    
+  --mcb-border-secondary: rgb(110, 85, 70); 
+  --mcb-border-subtle: rgba(80, 60, 50, 0.3);
+  --mcb-border-hover: rgb(120, 95, 80);   
+  
+  /* Text Colors - Warm tones */
+  --mcb-text-primary: rgb(245, 230, 220);   
+  --mcb-text-secondary: rgb(235, 215, 200); 
+  --mcb-text-tertiary: rgb(200, 175, 155);  
+  --mcb-text-disabled: rgb(145, 125, 110);  
+  --mcb-text-subtle: rgb(105, 85, 70);      
+  
+  /* Accent Colors - Vibrant Orange */
+  --mcb-accent-primary: #f97316;          /* orange-500 */
+  --mcb-accent-secondary: #ea580c;        /* orange-600 */
+  --mcb-accent-tertiary: #c2410c;         /* orange-700 */
+  --mcb-accent-light: #fb923c;            /* orange-400 */
+  --mcb-accent-subtle: #9a3412;           /* orange-800 */
+  
+  /* Accent Text Colors */
+  --mcb-accent-text-primary: #fb923c;     
+  --mcb-accent-text-secondary: #fdba74;   
+  --mcb-accent-text-light: #fed7aa;       
+  
+  /* Success Colors - Warm Green */
+  --mcb-success-primary: #84cc16;         /* lime-500 */
+  --mcb-success-secondary: #65a30d;       /* lime-600 */
+  --mcb-success-hover: #84cc16;           
+  --mcb-success-text: #d9f99d;            
+  
+  /* Danger Colors - Red Orange */
+  --mcb-danger-primary: #dc2626;          
+  --mcb-danger-secondary: #b91c1c;        
+  --mcb-danger-hover: #dc2626;            
+  --mcb-danger-text: #fecaca;             
+  --mcb-danger-border: #b91c1c;           
+  
+  /* Warning Colors - Amber */
+  --mcb-warning-primary: rgba(251, 146, 60, 0.1);  
+  --mcb-warning-border: rgba(251, 146, 60, 0.3);   
+  --mcb-warning-text: #fbbf24;                     
+  --mcb-warning-text-alt: #fcd34d;                 
+  
+  /* Special States - Warm variants */
+  --mcb-purple-bg: rgba(236, 72, 153, 0.15);   /* More pink-purple */
+  --mcb-purple-border: rgba(219, 39, 119, 0.35); 
+  --mcb-purple-text: #f9a8d4;                  
+  
+  --mcb-cyan-bg: rgba(56, 189, 248, 0.15);     /* Warm cyan */
+  --mcb-cyan-border: rgba(14, 165, 233, 0.35); 
+  --mcb-cyan-text: #7dd3fc;                   
+}
+
+/* Utility Classes */
+.bg-mcb-app { background-color: var(--mcb-bg-app); }
+.bg-mcb-primary { background-color: var(--mcb-bg-primary); }
+.bg-mcb-secondary { background-color: var(--mcb-bg-secondary); }
+.bg-mcb-tertiary { background-color: var(--mcb-bg-tertiary); }
+.bg-mcb-elevated { background-color: var(--mcb-bg-elevated); }
+.bg-mcb-hover { background-color: var(--mcb-bg-hover); }
+.bg-mcb-active { background-color: var(--mcb-bg-active); }
+.bg-mcb-input { background-color: var(--mcb-bg-input); }
+
+.border-mcb-primary { border-color: var(--mcb-border-primary); }
+.border-mcb-secondary { border-color: var(--mcb-border-secondary); }
+.border-mcb-subtle { border-color: var(--mcb-border-subtle); }
+.border-mcb-hover { border-color: var(--mcb-border-hover); }
+
+.text-mcb-primary { color: var(--mcb-text-primary); }
+.text-mcb-secondary { color: var(--mcb-text-secondary); }
+.text-mcb-tertiary { color: var(--mcb-text-tertiary); }
+.text-mcb-disabled { color: var(--mcb-text-disabled); }
+.text-mcb-subtle { color: var(--mcb-text-subtle); }
+
+.bg-mcb-accent { background-color: var(--mcb-accent-primary); }
+.bg-mcb-accent-hover { background-color: var(--mcb-accent-secondary); }
+.text-mcb-accent { color: var(--mcb-accent-text-primary); }
+.border-mcb-accent { border-color: var(--mcb-accent-secondary); }
+
+.bg-mcb-success { background-color: var(--mcb-success-primary); }
+.bg-mcb-danger { background-color: var(--mcb-danger-primary); }
+.text-mcb-danger { color: var(--mcb-danger-text); }
+.text-mcb-warning { color: var(--mcb-warning-text); }

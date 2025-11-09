@@ -44,7 +44,7 @@ const ChordCard = memo<{
 
   return (
     <div
-      className={`bg-[#3d434f] rounded-lg border border-gray-600 hover:border-blue-500 hover:bg-[#444b59] transition-all duration-200 overflow-hidden cursor-pointer group relative ${isPlaying ? 'chord-playing z-50' : ''
+      className={`bg-mcb-secondary rounded-lg border border-mcb-primary hover:border-[var(--mcb-accent-primary)] hover:bg-mcb-tertiary transition-all duration-200 overflow-hidden cursor-pointer group relative ${isPlaying ? 'chord-playing z-50' : ''
         } ${isAdding ? 'chord-adding z-40' : ''}`}
       onClick={handleCardClick}
     >
@@ -53,9 +53,9 @@ const ChordCard = memo<{
         {/* Chord name and buttons */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
-            <PlayCircleIcon className={`h-5 w-5 sm:h-6 sm:w-6 transition-colors flex-shrink-0 ${isPlaying ? 'text-blue-400' : 'text-gray-400 group-hover:text-blue-300'
+            <PlayCircleIcon className={`h-5 w-5 sm:h-6 sm:w-6 transition-colors flex-shrink-0 ${isPlaying ? 'text-[var(--mcb-accent-text-primary)]' : 'text-[var(--mcb-text-tertiary)] group-hover:text-[var(--mcb-accent-text-secondary)]'
               }`} />
-            <h3 className={`text-base sm:text-lg font-bold transition-colors truncate ${isPlaying ? 'text-blue-200' : 'text-white group-hover:text-blue-200'
+            <h3 className={`text-base sm:text-lg font-bold transition-colors truncate ${isPlaying ? 'text-[var(--mcb-accent-text-light)]' : 'text-white group-hover:text-[var(--mcb-accent-text-light)]'
               }`}>
               {chord.chordName}
             </h3>
@@ -64,8 +64,8 @@ const ChordCard = memo<{
             <button
               onClick={handleAddClick}
               className={`p-1 sm:p-2 rounded-md transition-colors ${isAdding
-                  ? 'bg-green-600 text-white'
-                  : 'hover:bg-green-600 text-gray-400 hover:text-white'
+                  ? 'bg-[var(--mcb-success-primary)] text-white'
+                  : 'hover:bg-[var(--mcb-success-primary)] text-[var(--mcb-text-tertiary)] hover:text-white'
                 }`}
               title="Add to sequence"
             >
@@ -73,7 +73,7 @@ const ChordCard = memo<{
             </button>
             <button
               onClick={handleToggleClick}
-              className="p-1.5 sm:p-2 rounded-md hover:bg-[#565b6f] text-gray-400 hover:text-white transition-colors"
+              className="p-1.5 sm:p-2 rounded-md hover:bg-[#565b6f] text-[var(--mcb-text-tertiary)] hover:text-white transition-colors"
               title={isExpanded ? "Hide notes" : "Show notes"}
             >
               {isExpanded ? (
@@ -89,11 +89,11 @@ const ChordCard = memo<{
       {/* Expandable notes section */}
       {isExpanded && (
         <div className="px-3 pb-3 pt-0 sm:px-4 sm:pb-4">
-          <div className="bg-gray-800x bg-[#363c46]  rounded-md p-2 sm:p-3 border-1 border-gray-600">
-            <div className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">
+          <div className="bg-gray-800x bg-mcb-elevated  rounded-md p-2 sm:p-3 border-1 border-mcb-primary">
+            <div className="text-xs font-medium text-[var(--mcb-text-tertiary)] uppercase tracking-wide mb-1">
               Notes
             </div>
-            <div className="text-sm text-gray-200 font-mono">
+            <div className="text-sm text-mcb-primary font-mono">
               {chord.chordNoteNames}
             </div>
           </div>
@@ -300,8 +300,8 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
       <button
         onClick={() => setSelectedRootNote('All')}
         className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-colors ${selectedRootNote === 'All'
-            ? 'bg-blue-600 text-white'
-            : 'bg-[#444b59] text-gray-300 hover:bg-[#525a6b] hover:text-white'
+            ? 'bg-[var(--mcb-accent-secondary)] text-white'
+            : 'bg-mcb-tertiary text-mcb-secondary hover:bg-mcb-active hover:text-white'
           }`}
       >
         All ({validChords.length})
@@ -311,8 +311,8 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
           key={note}
           onClick={() => setSelectedRootNote(note)}
           className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-colors ${selectedRootNote === note
-              ? 'bg-blue-600 text-white'
-              : 'bg-[#444b59] text-gray-300 hover:bg-[#525a6b] hover:text-white'
+              ? 'bg-[var(--mcb-accent-secondary)] text-white'
+              : 'bg-mcb-tertiary text-mcb-secondary hover:bg-mcb-active hover:text-white'
             }`}
         >
           {note} ({chordCounts[note] || 0})
@@ -326,11 +326,11 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
   return (
     <div className="w-full max-w-7xl mx-auto px-2">
       {/* Header Section */}
-      <div className="bg-[#3d434f]  border border-gray-600 rounded-lg overflow-hidden mb-4">
+      <div className="bg-mcb-secondary  border border-mcb-primary rounded-lg overflow-hidden mb-4">
         <div className="px-4 py-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider">Chord Explorer</h2>
-            <div className="text-xs text-gray-400">
+            <h2 className="text-sm font-bold text-mcb-secondary uppercase tracking-wider">Chord Explorer</h2>
+            <div className="text-xs text-[var(--mcb-text-tertiary)]">
               {filteredChords.length} of {validChords.length} chords
             </div>
           </div>
@@ -338,12 +338,12 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
           {/* Toggle and Search Section */}
           <div className="space-y-4">
             {/* Show All Chords Toggle */}
-            <div className="flex items-center justify-between p-3 bg-[#444b59]x bg-[#363c46]  rounded-lg border border-gray-600">
+            <div className="flex items-center justify-between p-3 bg-mcb-tertiaryx bg-mcb-elevated  rounded-lg border border-mcb-primary">
               <div className="flex flex-col text-left">
-                <span className="text-xs uppercase font-medium text-gray-400 text-left">
+                <span className="text-xs uppercase font-medium text-[var(--mcb-text-tertiary)] text-left">
                   Show All Chords
                 </span>
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-[var(--mcb-text-tertiary)]">
                   {showAllChords
                     ? (allDistinctChords ? `${allDistinctChords?.length} chords` : 'Loading...')
                     : `Showing chords in ${key} ${mode}`
@@ -353,7 +353,7 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
               <button
                 onClick={handleToggleAllChords}
                 disabled={currentLoading}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 ${showAllChords ? 'bg-blue-600' : 'bg-gray-600'
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[var(--mcb-accent-primary)] focus:ring-offset-2 focus:ring-offset-gray-800 ${showAllChords ? 'bg-[var(--mcb-accent-secondary)]' : 'bg-[var(--mcb-border-secondary)]'
                   } ${currentLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 role="switch"
                 aria-checked={showAllChords}
@@ -371,14 +371,14 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
 
             <div className="relative">
               <div className="absolute left-3 inset-y-0 flex items-center pointer-events-none">
-                <MagnifyingGlassIcon className="w-4 h-4 text-gray-400" />
+                <MagnifyingGlassIcon className="w-4 h-4 text-[var(--mcb-text-tertiary)]" />
               </div>
               <input
                 type="text"
                 placeholder="Search chords..."
                 value={searchQuery}
                 onChange={handleSearchChange}
-                className="w-full pl-10 pr-4 py-2 bg-[#444b59] border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none transition-colors !text-sm"
+                className="w-full pl-10 pr-4 py-2 bg-mcb-tertiary border border-mcb-primary rounded-lg text-white placeholder-gray-400 focus:border-[var(--mcb-accent-primary)] focus:outline-none transition-colors !text-sm"
               />
             </div>
 
@@ -395,9 +395,9 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
       <div className="flex flex-col lg:flex-row gap-3 lg:gap-4">
         {/* Desktop Sidebar Filter */}
         <div className="hidden lg:block lg:w-48 flex-shrink-0">
-          <div className="bg-[#3d434f] rounded-lg h-fit">
-            <div className="px-4 py-3 border-b border-gray-600">
-              <h3 className="text-sm font-medium text-gray-200 uppercase tracking-wide">
+          <div className="bg-mcb-secondary rounded-lg h-fit">
+            <div className="px-4 py-3 border-b border-mcb-primary">
+              <h3 className="text-sm font-medium text-mcb-primary uppercase tracking-wide">
                 Filter by Root
               </h3>
             </div>
@@ -406,13 +406,13 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
               <button
                 onClick={() => setSelectedRootNote('All')}
                 className={`w-full px-3 py-2 text-left transition-colors rounded-md border-l-4 ${selectedRootNote === 'All'
-                    ? 'bg-[#4a5262] border-l-blue-500 text-white'
-                    : 'hover:bg-[#444b59] border-l-transparent text-gray-300 hover:text-white'
+                    ? 'bg-mcb-hover border-l-[var(--mcb-accent-primary)] text-white'
+                    : 'hover:bg-mcb-tertiary border-l-transparent text-mcb-secondary hover:text-white'
                   }`}
               >
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">All Notes</span>
-                  <span className="text-xs text-gray-400 bg-gray-700 px-2 py-1 rounded">
+                  <span className="text-xs text-[var(--mcb-text-tertiary)] bg-gray-700 px-2 py-1 rounded">
                     {validChords.length}
                   </span>
                 </div>
@@ -423,13 +423,13 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
                   key={note}
                   onClick={() => setSelectedRootNote(note)}
                   className={`w-full px-3 py-2 text-left transition-colors rounded-md border-l-4 mt-1 ${selectedRootNote === note
-                      ? 'bg-[#4a5262] border-l-blue-500 text-white'
-                      : 'hover:bg-[#444b59] border-l-transparent text-gray-300 hover:text-white'
+                      ? 'bg-mcb-hover border-l-[var(--mcb-accent-primary)] text-white'
+                      : 'hover:bg-mcb-tertiary border-l-transparent text-mcb-secondary hover:text-white'
                     }`}
                 >
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">{note}</span>
-                    <span className="text-xs text-gray-400 bg-gray-700 px-2 py-1 rounded">
+                    <span className="text-xs text-[var(--mcb-text-tertiary)] bg-gray-700 px-2 py-1 rounded">
                       {chordCounts[note] || 0}
                     </span>
                   </div>
@@ -444,8 +444,8 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
           {currentLoading ? (
             <div className="flex justify-center items-center h-64">
               <div className="flex flex-col items-center space-y-3">
-                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-blue-500" />
-                <span className="text-sm text-gray-400">
+                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-[var(--mcb-accent-primary)]" />
+                <span className="text-sm text-[var(--mcb-text-tertiary)]">
                   {showAllChords ? 'Loading all distinct chords...' : 'Loading chords...'}
                 </span>
               </div>
@@ -467,11 +467,11 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
               ))}
             </div>
           ) : (
-            <div className="flex justify-center items-center h-64 bg-[#3d434f] rounded-lg">
+            <div className="flex justify-center items-center h-64 bg-mcb-secondary rounded-lg">
               <div className="text-center space-y-3">
-                <div className="text-gray-500 text-4xl">🎵</div>
+                <div className="text-mcb-disabled text-4xl">🎵</div>
                 <div className="space-y-2">
-                  <div className="text-sm text-gray-400">
+                  <div className="text-sm text-[var(--mcb-text-tertiary)]">
                     {searchQuery.trim()
                       ? `No chords found matching "${searchQuery}"`
                       : selectedRootNote === 'All'
@@ -484,7 +484,7 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
                   {(searchQuery.trim() || selectedRootNote !== 'All') && (
                     <button
                       onClick={handleClearFilters}
-                      className="text-sm text-blue-400 hover:text-blue-300 underline transition-colors"
+                      className="text-sm text-[var(--mcb-accent-text-primary)] hover:text-[var(--mcb-accent-text-secondary)] underline transition-colors"
                     >
                       Clear filters
                     </button>
@@ -497,12 +497,12 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
           {/* Footer info */}
           {filteredChords.length > 0 && (
             <div className="mt-4 text-center">
-              <div className="text-xs text-gray-400">
+              <div className="text-xs text-[var(--mcb-text-tertiary)]">
                 Tap any chord to play •
-                <span className="text-gray-300 mx-1">+</span> to add to sequence •
+                <span className="text-mcb-secondary mx-1">+</span> to add to sequence •
                 <ChevronDownIcon className="inline h-3 w-3 mx-1" /> to show notes for entire row
                 {showAllChords && (
-                  <span className="block mt-1 text-blue-400">
+                  <span className="block mt-1 text-[var(--mcb-accent-text-primary)]">
                     Currently showing all distinct chords across all modes and keys (sorted alphabetically)
                   </span>
                 )}

@@ -197,15 +197,15 @@ useEffect(() => {
     <div className={`space-y-4 ${className}`}>
       {/* Pattern Constraints Checkbox */}
       <div>
-        <label className="block text-xs font-medium text-slate-200 mb-2 uppercase tracking-wide">Pattern Presets</label>
+        <label className="block text-xs font-medium text-mcb-primary mb-2 uppercase tracking-wide">Pattern Presets</label>
         <label className="flex items-center space-x-2 cursor-pointer">
           <input
             type="checkbox"
             checked={hideFewerNotePatterns}
             onChange={(e) => onHideFewerNotePatternsChange(e.target.checked)}
-            className="w-3 h-3 rounded border-gray-600 bg-[#3d434f] text-blue-600 focus:ring-blue-500 focus:ring-1"
+            className="w-3 h-3 rounded border-mcb-primary bg-mcb-secondary text-[var(--mcb-accent-secondary)] focus:ring-[var(--mcb-accent-primary)] focus:ring-1"
           />
-          <span className="text-xs text-slate-200">Hide patterns with fewer notes</span>
+          <span className="text-xs text-mcb-primary">Hide patterns with fewer notes</span>
         </label>
       </div>
 
@@ -223,7 +223,7 @@ useEffect(() => {
           }}
           options={stepCountOptions}
           className="flex-1"
-          buttonClassName="w-full p-2 bg-[#3d434f] border border-gray-600 rounded text-slate-200 text-xs transition-colors hover:bg-[#4a5262]"
+          buttonClassName="w-full p-2 bg-mcb-secondary border border-mcb-primary rounded text-mcb-primary text-xs transition-colors hover:bg-mcb-hover"
         />
         <Dropdown
           value={categoryOptions[selectedCategory === 'all' ? 0 : categoryOptions.findIndex(opt => opt.toLowerCase() === selectedCategory)]}
@@ -236,7 +236,7 @@ useEffect(() => {
           }}
           options={categoryOptions}
           className="flex-1"
-          buttonClassName="w-full p-2 bg-[#3d434f] border border-gray-600 rounded text-slate-200 text-xs transition-colors hover:bg-[#4a5262]"
+          buttonClassName="w-full p-2 bg-mcb-secondary border border-mcb-primary rounded text-mcb-primary text-xs transition-colors hover:bg-mcb-hover"
         />
       </div>
 
@@ -259,27 +259,27 @@ useEffect(() => {
                 onClick={() => onApplyPreset(preset)}
                 className={`p-2 rounded text-xs transition-colors text-left border ${
                   isSelected 
-                    ? 'bg-blue-600/20 text-slate-100 border-blue-500 ring-1 ring-blue-500/50' 
-                    : 'bg-[#3d434f] text-slate-300 hover:bg-[#4a5262] hover:text-slate-200 border-gray-600 hover:border-gray-500'
+                    ? 'bg-[var(--mcb-accent-secondary)]/20 text-slate-100 border-[var(--mcb-accent-primary)] ring-1 ring-[var(--mcb-accent-primary)]/50' 
+                    : 'bg-mcb-secondary text-mcb-secondary hover:bg-mcb-hover hover:text-mcb-primary border-mcb-primary hover:border-mcb-secondary'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="font-medium uppercase tracking-wide">{preset.name}</span>
                   <div className="flex items-center space-x-2">
-                    <span className={`text-xs ${isSelected ? 'text-slate-300' : 'text-slate-500'}`}>
+                    <span className={`text-xs ${isSelected ? 'text-mcb-secondary' : 'text-mcb-disabled'}`}>
                       {distinctNotes}n • {preset.pattern.length}s
                     </span>
                     <span>{preset.icon}</span>
                   </div>
                 </div>
-                <div className={`text-xs opacity-60 ${isSelected ? 'text-slate-400' : 'text-slate-500'}`}>
+                <div className={`text-xs opacity-60 ${isSelected ? 'text-mcb-tertiary' : 'text-mcb-disabled'}`}>
                   {preset.pattern.join('-')}
                 </div>
               </button>
             );
           })
         ) : (
-          <div className="p-3 text-xs text-slate-400 text-center">
+          <div className="p-3 text-xs text-mcb-tertiary text-center">
             No patterns found matching current filters
           </div>
         )}

@@ -5,7 +5,7 @@ html, body {
   width: 100%;
   height: 100%;
   overflow-x: hidden;
-  background-color: #282c34;
+  background-color: var(--mcb-bg-app);
 }
 
 /* Prevent horizontal scrolling globally */
@@ -19,8 +19,9 @@ html, body {
   height: 100vh;
   margin: 0;
   padding: 0;
-  background-color: #282c34;
+  background-color: var(--mcb-bg-app);
 }
+
 
 /* Mobile-specific viewport handling */
 @media screen and (max-width: 768px) {
@@ -74,7 +75,7 @@ body {
 .slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  background: #2a2f3a;
+  background: var(--mcb-bg-primary);
   cursor: pointer;
   border-radius: 6px;
 }
@@ -85,15 +86,15 @@ body {
   height: 18px;
   width: 18px;
   border-radius: 50%;
-  background: #3b82f6 !important;
+  background: var(--mcb-accent-primary) !important;
   cursor: pointer;
-  border: 2px solid #1e40af;
+  border: 2px solid var(--mcb-accent-tertiary);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   transition: all 0.2s ease;
 }
 
 .slider-thumb::-webkit-slider-thumb:hover {
-  background: #2563eb;
+  background: var(--mcb-accent-secondary);
   transform: scale(1.1);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
@@ -104,14 +105,14 @@ body {
     width: 22px;
     height: 22px;
     background-clip: content-box;
-    background-color: #3b82f6;
+    background-color: var(--mcb-accent-primary);
     box-shadow: 
-      0 0 0 1px #1e40af,
+      0 0 0 1px var(--mcb-accent-tertiary),
       0 2px 4px rgba(0, 0, 0, 0.2);
   }
   
   .slider-thumb::-webkit-slider-thumb:hover {
-    background-color: #2563eb;
+    background-color: var(--mcb-accent-secondary);
   }
   
   /* Make the track taller for easier interaction */
@@ -125,15 +126,15 @@ body {
   height: 18px;
   width: 18px;
   border-radius: 50%;
-  background: #3b82f6;
+  background: var(--mcb-accent-primary);
   cursor: pointer;
-  border: 2px solid #1e40af;
+  border: 2px solid var(--mcb-accent-tertiary);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   transition: all 0.2s ease;
 }
 
 .slider-thumb::-moz-range-thumb:hover {
-  background: #2563eb;
+  background: var(--mcb-accent-secondary);
   transform: scale(1.1);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
@@ -144,14 +145,14 @@ body {
     width: 22px;
     height: 22px;
     background-clip: content-box;
-    background-color: #3b82f6;
+    background-color: var(--mcb-accent-primary);
     box-shadow: 
-      0 0 0 1px #1e40af,
+      0 0 0 1px var(--mcb-accent-tertiary),
       0 2px 4px rgba(0, 0, 0, 0.2);
   }
   
   .slider-thumb::-moz-range-thumb:hover {
-    background-color: #2563eb;
+    background-color: var(--mcb-accent-secondary);
   }
   
   .slider-thumb::-moz-range-track {
@@ -234,24 +235,24 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #1a1f28;
+  background: var(--mcb-bg-input);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #4a5262;
+  background: var(--mcb-bg-hover);
   border-radius: 4px;
   transition: background 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #5a6272;
+  background: var(--mcb-bg-active);
 }
 
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #4a5262 #1a1f28;
+  scrollbar-color: var(--mcb-bg-hover) var(--mcb-bg-input);
 }
 
 /* Thinner scrollbars for modal content */
@@ -260,17 +261,17 @@ body {
 }
 
 .modal-scrollbar::-webkit-scrollbar-thumb {
-  background: #3d434f;
+  background: var(--mcb-bg-secondary);
 }
 
 .modal-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #4a5262;
+  background: var(--mcb-bg-hover);
 }
 
 /* Smooth scrolling for the chord sequence */
 .chord-sequence-scroll {
   scrollbar-width: thin;
-  scrollbar-color: #4a5568 #2d3748;
+  scrollbar-color: var(--mcb-bg-hover) var(--mcb-bg-primary);
 }
 
 .chord-sequence-scroll::-webkit-scrollbar {
@@ -278,17 +279,17 @@ body {
 }
 
 .chord-sequence-scroll::-webkit-scrollbar-track {
-  background: #2d3748;
+  background: var(--mcb-bg-primary);
   border-radius: 2px;
 }
 
 .chord-sequence-scroll::-webkit-scrollbar-thumb {
-  background: #4a5568;
+  background: var(--mcb-bg-hover);
   border-radius: 2px;
 }
 
 .chord-sequence-scroll::-webkit-scrollbar-thumb:hover {
-  background: #5a6578;
+  background: var(--mcb-bg-active);
 }
 
 /* Better button hover effects for bottom nav */
@@ -319,12 +320,12 @@ body {
   ring: 2px;
   ring-color: rgba(59, 130, 246, 0.5);
   ring-offset: 2px;
-  ring-offset-color: #1e2329;
+  ring-offset-color: var(--mcb-bg-primary);
 }
 
 /* Loading animation improvements */
 .loading-spinner {
-  background: conic-gradient(from 0deg, transparent, #3b82f6, transparent);
+  background: conic-gradient(from 0deg, transparent, var(--mcb-accent-primary), transparent);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   position: relative;
@@ -337,7 +338,7 @@ body {
   left: 2px;
   right: 2px;
   bottom: 2px;
-  background: #3d434f;
+  background: var(--mcb-bg-secondary);
   border-radius: 50%;
 }
 
@@ -364,80 +365,87 @@ body {
   }
 }
 
-/* Dark mode enhancements */
+/* Dark mode enhancements - Now using theme variables */
 @media (prefers-color-scheme: dark) {
   .chord-sequence-scroll::-webkit-scrollbar-track {
-    background: #1a1d23;
+    background: var(--mcb-bg-input);
   }
 
   .chord-sequence-scroll::-webkit-scrollbar-thumb {
-    background: #374151;
+    background: var(--mcb-bg-hover);
   }
 
   .chord-sequence-scroll::-webkit-scrollbar-thumb:hover {
-    background: #4b5563;
+    background: var(--mcb-bg-active);
   }
 }
 
+/* Chord playing animation - uses accent color */
 @keyframes blueWave {
   0% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7), 0 0 0 0 rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--mcb-accent-primary) 70%, transparent), 
+                0 0 0 0 color-mix(in srgb, var(--mcb-accent-primary) 50%, transparent);
   }
 
   25% {
-    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.5), 0 0 0 0 rgba(59, 130, 246, 0.3);
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--mcb-accent-primary) 50%, transparent), 
+                0 0 0 0 color-mix(in srgb, var(--mcb-accent-primary) 30%, transparent);
   }
 
   50% {
-    box-shadow: 0 0 0 16px rgba(59, 130, 246, 0.3), 0 0 0 8px rgba(59, 130, 246, 0.2);
+    box-shadow: 0 0 0 16px color-mix(in srgb, var(--mcb-accent-primary) 30%, transparent), 
+                0 0 0 8px color-mix(in srgb, var(--mcb-accent-primary) 20%, transparent);
   }
 
   75% {
-    box-shadow: 0 0 0 24px rgba(59, 130, 246, 0.1), 0 0 0 16px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 24px color-mix(in srgb, var(--mcb-accent-primary) 10%, transparent), 
+                0 0 0 16px color-mix(in srgb, var(--mcb-accent-primary) 10%, transparent);
   }
 
   100% {
-    box-shadow: 0 0 0 32px rgba(59, 130, 246, 0), 0 0 0 24px rgba(59, 130, 246, 0);
+    box-shadow: 0 0 0 32px color-mix(in srgb, var(--mcb-accent-primary) 0%, transparent), 
+                0 0 0 24px color-mix(in srgb, var(--mcb-accent-primary) 0%, transparent);
   }
 }
 
+/* Chord adding animation - uses success color */
 @keyframes greenPulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.8);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--mcb-success-primary) 80%, transparent);
     transform: scale(1);
   }
 
   25% {
-    box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.6);
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--mcb-success-primary) 60%, transparent);
     transform: scale(1.01);
   }
 
   50% {
-    box-shadow: 0 0 0 12px rgba(34, 197, 94, 0.4);
+    box-shadow: 0 0 0 12px color-mix(in srgb, var(--mcb-success-primary) 40%, transparent);
     transform: scale(1.01);
   }
 
   75% {
-    box-shadow: 0 0 0 18px rgba(34, 197, 94, 0.2);
+    box-shadow: 0 0 0 18px color-mix(in srgb, var(--mcb-success-primary) 20%, transparent);
     transform: scale(1.01);
   }
 
   100% {
-    box-shadow: 0 0 0 24px rgba(34, 197, 94, 0);
+    box-shadow: 0 0 0 24px color-mix(in srgb, var(--mcb-success-primary) 0%, transparent);
     transform: scale(1);
   }
 }
 
 .chord-playing {
   animation: blueWave 0.8s ease-out;
-  border-color: #3b82f6 !important;
-  background-color: rgba(59, 130, 246, 0.1) !important;
+  border-color: var(--mcb-accent-primary) !important;
+  background-color: color-mix(in srgb, var(--mcb-accent-primary) 10%, transparent) !important;
 }
 
 .chord-adding {
   animation: greenPulse 0.6s ease-out;
-  border-color: rgb(34, 197, 94) !important;
-  background-color: rgba(34, 197, 94, 0.1) !important;
+  border-color: var(--mcb-success-primary) !important;
+  background-color: color-mix(in srgb, var(--mcb-success-primary) 10%, transparent) !important;
 }
 
 @keyframes animate-in {
@@ -466,25 +474,26 @@ body {
 }
 
 .dropdown-menu::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, #5a6170, #4a5262);
+  background: linear-gradient(to bottom, var(--mcb-bg-active), var(--mcb-bg-hover));
   border-radius: 3px;
   box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.1);
 }
 
 .dropdown-menu::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(to bottom, #6a7180, #5a6272);
+  background: linear-gradient(to bottom, var(--mcb-bg-active), var(--mcb-bg-active));
 }
 
+/* Piano key active state - uses accent color */
 .ReactPiano__Key--active {
-  background: oklch(70.7% 0.165 254.624);
+  background: var(--mcb-accent-primary);
 }
 
 .ReactPiano__Key--active.ReactPiano__Key--accidental {
-  border-top: 1px solid oklch(70.7% 0.165 254.624);
+  border-top: 1px solid var(--mcb-accent-primary);
 }
 
 .ReactPiano__Key--active.ReactPiano__Key--natural {
-  border: 1px solid oklch(70.7% 0.165 254.624);
+  border: 1px solid var(--mcb-accent-primary);
 }
 
 /* Mobile drag optimization styles */
@@ -579,4 +588,3 @@ body {
     transition-duration: 0.3s;
   }
 }
-

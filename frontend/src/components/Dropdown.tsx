@@ -125,11 +125,11 @@ const Dropdown: React.FC<DropdownProps> = ({
         onClick={handleToggle}
         className={`
           inline-flex w-full justify-between items-center gap-x-2 rounded-lg
-          bg-[#3d434f] border
+          bg-mcb-secondary border
           px-4 py-2.5 text-sm font-medium
-          text-slate-200 
-          ${isOpen ? 'border-blue-500 bg-[#4a5262]' : 'border-gray-600 hover:bg-[#4a5262] hover:border-gray-500'}
-          focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 focus:ring-offset-[#2a2f38]
+          text-mcb-primary 
+          ${isOpen ? 'border-[var(--mcb-accent-primary)] bg-mcb-hover' : 'border-mcb-primary hover:bg-mcb-hover hover:border-mcb-secondary'}
+          focus:outline-none focus:ring-2 focus:ring-[var(--mcb-accent-primary)]/50 focus:ring-offset-2 focus:ring-offset-[#2a2f38]
           transition-all duration-200 ease-out
           ${buttonClassName.includes('h-') ? '' : 'h-10'}
           ${buttonClassName}
@@ -140,9 +140,9 @@ const Dropdown: React.FC<DropdownProps> = ({
         </span>
         <ChevronDown 
           className={`
-            h-4 w-4 text-slate-400 flex-shrink-0
+            h-4 w-4 text-mcb-tertiary flex-shrink-0
             transition-all duration-200
-            ${isOpen ? 'rotate-180 text-slate-200' : 'group-hover:text-slate-200'}
+            ${isOpen ? 'rotate-180 text-mcb-primary' : 'group-hover:text-mcb-primary'}
           `}
           aria-hidden="true" 
         />
@@ -168,19 +168,19 @@ const Dropdown: React.FC<DropdownProps> = ({
             }}
             className="dropdown-menu rounded-lg shadow-2xl ring-1 ring-black/30 overflow-hidden"
           >
-            <div className="bg-[#3d434f] border border-gray-600 rounded-lg overflow-hidden shadow-2xl">
+            <div className="bg-mcb-secondary border border-mcb-primary rounded-lg overflow-hidden shadow-2xl">
               {showSearch && (
-                <div className="p-3 border-b border-gray-600 bg-[#444b59]">
+                <div className="p-3 border-b border-mcb-primary bg-mcb-tertiary">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-mcb-tertiary" />
                     <input
                       type="text"
-                      className="w-full text-slate-200 pl-9 pr-3 py-2 text-sm font-normal 
-                        bg-[#2a2f38] border border-gray-600 rounded-md 
-                        focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 
+                      className="w-full text-mcb-primary pl-9 pr-3 py-2 text-sm font-normal 
+                        bg-mcb-primary border border-mcb-primary rounded-md 
+                        focus:outline-none focus:ring-2 focus:ring-[var(--mcb-accent-primary)]/50 focus:border-[var(--mcb-accent-primary)] 
                         placeholder-slate-500 
                         transition-all duration-200
-                        hover:bg-[#333844] hover:border-gray-500"
+                        hover:bg-[#333844] hover:border-mcb-secondary"
                       placeholder="Search options..."
                       value={filter}                
                       onChange={(e) => setFilter(e.target.value)}
@@ -204,9 +204,9 @@ const Dropdown: React.FC<DropdownProps> = ({
                       className={`
                         relative block w-full px-4 py-2.5 text-left text-sm font-medium 
                         transition-all duration-200
-                        text-slate-300 hover:text-slate-100
-                        hover:bg-[#4a5262]
-                        border-l-2 border-l-transparent hover:border-l-blue-400
+                        text-mcb-secondary hover:text-slate-100
+                        hover:bg-mcb-hover
+                        border-l-2 border-l-transparent hover:border-l-[var(--mcb-accent-text-primary)]
                       `}
                     >
                       <span className="relative truncate block tracking-wide">
@@ -214,12 +214,12 @@ const Dropdown: React.FC<DropdownProps> = ({
                       </span>
                       
                       {value === option && (
-                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 w-1.5 h-1.5 bg-blue-400 rounded-full" />
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 w-1.5 h-1.5 bg-[var(--mcb-accent-text-primary)] rounded-full" />
                       )}
                     </button>
                   ))
                 ) : (
-                  <div className="px-4 py-3 text-sm text-slate-500 italic text-center">
+                  <div className="px-4 py-3 text-sm text-mcb-disabled italic text-center">
                     No options found
                   </div>
                 )}

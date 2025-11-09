@@ -53,43 +53,43 @@ export const Button: React.FC<ButtonProps> = ({
   const variantClasses = {
     primary: `
       ${active 
-        ? 'bg-[#525a6b] border-gray-500 text-slate-100' 
-        : 'bg-[#3d434f] border-gray-600 text-slate-200 hover:bg-[#4a5262] hover:border-gray-500'
+        ? 'bg-mcb-active border-mcb-secondary text-slate-100' 
+        : 'bg-mcb-secondary border-mcb-primary text-mcb-primary hover:bg-mcb-hover hover:border-mcb-secondary'
       }
-      focus:ring-blue-500/50
+      focus:ring-[var(--mcb-accent-primary)]/50
     `,
     secondary: `
       ${active 
-        ? 'bg-[#525a6b] border-gray-500 text-slate-100' 
-        : 'bg-[#4a5262] border-gray-500 text-slate-200 hover:bg-[#525a6b] hover:border-gray-400'
+        ? 'bg-mcb-active border-mcb-secondary text-slate-100' 
+        : 'bg-mcb-hover border-mcb-secondary text-mcb-primary hover:bg-mcb-active hover:border-gray-400'
       }
       focus:ring-gray-400/50
     `,
     success: `
       ${active 
-        ? 'bg-green-600 border-green-500 text-green-100' 
-        : 'bg-green-700 border-green-600 text-green-100 hover:bg-green-600 hover:border-green-500'
+        ? 'bg-[var(--mcb-success-primary)] border-green-500 text-[var(--mcb-success-text)]' 
+        : 'bg-[var(--mcb-success-secondary)] border-green-600 text-[var(--mcb-success-text)] hover:bg-[var(--mcb-success-primary)] hover:border-green-500'
       }
       focus:ring-green-500/50
     `,
     danger: `
       ${active 
-        ? 'bg-red-600 border-red-500 text-red-100' 
-        : 'bg-red-700 border-red-600 text-red-100 hover:bg-red-600 hover:border-red-500'
+        ? 'bg-[var(--mcb-danger-primary)] border-[var(--mcb-danger-border)] text-red-100' 
+        : 'bg-[var(--mcb-danger-secondary)] border-red-600 text-red-100 hover:bg-[var(--mcb-danger-primary)] hover:border-[var(--mcb-danger-border)]'
       }
       focus:ring-red-500/50
     `,
     icon: `
       ${active 
-        ? 'bg-[#525a6b] border-gray-500 text-slate-200' 
-        : 'bg-[#3d434f] border-gray-600 text-slate-400 hover:bg-[#4a5262] hover:border-gray-500 hover:text-slate-200'
+        ? 'bg-mcb-active border-mcb-secondary text-mcb-primary' 
+        : 'bg-mcb-secondary border-mcb-primary text-mcb-tertiary hover:bg-mcb-hover hover:border-mcb-secondary hover:text-mcb-primary'
       }
       focus:ring-gray-500/50
     `,
     'play-stop': `
       ${active 
-        ? 'bg-red-700 hover:bg-red-600 border-red-600 text-white' 
-        : 'bg-green-600 hover:bg-green-500 border-green-500 text-white'
+        ? 'bg-[var(--mcb-danger-secondary)] hover:bg-[var(--mcb-danger-primary)] border-red-600 text-white' 
+        : 'bg-[var(--mcb-success-primary)] hover:bg-green-500 border-green-500 text-white'
       }
       font-medium uppercase tracking-wide text-sm w-[7em] px-4 py-2
       focus:ring-green-500/50

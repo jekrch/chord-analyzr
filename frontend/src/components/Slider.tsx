@@ -122,11 +122,11 @@ const Slider: React.FC<SliderProps> = ({
     return (
       <div className={className}>
         <div className="flex justify-between items-center mb-1">
-          <span className={`text-xs text-slate-400 uppercase tracking-wide ${labelClassName}`}>
+          <span className={`text-xs text-mcb-tertiary uppercase tracking-wide ${labelClassName}`}>
             {label}
           </span>
           <div className="flex items-center gap-2">
-            <span className={`text-xs font-mono transition-colors ${enabled ? 'text-slate-400' : 'text-slate-600'}`}>
+            <span className={`text-xs font-mono transition-colors ${enabled ? 'text-mcb-tertiary' : 'text-mcb-subtle'}`}>
               {getDisplayValue()}
             </span>
             {showBypass && (
@@ -135,7 +135,7 @@ const Slider: React.FC<SliderProps> = ({
                 className={`w-5 h-5 rounded flex items-center justify-center transition-all ${
                   enabled 
                     ? 'bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30' 
-                    : 'bg-slate-700/50 text-slate-500 hover:bg-slate-700/70'
+                    : 'bg-slate-700/50 text-mcb-disabled hover:bg-slate-700/70'
                 }`}
                 title={enabled ? 'Bypass effect' : 'Enable effect'}
               >
@@ -156,13 +156,13 @@ const Slider: React.FC<SliderProps> = ({
           value={sliderValue}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          className={`w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb transition-opacity ${
+          className={`w-full h-1.5 bg-mcb-secondary rounded appearance-none cursor-pointer slider-thumb transition-opacity ${
             enabled ? 'opacity-100' : 'opacity-40'
           }`}
         />
         
         {showMinMax && (
-          <div className="flex justify-between text-xs text-slate-500 mt-1">
+          <div className="flex justify-between text-xs text-mcb-disabled mt-1">
             <span>{minLabel || min}</span>
             <span>{maxLabel || max}</span>
           </div>
@@ -175,9 +175,9 @@ const Slider: React.FC<SliderProps> = ({
   return (
     <div className={className}>
       <div className="flex justify-between items-center mb-2">
-        <label className={`block text-xs font-medium text-slate-200 uppercase tracking-wide ${labelClassName}`}>
+        <label className={`block text-xs font-medium text-mcb-primary uppercase tracking-wide ${labelClassName}`}>
           {label}
-          <span className={`text-xs ml-2 normal-case font-mono transition-colors ${enabled ? 'text-slate-400' : 'text-slate-600'}`}>
+          <span className={`text-xs ml-2 normal-case font-mono transition-colors ${enabled ? 'text-mcb-tertiary' : 'text-mcb-subtle'}`}>
             ({getDisplayValue()})
           </span>
         </label>
@@ -187,7 +187,7 @@ const Slider: React.FC<SliderProps> = ({
             className={`w-5 h-5 rounded flex items-center justify-center transition-all flex-shrink-0 ${
               enabled 
                 ? 'bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30' 
-                : 'bg-slate-700/50 text-slate-500 hover:bg-slate-700/70'
+                : 'bg-slate-700/50 text-mcb-disabled hover:bg-slate-700/70'
             }`}
             title={enabled ? 'Bypass effect' : 'Enable effect'}
           >
@@ -208,14 +208,14 @@ const Slider: React.FC<SliderProps> = ({
           value={sliderValue}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          className={`slider-mobile w-full h-1.5 bg-[#3d434f] rounded appearance-none cursor-pointer slider-thumb transition-opacity ${
+          className={`slider-mobile w-full h-1.5 bg-mcb-secondary rounded appearance-none cursor-pointer slider-thumb transition-opacity ${
             enabled ? 'opacity-100' : 'opacity-40'
           }`}
         />
       </div>
       
       {showMinMax && (
-        <div className="flex justify-between text-xs text-slate-500 mt-1">
+        <div className="flex justify-between text-xs text-mcb-disabled mt-1">
           <span>{minLabel || min}</span>
           <span>{maxLabel || max}</span>
         </div>

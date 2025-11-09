@@ -88,7 +88,7 @@ const SequenceStatusView: React.FC<SequenceStatusViewProps> = ({ className = "" 
                         )}
 
                         {!temporaryChord && activeChord && (
-                             <span className="ml-2 text-purple-300">{activeChord.name}</span>
+                             <span className="ml-2 text-[var(--mcb-purple-text)]">{activeChord.name}</span>
                         )}
                         
                     </div>

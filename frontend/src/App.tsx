@@ -8,6 +8,7 @@ import ChordNavigation from './components/chordNav/ChordNavigation';
 import PianoControlPanel from './components/piano/PianoControlPanel';
 import HeaderNav from './components/HeaderNav';
 import './App.css';
+import './themes.css';
 import SequenceStatusView from './components/SequenceStatusView';
 
 function App() {
@@ -124,7 +125,7 @@ function App() {
     console.log('test App render');
 
     return (
-        <div className="select-none text-center bg-[#282c34] min-h-screen h-screen w-screen overflow-hidden flex flex-col">
+        <div className="select-none text-center bg-mcb-app min-h-screen h-screen w-screen overflow-hidden flex flex-col">
             {/* Invisible component that runs all effects without causing App re-renders */}
             <EffectsManager />
             

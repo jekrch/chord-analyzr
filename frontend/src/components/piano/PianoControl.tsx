@@ -10,6 +10,7 @@ import { usePlaybackStore } from '../../stores/playbackStore';
 import { usePatternStore } from '../../stores/patternStore';
 
 // Create the AudioContext ONCE, outside the component.
+// This ensures the same instance is reused across re-renders and prevents exceeding the browser limit.
 const audioContext = typeof window !== 'undefined' ? new (window.AudioContext || (window as any).webkitAudioContext)() : null;
 
 interface PianoProps {
@@ -22,58 +23,88 @@ export const endOctave = 7;
 const PianoControl: React.FC<PianoProps> = ({
   hideConfigControls = false
 }) => {
-  
 
+  // Optimized store selectors - only subscribe to what we need
   const normalizedScaleNotes = useMusicStore(state => state.normalizedScaleNotes);
-  const activeNotes = usePlaybackStore(state => state.activeNotes);
-  
-  const isPlaying = usePatternStore(state => state.globalPatternState.isPlaying);
-  const currentStep = usePatternStore(state => state.globalPatternState.currentStep);
 
   const pianoSettings = usePianoStore(state => state.pianoSettings);
   const availableInstruments = usePianoStore(state => state.availableInstruments);
-  
   const setAvailableInstruments = usePianoStore(state => state.setAvailableInstruments);
-  
-  // ============================================================================
-  // LOCAL STATE & REFS
-  // ============================================================================
-  
+
+  const activeNotes = usePlaybackStore(state => state.activeNotes);
+  const activeChordIndex = usePlaybackStore(state => state.activeChordIndex);
+  const addedChords = usePlaybackStore(state => state.addedChords);
+
+  const currentlyActivePattern = usePatternStore(state => state.currentlyActivePattern);
+  const globalPatternState = usePatternStore(state => state.globalPatternState);
+
   const soundfontHostname = 'https://d1pzp51pvbm36p.cloudfront.net';
   const stopAllNotesRef = useRef<(() => void) | null>(null);
   const [activePianoNotes, setActivePianoNotes] = useState<number[]>([]);
   const lastStepRef = useRef<number>(-1);
   const chordSustainTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const instrumentListRef = useRef<string[] | null>(null);
+
+  // Container ref for measuring width
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState<number>(500);
 
-  // ============================================================================
-  // COMPUTED VALUES
-  // ============================================================================
-
+  // Responsive width calculation
   const pianoWidth = useMemo(() => {
     const availableWidth = containerWidth;
-    
+
+    // Define responsive breakpoints and widths
     if (availableWidth < 400) {
+      // Mobile: use most of available space
       return Math.max(320, availableWidth - 40);
     } else if (availableWidth < 768) {
+      // Tablet: moderate scaling
+      // Small desktop: good balance
       return Math.min(600, availableWidth - 60);
     } else if (availableWidth < 1200) {
       return Math.min(800, availableWidth - 80);
     } else {
+      // Large desktop: generous but not excessive
       return Math.min(1000, availableWidth - 100);
     }
   }, [containerWidth]);
 
-  // Update store from ref after render completes
+  // Debounced measure function
+  const measureWidth = useMemo(() => {
+    let timeoutId: number;
+    return () => {
+      clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(() => {
+        if (containerRef.current) {
+          setContainerWidth(containerRef.current.offsetWidth);
+        }
+      }, 100);
+    };
+  }, []);
+
+  // Measure container width and set up resize observer
   useEffect(() => {
-    if (instrumentListRef.current && 
-        instrumentListRef.current.length > 0 && 
-        instrumentListRef.current !== availableInstruments) {
-      setAvailableInstruments(instrumentListRef.current);
+    // Initial measurement
+    if (containerRef.current) {
+      setContainerWidth(containerRef.current.offsetWidth);
     }
-  }, [availableInstruments, setAvailableInstruments]);
+
+    // Set up ResizeObserver for dynamic updates
+    const resizeObserver = new ResizeObserver(() => {
+      measureWidth();
+    });
+
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    // Fallback: window resize listener
+    window.addEventListener('resize', measureWidth);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', measureWidth);
+    };
+  }, [measureWidth]);
 
   const { firstNote, lastNote, keyboardShortcuts, midiOffset } = useMemo(() => {
     const anchorNote = 'c';
@@ -105,10 +136,7 @@ const PianoControl: React.FC<PianoProps> = ({
     }));
   }, [pianoSettings.instrumentName]);
 
-  // ============================================================================
-  // CHORD PLAYING (when sequencer is OFF)
-  // ============================================================================
-
+  // Simple chord playing when sequencer is OFF
   useEffect(() => {
     // Clear any existing timeout
     if (chordSustainTimeoutRef.current) {
@@ -116,20 +144,20 @@ const PianoControl: React.FC<PianoProps> = ({
       chordSustainTimeoutRef.current = null;
     }
 
-    if (!isPlaying && activeNotes.length > 0) {
+    if (!globalPatternState.isPlaying && activeNotes.length > 0) {
       // Play all notes as a chord
       const chordMidiNotes = activeNotes.map(({ note, octave = 4 }) =>
         getMidiNote(note, octave)
       );
       setActivePianoNotes(chordMidiNotes);
-      
+
       // Auto-release after 2 seconds
       chordSustainTimeoutRef.current = setTimeout(() => {
-        if (!isPlaying) {
+        if (!globalPatternState.isPlaying) {
           setActivePianoNotes([]);
         }
       }, 2000);
-    } else if (!isPlaying && activeNotes.length === 0) {
+    } else if (!globalPatternState.isPlaying && activeNotes.length === 0) {
       setActivePianoNotes([]);
     }
 
@@ -139,111 +167,102 @@ const PianoControl: React.FC<PianoProps> = ({
         chordSustainTimeoutRef.current = null;
       }
     };
-  }, [activeNotes, isPlaying]);
+  }, [activeNotes, globalPatternState.isPlaying]);
 
-  // ============================================================================
-  // PATTERN PLAYBACK (when sequencer is ON)
-  // ============================================================================
+  // Get current active pattern (uses the same logic as App)
+  const getCurrentPattern = useCallback(() => {
+    // If a chord is selected, use its pattern; otherwise use currently active pattern
+    if (activeChordIndex !== null && addedChords[activeChordIndex]) {
+      return addedChords[activeChordIndex].pattern;
+    }
+    return currentlyActivePattern;
+  }, [activeChordIndex, addedChords, currentlyActivePattern]);
 
   // Parse pattern step (handle rests and octave notation)
   const parsePatternStep = useCallback((step: string, noteCount: number) => {
     if (step === 'x' || step === 'X') return null; // Rest
-    
+
     const isOctaveUp = step.includes('+');
     const isOctaveDown = step.includes('-');
     const noteIndex = parseInt(step.replace(/[+-]/g, '')) - 1;
-    
+
     if (noteIndex >= 0 && noteIndex < noteCount) {
-      return { 
-        noteIndex, 
+      return {
+        noteIndex,
         octaveUp: isOctaveUp,
-        octaveDown: isOctaveDown 
+        octaveDown: isOctaveDown
       };
     }
     return null;
   }, []);
 
   const getStepDuration = useCallback(() => {
-    // Read state without subscribing
-    const { globalPatternState } = usePatternStore.getState();
     const quarterNoteDuration = 60000 / globalPatternState.bpm;
     return quarterNoteDuration * globalPatternState.subdivision;
-  }, []);
+  }, [globalPatternState.bpm, globalPatternState.subdivision]);
 
   // Handle pattern playback when sequencer is ON
   useEffect(() => {
-    // Read complex state without subscribing
-    const { activeChordIndex, addedChords } = usePlaybackStore.getState();
-    const { currentlyActivePattern } = usePatternStore.getState();
-    
-    // Get current pattern
-    const currentPattern = activeChordIndex !== null && addedChords[activeChordIndex]
-      ? addedChords[activeChordIndex].pattern
-      : currentlyActivePattern;
-    
-    if (!isPlaying || 
-        activeNotes.length === 0 || 
-        !currentPattern?.length ||
-        currentStep === lastStepRef.current) {
-      return;
-    }
-    
-    lastStepRef.current = currentStep;
-    
-    const currentPatternIndex = currentStep % currentPattern.length;
-    const stepValue = currentPattern[currentPatternIndex];
-    const parsedStep = parsePatternStep(stepValue, activeNotes.length);
-    
-    if (parsedStep) {
-      const { noteIndex, octaveUp, octaveDown } = parsedStep;
-      const { note, octave = 4 } = activeNotes[noteIndex];
-      let finalOctave = octave;
-      
-      if (octaveUp) finalOctave += 1;
-      if (octaveDown) finalOctave -= 1;
-      
-      // Ensure octave stays within reasonable bounds
-      finalOctave = Math.max(1, Math.min(8, finalOctave));
-      
-      const midiNote = getMidiNote(note, finalOctave);
-      
-      if (!pianoSettings.cutOffPreviousNotes && stopAllNotesRef.current) {
-        stopAllNotesRef.current();
-      }
-      
-      setActivePianoNotes([midiNote]);
-      
-      const stepDuration = getStepDuration();
-      const sustainDuration = Math.min(stepDuration * pianoSettings.noteDuration, stepDuration - 50);
-      
-      setTimeout(() => {
+    const currentPattern = getCurrentPattern();
+
+    if (globalPatternState.isPlaying &&
+      activeNotes.length > 0 &&
+      currentPattern?.length > 0 &&  // Added optional chaining
+      globalPatternState.currentStep !== lastStepRef.current) {
+
+      lastStepRef.current = globalPatternState.currentStep;
+
+      const currentPatternIndex = globalPatternState.currentStep % currentPattern.length;
+      const stepValue = currentPattern[currentPatternIndex];
+      const parsedStep = parsePatternStep(stepValue, activeNotes.length);
+
+      if (parsedStep) {
+        const { noteIndex, octaveUp, octaveDown } = parsedStep;
+        const { note, octave = 4 } = activeNotes[noteIndex];
+        let finalOctave = octave;
+
+        if (octaveUp) finalOctave += 1;
+        if (octaveDown) finalOctave -= 1;
+
+        // Ensure octave stays within reasonable bounds
+        finalOctave = Math.max(1, Math.min(8, finalOctave));
+
+        // Convert note to standard format before passing to MidiNumbers.fromNote
+        const midiNote = getMidiNote(note, finalOctave)
+
+        if (!pianoSettings.cutOffPreviousNotes && stopAllNotesRef.current) {
+          stopAllNotesRef.current();
+        }
+
+        setActivePianoNotes([midiNote]);
+
+        const stepDuration = getStepDuration();
+        const sustainDuration = Math.min(stepDuration * pianoSettings.noteDuration, stepDuration - 50);
+
+        setTimeout(() => {
+          setActivePianoNotes([]);
+        }, sustainDuration);
+      } else {
+        // Rest - clear any active notes
         setActivePianoNotes([]);
-      }, sustainDuration);
-    } else {
-      // Rest - clear any active notes
-      setActivePianoNotes([]);
+      }
+    } else if (!globalPatternState.isPlaying) {
+      // When pattern stops, clear sequencer notes but let chord playing handle the rest
+      if (lastStepRef.current !== -1) {
+        setActivePianoNotes([]);
+        lastStepRef.current = -1;
+      }
     }
   }, [
-    currentStep,
-    isPlaying,
+    globalPatternState.currentStep,
+    globalPatternState.isPlaying,
     activeNotes,
     pianoSettings.cutOffPreviousNotes,
     pianoSettings.noteDuration,
     getStepDuration,
+    getCurrentPattern,
     parsePatternStep
   ]);
-
-  // Reset on playback stop
-  useEffect(() => {
-    if (!isPlaying && lastStepRef.current !== -1) {
-      setActivePianoNotes([]);
-      lastStepRef.current = -1;
-    }
-  }, [isPlaying]);
-
-  // ============================================================================
-  // PIANO INTERACTION CALLBACKS
-  // ============================================================================
 
   const playNoteWithOffset = useCallback((playNote: (midiNumber: number) => void) =>
     (midiNumber: number) => {
@@ -258,60 +277,17 @@ const PianoControl: React.FC<PianoProps> = ({
       stopNote(midiNumber + midiOffset);
     }, [midiOffset]);
 
-  // ============================================================================
-  // RESPONSIVE WIDTH MEASUREMENT
-  // ============================================================================
-
-  const measureWidth = useMemo(() => {
-    let timeoutId: number;
-    return () => {
-      clearTimeout(timeoutId);
-      timeoutId = window.setTimeout(() => {
-        if (containerRef.current) {
-          setContainerWidth(containerRef.current.offsetWidth);
-        }
-      }, 100);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (containerRef.current) {
-      setContainerWidth(containerRef.current.offsetWidth);
-    }
-
-    const resizeObserver = new ResizeObserver(() => {
-      measureWidth();
-    });
-
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current);
-    }
-
-    window.addEventListener('resize', measureWidth);
-
-    return () => {
-      resizeObserver.disconnect();
-      window.removeEventListener('resize', measureWidth);
-    };
-  }, [measureWidth]);
-
-  // ============================================================================
-  // RENDER NOTE LABELS
-  // ============================================================================
-
+  // Memoized render note label function
   const renderNoteLabel = useCallback(({ midiNumber, isAccidental }: any) => {
     const noteNameWithoutOctave = MidiNumbers.getAttributes(midiNumber).note.slice(0, -1);
     const isScaleNote = normalizedScaleNotes.includes(normalizeNoteName(noteNameWithoutOctave)!);
     if (isScaleNote) {
-      return <div className={`mx-auto mb-2 w-2 h-2 rounded-full ${isAccidental ? 'bg-[var(--mcb-accent-text-secondary)]' : 'bg-[var(--mcb-accent-primary)]'}`} />;
+      return <div className={`mx-auto mb-2 w-2 h-2 rounded-full ${isAccidental ? 'bg-blue-300' : 'bg-blue-500'}`} />;
     }
     return null;
   }, [normalizedScaleNotes]);
 
-  // ============================================================================
-  // SOUNDFONT PROPS
-  // ============================================================================
-
+  // Memoize SoundfontProvider props to prevent unnecessary re-renders
   const soundfontProps = useMemo(() => ({
     instrumentName: pianoSettings.instrumentName,
     audioContext: audioContext!,
@@ -332,18 +308,32 @@ const PianoControl: React.FC<PianoProps> = ({
     compressorLevel: pianoSettings.compressorLevel,
   }), [pianoSettings]);
 
+  // Callback to handle instrument list loading - store directly when available
+  const handleInstrumentListLoaded = useCallback((instrumentList: string[] | null) => {
+    if (instrumentList && instrumentList.length > 0 && instrumentList !== availableInstruments) {
+      console.log('Loading instruments:', instrumentList.length);
+      setAvailableInstruments(instrumentList);
+    }
+  }, [availableInstruments, setAvailableInstruments]);
+
   if (!audioContext) {
     return <div>Audio context is not available.</div>;
   }
 
   return (
-    <SoundfontProvider
-      {...soundfontProps}
-      render={({ isLoading, playNote, stopNote, stopAllNotes }) => {
-        stopAllNotesRef.current = stopAllNotes;
-        
-        return (
-          <>
+    <>
+      {/* Load instruments FIRST, before anything else */}
+      <InstrumentListProvider
+        hostname={soundfontHostname}
+        render={handleInstrumentListLoaded}
+      />
+
+      <SoundfontProvider
+        {...soundfontProps}
+        render={({ isLoading, playNote, stopNote, stopAllNotes }) => {
+          stopAllNotesRef.current = stopAllNotes;
+
+          return (
             <div ref={containerRef} className="relative w-full">
               {/* Piano Container - Properly centered */}
               <div className="w-full flex justify-center overflow-x-auto">
@@ -359,22 +349,10 @@ const PianoControl: React.FC<PianoProps> = ({
                 />
               </div>
             </div>
-
-            {/* Always ensure instrument list is available for the main controls */}
-            <InstrumentListProvider
-              hostname={soundfontHostname}
-              render={(instrumentList) => {
-                // Store in ref instead of triggering state update
-                if (instrumentList && instrumentList.length > 0) {
-                  instrumentListRef.current = instrumentList;
-                }
-                return <></>;
-              }}
-            />
-          </>
-        );
-      }}
-    />
+          );
+        }}
+      />
+    </>
   );
 };
 

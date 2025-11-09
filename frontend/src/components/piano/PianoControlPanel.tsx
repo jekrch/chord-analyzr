@@ -67,7 +67,7 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
     };
 
     const containerClass = isDesktop ?
-        "flex flex-col bg-mcb-secondary/30 border border-mcb-primary/30 rounded-lg px-6 py-4" :
+        "flex flex-col bg-mcb-secondary/30 border border-mcb-secondary rounded-lg px-6 py-4" :
         "space-y-4";
 
     const separatorClass = isDesktop ? "w-px h-8 bg-[var(--mcb-border-primary)]/50 mx-8" : "hidden";

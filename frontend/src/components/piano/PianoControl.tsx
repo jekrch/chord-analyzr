@@ -23,18 +23,18 @@ export const endOctave = 7;
 const PianoControl: React.FC<PianoProps> = ({
   hideConfigControls = false
 }) => {
-  
+
   // Optimized store selectors - only subscribe to what we need
   const normalizedScaleNotes = useMusicStore(state => state.normalizedScaleNotes);
-  
+
   const pianoSettings = usePianoStore(state => state.pianoSettings);
   const availableInstruments = usePianoStore(state => state.availableInstruments);
   const setAvailableInstruments = usePianoStore(state => state.setAvailableInstruments);
-  
+
   const activeNotes = usePlaybackStore(state => state.activeNotes);
   const activeChordIndex = usePlaybackStore(state => state.activeChordIndex);
   const addedChords = usePlaybackStore(state => state.addedChords);
-  
+
   const currentlyActivePattern = usePatternStore(state => state.currentlyActivePattern);
   const globalPatternState = usePatternStore(state => state.globalPatternState);
 
@@ -43,10 +43,7 @@ const PianoControl: React.FC<PianoProps> = ({
   const [activePianoNotes, setActivePianoNotes] = useState<number[]>([]);
   const lastStepRef = useRef<number>(-1);
   const chordSustainTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // Use ref instead of state to capture instrument list during render
-  const instrumentListRef = useRef<string[] | null>(null);
-  
+
   // Container ref for measuring width
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState<number>(500);
@@ -54,7 +51,7 @@ const PianoControl: React.FC<PianoProps> = ({
   // Responsive width calculation
   const pianoWidth = useMemo(() => {
     const availableWidth = containerWidth;
-    
+
     // Define responsive breakpoints and widths
     if (availableWidth < 400) {
       // Mobile: use most of available space
@@ -109,15 +106,6 @@ const PianoControl: React.FC<PianoProps> = ({
     };
   }, [measureWidth]);
 
-  // Update store from ref after render completes - FIXED with deps array
-  useEffect(() => {
-    if (instrumentListRef.current && 
-        instrumentListRef.current.length > 0 && 
-        instrumentListRef.current !== availableInstruments) {
-      setAvailableInstruments(instrumentListRef.current);
-    }
-  }, [availableInstruments, setAvailableInstruments]);
-
   const { firstNote, lastNote, keyboardShortcuts, midiOffset } = useMemo(() => {
     const anchorNote = 'c';
     const firstNote = getMidiNote(anchorNote, startOctave);
@@ -162,7 +150,7 @@ const PianoControl: React.FC<PianoProps> = ({
         getMidiNote(note, octave)
       );
       setActivePianoNotes(chordMidiNotes);
-      
+
       // Auto-release after 2 seconds
       chordSustainTimeoutRef.current = setTimeout(() => {
         if (!globalPatternState.isPlaying) {
@@ -193,16 +181,16 @@ const PianoControl: React.FC<PianoProps> = ({
   // Parse pattern step (handle rests and octave notation)
   const parsePatternStep = useCallback((step: string, noteCount: number) => {
     if (step === 'x' || step === 'X') return null; // Rest
-    
+
     const isOctaveUp = step.includes('+');
     const isOctaveDown = step.includes('-');
     const noteIndex = parseInt(step.replace(/[+-]/g, '')) - 1;
-    
+
     if (noteIndex >= 0 && noteIndex < noteCount) {
-      return { 
-        noteIndex, 
+      return {
+        noteIndex,
         octaveUp: isOctaveUp,
-        octaveDown: isOctaveDown 
+        octaveDown: isOctaveDown
       };
     }
     return null;
@@ -216,41 +204,41 @@ const PianoControl: React.FC<PianoProps> = ({
   // Handle pattern playback when sequencer is ON
   useEffect(() => {
     const currentPattern = getCurrentPattern();
-    
-    if (globalPatternState.isPlaying && 
-        activeNotes.length > 0 && 
-        currentPattern?.length > 0 &&  // Added optional chaining
-        globalPatternState.currentStep !== lastStepRef.current) {
-      
+
+    if (globalPatternState.isPlaying &&
+      activeNotes.length > 0 &&
+      currentPattern?.length > 0 &&  // Added optional chaining
+      globalPatternState.currentStep !== lastStepRef.current) {
+
       lastStepRef.current = globalPatternState.currentStep;
-      
+
       const currentPatternIndex = globalPatternState.currentStep % currentPattern.length;
       const stepValue = currentPattern[currentPatternIndex];
       const parsedStep = parsePatternStep(stepValue, activeNotes.length);
-      
+
       if (parsedStep) {
         const { noteIndex, octaveUp, octaveDown } = parsedStep;
         const { note, octave = 4 } = activeNotes[noteIndex];
         let finalOctave = octave;
-        
+
         if (octaveUp) finalOctave += 1;
         if (octaveDown) finalOctave -= 1;
-        
+
         // Ensure octave stays within reasonable bounds
         finalOctave = Math.max(1, Math.min(8, finalOctave));
-        
+
         // Convert note to standard format before passing to MidiNumbers.fromNote
         const midiNote = getMidiNote(note, finalOctave)
-        
+
         if (!pianoSettings.cutOffPreviousNotes && stopAllNotesRef.current) {
           stopAllNotesRef.current();
         }
-        
+
         setActivePianoNotes([midiNote]);
-        
+
         const stepDuration = getStepDuration();
         const sustainDuration = Math.min(stepDuration * pianoSettings.noteDuration, stepDuration - 50);
-        
+
         setTimeout(() => {
           setActivePianoNotes([]);
         }, sustainDuration);
@@ -320,48 +308,51 @@ const PianoControl: React.FC<PianoProps> = ({
     compressorLevel: pianoSettings.compressorLevel,
   }), [pianoSettings]);
 
+  // Callback to handle instrument list loading - store directly when available
+  const handleInstrumentListLoaded = useCallback((instrumentList: string[] | null) => {
+    if (instrumentList && instrumentList.length > 0 && instrumentList !== availableInstruments) {
+      console.log('Loading instruments:', instrumentList.length);
+      setAvailableInstruments(instrumentList);
+    }
+  }, [availableInstruments, setAvailableInstruments]);
+
   if (!audioContext) {
     return <div>Audio context is not available.</div>;
   }
 
   return (
-    <SoundfontProvider
-      {...soundfontProps}
-      render={({ isLoading, playNote, stopNote, stopAllNotes }) => {
-        stopAllNotesRef.current = stopAllNotes;
-        
-        return (<>
-          <div ref={containerRef} className="relative w-full">
-            {/* Piano Container - Properly centered */}
-            <div className="w-full flex justify-center overflow-x-auto">
-              <Piano
-                noteRange={{ first: firstNote, last: lastNote }}
-                playNote={playNoteWithOffset(playNote)}
-                stopNote={stopNoteWithOffset(stopNote)}
-                disabled={isLoading}
-                width={pianoWidth}
-                className={"mx-auto w-full"}
-                activeNotes={activePianoNotes}
-                renderNoteLabel={renderNoteLabel}
-              />
+    <>
+      {/* Load instruments FIRST, before anything else */}
+      <InstrumentListProvider
+        hostname={soundfontHostname}
+        render={handleInstrumentListLoaded}
+      />
+
+      <SoundfontProvider
+        {...soundfontProps}
+        render={({ isLoading, playNote, stopNote, stopAllNotes }) => {
+          stopAllNotesRef.current = stopAllNotes;
+
+          return (
+            <div ref={containerRef} className="relative w-full">
+              {/* Piano Container - Properly centered */}
+              <div className="w-full flex justify-center overflow-x-auto">
+                <Piano
+                  noteRange={{ first: firstNote, last: lastNote }}
+                  playNote={playNoteWithOffset(playNote)}
+                  stopNote={stopNoteWithOffset(stopNote)}
+                  disabled={isLoading}
+                  width={pianoWidth}
+                  className={"mx-auto w-full"}
+                  activeNotes={activePianoNotes}
+                  renderNoteLabel={renderNoteLabel}
+                />
+              </div>
             </div>
-          </div>
-
-
-          {/* Always ensure instrument list is available for the main controls */}
-          <InstrumentListProvider
-            hostname={soundfontHostname}
-            render={(instrumentList) => {
-              // Store in ref instead of triggering state update
-              if (instrumentList && instrumentList.length > 0) {
-                instrumentListRef.current = instrumentList;
-              }
-              return <></>;
-            }}
-          />
-        </>)
-      }}
-    />
+          );
+        }}
+      />
+    </>
   );
 };
 

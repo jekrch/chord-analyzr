@@ -203,7 +203,7 @@ useEffect(() => {
             type="checkbox"
             checked={hideFewerNotePatterns}
             onChange={(e) => onHideFewerNotePatternsChange(e.target.checked)}
-            className="w-3 h-3 rounded border-mcb-primary bg-mcb-secondary text-blue-600 focus:ring-[var(--mcb-accent-primary)] focus:ring-1"
+            className="w-3 h-3 rounded border-mcb-primary bg-mcb-secondary text-[var(--mcb-accent-secondary)] focus:ring-[var(--mcb-accent-primary)] focus:ring-1"
           />
           <span className="text-xs text-mcb-primary">Hide patterns with fewer notes</span>
         </label>

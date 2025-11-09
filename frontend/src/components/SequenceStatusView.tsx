@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { usePatternStore } from '../stores/patternStore';
 import { usePlaybackStore } from '../stores/playbackStore';
-import { AddedChord } from '../util/urlStateEncoder';
 import classNames from 'classnames';
+import { AddedChord } from '../stores/types';
 
 type SequenceStatusViewProps = {
     className?: string;
@@ -31,7 +31,7 @@ const SequenceStatusView: React.FC<SequenceStatusViewProps> = ({ className = "" 
    
     const isPlaying = usePatternStore(state => state.globalPatternState.isPlaying);
     const bpm = usePatternStore(state => state.globalPatternState.bpm);
-    const currentStep = usePatternStore(state => state.globalPatternState.currentStep);
+    //const currentStep = usePatternStore(state => state.globalPatternState.currentStep);
     const currentlyActivePattern = usePatternStore(state => state.currentlyActivePattern);
 
     const temporaryChord = usePlaybackStore(state => state.temporaryChord);
@@ -62,12 +62,13 @@ const SequenceStatusView: React.FC<SequenceStatusViewProps> = ({ className = "" 
     );
 
     const patternLength = currentPattern.length > 0 ? currentPattern.length : 1;
-    const displayStep = (currentStep % patternLength) + 1;
+    //const displayStep = (currentStep % patternLength) + 1;
 
     // If the sequencer isn't playing, the component renders nothing
     if (!isPlaying) {
         return null;
     }
+    //console.log('Rendering status')
 
     return (
         <div className={classNames("w-full px-2 mx-auto items-center", className)}>
@@ -80,14 +81,14 @@ const SequenceStatusView: React.FC<SequenceStatusViewProps> = ({ className = "" 
                     <div className="text-xs opacity-80 font-mono">
                         {patternString} |
                         {` ${bpm}`} BPM |
-                        Step {displayStep}/{patternLength}
+                        {/* Step {displayStep}/{patternLength} */}
                         
                         {temporaryChord && (
-                            <span className="ml-2 text-yellow-300">• {temporaryChord.name}</span>
+                            <span className="ml-2 text-yellow-300">{temporaryChord.name}</span>
                         )}
 
                         {!temporaryChord && activeChord && (
-                             <span className="ml-2 text-purple-300">• {activeChord.name}</span>
+                             <span className="ml-2 text-purple-300">{activeChord.name}</span>
                         )}
                         
                     </div>

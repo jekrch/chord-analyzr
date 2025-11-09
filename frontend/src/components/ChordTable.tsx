@@ -121,10 +121,11 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
   const allDistinctChords = useMusicStore((state) => state.allDistinctChords);
   const loadingAllChords = useMusicStore((state) => state.loadingAllChords);
   const showAllChords = useMusicStore((state) => state.showAllChords);
+
   const toggleShowAllChords = useMusicStore((state) => state.toggleShowAllChords);
+  
   const key = useMusicStore((state) => state.key);
   const mode = useMusicStore((state) => state.mode);
-  const modes = useMusicStore((state) => state.modes);
 
   // Determine which chord set to use
   const currentChords = showAllChords ? allDistinctChords : chords;
@@ -221,7 +222,6 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
     setExpandedRows(new Set());
   }, [currentColumns, filteredChords]);
 
-  // Optimized event handlers with useCallback
   const handleChordPlay = useCallback((chordNoteNames: string, index: number, chordName: string) => {
     // Trigger play animation
     setPlayingChords(prev => new Set(prev).add(index));
@@ -245,8 +245,9 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
     // Trigger add animation
     setAddingChords(prev => new Set(prev).add(index));
 
-    const mode = modes[modeId - 1];
-
+  const modes = useMusicStore.getState().modes;
+  const mode = modes[modeId - 1];
+      
     // Call the original function
     addChordClick?.(chordName, chordNotes, key, mode);
 
@@ -260,7 +261,7 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
     }, 600);
 
     return () => clearTimeout(timeoutId);
-  }, [addChordClick, modes]);
+  }, [addChordClick]);
 
   // Updated expansion toggle to work with rows
   const handleToggleExpansion = useCallback((index: number) => {

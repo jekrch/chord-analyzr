@@ -24,7 +24,7 @@ function App() {
     const lastCompactState = useRef(false);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-    // Optimized height check with scroll restoration
+    // height check with scroll restoration
     const checkHeight = useCallback(() => {
         const vh = window.innerHeight;
         const em = parseFloat(getComputedStyle(document.documentElement).fontSize);

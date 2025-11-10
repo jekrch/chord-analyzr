@@ -469,7 +469,7 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
           ) : (
             <div className="flex justify-center items-center h-64 bg-mcb-secondary rounded-lg">
               <div className="text-center space-y-3">
-                <div className="text-mcb-disabled text-4xl">🎵</div>
+                <div className="text-mcb-disabled text-4xl">♫</div>
                 <div className="space-y-2">
                   <div className="text-sm text-[var(--mcb-text-tertiary)]">
                     {searchQuery.trim()

@@ -412,7 +412,7 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
               >
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">All Notes</span>
-                  <span className="text-xs text-[var(--mcb-text-tertiary)] bg-gray-700 px-2 py-1 rounded">
+                  <span className="text-xs text-[var(--mcb-text-tertiary)] bg-[var(--mcb-border-primary)] px-2 py-1 rounded">
                     {validChords.length}
                   </span>
                 </div>
@@ -429,7 +429,7 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
                 >
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">{note}</span>
-                    <span className="text-xs text-[var(--mcb-text-tertiary)] bg-gray-700 px-2 py-1 rounded">
+                    <span className="text-xs text-[var(--mcb-text-tertiary)] bg-[var(--mcb-border-primary)] px-2 py-1 rounded">
                       {chordCounts[note] || 0}
                     </span>
                   </div>

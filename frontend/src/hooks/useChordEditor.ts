@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { DropResult } from '@hello-pangea/dnd';
 import { ModeScaleChordDto } from '../api';
 import { dataService } from '../services/DataService';
+import { useMusicStore } from '../stores/musicStore';
 
 export interface AddedChord {
     name: string;
@@ -106,6 +107,13 @@ export const useChordEditor = ({
     const [originalChordNotes, setOriginalChordNotes] = useState<string>('');
     const [slashNoteError, setSlashNoteError] = useState<string>('');
 
+    const musicStore = useMusicStore();
+
+    const { 
+        key,
+        mode
+    } = musicStore;
+
     // Find the original chord definition, handling duplicate names by comparing note numbers
     const findOriginalChordFromLibrary = async (chord: AddedChord): Promise<string | null> => {
         // Extract base chord name (remove slash note if present)
@@ -113,7 +121,7 @@ export const useChordEditor = ({
         
         console.log('Looking for base chord:', baseChordName);
         
-        const chords = await dataService.getAllDistinctChords();
+        const chords = await dataService.getAllDistinctChords(key, mode);
         
         // First try: Look in the current chords library
         if (chords) {

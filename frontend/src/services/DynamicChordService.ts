@@ -189,13 +189,28 @@ class DynamicChordGenerator {
     }
 
     /**
-     * Get the appropriate chromatic note name based on key context
+     * Determine if a scale uses flats based on its notes
      */
-    private getChromaticNoteName(noteNumber: number, keyName: string): string {
+    private scaleUsesFlats(scaleNotes: ScaleNoteDto[], keyName: string): boolean {
+        // Check if any scale notes have flats
+        const hasFlatsInScale = scaleNotes.some(note => 
+            note.noteName && note.noteName.includes('b')
+        );
+        
+        // Also check if the key name itself has a flat
+        const keyHasFlat = keyName.includes('b');
+        
+        return hasFlatsInScale || keyHasFlat;
+    }
+
+    /**
+     * Get the appropriate chromatic note name based on scale context
+     */
+    private getChromaticNoteName(noteNumber: number, scaleNotes: ScaleNoteDto[], keyName: string): string {
         const normalizedNote = ((noteNumber % 12) + 12) % 12;
 
-        // Use flats if the key has flats, sharps if the key has sharps
-        if (keyName.includes('b')) {
+        // Use flats if the scale or key uses flats
+        if (this.scaleUsesFlats(scaleNotes, keyName)) {
             return this.chromaticNotesFlat[normalizedNote];
         } else {
             return this.chromaticNotes[normalizedNote];
@@ -204,7 +219,7 @@ class DynamicChordGenerator {
 
     /**
      * Find the best note name for a chord tone within the scale context
-     * Priority: 1) Scale notes, 2) Chromatic naming (simplified for readability)
+     * Priority: 1) Scale notes, 2) Chromatic naming based on scale convention
      */
     private findBestNoteName(targetNote: number, scaleNotes: ScaleNoteDto[], keyName: string, rootNote?: string, intervalFromRoot?: number): string {
         const normalizedTarget = ((targetNote % 12) + 12) % 12;
@@ -219,9 +234,8 @@ class DynamicChordGenerator {
             return scaleNote.noteName!;
         }
 
-        // For notes outside the scale, use simple chromatic naming
-        // This avoids double sharps/flats (e.g., G instead of F##)
-        return this.getChromaticNoteName(normalizedTarget, keyName);
+        // For notes outside the scale, use chromatic naming based on scale convention
+        return this.getChromaticNoteName(normalizedTarget, scaleNotes, keyName);
     }
 
     /**

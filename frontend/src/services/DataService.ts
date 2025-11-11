@@ -79,10 +79,10 @@ class DataService {
   /**
    * Get all distinct chords across all keys and modes
    */
-  async getAllDistinctChords(): Promise<ModeScaleChordDto[]> {
+  async getAllDistinctChords(key: string, mode: string): Promise<ModeScaleChordDto[]> {
     if (this.config.useStaticData) {
       console.log('Loading all distinct chords from static data');
-      return staticDataService.getAllDistinctChords();
+      return staticDataService.getAllDistinctChords(key, mode);
     } else {
       console.log('Loading all distinct chords from API');
 

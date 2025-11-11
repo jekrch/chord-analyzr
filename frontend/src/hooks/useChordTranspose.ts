@@ -35,7 +35,7 @@ export const useChordTranspose = () => {
         // Fetch new music data and all distinct chords
         const [newChords, allChords] = await Promise.all([
             dataService.getModeKeyChords(toKey, toMode),
-            dataService.getAllDistinctChords()
+            dataService.getAllDistinctChords(toKey, toMode)
         ]);
 
         // Transform each chord

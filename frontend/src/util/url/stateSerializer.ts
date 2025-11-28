@@ -179,7 +179,7 @@ function encodeChords(
     typeToCode: Record<string, string>
 ): string {
     const globalPatternNormalized = normalizePattern(globalPattern);
-    
+
     const chordData = addedChords.map(ac => {
         const compactName = encodeChordName(ac.name, typeToCode);
         if (!compactName) {
@@ -385,7 +385,7 @@ export function updateChordNameFromNotes(chordName: string, regeneratedNotes: st
     if (slashIndex >= 0) {
         mainPart = chordName.substring(0, slashIndex);
         const potentialSlashNote = chordName.substring(slashIndex + 1);
-        
+
         // Check if this looks like a bass note (starts with A-G) or part of chord type
         // Bass notes start with A-G followed by optional accidentals
         if (/^[A-G](?:##|#|bb|b)?$/.test(potentialSlashNote)) {
@@ -403,11 +403,11 @@ export function updateChordNameFromNotes(chordName: string, regeneratedNotes: st
     // For regular chords, use the FIRST note as the root
     const notesArray = regeneratedNotes.split(',').map(n => n.trim());
     const rootNoteIndex = slashPart ? 1 : 0; // If slash chord, skip first (bass) note
-    
+
     if (rootNoteIndex >= notesArray.length) {
         return chordName; // Not enough notes, return original
     }
-    
+
     const rootNoteWithOctave = notesArray[rootNoteIndex];
     const newRootNote = rootNoteWithOctave.replace(/\d+/g, '');
 
@@ -418,14 +418,14 @@ export function updateChordNameFromNotes(chordName: string, regeneratedNotes: st
     }
 
     const oldRootNote = rootMatch[1];
-    
+
     // CRITICAL: Only update if the notes are enharmonically equivalent
     // This prevents "G" from becoming "C" when it shouldn't
     if (!areEnharmonic(oldRootNote, newRootNote)) {
         console.warn(`Root note mismatch: ${oldRootNote} → ${newRootNote} are not enharmonic. Keeping original.`);
         return chordName;
     }
-    
+
     const chordSuffix = mainPart.substring(oldRootNote.length);
 
     // Build updated chord name
@@ -436,7 +436,7 @@ export function updateChordNameFromNotes(chordName: string, regeneratedNotes: st
         // For slash chords, the first note in regeneratedNotes is already the slash note
         const slashNoteWithOctave = notesArray[0];
         const regeneratedSlashNote = slashNoteWithOctave.replace(/\d+/g, '');
-        
+
         // Verify the slash note is enharmonically equivalent too
         if (areEnharmonic(slashPart, regeneratedSlashNote)) {
             updatedName += '/' + regeneratedSlashNote;
@@ -459,24 +459,82 @@ function areEnharmonic(note1: string, note2: string): boolean {
         const baseNotes: Record<string, number> = {
             'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11
         };
-        
+
         const baseLetter = note.charAt(0).toUpperCase();
         let pitch = baseNotes[baseLetter];
-        
+
         if (pitch === undefined) return -1;
-        
+
         // Count sharps and flats
         const sharps = (note.match(/#/g) || []).length;
         const flats = (note.match(/b/g) || []).length;
-        
+
         pitch += sharps;
         pitch -= flats;
-        
+
         // Normalize to 0-11
         return ((pitch % 12) + 12) % 12;
     };
-    
+
     return noteToPitch(note1) === noteToPitch(note2);
+}
+
+// ============================================================================
+// HELPER FUNCTIONS FOR NOTE RESPELLING
+// ============================================================================
+
+export function noteToPitchClass(note: string): number {
+    const baseNotes: Record<string, number> = {
+        'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11
+    };
+
+    // Remove octave number
+    const noteName = note.replace(/\d+/g, '');
+    if (noteName.length === 0) return -1;
+
+    const baseLetter = noteName.charAt(0).toUpperCase();
+    let pitch = baseNotes[baseLetter];
+
+    if (pitch === undefined) return -1;
+
+    // Get the accidental part only (everything after the first letter)
+    // This prevents matching the base letter 'B' as a flat when lowercase
+    const accidentals = noteName.substring(1);
+
+    // Count sharps (##) and flats (bb) in the accidental part
+    const sharps = (accidentals.match(/#/g) || []).length;
+    const flats = (accidentals.match(/b/g) || []).length;
+
+    pitch += sharps;
+    pitch -= flats;
+
+    return ((pitch % 12) + 12) % 12;
+}
+
+export function respellNotesPreservingOrder(
+    currentNotes: string,
+    newlySpelledNotes: string
+): string {
+    const currentNotesArray = currentNotes.split(',').map(n => n.trim());
+    const newNotesArray = newlySpelledNotes.split(',').map(n => n.trim());
+
+    const pitchToNewSpelling = new Map<number, string>();
+    for (const note of newNotesArray) {
+        const pitch = noteToPitchClass(note);
+        if (pitch !== -1) {
+            pitchToNewSpelling.set(pitch, note);
+        }
+    }
+
+    const respelledNotes = currentNotesArray.map(note => {
+        const pitch = noteToPitchClass(note);
+        if (pitch !== -1 && pitchToNewSpelling.has(pitch)) {
+            return pitchToNewSpelling.get(pitch)!;
+        }
+        return note;
+    });
+
+    return respelledNotes.join(', ');
 }
 
 // ============================================================================
@@ -490,16 +548,22 @@ async function regenerateChordNotes(
     encodedNotes: string,
     version: string
 ): Promise<string> {
+    // First, decode the saved notes to preserve user's order
+    let decodedNotes: string;
+    if (version === VERSION && encodedNotes.includes('-') && !encodedNotes.includes('%')) {
+        decodedNotes = decodeChordNotes(encodedNotes);
+    } else {
+        decodedNotes = decodeURIComponent(encodedNotes);
+    }
+
+    // Now generate fresh notes for current key/mode to get correct spelling
     try {
-        
-        // Parse slash note if present
         const slashMatch = chordName.match(/\/([A-G](##|#|bb|b)?)/);
         const slashNoteName = slashMatch ? slashMatch[1] : null;
 
         const { rootNote, chordType } = parseChordNameForGeneration(chordName);
 
         if (rootNote && chordType !== undefined) {
-            // Generate chord with current key/mode for proper enharmonic spelling
             const generated = await dynamicChordGenerator.generateChord(
                 rootNote,
                 chordType,
@@ -508,69 +572,46 @@ async function regenerateChordNotes(
             );
 
             if (generated) {
-                let chordNotes = generated.chordNoteNames;
+                // Respell notes while preserving user's order
+                let respelledNotes = respellNotesPreservingOrder(
+                    decodedNotes,
+                    generated.chordNoteNames
+                );
 
-                // Handle slash note
+                // Handle slash note spelling
                 if (slashNoteName) {
-                    chordNotes = await addSlashNote(slashNoteName, chordNotes, key, mode);
+                    const slashNoteGenerated = await dynamicChordGenerator.generateChord(
+                        slashNoteName,
+                        '',
+                        key,
+                        mode
+                    );
+
+                    if (slashNoteGenerated) {
+                        const regeneratedSlashNote = slashNoteGenerated.chordNoteNames.split(',')[0].trim();
+                        const notesArray = respelledNotes.split(',').map(n => n.trim());
+                        const slashPitch = noteToPitchClass(slashNoteName);
+
+                        const updatedNotes = notesArray.map(note => {
+                            if (noteToPitchClass(note) === slashPitch) {
+                                return regeneratedSlashNote;
+                            }
+                            return note;
+                        });
+
+                        respelledNotes = updatedNotes.join(', ');
+                    }
                 }
 
-                return chordNotes;
+                return respelledNotes;
             }
         }
     } catch (error) {
-        console.warn('Failed to regenerate chord notes for:', chordName, error);
+        console.warn('Failed to respell chord notes for:', chordName, error);
     }
 
-    // Fallback: decode from encoded string
-    if (version === VERSION && encodedNotes.includes('-') && !encodedNotes.includes('%')) {
-        return decodeChordNotes(encodedNotes);
-    } else {
-        return decodeURIComponent(encodedNotes);
-    }
-}
-
-// ============================================================================
-// SLASH NOTE HANDLING
-// ============================================================================
-
-async function addSlashNote(
-    slashNoteName: string,
-    chordNotes: string,
-    key: string,
-    mode: string
-): Promise<string> {
-    const slashNoteGenerated = await dynamicChordGenerator.generateChord(
-        slashNoteName,
-        '',
-        key,
-        mode
-    );
-
-    if (!slashNoteGenerated) return chordNotes;
-
-    const regeneratedSlashNote = slashNoteGenerated.chordNoteNames.split(',')[0].trim();
-    const chordNotesArray = chordNotes.split(',').map(n => n.trim());
-
-    // Check if slash note already exists in chord
-    const slashNoteExists = chordNotesArray.some(note => {
-        const noteNameOnly = note.replace(/\d+/, '');
-        const slashNoteNameOnly = regeneratedSlashNote.replace(/\d+/, '');
-        return noteNameOnly === slashNoteNameOnly;
-    });
-
-    if (slashNoteExists) {
-        // Remove existing occurrence and add to front
-        const filteredNotes = chordNotesArray.filter(note => {
-            const noteNameOnly = note.replace(/\d+/, '');
-            const slashNoteNameOnly = regeneratedSlashNote.replace(/\d+/, '');
-            return noteNameOnly !== slashNoteNameOnly;
-        });
-        return [regeneratedSlashNote, ...filteredNotes].join(', ');
-    } else {
-        // Add new slash note to front
-        return `${regeneratedSlashNote}, ${chordNotes}`;
-    }
+    // Fallback to decoded notes without respelling
+    return decodedNotes;
 }
 
 // ============================================================================

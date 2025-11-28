@@ -11,6 +11,8 @@ import { normalizeNoteName } from '../util/NoteUtil';
 import {
     encodeAndSaveToUrl,
     loadAndDecodeFromUrl,
+    noteToPitchClass,
+    respellNotesPreservingOrder,
 } from '../util/url/stateSerializer';
 import { dynamicChordGenerator, GeneratedChord } from '../services/DynamicChordService';
 
@@ -227,20 +229,24 @@ export const useIntegratedAppLogic = () => {
     const hasInitialized = useRef(false);
     const shouldRegenerateChords = useRef(true);
 
+
     // Regenerate chords when key or mode changes
     useEffect(() => {
         if (isInitialLoad.current || !shouldRegenerateChords.current) {
             return;
         }
 
-        if (addedChords.length === 0) {
+        // Read addedChords directly from store instead of using it as a dependency
+        const currentAddedChords = usePlaybackStore.getState().addedChords;
+
+        if (currentAddedChords.length === 0) {
             return;
         }
 
         const regenerateChords = async () => {
             const regeneratedChords = [];
 
-            for (const chord of addedChords) {
+            for (const chord of currentAddedChords) {
                 try {
                     const { rootNote, chordType, slashNote } = parseChordName(chord.name);
 
@@ -256,11 +262,40 @@ export const useIntegratedAppLogic = () => {
                     if (regeneratedChord) {
                         console.log('Generated notes:', regeneratedChord.chordNoteNames);
 
-                        let newNotes = regeneratedChord.chordNoteNames;
+                        // Respell notes while preserving user's custom order
+                        let newNotes = respellNotesPreservingOrder(
+                            chord.notes,
+                            regeneratedChord.chordNoteNames
+                        );
                         let newName = regeneratedChord.chordName;
 
                         if (slashNote) {
-                            ({ newName, newNotes } = await regenerateSlashNote(slashNote, newName, regeneratedChord, newNotes, key, mode));
+                            // Regenerate slash note spelling
+                            const slashNoteRegenerated = await dynamicChordGenerator.generateChord(
+                                slashNote,
+                                '',
+                                key,
+                                mode
+                            );
+
+                            if (slashNoteRegenerated) {
+                                const regeneratedSlashNote = slashNoteRegenerated.chordNoteNames.split(',')[0].trim();
+                                newName = `${regeneratedChord.chordName}/${regeneratedSlashNote}`;
+
+                                // Update the slash note spelling in the notes array
+                                const notesArray = newNotes.split(',').map((n: string) => n.trim());
+                                const slashPitch = noteToPitchClass(slashNote);
+
+                                // Find and update the slash note in the array
+                                const updatedNotes = notesArray.map((note: string) => {
+                                    if (noteToPitchClass(note) === slashPitch) {
+                                        return regeneratedSlashNote;
+                                    }
+                                    return note;
+                                });
+
+                                newNotes = updatedNotes.join(', ');
+                            }
                         }
 
                         const finalName = updateChordNameFromNotes(chord.name, newNotes);
@@ -290,7 +325,8 @@ export const useIntegratedAppLogic = () => {
         };
 
         regenerateChords();
-    }, [key, mode, addedChords, setAddedChords]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [key, mode, setAddedChords]);
 
     useEffect(() => {
         if (modesFromHook && !hasInitialized.current) {
@@ -350,7 +386,7 @@ export const useIntegratedAppLogic = () => {
                 key,
                 mode,
                 addedChords,
-                globalCurrentPattern, 
+                globalCurrentPattern,
                 bpm,
                 subdivision,
                 swing,
@@ -367,7 +403,7 @@ export const useIntegratedAppLogic = () => {
     }, [
         key, mode, chords,
         addedChords,
-        globalCurrentPattern, 
+        globalCurrentPattern,
         bpm,
         subdivision,
         swing,
@@ -571,7 +607,7 @@ export const useIntegratedAppLogic = () => {
         if (activeChordIndex !== null && addedChords[activeChordIndex]) {
             setCurrentlyActivePattern([...addedChords[activeChordIndex].pattern]);
         } else {
-            setCurrentlyActivePattern([...globalCurrentPattern]); 
+            setCurrentlyActivePattern([...globalCurrentPattern]);
         }
     }, [activeChordIndex, addedChords, globalCurrentPattern, setCurrentlyActivePattern]);
 
@@ -676,7 +712,7 @@ export const useIntegratedAppLogic = () => {
         };
     }, [
         key, mode, addedChords,
-        globalCurrentPattern, 
+        globalCurrentPattern,
         bpm,
         subdivision,
         swing,
@@ -712,7 +748,7 @@ export const useIntegratedAppLogic = () => {
 export const useAppState = () => {
     // Only subscribe to isLiveMode for rendering - nothing else!
     const isLiveMode = useUIStore((state) => state.isLiveMode);
-    
+
     // Get stable action references (these never change, so no re-renders)
     const removeChord = usePlaybackStore((state) => state.removeChord);
     const setTemporaryChord = usePlaybackStore((state) => state.setTemporaryChord);
@@ -725,7 +761,7 @@ export const useAppState = () => {
         // Read state directly without subscribing
         const isDeleteMode = useUIStore.getState().isDeleteMode;
         const isPlaying = usePatternStore.getState().globalPatternState.isPlaying;
-        
+
         if (isDeleteMode && chordIndex !== undefined) {
             removeChord(chordIndex);
             return;
@@ -757,7 +793,7 @@ export const useAppState = () => {
     const addChordClick = useCallback((chordName: string, chordNotes: string, key: string, mode: string) => {
         // Read state directly without subscribing
         const currentlyActivePattern = usePatternStore.getState().currentlyActivePattern;
-        
+
         addChord(
             chordName,
             chordNotes,

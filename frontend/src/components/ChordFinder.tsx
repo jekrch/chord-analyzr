@@ -49,7 +49,7 @@ const MiniPiano: React.FC<MiniPianoProps> = ({ highlightedNotes, className }) =>
     const notesArray = Array.from(highlightedNotes);
     const maxNoteIndex = notesArray.length > 0 ? Math.max(...notesArray) : 11;
     const octaves = Math.max(1, Math.floor(maxNoteIndex / 12) + 1);
-    
+
     const octaveWidthPercent = 100 / octaves;
     const blackKeyWidth = octaveWidthPercent * 0.085;
     const pianoWidth = octaves * 60;
@@ -108,7 +108,7 @@ interface TogglePianoProps {
 
 const TogglePiano: React.FC<TogglePianoProps> = ({ selectedNotes, onToggleNote, octaves = 3 }) => {
     const whiteKeyPitchClasses = [0, 2, 4, 5, 7, 9, 11];
-    
+
     const blackKeyConfig = [
         { pc: 1, leftPercent: 11.5 },
         { pc: 3, leftPercent: 25 },
@@ -198,7 +198,7 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
 
     // Determine if scale uses flats based on scale notes and key
     const scaleUsesFlats = useMemo(() => {
-        const hasFlatsInScale = scaleNotes.some(note => 
+        const hasFlatsInScale = scaleNotes.some(note =>
             note.noteName && note.noteName.includes('b')
         );
         const keyHasFlat = currentKey.includes('b');
@@ -208,14 +208,15 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
     // Get note name for a pitch class (display version with unicode)
     const getNoteNameForPitchClass = useCallback((pitchClass: number, forPlayback: boolean = false): string => {
         const normalizedPitchClass = ((pitchClass % 12) + 12) % 12;
-        
+
         // First check if this pitch class is in the scale
         const scaleNote = scaleNotes.find(note => {
             if (!note.noteName) return false;
+            // noteNameToNumber is guaranteed to return 0-11, so we don't need modulo here
             const noteNum = noteNameToNumber(note.noteName);
-            return ((noteNum % 12) + 12) % 12 === normalizedPitchClass;
+            return noteNum === normalizedPitchClass;
         });
-        
+
         if (scaleNote?.noteName) {
             if (forPlayback) {
                 // Convert unicode to ASCII for playback
@@ -224,7 +225,7 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
             // Convert ASCII to unicode for display
             return scaleNote.noteName.replace('#', '♯').replace('b', '♭');
         }
-        
+
         // Fall back to chromatic naming based on scale context
         if (forPlayback) {
             return scaleUsesFlats ? CHROMATIC_FLATS_PLAY[normalizedPitchClass] : CHROMATIC_SHARPS_PLAY[normalizedPitchClass];
@@ -307,8 +308,9 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
 
         for (const name of noteNames) {
             try {
+                // noteNameToNumber guarantees 0-11, direct usage is safe
                 const noteNum = noteNameToNumber(name);
-                pitchClasses.add(((noteNum % 12) + 12) % 12);
+                pitchClasses.add(noteNum);
             } catch (e) {
                 console.warn(`Could not parse note: ${name}`);
             }
@@ -347,8 +349,9 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
                     seenSignatures.add(signature);
 
                     const chordNoteNames = chord.chordNoteNames?.split(',').map(n => n.trim()) || [];
+                    // Simplified: removed redundant modulo math
                     const chordRootPitchClass = chordNoteNames[0]
-                        ? ((noteNameToNumber(chordNoteNames[0]) % 12) + 12) % 12
+                        ? noteNameToNumber(chordNoteNames[0])
                         : -1;
                     const isRootMatch = chordRootPitchClass === rootPitchClass;
 
@@ -407,7 +410,7 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
         if (onSelectChord) {
             // Convert slash note to ASCII for the callback
             const slashNoteAscii = match.slashNote?.replace('♯', '#').replace('♭', 'b');
-            
+
             let fullNotes = match.chord.chordNoteNames || '';
 
             // Construct full playable notes string for the callback
@@ -445,24 +448,23 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
     const getChordNoteIndices = useCallback((chord: ModeScaleChordDto, slashPitchClass?: number): Set<number> => {
         if (!chord.chordNoteNames) return new Set();
         const noteNames = chord.chordNoteNames.split(',').map(n => n.trim());
-        
+
         if (noteNames.length === 0) return new Set();
 
         const midiNumbers: number[] = [];
         let currentMidi = 48;
-        
+
         for (const name of noteNames) {
             try {
-                const baseMidi = noteNameToNumber(name);
-                const pitchClass = ((baseMidi % 12) + 12) % 12;
-                
+                const pitchClass = noteNameToNumber(name);
+
                 const octaveBase = Math.floor(currentMidi / 12) * 12;
                 let targetMidi = octaveBase + pitchClass;
-                
+
                 if (targetMidi < currentMidi) {
                     targetMidi += 12;
                 }
-                
+
                 midiNumbers.push(targetMidi);
                 currentMidi = targetMidi;
             } catch (e) {
@@ -484,9 +486,9 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
 
         const minMidi = Math.min(...midiNumbers);
         const baseOffset = minMidi - (minMidi % 12);
-        
+
         const indices = midiNumbers.map(m => m - baseOffset);
-        
+
         return new Set(indices);
     }, []);
 
@@ -595,15 +597,16 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
                                 Select notes on the piano to find matching chords
                             </div>
                         ) : matchingChords.length === 0 ? (
-                            <div className="text-center py-8 text-mcb-tertiary">
+                            <div className="text-center py-8 text-mcb-tertiary text-lg">
                                 No matching chords found
                             </div>
                         ) : (
                             matchingChords.map((match, idx) => (
                                 <div
                                     key={`${match.chord.chordName}-${match.slashNote || ''}-${idx}`}
+                                    // 1. Add 'relative' here so the absolute button positions relative to this card
                                     className={classNames(
-                                        "w-full text-left p-3 rounded border transition-all",
+                                        "relative w-full text-left p-3 rounded border transition-all",
                                         "hover:border-[var(--mcb-accent-primary)] hover:bg-mcb-hover",
                                         match.matchType === 'exact'
                                             ? "bg-[var(--mcb-accent-primary)]/10 border-[var(--mcb-accent-primary)]/50"
@@ -611,6 +614,7 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
                                     )}
                                 >
                                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                                        {/* Left Side: Play Button & Mini Piano */}
                                         <div className="flex items-center gap-2 flex-shrink-0">
                                             {onPlayNotes && (
                                                 <button
@@ -624,15 +628,10 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
                                             <MiniPiano
                                                 highlightedNotes={getChordNoteIndices(match.chord, match.slashPitchClass)}
                                             />
-                                            <button
-                                                onClick={(e) => handleSelectChord(e, match)}
-                                                className="p-1.5 rounded bg-[var(--mcb-success-primary)] hover:bg-[var(--mcb-success-secondary)] text-white transition-colors"
-                                                title="Add chord to progression"
-                                            >
-                                                <PlusCircleIcon className="w-4 h-4" />
-                                            </button>
                                         </div>
-                                        <div className="min-w-0 flex-1">
+
+
+                                        <div className="min-w-0 flex-1 pr-8 sm:pr-0">
                                             <div className="flex items-center space-x-2 flex-wrap">
                                                 <span className="text-white font-semibold text-lg">
                                                     {match.chord.chordName}
@@ -655,6 +654,17 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
                                             <span className="text-xs text-mcb-tertiary font-mono truncate block">
                                                 {match.chord.chordNoteNames}
                                             </span>
+                                        </div>
+
+
+                                        <div className="absolute top-3 right-3 sm:static sm:ml-auto">
+                                            <button
+                                                onClick={(e) => handleSelectChord(e, match)}
+                                                className="p-1.5 rounded bg-[var(--mcb-success-primary)] hover:bg-[var(--mcb-success-secondary)] text-white transition-colors"
+                                                title="Add chord to progression"
+                                            >
+                                                <PlusCircleIcon className="w-4 h-4" />
+                                            </button>
                                         </div>
                                     </div>
                                 </div>

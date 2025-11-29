@@ -271,10 +271,21 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
       const name = slashNote ? `${chord.chordName}/${slashNote}` : chord.chordName!;
       const notes = fullNotes || chord.chordNoteNames!;
 
-      // Use current store key/mode since the finder operates within the current context
-      addChordClick(name, notes, key, mode);
+      // 1. Prefer the chord's keyName if available, otherwise fallback to global 'key'
+      const targetKey = chord.keyName || key;
+
+      // 2. Calculate the mode string from the ID if available, otherwise fallback to global 'mode'
+      let targetMode = mode;
+      if (chord.modeId) {
+        const modes = useMusicStore.getState().modes;
+        // The table uses [modeId - 1] to get the string name
+        targetMode = modes[chord.modeId - 1] || mode;
+      }
+
+      addChordClick(name, notes, targetKey, targetMode);
     }
   }, [addChordClick, key, mode]);
+
 
   // Updated expansion toggle to work with rows
   const handleToggleExpansion = useCallback((index: number) => {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { XMarkIcon, MusicalNoteIcon, SparklesIcon, PlayIcon } from '@heroicons/react/20/solid';
+import { XMarkIcon, MusicalNoteIcon, SparklesIcon, PlayIcon, PlusCircleIcon } from '@heroicons/react/20/solid';
 import classNames from 'classnames';
 import { dynamicChordGenerator } from '../services/DynamicChordService';
 import { staticDataService } from '../services/StaticDataService';
@@ -10,7 +10,7 @@ import { noteNameToNumber } from '../util/NoteUtil';
 interface ChordFinderModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSelectChord?: (chord: ModeScaleChordDto, slashNote?: string) => void;
+    onSelectChord?: (chord: ModeScaleChordDto, slashNote?: string, fullNotes?: string) => void;
     onPlayNotes?: (notes: string) => void;
     currentKey: string;
     currentMode: string;
@@ -402,11 +402,22 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
 
     const clearSelection = () => setSelectedNotes(new Set());
 
-    const handleSelectChord = (match: ChordMatch) => {
+    const handleSelectChord = (e: React.MouseEvent, match: ChordMatch) => {
+        e.stopPropagation();
         if (onSelectChord) {
             // Convert slash note to ASCII for the callback
             const slashNoteAscii = match.slashNote?.replace('♯', '#').replace('♭', 'b');
-            onSelectChord(match.chord, slashNoteAscii);
+            
+            let fullNotes = match.chord.chordNoteNames || '';
+
+            // Construct full playable notes string for the callback
+            if (match.slashNote && match.slashPitchClass !== undefined) {
+                const slashNotePlayable = getNoteNameForPitchClass(match.slashPitchClass, true);
+                const slashNoteWithOctave = `${slashNotePlayable}3`;
+                fullNotes = `${slashNoteWithOctave}, ${fullNotes}`;
+            }
+
+            onSelectChord(match.chord, slashNoteAscii, fullNotes);
         }
         onClose();
     };
@@ -580,7 +591,7 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
                                 Generating all chord combinations...
                             </div>
                         ) : sortedSelectedNotes.length === 0 ? (
-                            <div className="text-center py-8 text-mcb-tertiary">
+                            <div className="text-center py-8 text-mcb-tertiary text-lg">
                                 Select notes on the piano to find matching chords
                             </div>
                         ) : matchingChords.length === 0 ? (
@@ -592,7 +603,7 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
                                 <div
                                     key={`${match.chord.chordName}-${match.slashNote || ''}-${idx}`}
                                     className={classNames(
-                                        "w-full text-left p-3 rounded border transition-all cursor-pointer",
+                                        "w-full text-left p-3 rounded border transition-all",
                                         "hover:border-[var(--mcb-accent-primary)] hover:bg-mcb-hover",
                                         match.matchType === 'exact'
                                             ? "bg-[var(--mcb-accent-primary)]/10 border-[var(--mcb-accent-primary)]/50"
@@ -601,9 +612,6 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
                                 >
                                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
                                         <div className="flex items-center gap-2 flex-shrink-0">
-                                            <MiniPiano
-                                                highlightedNotes={getChordNoteIndices(match.chord, match.slashPitchClass)}
-                                            />
                                             {onPlayNotes && (
                                                 <button
                                                     onClick={(e) => handlePlayChord(e, match)}
@@ -613,11 +621,18 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
                                                     <PlayIcon className="w-4 h-4" />
                                                 </button>
                                             )}
+                                            <MiniPiano
+                                                highlightedNotes={getChordNoteIndices(match.chord, match.slashPitchClass)}
+                                            />
+                                            <button
+                                                onClick={(e) => handleSelectChord(e, match)}
+                                                className="p-1.5 rounded bg-[var(--mcb-success-primary)] hover:bg-[var(--mcb-success-secondary)] text-white transition-colors"
+                                                title="Add chord to progression"
+                                            >
+                                                <PlusCircleIcon className="w-4 h-4" />
+                                            </button>
                                         </div>
-                                        <div 
-                                            className="min-w-0 flex-1 cursor-pointer"
-                                            onClick={() => handleSelectChord(match)}
-                                        >
+                                        <div className="min-w-0 flex-1">
                                             <div className="flex items-center space-x-2 flex-wrap">
                                                 <span className="text-white font-semibold text-lg">
                                                     {match.chord.chordName}

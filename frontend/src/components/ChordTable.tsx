@@ -1,7 +1,9 @@
+
 import React, { useState, useMemo, useEffect, useCallback, memo } from 'react';
-import { PlayCircleIcon, PlusCircleIcon, MagnifyingGlassIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/20/solid';
+import { PlayCircleIcon, PlusCircleIcon, MagnifyingGlassIcon, ChevronDownIcon, ChevronUpIcon, MusicalNoteIcon } from '@heroicons/react/20/solid';
 import { ModeScaleChordDto } from '../api';
 import { useMusicStore } from '../stores/musicStore';
+import ChordFinderModal from './ChordFinder';
 
 interface ChordTableProps {
   onChordClick: (chordNoteNames: string, index?: number, chordName?: string) => void;
@@ -64,8 +66,8 @@ const ChordCard = memo<{
             <button
               onClick={handleAddClick}
               className={`p-1 sm:p-2 rounded-md transition-colors ${isAdding
-                  ? 'bg-[var(--mcb-success-primary)] text-white'
-                  : 'hover:bg-[var(--mcb-success-primary)] text-[var(--mcb-text-tertiary)] hover:text-white'
+                ? 'bg-[var(--mcb-success-primary)] text-white'
+                : 'hover:bg-[var(--mcb-success-primary)] text-[var(--mcb-text-tertiary)] hover:text-white'
                 }`}
               title="Add to sequence"
             >
@@ -115,6 +117,7 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
   const [playingChords, setPlayingChords] = useState<Set<number>>(new Set());
   const [addingChords, setAddingChords] = useState<Set<number>>(new Set());
   const [currentColumns, setCurrentColumns] = useState<number>(1);
+  const [isChordFinderOpen, setIsChordFinderOpen] = useState(false);
 
   const chords = useMusicStore((state) => state.chords);
   const loadingChords = useMusicStore((state) => state.loadingChords);
@@ -123,7 +126,7 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
   const showAllChords = useMusicStore((state) => state.showAllChords);
 
   const toggleShowAllChords = useMusicStore((state) => state.toggleShowAllChords);
-  
+
   const key = useMusicStore((state) => state.key);
   const mode = useMusicStore((state) => state.mode);
 
@@ -245,9 +248,9 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
     // Trigger add animation
     setAddingChords(prev => new Set(prev).add(index));
 
-  const modes = useMusicStore.getState().modes;
-  const mode = modes[modeId - 1];
-      
+    const modes = useMusicStore.getState().modes;
+    const mode = modes[modeId - 1];
+
     // Call the original function
     addChordClick?.(chordName, chordNotes, key, mode);
 
@@ -262,6 +265,16 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
 
     return () => clearTimeout(timeoutId);
   }, [addChordClick]);
+
+  const handleFinderSelectChord = useCallback((chord: ModeScaleChordDto, slashNote?: string, fullNotes?: string) => {
+    if (addChordClick) {
+      const name = slashNote ? `${chord.chordName}/${slashNote}` : chord.chordName!;
+      const notes = fullNotes || chord.chordNoteNames!;
+
+      // Use current store key/mode since the finder operates within the current context
+      addChordClick(name, notes, key, mode);
+    }
+  }, [addChordClick, key, mode]);
 
   // Updated expansion toggle to work with rows
   const handleToggleExpansion = useCallback((index: number) => {
@@ -300,8 +313,8 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
       <button
         onClick={() => setSelectedRootNote('All')}
         className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-colors ${selectedRootNote === 'All'
-            ? 'bg-[var(--mcb-accent-secondary)] text-white'
-            : 'bg-mcb-tertiary text-mcb-secondary hover:bg-mcb-active hover:text-white'
+          ? 'bg-[var(--mcb-accent-secondary)] text-white'
+          : 'bg-mcb-tertiary text-mcb-secondary hover:bg-mcb-active hover:text-white'
           }`}
       >
         All ({validChords.length})
@@ -311,8 +324,8 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
           key={note}
           onClick={() => setSelectedRootNote(note)}
           className={`flex-shrink-0 px-3 py-2 rounded-full text-sm font-medium transition-colors ${selectedRootNote === note
-              ? 'bg-[var(--mcb-accent-secondary)] text-white'
-              : 'bg-mcb-tertiary text-mcb-secondary hover:bg-mcb-active hover:text-white'
+            ? 'bg-[var(--mcb-accent-secondary)] text-white'
+            : 'bg-mcb-tertiary text-mcb-secondary hover:bg-mcb-active hover:text-white'
             }`}
         >
           {note} ({chordCounts[note] || 0})
@@ -322,17 +335,26 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
   ), [selectedRootNote, validChords.length, rootNotes, chordCounts]);
 
   //console.log(`Rendering chord table`);
-  
+
   return (
     <div className="w-full max-w-7xl mx-auto px-2">
       {/* Header Section */}
       <div className="bg-mcb-secondary  border border-mcb-primary rounded-lg overflow-hidden mb-4">
         <div className="px-4 py-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-bold text-mcb-secondary uppercase tracking-wider">Chord Explorer</h2>
-            <div className="text-xs text-[var(--mcb-text-tertiary)]">
-              {filteredChords.length} of {validChords.length} chords
+            <div className="flex items-center gap-4">
+              <h2 className="text-sm font-bold text-mcb-secondary uppercase tracking-wider">Chord Explorer</h2>
+              <button
+                onClick={() => setIsChordFinderOpen(true)}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[var(--mcb-accent-primary)]/10 hover:bg-[var(--mcb-accent-primary)]/20 border border-[var(--mcb-accent-primary)]/20 hover:border-[var(--mcb-accent-primary)]/50 transition-all group"
+              >
+                <MusicalNoteIcon className="w-3.5 h-3.5 text-[var(--mcb-accent-primary)]" />
+                <span className="text-xs font-medium text-[var(--mcb-accent-text-primary)]">Find by Notes</span>
+              </button>
             </div>
+            {/* <div className="text-xs text-[var(--mcb-text-tertiary)]">
+              {filteredChords.length} of {validChords.length} chords
+            </div> */}
           </div>
 
           {/* Toggle and Search Section */}
@@ -406,8 +428,8 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
               <button
                 onClick={() => setSelectedRootNote('All')}
                 className={`w-full px-3 py-2 text-left transition-colors rounded-md border-l-4 ${selectedRootNote === 'All'
-                    ? 'bg-mcb-hover border-l-[var(--mcb-accent-primary)] text-white'
-                    : 'hover:bg-mcb-tertiary border-l-transparent text-mcb-secondary hover:text-white'
+                  ? 'bg-mcb-hover border-l-[var(--mcb-accent-primary)] text-white'
+                  : 'hover:bg-mcb-tertiary border-l-transparent text-mcb-secondary hover:text-white'
                   }`}
               >
                 <div className="flex justify-between items-center">
@@ -423,8 +445,8 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
                   key={note}
                   onClick={() => setSelectedRootNote(note)}
                   className={`w-full px-3 py-2 text-left transition-colors rounded-md border-l-4 mt-1 ${selectedRootNote === note
-                      ? 'bg-mcb-hover border-l-[var(--mcb-accent-primary)] text-white'
-                      : 'hover:bg-mcb-tertiary border-l-transparent text-mcb-secondary hover:text-white'
+                    ? 'bg-mcb-hover border-l-[var(--mcb-accent-primary)] text-white'
+                    : 'hover:bg-mcb-tertiary border-l-transparent text-mcb-secondary hover:text-white'
                     }`}
                 >
                   <div className="flex justify-between items-center">
@@ -511,6 +533,15 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
           )}
         </div>
       </div>
+
+      <ChordFinderModal
+        isOpen={isChordFinderOpen}
+        onClose={() => setIsChordFinderOpen(false)}
+        currentKey={key}
+        currentMode={mode}
+        onPlayNotes={(notes) => onChordClick(notes)}
+        onSelectChord={handleFinderSelectChord}
+      />
     </div>
   );
 };

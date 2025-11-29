@@ -4,6 +4,7 @@ import { PlayCircleIcon, PlusCircleIcon, MagnifyingGlassIcon, ChevronDownIcon, C
 import { ModeScaleChordDto } from '../api';
 import { useMusicStore } from '../stores/musicStore';
 import ChordFinderModal from './ChordFinder';
+import { createPortal } from 'react-dom';
 
 interface ChordTableProps {
   onChordClick: (chordNoteNames: string, index?: number, chordName?: string) => void;
@@ -549,14 +550,17 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
 
       </div>
       <div className="!z-50">
-        <ChordFinderModal
-          isOpen={isChordFinderOpen}
-          onClose={() => setIsChordFinderOpen(false)}
-          currentKey={key}
-          currentMode={mode}
-          onPlayNotes={(notes) => onChordClick(notes)}
-          onSelectChord={handleFinderSelectChord}
-        />
+        {isChordFinderOpen && createPortal(
+          <ChordFinderModal
+            isOpen={isChordFinderOpen}
+            onClose={() => setIsChordFinderOpen(false)}
+            currentKey={key}
+            currentMode={mode}
+            onPlayNotes={(notes) => onChordClick(notes)}
+            onSelectChord={handleFinderSelectChord}
+          />,
+          document.body
+        )}
       </div>
     </>
   );

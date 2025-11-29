@@ -348,212 +348,217 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
   //console.log(`Rendering chord table`);
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-2">
-      {/* Header Section */}
-      <div className="bg-mcb-secondary  border border-mcb-primary rounded-lg overflow-hidden mb-4">
-        <div className="px-4 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <h2 className="text-sm font-bold text-mcb-secondary uppercase tracking-wider">Chord Explorer</h2>
-              <button
-                onClick={() => setIsChordFinderOpen(true)}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[var(--mcb-accent-primary)]/10 hover:bg-[var(--mcb-accent-primary)]/20 border border-[var(--mcb-accent-primary)]/20 hover:border-[var(--mcb-accent-primary)]/50 transition-all group"
-              >
-                <MusicalNoteIcon className="w-3.5 h-3.5 text-[var(--mcb-accent-primary)]" />
-                <span className="text-xs font-medium text-[var(--mcb-accent-text-primary)]">Find by Notes</span>
-              </button>
-            </div>
-            {/* <div className="text-xs text-[var(--mcb-text-tertiary)]">
+    <>
+      <div className="w-full max-w-7xl mx-auto px-2">
+        {/* Header Section */}
+        <div className="bg-mcb-secondary  border border-mcb-primary rounded-lg overflow-hidden mb-4">
+          <div className="px-4 py-4">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-4">
+                <h2 className="text-sm font-bold text-mcb-secondary uppercase tracking-wider">Chord Explorer</h2>
+                <button
+                  onClick={() => setIsChordFinderOpen(true)}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[var(--mcb-accent-primary)]/10 hover:bg-[var(--mcb-accent-primary)]/20 border border-[var(--mcb-accent-primary)]/20 hover:border-[var(--mcb-accent-primary)]/50 transition-all group"
+                >
+                  <MusicalNoteIcon className="w-3.5 h-3.5 text-[var(--mcb-accent-primary)]" />
+                  <span className="text-xs font-medium text-[var(--mcb-accent-text-primary)]">Find by Notes</span>
+                </button>
+              </div>
+              {/* <div className="text-xs text-[var(--mcb-text-tertiary)]">
               {filteredChords.length} of {validChords.length} chords
             </div> */}
-          </div>
-
-          {/* Toggle and Search Section */}
-          <div className="space-y-4">
-            {/* Show All Chords Toggle */}
-            <div className="flex items-center justify-between p-3 bg-mcb-tertiaryx bg-mcb-elevated  rounded-lg border border-mcb-primary">
-              <div className="flex flex-col text-left">
-                <span className="text-xs uppercase font-medium text-[var(--mcb-text-tertiary)] text-left">
-                  Show All Chords
-                </span>
-                <span className="text-xs text-[var(--mcb-text-tertiary)]">
-                  {showAllChords
-                    ? (allDistinctChords ? `${allDistinctChords?.length} chords` : 'Loading...')
-                    : `Showing chords in ${key} ${mode}`
-                  }
-                </span>
-              </div>
-              <button
-                onClick={handleToggleAllChords}
-                disabled={currentLoading}
-                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[var(--mcb-accent-primary)] focus:ring-offset-2 focus:ring-offset-gray-800 ${showAllChords ? 'bg-[var(--mcb-accent-secondary)]' : 'bg-[var(--mcb-border-secondary)]'
-                  } ${currentLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                role="switch"
-                aria-checked={showAllChords}
-                aria-label="Toggle between current mode chords and all distinct chords"
-              >
-                <span
-                  aria-hidden="true"
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${showAllChords ? 'translate-x-5' : 'translate-x-0'
-                    }`}
-                />
-              </button>
             </div>
 
-            {/* Search Bar */}
-
-            <div className="relative">
-              <div className="absolute left-3 inset-y-0 flex items-center pointer-events-none">
-                <MagnifyingGlassIcon className="w-4 h-4 text-[var(--mcb-text-tertiary)]" />
-              </div>
-              <input
-                type="text"
-                placeholder="Search chords..."
-                value={searchQuery}
-                onChange={handleSearchChange}
-                className="w-full pl-10 pr-4 py-2 bg-mcb-tertiary border border-mcb-primary rounded-lg text-white placeholder-[var(--mcb-text-tertiary)] focus:border-[var(--mcb-accent-primary)] focus:outline-none transition-colors !text-sm"
-              />
-            </div>
-
-          </div>
-
-          {/* Mobile Root Note Filter */}
-          <div className="lg:hidden mt-4">
-            {mobileFilterButtons}
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content Area */}
-      <div className="flex flex-col lg:flex-row gap-3 lg:gap-4">
-        {/* Desktop Sidebar Filter */}
-        <div className="hidden lg:block lg:w-48 flex-shrink-0">
-          <div className="bg-mcb-secondary rounded-lg h-fit">
-            <div className="px-4 py-3 border-b border-mcb-primary">
-              <h3 className="text-sm font-medium text-mcb-primary uppercase tracking-wide">
-                Filter by Root
-              </h3>
-            </div>
-
-            <div className="p-2">
-              <button
-                onClick={() => setSelectedRootNote('All')}
-                className={`w-full px-3 py-2 text-left transition-colors rounded-md border-l-4 ${selectedRootNote === 'All'
-                  ? 'bg-mcb-hover border-l-[var(--mcb-accent-primary)] text-white'
-                  : 'hover:bg-mcb-tertiary border-l-transparent text-mcb-secondary hover:text-white'
-                  }`}
-              >
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">All Notes</span>
-                  <span className="text-xs text-[var(--mcb-text-tertiary)] bg-[var(--mcb-border-primary)] px-2 py-1 rounded">
-                    {validChords.length}
+            {/* Toggle and Search Section */}
+            <div className="space-y-4">
+              {/* Show All Chords Toggle */}
+              <div className="flex items-center justify-between p-3 bg-mcb-tertiaryx bg-mcb-elevated  rounded-lg border border-mcb-primary">
+                <div className="flex flex-col text-left">
+                  <span className="text-xs uppercase font-medium text-[var(--mcb-text-tertiary)] text-left">
+                    Show All Chords
+                  </span>
+                  <span className="text-xs text-[var(--mcb-text-tertiary)]">
+                    {showAllChords
+                      ? (allDistinctChords ? `${allDistinctChords?.length} chords` : 'Loading...')
+                      : `Showing chords in ${key} ${mode}`
+                    }
                   </span>
                 </div>
-              </button>
-
-              {rootNotes.map(note => (
                 <button
-                  key={note}
-                  onClick={() => setSelectedRootNote(note)}
-                  className={`w-full px-3 py-2 text-left transition-colors rounded-md border-l-4 mt-1 ${selectedRootNote === note
+                  onClick={handleToggleAllChords}
+                  disabled={currentLoading}
+                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[var(--mcb-accent-primary)] focus:ring-offset-2 focus:ring-offset-gray-800 ${showAllChords ? 'bg-[var(--mcb-accent-secondary)]' : 'bg-[var(--mcb-border-secondary)]'
+                    } ${currentLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  role="switch"
+                  aria-checked={showAllChords}
+                  aria-label="Toggle between current mode chords and all distinct chords"
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${showAllChords ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                  />
+                </button>
+              </div>
+
+              {/* Search Bar */}
+
+              <div className="relative">
+                <div className="absolute left-3 inset-y-0 flex items-center pointer-events-none">
+                  <MagnifyingGlassIcon className="w-4 h-4 text-[var(--mcb-text-tertiary)]" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search chords..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  className="w-full pl-10 pr-4 py-2 bg-mcb-tertiary border border-mcb-primary rounded-lg text-white placeholder-[var(--mcb-text-tertiary)] focus:border-[var(--mcb-accent-primary)] focus:outline-none transition-colors !text-sm"
+                />
+              </div>
+
+            </div>
+
+            {/* Mobile Root Note Filter */}
+            <div className="lg:hidden mt-4">
+              {mobileFilterButtons}
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content Area */}
+        <div className="flex flex-col lg:flex-row gap-3 lg:gap-4">
+          {/* Desktop Sidebar Filter */}
+          <div className="hidden lg:block lg:w-48 flex-shrink-0">
+            <div className="bg-mcb-secondary rounded-lg h-fit">
+              <div className="px-4 py-3 border-b border-mcb-primary">
+                <h3 className="text-sm font-medium text-mcb-primary uppercase tracking-wide">
+                  Filter by Root
+                </h3>
+              </div>
+
+              <div className="p-2">
+                <button
+                  onClick={() => setSelectedRootNote('All')}
+                  className={`w-full px-3 py-2 text-left transition-colors rounded-md border-l-4 ${selectedRootNote === 'All'
                     ? 'bg-mcb-hover border-l-[var(--mcb-accent-primary)] text-white'
                     : 'hover:bg-mcb-tertiary border-l-transparent text-mcb-secondary hover:text-white'
                     }`}
                 >
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">{note}</span>
+                    <span className="text-sm font-medium">All Notes</span>
                     <span className="text-xs text-[var(--mcb-text-tertiary)] bg-[var(--mcb-border-primary)] px-2 py-1 rounded">
-                      {chordCounts[note] || 0}
+                      {validChords.length}
                     </span>
                   </div>
                 </button>
-              ))}
-            </div>
-          </div>
-        </div>
 
-        {/* Chord Cards */}
-        <div className="flex-1">
-          {currentLoading ? (
-            <div className="flex justify-center items-center h-64">
-              <div className="flex flex-col items-center space-y-3">
-                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-[var(--mcb-accent-primary)]" />
-                <span className="text-sm text-[var(--mcb-text-tertiary)]">
-                  {showAllChords ? 'Loading all distinct chords...' : 'Loading chords...'}
-                </span>
+                {rootNotes.map(note => (
+                  <button
+                    key={note}
+                    onClick={() => setSelectedRootNote(note)}
+                    className={`w-full px-3 py-2 text-left transition-colors rounded-md border-l-4 mt-1 ${selectedRootNote === note
+                      ? 'bg-mcb-hover border-l-[var(--mcb-accent-primary)] text-white'
+                      : 'hover:bg-mcb-tertiary border-l-transparent text-mcb-secondary hover:text-white'
+                      }`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">{note}</span>
+                      <span className="text-xs text-[var(--mcb-text-tertiary)] bg-[var(--mcb-border-primary)] px-2 py-1 rounded">
+                        {chordCounts[note] || 0}
+                      </span>
+                    </div>
+                  </button>
+                ))}
               </div>
             </div>
-          ) : filteredChords.length ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 sm:gap-3">
-              {filteredChords.map((chord: ModeScaleChordDto, index: number) => (
-                <ChordCard
-                  key={`chord-${chord.chordName}-${index}`}
-                  chord={chord}
-                  index={index}
-                  isExpanded={expandedRows.has(getRowNumber(index))}
-                  isPlaying={playingChords.has(index)}
-                  isAdding={addingChords.has(index)}
-                  onChordPlay={handleChordPlay}
-                  onChordAdd={handleChordAdd}
-                  onToggleExpansion={handleToggleExpansion}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="flex justify-center items-center h-64 bg-mcb-secondary rounded-lg">
-              <div className="text-center space-y-3">
-                <div className="text-mcb-disabled text-4xl">♫</div>
-                <div className="space-y-2">
-                  <div className="text-sm text-[var(--mcb-text-tertiary)]">
-                    {searchQuery.trim()
-                      ? `No chords found matching "${searchQuery}"`
-                      : selectedRootNote === 'All'
-                        ? showAllChords
-                          ? 'No distinct chords available'
-                          : 'No chords available'
-                        : `No chords found for root note "${selectedRootNote}"`
-                    }
+          </div>
+
+          {/* Chord Cards */}
+          <div className="flex-1">
+            {currentLoading ? (
+              <div className="flex justify-center items-center h-64">
+                <div className="flex flex-col items-center space-y-3">
+                  <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-[var(--mcb-accent-primary)]" />
+                  <span className="text-sm text-[var(--mcb-text-tertiary)]">
+                    {showAllChords ? 'Loading all distinct chords...' : 'Loading chords...'}
+                  </span>
+                </div>
+              </div>
+            ) : filteredChords.length ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 sm:gap-3">
+                {filteredChords.map((chord: ModeScaleChordDto, index: number) => (
+                  <ChordCard
+                    key={`chord-${chord.chordName}-${index}`}
+                    chord={chord}
+                    index={index}
+                    isExpanded={expandedRows.has(getRowNumber(index))}
+                    isPlaying={playingChords.has(index)}
+                    isAdding={addingChords.has(index)}
+                    onChordPlay={handleChordPlay}
+                    onChordAdd={handleChordAdd}
+                    onToggleExpansion={handleToggleExpansion}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="flex justify-center items-center h-64 bg-mcb-secondary rounded-lg">
+                <div className="text-center space-y-3">
+                  <div className="text-mcb-disabled text-4xl">♫</div>
+                  <div className="space-y-2">
+                    <div className="text-sm text-[var(--mcb-text-tertiary)]">
+                      {searchQuery.trim()
+                        ? `No chords found matching "${searchQuery}"`
+                        : selectedRootNote === 'All'
+                          ? showAllChords
+                            ? 'No distinct chords available'
+                            : 'No chords available'
+                          : `No chords found for root note "${selectedRootNote}"`
+                      }
+                    </div>
+                    {(searchQuery.trim() || selectedRootNote !== 'All') && (
+                      <button
+                        onClick={handleClearFilters}
+                        className="text-sm text-[var(--mcb-accent-text-primary)] hover:text-[var(--mcb-accent-text-secondary)] underline transition-colors"
+                      >
+                        Clear filters
+                      </button>
+                    )}
                   </div>
-                  {(searchQuery.trim() || selectedRootNote !== 'All') && (
-                    <button
-                      onClick={handleClearFilters}
-                      className="text-sm text-[var(--mcb-accent-text-primary)] hover:text-[var(--mcb-accent-text-secondary)] underline transition-colors"
-                    >
-                      Clear filters
-                    </button>
+                </div>
+              </div>
+            )}
+
+            {/* Footer info */}
+            {filteredChords.length > 0 && (
+              <div className="mt-4 text-center">
+                <div className="text-xs text-[var(--mcb-text-tertiary)]">
+                  Tap any chord to play •
+                  <span className="text-mcb-secondary mx-1">+</span> to add to sequence •
+                  <ChevronDownIcon className="inline h-3 w-3 mx-1" /> to show notes for entire row
+                  {showAllChords && (
+                    <span className="block mt-1 text-[var(--mcb-accent-text-primary)]">
+                      Currently showing all distinct chords across all modes and keys (sorted alphabetically)
+                    </span>
                   )}
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* Footer info */}
-          {filteredChords.length > 0 && (
-            <div className="mt-4 text-center">
-              <div className="text-xs text-[var(--mcb-text-tertiary)]">
-                Tap any chord to play •
-                <span className="text-mcb-secondary mx-1">+</span> to add to sequence •
-                <ChevronDownIcon className="inline h-3 w-3 mx-1" /> to show notes for entire row
-                {showAllChords && (
-                  <span className="block mt-1 text-[var(--mcb-accent-text-primary)]">
-                    Currently showing all distinct chords across all modes and keys (sorted alphabetically)
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
 
-      <ChordFinderModal
-        isOpen={isChordFinderOpen}
-        onClose={() => setIsChordFinderOpen(false)}
-        currentKey={key}
-        currentMode={mode}
-        onPlayNotes={(notes) => onChordClick(notes)}
-        onSelectChord={handleFinderSelectChord}
-      />
-    </div>
+
+      </div>
+      <div className="!z-50">
+        <ChordFinderModal
+          isOpen={isChordFinderOpen}
+          onClose={() => setIsChordFinderOpen(false)}
+          currentKey={key}
+          currentMode={mode}
+          onPlayNotes={(notes) => onChordClick(notes)}
+          onSelectChord={handleFinderSelectChord}
+        />
+      </div>
+    </>
   );
 };
 

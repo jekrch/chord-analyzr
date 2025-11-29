@@ -1,98 +1,11 @@
 import { create } from 'zustand';
-import { ActiveNoteInfo, AddedChord, ModeScaleChordDto, ScaleNoteDto } from './types';
+import { ActiveNoteInfo, AddedChord } from './types';
 import { dataService } from '../services/DataService';
-import { normalizeNoteName } from '../util/NoteUtil';
+import { calculateTransposeSteps, transposeChordName, transposeNotes } from '../hooks/useChordTranspose';
 
 const START_OCTAVE = 4;
 const END_OCTAVE = 7;
 
-// Helper functions for transposition
-const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-
-/**
- * Calculate the number of semitone steps between two keys
- */
-export const calculateTransposeSteps = (fromKey: string, toKey: string): number => {
-    // Handle flats by converting to sharps
-    const flatToSharp: { [key: string]: string } = {
-        'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#'
-    };
-    
-    const normalizedFrom = flatToSharp[fromKey] || fromKey;
-    const normalizedTo = flatToSharp[toKey] || toKey;
-    
-    const fromIndex = NOTES.indexOf(normalizedFrom);
-    const toIndex = NOTES.indexOf(normalizedTo);
-    
-    if (fromIndex === -1 || toIndex === -1) return 0;
-    
-    let steps = toIndex - fromIndex;
-    // Normalize to range [-5, 6] for shortest path
-    if (steps > 6) steps -= 12;
-    if (steps < -5) steps += 12;
-    
-    return steps;
-};
-
-/**
- * Transpose a single note by the specified number of semitones
- */
-const transposeNote = (note: string, steps: number): string => {
-    // Handle flats by converting to sharps
-    const flatToSharp: { [key: string]: string } = {
-        'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#'
-    };
-    
-    let normalizedNote = note;
-    if (flatToSharp[note]) {
-        normalizedNote = flatToSharp[note];
-    }
-    
-    const index = NOTES.indexOf(normalizedNote);
-    if (index === -1) return note; // Return original if not found
-    
-    const newIndex = (index + steps + 12) % 12;
-    return NOTES[newIndex];
-};
-
-/**
- * Transpose a chord name by extracting and transposing the root note
- */
-export const transposeChordName = (chordName: string, steps: number): string => {
-    // Extract root note (first 1-2 characters)
-    let rootNote = '';
-    let suffix = '';
-    
-    if (chordName.length >= 2 && (chordName[1] === '#' || chordName[1] === 'b')) {
-        rootNote = chordName.substring(0, 2);
-        suffix = chordName.substring(2);
-    } else if (chordName.length >= 1) {
-        rootNote = chordName[0];
-        suffix = chordName.substring(1);
-    }
-    
-    const transposedRoot = transposeNote(rootNote, steps);
-    return transposedRoot + suffix;
-};
-
-/**
- * Transpose a comma-separated list of notes (with optional whitespace)
- * Handles formats like "C, E, G, B" or "C,E,G,B" or "C E G B"
- */
-export const transposeNotes = (notes: string, steps: number): string => {
-    // Split by comma first (if present), otherwise by space
-    const delimiter = notes.includes(',') ? ',' : ' ';
-    
-    return notes.split(delimiter)
-        .map(note => note.trim()) // Remove whitespace
-        .filter(note => note.length > 0) // Remove empty strings
-        .map(note => transposeNote(note, steps))
-        .join(', '); // Always rejoin with comma + space for consistency
-};
-
-// ============================================================================
-// PLAYBACK STORE
-// ============================================================================
 
 interface PlaybackState {
     // State

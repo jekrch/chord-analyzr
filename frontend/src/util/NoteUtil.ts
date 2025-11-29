@@ -94,7 +94,6 @@ export const getMidiNote = (note: string, octave: number): number => {
     return midiNote;
 };
 
-
 export const clearMidiNoteCache = () => {
     midiNoteCache.clear();
 };

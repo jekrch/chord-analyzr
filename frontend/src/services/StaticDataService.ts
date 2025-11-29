@@ -4,6 +4,7 @@
  */
 
 import type { ModeDto, ModeScaleChordDto, ScaleNoteDto } from '../api';
+import { noteNameToNumber } from '../util/NoteUtil';
 import { dynamicChordGenerator } from './DynamicChordService';
 
 interface StaticDataIndex {
@@ -275,30 +276,6 @@ class StaticDataService {
     }
   }
 
-  /**
-   * Helper to convert note name to MIDI note number (0-11)
-   */
-  private noteNameToNumber(noteName: string): number {
-    if (!noteName || noteName.length === 0) return 0;
-
-    const baseNote = noteName.charAt(0).toUpperCase();
-    const accidentals = noteName.slice(1).replace(/\d+/g, ''); // Remove octave numbers
-
-    const baseNoteMap: Record<string, number> = {
-      'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11
-    };
-
-    let midiNote = baseNoteMap[baseNote];
-    if (midiNote === undefined) return 0;
-
-    const sharps = (accidentals.match(/#/g) || []).length;
-    const flats = (accidentals.match(/b/g) || []).length;
-
-    midiNote += sharps;
-    midiNote -= flats;
-
-    return ((midiNote % 12) + 12) % 12;
-  }
 
   /**
    * Get the best root note name for a chromatic note number in the given key/mode context
@@ -312,7 +289,7 @@ class StaticDataService {
 
     // First, check if this note is in the scale
     const scaleNote = scaleNotes.find(note => {
-      const noteNum = this.noteNameToNumber(note.noteName!);
+      const noteNum = noteNameToNumber(note.noteName!);
       return noteNum === normalizedNote;
     });
 
@@ -484,8 +461,8 @@ class StaticDataService {
 
     // Get scale note numbers for preference matching
     const scaleNoteNumbers = new Set(
-      scaleNotes.map(note => this.noteNameToNumber(note.noteName!))
-    );
+      scaleNotes.map(note => noteNameToNumber(note.noteName!))
+    )
 
     // Determine if this scale uses sharps or flats
     const scaleUsesFlats = scaleNotes.some(note => 
@@ -537,7 +514,7 @@ class StaticDataService {
     const noteNames = chord.chordNoteNames.split(',').map(n => n.trim());
 
     for (const noteName of noteNames) {
-      const noteNumber = this.noteNameToNumber(noteName);
+      const noteNumber = noteNameToNumber(noteName);
 
       // +10 points if the note is in the scale
       if (scaleNoteNumbers.has(noteNumber)) {
@@ -564,7 +541,7 @@ class StaticDataService {
 
     // Bonus points if the root note is in the scale
     if (chord.chordNoteName) {
-      const rootNumber = this.noteNameToNumber(chord.chordNoteName);
+      const rootNumber = noteNameToNumber(chord.chordNoteName);
       if (scaleNoteNumbers.has(rootNumber)) {
         score += 15;
       }

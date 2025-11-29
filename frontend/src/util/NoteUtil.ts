@@ -97,3 +97,28 @@ export const getMidiNote = (note: string, octave: number): number => {
 export const clearMidiNoteCache = () => {
     midiNoteCache.clear();
 };
+
+/**
+   * Helper to convert note name to MIDI note number (0-11)
+   */
+  export function noteNameToNumber(noteName: string): number {
+    if (!noteName || noteName.length === 0) return 0;
+
+    const baseNote = noteName.charAt(0).toUpperCase();
+    const accidentals = noteName.slice(1).replace(/\d+/g, ''); // Remove octave numbers
+
+    const baseNoteMap: Record<string, number> = {
+      'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11
+    };
+
+    let midiNote = baseNoteMap[baseNote];
+    if (midiNote === undefined) return 0;
+
+    const sharps = (accidentals.match(/#/g) || []).length;
+    const flats = (accidentals.match(/b/g) || []).length;
+
+    midiNote += sharps;
+    midiNote -= flats;
+
+    return ((midiNote % 12) + 12) % 12;
+  }

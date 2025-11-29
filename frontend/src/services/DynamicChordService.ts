@@ -5,6 +5,7 @@
 
 import { staticDataService } from './StaticDataService';
 import type { ScaleNoteDto } from '../api';
+import { noteNameToNumber } from '../util/NoteUtil';
 
 
 export interface GeneratedChord {
@@ -159,36 +160,6 @@ class DynamicChordGenerator {
     private chromaticNotesFlat = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 
     /**
-     * Convert note name to MIDI note number (C = 0)
-     * Now handles double sharps (##) and double flats (bb)
-     */
-    private noteNameToNumber(noteName: string): number {
-        if (!noteName || noteName.length === 0) return 0;
-
-        // Extract base note and accidentals
-        const baseNote = noteName.charAt(0).toUpperCase();
-        const accidentals = noteName.slice(1);
-
-        // Base note values
-        const baseNoteMap: Record<string, number> = {
-            'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11
-        };
-
-        let midiNote = baseNoteMap[baseNote];
-        if (midiNote === undefined) return 0;
-
-        // Count sharps and flats
-        const sharps = (accidentals.match(/#/g) || []).length;
-        const flats = (accidentals.match(/b/g) || []).length;
-
-        // Apply accidentals
-        midiNote += sharps;
-        midiNote -= flats;
-
-        return midiNote;
-    }
-
-    /**
      * Determine if a scale uses flats based on its notes
      */
     private scaleUsesFlats(scaleNotes: ScaleNoteDto[], keyName: string): boolean {
@@ -226,7 +197,7 @@ class DynamicChordGenerator {
 
         // First, try to find the note in the scale context
         const scaleNote = scaleNotes.find(note => {
-            const noteNum = this.noteNameToNumber(note.noteName!);
+            const noteNum = noteNameToNumber(note.noteName!);
             return ((noteNum % 12) + 12) % 12 === normalizedTarget;
         });
 
@@ -254,14 +225,14 @@ class DynamicChordGenerator {
 
             // Get scale note numbers for compatibility checking
             const scaleNoteNumbers = scaleNotes.map(note =>
-                ((this.noteNameToNumber(note.noteName!) % 12) + 12) % 12
+                ((noteNameToNumber(note.noteName!) % 12) + 12) % 12
             );
 
             const chords: GeneratedChord[] = [];
 
             // Generate chords for each scale degree
             scaleNotes.forEach(scaleNote => {
-                const rootNote = this.noteNameToNumber(scaleNote.noteName!);
+                const rootNote = noteNameToNumber(scaleNote.noteName!);
 
                 // Generate each chord type on this root
                 Object.entries(this.chordTypes).forEach(([chordType, intervals]) => {
@@ -323,7 +294,7 @@ class DynamicChordGenerator {
                 throw new Error(`Mode "${mode}" not found`);
             }
 
-            const rootNoteNumber = this.noteNameToNumber(rootNote);
+            const rootNoteNumber = noteNameToNumber(rootNote);
             const chordNoteNumbers: number[] = [];
             const chordNoteNames: string[] = [];
 

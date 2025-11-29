@@ -495,7 +495,7 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-mcb-input bg-opacity-95 backdrop-blur-sm z-[1000] flex flex-col">
+        <div className="fixed inset-0 bg-mcb-input bg-opacity-95 backdrop-blur-sm !z-[1000] flex flex-col">
             {/* Upper Section - Piano & Selection (max 50% height) */}
             <div className="flex-shrink-0 max-h-[50vh] flex flex-col">
                 <div className="max-w-3xl mx-auto px-4 pt-4 pb-2 w-full flex-shrink-0">

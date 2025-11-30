@@ -5,33 +5,11 @@ import { useMidiRecording } from '../hooks/useMidiRecording';
 import { usePlaybackStore } from '../stores/playbackStore';
 import { usePatternStore } from '../stores/patternStore';
 import { usePianoStore } from '../stores/pianoStore';
+import { convertToStandardNoteName } from '../util/NoteUtil';
 
 interface MidiRecorderProps {
   className?: string;
 }
-
-const convertToStandardNoteName = (noteName: string): string => {
-  if (!noteName || noteName.length === 0) return 'C';
-  
-  const baseNote = noteName.charAt(0).toUpperCase();
-  const accidentals = noteName.slice(1);
-  
-  const baseNoteMap: Record<string, number> = {
-    'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11
-  };
-  
-  let semitones = baseNoteMap[baseNote];
-  if (semitones === undefined) return 'C';
-  
-  const sharps = (accidentals.match(/#/g) || []).length;
-  const flats = (accidentals.match(/b/g) || []).length;
-  
-  semitones += sharps - flats;
-  semitones = ((semitones % 12) + 12) % 12;
-  
-  const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-  return noteNames[semitones];
-};
 
 const MidiRecorder: React.FC<MidiRecorderProps> = ({ className = '' }) => {
   const [midiRecordingEnabled, setMidiRecordingEnabled] = useState(false);

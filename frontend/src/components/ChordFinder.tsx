@@ -593,11 +593,11 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
                                 Generating all chord combinations...
                             </div>
                         ) : sortedSelectedNotes.length === 0 ? (
-                            <div className="text-center py-8 text-mcb-tertiary text-lg">
+                            <div className="text-center py-8 text-mcb-tertiary text-md">
                                 Select notes on the piano to find matching chords
                             </div>
                         ) : matchingChords.length === 0 ? (
-                            <div className="text-center py-8 text-mcb-tertiary text-lg">
+                            <div className="text-center py-8 text-mcb-tertiary text-md">
                                 No matching chords found
                             </div>
                         ) : (

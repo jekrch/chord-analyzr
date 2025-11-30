@@ -1,4 +1,3 @@
-import { MidiNumbers } from 'react-piano';
 import { normalizeNoteName } from './NoteUtil';
 import { ActiveNoteInfo } from '../stores/types';
 

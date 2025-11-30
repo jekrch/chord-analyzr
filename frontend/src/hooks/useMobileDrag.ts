@@ -4,12 +4,9 @@ import {
 } from '@dnd-kit/core';
 import {
     arrayMove,
-    SortableContext,
     sortableKeyboardCoordinates,
-    rectSortingStrategy
 } from '@dnd-kit/sortable';
 import {
-    closestCenter, 
     KeyboardSensor, 
     PointerSensor, 
     TouchSensor,

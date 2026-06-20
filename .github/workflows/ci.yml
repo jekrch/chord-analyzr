@@ -13,25 +13,25 @@ jobs:
       run:
         working-directory: ./frontend
     steps:
-      - name: Checkout 🛎️
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Bun 🥟
+      - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.3.10'
 
-      - name: Install dependencies 📦
+      - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Type-check 🔎
+      - name: Type-check
         run: bun run typecheck
 
-      - name: Lint 🧹
+      - name: Lint
         run: bun run lint
 
-      - name: Test 🧪
+      - name: Test
         run: bun run test:run
 
-      - name: Build 🛠️
+      - name: Build
         run: bun run build

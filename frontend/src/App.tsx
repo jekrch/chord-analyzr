@@ -40,7 +40,7 @@ function App() {
                 if (scrollContainerRef.current) {
                     scrollContainerRef.current.style.overflow = 'hidden';
                     // Force reflow
-                    scrollContainerRef.current.offsetHeight;
+                    void scrollContainerRef.current.offsetHeight;
                     scrollContainerRef.current.style.overflow = 'auto';
                 }
             }, 50);
@@ -66,7 +66,7 @@ function App() {
                     container.style.overflowY = 'hidden';
                     container.style.touchAction = 'pan-y';
                     // Force reflow
-                    container.offsetHeight;
+                    void container.offsetHeight;
                     container.style.overflowY = 'auto';
                     (container.style as any).WebkitOverflowScrolling = 'touch';
                 }
@@ -121,8 +121,6 @@ function App() {
             document.removeEventListener('click', initializeAudio);
         };
     }, []);
-
-    console.log('test App render');
 
     return (
         <div className="select-none text-center bg-mcb-app min-h-screen h-screen w-screen overflow-hidden flex flex-col">

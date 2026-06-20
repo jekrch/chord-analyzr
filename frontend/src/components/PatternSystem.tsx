@@ -22,8 +22,7 @@ const SUBDIVISIONS = [
   { value: 2.0, symbol: '♪', name: 'Half notes' },
 ];
 
-interface PatternSystemProps {
-}
+type PatternSystemProps = Record<string, never>;
 
 // Memoized Step Editor with updated styling and custom dropdown
 const StepEditor = memo(({

@@ -93,7 +93,7 @@ const Dropdown: React.FC<DropdownProps> = ({
     if (isOpen && isPositioned && selectedOptionRef.current && scrollContainerRef.current) {
       selectedOptionRef.current.scrollIntoView({
         block: 'nearest',
-        behavior: 'instant'
+        behavior: 'instant' as ScrollBehavior
       });
     }
   }, [isOpen, isPositioned]);

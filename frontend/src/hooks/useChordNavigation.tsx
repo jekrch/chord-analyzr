@@ -68,7 +68,7 @@ export const useChordNavigation = ({
                         container.style.overflowY = 'hidden';
                         container.style.touchAction = 'pan-y';
                         // Force reflow
-                        container.offsetHeight;
+                        void container.offsetHeight;
                         container.style.overflowY = 'auto';
                         (container.style as any).WebkitOverflowScrolling = 'touch';
                     }

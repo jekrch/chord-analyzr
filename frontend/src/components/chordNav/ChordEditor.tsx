@@ -141,7 +141,7 @@ CSS             background: linear-gradient(to bottom, var(--mcb-accent-primary)
         
         return () => {
             document.head.removeChild(style);
-CSS     };
+        };
     }, []);
 
     const startOctave = 4;

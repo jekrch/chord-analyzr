@@ -79,17 +79,12 @@ class StaticDataService {
       return this.modesCache;
     }
 
-    try {
-      const response = await fetch(`${this.baseUrl}/modes.json`);
-      if (!response.ok) {
-        throw new Error(`Failed to load modes: ${response.statusText}`);
-      }
-      this.modesCache = await response.json();
-      return this.modesCache!;
-    } catch (error) {
-      //console.error('Error loading modes from static data:', error);
-      throw error;
+    const response = await fetch(`${this.baseUrl}/modes.json`);
+    if (!response.ok) {
+      throw new Error(`Failed to load modes: ${response.statusText}`);
     }
+    this.modesCache = await response.json();
+    return this.modesCache!;
   }
 
   /**

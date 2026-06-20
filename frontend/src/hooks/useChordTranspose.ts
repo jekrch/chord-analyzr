@@ -76,7 +76,7 @@ export const useChordTranspose = () => {
             }
 
             // Find matching chord in library to update originalNotes (for reference)
-            let matchingChord = newChords.find(c => c.chordName === transposedBaseChordName) ||
+            const matchingChord = newChords.find(c => c.chordName === transposedBaseChordName) ||
                 allChords.find(c => c.chordName === transposedBaseChordName);
 
             // Update originalNotes to reflect the library version in the new key

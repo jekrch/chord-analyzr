@@ -7,7 +7,7 @@
  * @param scale 
  * @returns 
  */
-export function convertScaleToMajorKey(scale: String[]): string | null {
+export function convertScaleToMajorKey(scale: string[]): string | null {
     // count accidentals
     const accidentalCounts = { sharp: 0, flat: 0, doubleSharp: 0, doubleFlat: 0 };
     

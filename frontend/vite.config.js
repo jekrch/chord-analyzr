@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
@@ -14,11 +14,19 @@ export default defineConfig(({ command }) => {
         '/api': 'http://localhost:8080'
       }
     },
-    base: '/'
+    base: '/',
+    test: {
+      globals: true,
+      environment: 'jsdom',
+      setupFiles: './src/setupTests.ts',
+      css: false
+    }
   }
 
   if (command === 'build') {
     config.base = '/'
+    // Strip console.* and debugger statements from production bundles.
+    config.esbuild = { drop: ['console', 'debugger'] }
   }
 
   return config

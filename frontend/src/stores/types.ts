@@ -1,4 +1,4 @@
-export type { AddedChord, PianoSettings } from '../util/urlStateEncoder';
+export type { AddedChord, PianoSettings } from '../util/url/types';
 export type { ModeScaleChordDto, ScaleNoteDto } from '../api';
 
 export interface ActiveNoteInfo {

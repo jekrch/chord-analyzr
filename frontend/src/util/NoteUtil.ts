@@ -32,8 +32,8 @@ export const normalizeNoteName = (noteName?: string) => {
 export function normalizeNoteWithOctave(note?: string): string | undefined {
     if (!note) return note; 
 
-    let notePart = note.substring(0, note.length - 1);
-    let octavePart = note.substring(note.length - 1);
+    const notePart = note.substring(0, note.length - 1);
+    const octavePart = note.substring(note.length - 1);
 
     const normalizedNote = enharmonicEquivalents[notePart];
 

@@ -8,10 +8,8 @@ import { useMusicStore } from '../../stores/musicStore';
 import { usePianoStore } from '../../stores/pianoStore';
 import { usePlaybackStore } from '../../stores/playbackStore';
 import { usePatternStore } from '../../stores/patternStore';
-
-// Create the AudioContext ONCE, outside the component.
-// This ensures the same instance is reused across re-renders and prevents exceeding the browser limit.
-const audioContext = typeof window !== 'undefined' ? new (window.AudioContext || (window as any).webkitAudioContext)() : null;
+import { audioContext } from '../../piano/audioContext';
+import { sequencerScheduler } from '../../services/SequencerScheduler';
 
 interface PianoProps {
   hideConfigControls?: boolean;
@@ -32,16 +30,17 @@ const PianoControl: React.FC<PianoProps> = ({
   const setAvailableInstruments = usePianoStore(state => state.setAvailableInstruments);
 
   const activeNotes = usePlaybackStore(state => state.activeNotes);
-  const activeChordIndex = usePlaybackStore(state => state.activeChordIndex);
-  const addedChords = usePlaybackStore(state => state.addedChords);
 
-  const currentlyActivePattern = usePatternStore(state => state.currentlyActivePattern);
-  const globalPatternState = usePatternStore(state => state.globalPatternState);
+  // Narrow subscription: only isPlaying. Subscribing to the whole
+  // globalPatternState would re-render the piano on every sequencer step.
+  const isPlaying = usePatternStore(state => state.globalPatternState.isPlaying);
 
   const soundfontHostname = 'https://d1pzp51pvbm36p.cloudfront.net';
   const stopAllNotesRef = useRef<(() => void) | null>(null);
   const [activePianoNotes, setActivePianoNotes] = useState<number[]>([]);
-  const lastStepRef = useRef<number>(-1);
+  // Keys currently lit by the sequencer. Their audio is scheduled directly on
+  // the audio clock, so react-piano's playNote must not re-trigger them.
+  const sequencerNotesRef = useRef<Set<number>>(new Set());
   const chordSustainTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Container ref for measuring width
@@ -144,7 +143,7 @@ const PianoControl: React.FC<PianoProps> = ({
       chordSustainTimeoutRef.current = null;
     }
 
-    if (!globalPatternState.isPlaying && activeNotes.length > 0) {
+    if (!isPlaying && activeNotes.length > 0) {
       // Play all notes as a chord
       const chordMidiNotes = activeNotes.map(({ note, octave = 4 }) =>
         getMidiNote(note, octave)
@@ -153,11 +152,11 @@ const PianoControl: React.FC<PianoProps> = ({
 
       // Auto-release after 2 seconds
       chordSustainTimeoutRef.current = setTimeout(() => {
-        if (!globalPatternState.isPlaying) {
+        if (!usePatternStore.getState().globalPatternState.isPlaying) {
           setActivePianoNotes([]);
         }
       }, 2000);
-    } else if (!globalPatternState.isPlaying && activeNotes.length === 0) {
+    } else if (!isPlaying && activeNotes.length === 0) {
       setActivePianoNotes([]);
     }
 
@@ -167,105 +166,54 @@ const PianoControl: React.FC<PianoProps> = ({
         chordSustainTimeoutRef.current = null;
       }
     };
-  }, [activeNotes, globalPatternState.isPlaying]);
+  }, [activeNotes, isPlaying]);
 
-  // Get current active pattern (uses the same logic as App)
-  const getCurrentPattern = useCallback(() => {
-    // If a chord is selected, use its pattern; otherwise use currently active pattern
-    if (activeChordIndex !== null && addedChords[activeChordIndex]) {
-      return addedChords[activeChordIndex].pattern;
-    }
-    return currentlyActivePattern;
-  }, [activeChordIndex, addedChords, currentlyActivePattern]);
-
-  // Parse pattern step (handle rests and octave notation)
-  const parsePatternStep = useCallback((step: string, noteCount: number) => {
-    if (step === 'x' || step === 'X') return null; // Rest
-
-    const isOctaveUp = step.includes('+');
-    const isOctaveDown = step.includes('-');
-    const noteIndex = parseInt(step.replace(/[+-]/g, '')) - 1;
-
-    if (noteIndex >= 0 && noteIndex < noteCount) {
-      return {
-        noteIndex,
-        octaveUp: isOctaveUp,
-        octaveDown: isOctaveDown
-      };
-    }
-    return null;
-  }, []);
-
-  const getStepDuration = useCallback(() => {
-    const quarterNoteDuration = 60000 / globalPatternState.bpm;
-    return quarterNoteDuration * globalPatternState.subdivision;
-  }, [globalPatternState.bpm, globalPatternState.subdivision]);
-
-  // Handle pattern playback when sequencer is ON
+  // Sequencer key highlighting — visuals only. The audio for these steps is
+  // scheduled ahead on the audio clock by the SequencerScheduler; this
+  // listener fires approximately on the beat, where visual jitter is invisible.
   useEffect(() => {
-    const currentPattern = getCurrentPattern();
-
-    if (globalPatternState.isPlaying &&
-      activeNotes.length > 0 &&
-      currentPattern?.length > 0 &&  // Added optional chaining
-      globalPatternState.currentStep !== lastStepRef.current) {
-
-      lastStepRef.current = globalPatternState.currentStep;
-
-      const currentPatternIndex = globalPatternState.currentStep % currentPattern.length;
-      const stepValue = currentPattern[currentPatternIndex];
-      const parsedStep = parsePatternStep(stepValue, activeNotes.length);
-
-      if (parsedStep) {
-        const { noteIndex, octaveUp, octaveDown } = parsedStep;
-        const { note, octave = 4 } = activeNotes[noteIndex];
-        let finalOctave = octave;
-
-        if (octaveUp) finalOctave += 1;
-        if (octaveDown) finalOctave -= 1;
-
-        // Ensure octave stays within reasonable bounds
-        finalOctave = Math.max(1, Math.min(8, finalOctave));
-
-        // Convert note to standard format before passing to MidiNumbers.fromNote
-        const midiNote = getMidiNote(note, finalOctave)
-
-        if (!pianoSettings.cutOffPreviousNotes && stopAllNotesRef.current) {
-          stopAllNotesRef.current();
-        }
-
-        setActivePianoNotes([midiNote]);
-
-        const stepDuration = getStepDuration();
-        const sustainDuration = Math.min(stepDuration * pianoSettings.noteDuration, stepDuration - 50);
-
-        setTimeout(() => {
-          setActivePianoNotes([]);
-        }, sustainDuration);
-      } else {
-        // Rest - clear any active notes
-        setActivePianoNotes([]);
-      }
-    } else if (!globalPatternState.isPlaying) {
-      // When pattern stops, clear sequencer notes but let chord playing handle the rest
-      if (lastStepRef.current !== -1) {
-        setActivePianoNotes([]);
-        lastStepRef.current = -1;
-      }
+    if (!isPlaying) {
+      sequencerNotesRef.current = new Set();
+      return;
     }
-  }, [
-    globalPatternState.currentStep,
-    globalPatternState.isPlaying,
-    activeNotes,
-    pianoSettings.cutOffPreviousNotes,
-    pianoSettings.noteDuration,
-    getStepDuration,
-    getCurrentPattern,
-    parsePatternStep
-  ]);
+
+    const unsubscribe = sequencerScheduler.onStep((step) => {
+      if (step.midiNumber === null) {
+        // Rest (or no chord selected) - clear any lit keys
+        sequencerNotesRef.current = new Set();
+        setActivePianoNotes([]);
+        return;
+      }
+
+      // The scheduler plays the offset note; the visible key is the base one,
+      // matching how interactive presses light keys before the offset applies.
+      const visualMidi = step.midiNumber - midiOffset;
+      sequencerNotesRef.current = new Set([visualMidi]);
+      setActivePianoNotes([visualMidi]);
+
+      window.setTimeout(() => {
+        sequencerNotesRef.current.delete(visualMidi);
+        setActivePianoNotes(current =>
+          current.length === 1 && current[0] === visualMidi ? [] : current
+        );
+      }, step.durationMs);
+    });
+
+    return unsubscribe;
+  }, [isPlaying, midiOffset]);
+
+  // Detach the instrument from the scheduler on unmount
+  useEffect(() => {
+    return () => sequencerScheduler.setInstrument(null);
+  }, []);
 
   const playNoteWithOffset = useCallback((playNote: (midiNumber: number) => void) =>
     (midiNumber: number) => {
+      // Keys lit by the sequencer are visual-only here; their audio was
+      // already scheduled sample-accurately on the audio clock.
+      if (sequencerNotesRef.current.has(midiNumber)) {
+        return;
+      }
       if (!pianoSettings.cutOffPreviousNotes && stopAllNotesRef.current) {
         stopAllNotesRef.current();
       }
@@ -330,8 +278,9 @@ const PianoControl: React.FC<PianoProps> = ({
 
       <SoundfontProvider
         {...soundfontProps}
-        render={({ isLoading, playNote, stopNote, stopAllNotes }) => {
+        render={({ isLoading, playNote, stopNote, stopAllNotes, playNoteAt, stopAllNotesAt }) => {
           stopAllNotesRef.current = stopAllNotes;
+          sequencerScheduler.setInstrument({ playNoteAt, stopAllNotesAt });
 
           return (
             <div ref={containerRef} className="relative w-full">

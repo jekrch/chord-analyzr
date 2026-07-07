@@ -37,6 +37,8 @@ interface SoundfontProviderProps {
     playNote: (midiNumber: number) => void;
     stopNote: (midiNumber: number) => void;
     stopAllNotes: () => void;
+    playNoteAt: (midiNumber: number, when: number, durationSec: number) => void;
+    stopAllNotesAt: (when?: number) => void;
   }) => JSX.Element | null;
 }
 
@@ -763,6 +765,22 @@ export class SoundfontProvider extends React.Component<SoundfontProviderProps, S
     });
   };
 
+  // Scheduled playback for the sequencer: commits the note to the audio graph
+  // at an absolute AudioContext time, with its stop pre-scheduled via duration.
+  // Deliberately no setState — nothing React-side may sit on this path.
+  playNoteAt = (midiNumber: number, when: number, durationSec: number) => {
+    if (!this.state.instrument) return;
+    if (this.props.audioContext.state === 'suspended') {
+      this.props.audioContext.resume();
+    }
+    this.state.instrument.play(midiNumber.toString(), when, { duration: durationSec });
+  };
+
+  stopAllNotesAt = (when?: number) => {
+    if (!this.state.instrument) return;
+    this.state.instrument.stop(when);
+  };
+
   stopNote = (midiNumber: number) => {
     this.resumeAudio().then(() => {
       const audioNode = this.state.activeAudioNodes[midiNumber];
@@ -787,6 +805,9 @@ export class SoundfontProvider extends React.Component<SoundfontProviderProps, S
 
   stopAllNotes = () => {
     this.resumeAudio().then(() => {
+      // Stops every node from this player, including sequencer-scheduled ones
+      // that are not tracked in activeAudioNodes.
+      this.state.instrument?.stop();
       Object.values(this.state.activeAudioNodes).forEach((node) => {
         if (node) {
           node.stop();
@@ -804,6 +825,8 @@ export class SoundfontProvider extends React.Component<SoundfontProviderProps, S
       playNote: this.playNote,
       stopNote: this.stopNote,
       stopAllNotes: this.stopAllNotes,
+      playNoteAt: this.playNoteAt,
+      stopAllNotesAt: this.stopAllNotesAt,
     }) : null;
   }
 }

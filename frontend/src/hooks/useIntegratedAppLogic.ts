@@ -15,6 +15,7 @@ import {
     respellNotesPreservingOrder,
 } from '../util/url/stateSerializer';
 import { dynamicChordGenerator, GeneratedChord } from '../services/DynamicChordService';
+import { sequencerScheduler } from '../services/SequencerScheduler';
 
 const START_OCTAVE = 4;
 const END_OCTAVE = 7;
@@ -219,10 +220,6 @@ export const useIntegratedAppLogic = () => {
 
     const { modes: modesFromHook } = useModes();
 
-    // Refs for complex timing logic
-    const intervalRef = useRef<number | null>(null);
-    const globalStepRef = useRef<number>(0);
-    const sequencerStartTimeRef = useRef<number>(0);
     const hasLoadedFromUrl = useRef(false);
     const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const isInitialLoad = useRef(true);
@@ -341,19 +338,6 @@ export const useIntegratedAppLogic = () => {
             }
         }
     }, [modesFromHook, chords]);
-
-    // Computed values
-    const baseStepDuration = useMemo(() => {
-        const quarterNoteDuration = 60000 / bpm;
-        return quarterNoteDuration * subdivision;
-    }, [bpm, subdivision]);
-
-    const getSwingDuration = useCallback((stepIndex: number) => {
-        if (swing === 0) return baseStepDuration;
-        const isOffBeat = stepIndex % 2 === 1;
-        const swingRatio = 1 + (swing / 100);
-        return isOffBeat ? baseStepDuration * swingRatio : baseStepDuration / swingRatio;
-    }, [baseStepDuration, swing]);
 
     const getCurrentPattern = useCallback(() => {
         return resolvePatternForPlayback(
@@ -492,13 +476,7 @@ export const useIntegratedAppLogic = () => {
     }, [currentlyActivePattern]);
 
     const handleTogglePlayback = useCallback(() => {
-        const newIsPlaying = !isPlaying;
-        setGlobalPatternState({ isPlaying: newIsPlaying });
-
-        if (newIsPlaying) {
-            globalStepRef.current = 0;
-            sequencerStartTimeRef.current = performance.now();
-        }
+        setGlobalPatternState({ isPlaying: !isPlaying });
     }, [isPlaying]);
 
     const toggleScalePlayback = useCallback(() => {
@@ -611,52 +589,22 @@ export const useIntegratedAppLogic = () => {
         }
     }, [activeChordIndex, addedChords, globalCurrentPattern, setCurrentlyActivePattern]);
 
-    // Sequencer timing
+    // Sequencer timing: audio is scheduled ahead on the AudioContext clock by
+    // the SequencerScheduler, so main-thread jank (React renders, touch
+    // handling, rAF throttling on mobile) cannot move notes off the beat.
+    // Tempo/swing/chord changes are read by the scheduler per step from the
+    // stores, so this effect only reacts to the transport flag.
     useEffect(() => {
         if (isPlaying) {
-            if (!intervalRef.current) {
-                sequencerStartTimeRef.current = performance.now();
-                globalStepRef.current = 0;
-                setGlobalPatternState({ currentStep: 0 });
-
-                const tick = () => {
-                    const now = performance.now();
-                    const elapsed = now - sequencerStartTimeRef.current;
-
-                    let totalTime = 0;
-                    let calculatedStep = 0;
-
-                    while (totalTime < elapsed) {
-                        totalTime += getSwingDuration(calculatedStep);
-                        if (totalTime <= elapsed) {
-                            calculatedStep++;
-                        }
-                    }
-
-                    if (calculatedStep !== globalStepRef.current) {
-                        globalStepRef.current = calculatedStep;
-                        setGlobalPatternState({ currentStep: calculatedStep });
-                    }
-
-                    intervalRef.current = requestAnimationFrame(tick);
-                };
-
-                intervalRef.current = requestAnimationFrame(tick);
-            }
+            sequencerScheduler.start();
         } else {
-            if (intervalRef.current) {
-                cancelAnimationFrame(intervalRef.current);
-                intervalRef.current = null;
-            }
+            sequencerScheduler.stop();
         }
 
         return () => {
-            if (intervalRef.current) {
-                cancelAnimationFrame(intervalRef.current);
-                intervalRef.current = null;
-            }
+            sequencerScheduler.stop();
         };
-    }, [isPlaying, getSwingDuration]);
+    }, [isPlaying]);
 
     // Keep activeNotes in sync with sequencer
     useEffect(() => {

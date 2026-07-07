@@ -27,9 +27,9 @@ export const EditModeToggle: React.FC<EditModeToggleProps> = ({
             className={classNames(
                 "flex items-center justify-center rounded-lg border-2 border-dashed transition-all duration-200",
                 isLiveMode ? "w-full h-full min-h-[120px] py-8 px-6" : "w-12 h-12",
-                isEditMode ? 
-                    "border-[var(--mcb-accent-primary)] text-[var(--mcb-accent-text-primary)] bg-[var(--mcb-accent-primary)]/10 hover:bg-[var(--mcb-accent-primary)]/20" : 
-                    "border-mcb-secondary text-[var(--mcb-text-tertiary)] hover:border-gray-400 hover:text-mcb-secondary hover:bg-gray-500/10"
+                isEditMode ?
+                    "border-[var(--mcb-accent-primary)] text-[var(--mcb-accent-text-primary)] bg-[var(--mcb-accent-primary)]/10 hover:bg-[var(--mcb-accent-primary)]/20" :
+                    "border-mcb-secondary text-[var(--mcb-text-tertiary)] hover:border-[var(--mcb-border-hover)] hover:text-mcb-secondary hover:bg-[color-mix(in_srgb,var(--mcb-bg-hover)_30%,transparent)]"
             )}
             title={isEditMode ? "Exit edit mode" : "Edit chords"}
             style={{

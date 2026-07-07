@@ -15,12 +15,12 @@ const HelpSection: React.FC<{
     const [isOpen, setIsOpen] = useState(defaultOpen);
 
     return (
-        <div className="bg-mcb-primary rounded-lg border border-mcb-primary overflow-hidden mb-4">
+        <div className="mcb-inset overflow-hidden mb-4">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex items-center justify-between p-4 text-left bg-mcb-tertiary border-b border-mcb-primary hover:bg-mcb-hover transition-all duration-200"
+                className="w-full flex items-center justify-between px-4 py-2.5 text-left border-b border-mcb-subtle hover:bg-[var(--mcb-bg-hover)] transition-colors"
             >
-                <h4 className="text-sm font-semibold text-white uppercase tracking-wide">
+                <h4 className="mcb-panel-title">
                     {title}
                 </h4>
                 {isOpen ? (
@@ -54,7 +54,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     defaultOpen={true}
                 >
                     <div className="space-y-4">
-                        <div className="flex items-start space-x-4 p-3 rounded-lg bg-mcb-secondary/30 hover:bg-mcb-secondary/50 transition-colors">
+                        <div className="flex items-start space-x-4 p-3 rounded-lg transition-colors">
                             <div className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--mcb-accent-secondary)] text-white text-sm font-bold flex-shrink-0">
                                 1
                             </div>
@@ -63,7 +63,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                                 <div className="text-sm text-mcb-secondary">Use the Controls section to select your musical key and mode (like C Ionian, D# Lydian, etc.)</div>
                             </div>
                         </div>
-                        <div className="flex items-start space-x-4 p-3 rounded-lg bg-mcb-secondary/30 hover:bg-mcb-secondary/50 transition-colors">
+                        <div className="flex items-start space-x-4 p-3 rounded-lg transition-colors">
                             <div className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--mcb-accent-secondary)] text-white text-sm font-bold flex-shrink-0">
                                 2
                             </div>
@@ -72,7 +72,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                                 <div className="text-sm text-mcb-secondary">Browse the Chord Explorer below to discover chords that fit your chosen key/mode</div>
                             </div>
                         </div>
-                        <div className="flex items-start space-x-4 p-3 rounded-lg bg-mcb-secondary/30 hover:bg-mcb-secondary/50 transition-colors">
+                        <div className="flex items-start space-x-4 p-3 rounded-lg transition-colors">
                             <div className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--mcb-accent-secondary)] text-white text-sm font-bold flex-shrink-0">
                                 3
                             </div>
@@ -81,7 +81,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                                 <div className="text-sm text-mcb-secondary">Click the + button on chords to add them to your sequence</div>
                             </div>
                         </div>
-                        <div className="flex items-start space-x-4 p-3 rounded-lg bg-mcb-secondary/30 hover:bg-mcb-secondary/50 transition-colors">
+                        <div className="flex items-start space-x-4 p-3 rounded-lg transition-colors">
                             <div className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--mcb-accent-secondary)] text-white text-sm font-bold flex-shrink-0">
                                 4
                             </div>
@@ -90,7 +90,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                                 <div className="text-sm text-mcb-secondary">Use the Sequencer to create rhythmic patterns for your chords</div>
                             </div>
                         </div>
-                        <div className="flex items-start space-x-4 p-3 rounded-lg bg-mcb-secondary/30 hover:bg-mcb-secondary/50 transition-colors">
+                        <div className="flex items-start space-x-4 p-3 rounded-lg transition-colors">
                             <div className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--mcb-accent-secondary)] text-white text-sm font-bold flex-shrink-0">
                                 5
                             </div>
@@ -105,22 +105,22 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 <HelpSection title="Keyboard Shortcuts">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div className="space-y-3">
-                            <h5 className="text-white font-semibold text-sm border-b border-mcb-primary pb-2 text-left">Playback Control</h5>
-                            <div className="flex items-center justify-between p-2 rounded-md bg-mcb-secondary/30">
+                            <h5 className="text-white font-semibold text-sm border-b border-mcb-subtle pb-2 text-left">Playback Control</h5>
+                            <div className="flex items-center justify-between p-2 rounded-md">
                                 <span className="text-sm text-left">Play/Pause sequencer</span>
-                                <kbd className="px-2 py-1 bg-gray-700 rounded text-xs font-mono">Space</kbd>
+                                <kbd className="px-2 py-1 bg-[var(--mcb-bg-elevated)] rounded text-xs font-mono">Space</kbd>
                             </div>
                         </div>
                         <div className="space-y-3">
-                            <h5 className="text-white font-semibold text-sm border-b border-mcb-primary pb-2 text-left">Navigation</h5>
+                            <h5 className="text-white font-semibold text-sm border-b border-mcb-subtle pb-2 text-left">Navigation</h5>
                             <div className="space-y-2">
-                                <div className="flex items-center justify-between p-2 rounded-md bg-mcb-secondary/30">
+                                <div className="flex items-center justify-between p-2 rounded-md">
                                     <span className="text-sm text-left">Expand chord buttons</span>
-                                    <kbd className="px-2 py-1 bg-gray-700 rounded text-xs font-mono">L</kbd>
+                                    <kbd className="px-2 py-1 bg-[var(--mcb-bg-elevated)] rounded text-xs font-mono">L</kbd>
                                 </div>
-                                <div className="flex items-center justify-between p-2 rounded-md bg-mcb-secondary/30">
+                                <div className="flex items-center justify-between p-2 rounded-md">
                                     <span className="text-sm text-left">Select chord from sequence</span>
-                                    <kbd className="px-2 py-1 bg-gray-700 rounded text-xs font-mono">1-9</kbd>
+                                    <kbd className="px-2 py-1 bg-[var(--mcb-bg-elevated)] rounded text-xs font-mono">1-9</kbd>
                                 </div>
                             </div>
                         </div>
@@ -129,11 +129,11 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
 
                 <HelpSection title="Piano & Audio Controls">
                     <div className="space-y-6">
-                        <div className="p-4 rounded-lg bg-mcb-secondary/30">
+                        <div className="p-4 rounded-lg">
                             <h5 className="text-white font-semibold mb-3 text-sm text-left">Piano Interaction</h5>
                             <p className="text-sm text-left">Click piano keys to play individual notes. The piano highlights scale notes and chord tones based on your current selection.</p>
                         </div>
-                        <div className="p-4 rounded-lg bg-mcb-secondary/30">
+                        <div className="p-4 rounded-lg">
                             <h5 className="text-white font-semibold mb-3 text-sm text-left">Audio Settings</h5>
                             <p className="text-sm mb-3 text-left">Access comprehensive audio controls through the Settings panel in the Controls section:</p>
                             <div className="space-y-2">
@@ -174,27 +174,27 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
 
                 <HelpSection title="Pattern Sequencer">
                     <div className="space-y-4">
-                        <div className="p-4 rounded-lg bg-mcb-secondary/30">
+                        <div className="p-4 rounded-lg">
                             <h5 className="text-white font-semibold mb-3 text-sm text-left">Understanding Patterns</h5>
                             <p className="text-sm mb-3 text-left">Patterns control which chord tones play at different time steps. Each step can be:</p>
                             <div className="space-y-2">
                                 <div className="flex items-center space-x-3 p-2 rounded-md bg-mcb-primary">
-                                    <code className="px-2 py-1 bg-gray-700 rounded text-xs font-mono text-white min-w-[4rem] text-center">—</code>
+                                    <code className="px-2 py-1 bg-[var(--mcb-bg-elevated)] rounded text-xs font-mono text-white min-w-[4rem] text-center">—</code>
                                     <span className="text-sm text-mcb-secondary text-left">Rest/silence (represented as 'x' in custom patterns)</span>
                                 </div>
                                 <div className="flex items-center space-x-3 p-2 rounded-md bg-mcb-primary">
-                                    <code className="px-2 py-1 bg-gray-700 rounded text-xs font-mono text-white min-w-[4rem] text-center">1, 2, 3...</code>
+                                    <code className="px-2 py-1 bg-[var(--mcb-bg-elevated)] rounded text-xs font-mono text-white min-w-[4rem] text-center">1, 2, 3...</code>
                                     <span className="text-sm text-mcb-secondary text-left">Play the 1st, 2nd, 3rd... note of the chord</span>
                                 </div>
                                 <div className="flex items-center space-x-3 p-2 rounded-md bg-mcb-primary">
-                                    <code className="px-2 py-1 bg-gray-700 rounded text-xs font-mono text-white min-w-[4rem] text-center">1↑, 2↑...</code>
+                                    <code className="px-2 py-1 bg-[var(--mcb-bg-elevated)] rounded text-xs font-mono text-white min-w-[4rem] text-center">1↑, 2↑...</code>
                                     <span className="text-sm text-mcb-secondary text-left">Play the note one octave higher ('+' in custom patterns)</span>
                                 </div>
                             </div>
                         </div>
                         
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                            <div className="p-4 rounded-lg bg-mcb-secondary/30">
+                            <div className="p-4 rounded-lg">
                                 <h5 className="text-white font-semibold mb-3 text-sm text-left">Pattern Controls</h5>
                                 <div className="space-y-2 text-sm text-left">
                                     <div><strong className="text-white">Add/Remove Steps:</strong> Use the +/- buttons to change pattern length (1-16 steps)</div>
@@ -203,7 +203,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                                     <div><strong className="text-white">Visual Feedback:</strong> Blue indicator shows the currently playing step</div>
                                 </div>
                             </div>
-                            <div className="p-4 rounded-lg bg-mcb-secondary/30">
+                            <div className="p-4 rounded-lg">
                                 <h5 className="text-white font-semibold mb-3 text-sm text-left">Timing Controls</h5>
                                 <div className="space-y-2 text-sm text-left">
                                     <div><strong className="text-white">BPM:</strong> Set tempo from 60-200 beats per minute</div>
@@ -213,7 +213,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                             </div>
                         </div>
 
-                        <div className="p-4 rounded-lg bg-mcb-secondary/30">
+                        <div className="p-4 rounded-lg">
                             <h5 className="text-white font-semibold mb-3 text-sm text-left">Chord-Specific Patterns</h5>
                             <p className="text-sm mb-3 text-left">Each chord in your sequence can have its own unique pattern:</p>
                             <div className="space-y-2 text-sm text-left">
@@ -224,7 +224,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                             </div>
                         </div>
 
-                        <div className="p-4 rounded-lg bg-mcb-secondary/30">
+                        <div className="p-4 rounded-lg">
                             <h5 className="text-white font-semibold mb-3 text-sm text-left">Pattern Presets</h5>
                             <p className="text-sm mb-3 text-left">Browse categorized pattern presets to quickly create common rhythmic patterns:</p>
                             <div className="space-y-2 text-sm text-left">
@@ -238,7 +238,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
 
                 <HelpSection title="MIDI Recording & Export">
                     <div className="space-y-4">
-                        <div className="p-4 rounded-lg bg-mcb-secondary/30">
+                        <div className="p-4 rounded-lg">
                             <h5 className="text-white font-semibold mb-3 text-sm text-left">Automatic MIDI Recording</h5>
                             <p className="text-sm mb-3 text-left">The app automatically records your sequencer performances as standard MIDI files that you can export and use in any DAW or music software.</p>
                             <div className="space-y-2">
@@ -270,7 +270,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                            <div className="p-4 rounded-lg bg-mcb-secondary/30">
+                            <div className="p-4 rounded-lg">
                                 <h5 className="text-white font-semibold mb-3 text-sm text-left">What Gets Recorded</h5>
                                 <div className="space-y-2 text-sm text-left">
                                     <div><strong className="text-white">Note Events:</strong> All notes played by the sequencer with accurate timing</div>
@@ -279,7 +279,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                                     <div><strong className="text-white">Patterns:</strong> Records the full sequence including chord-specific patterns</div>
                                 </div>
                             </div>
-                            <div className="p-4 rounded-lg bg-mcb-secondary/30">
+                            <div className="p-4 rounded-lg">
                                 <h5 className="text-white font-semibold mb-3 text-sm text-left">Using MIDI Files</h5>
                                 <div className="space-y-2 text-sm text-left">
                                     <div><strong className="text-white">Import to DAW:</strong> Drag the .mid file into any music production software</div>
@@ -290,7 +290,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                             </div>
                         </div>
 
-                        <div className="p-4 rounded-lg bg-mcb-secondary/30">
+                        <div className="p-4 rounded-lg">
                             <h5 className="text-white font-semibold mb-3 text-sm text-left">Tips for MIDI Recording</h5>
                             <div className="space-y-2 text-sm text-left">
                                 <div>Set your desired BPM and timing before starting playback</div>
@@ -304,7 +304,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
 
                 <HelpSection title="Chord Explorer & Sequences">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div className="p-4 rounded-lg bg-mcb-secondary/30">
+                        <div className="p-4 rounded-lg">
                             <h5 className="text-white font-semibold mb-3 text-sm text-left">Finding Chords</h5>
                             <p className="text-sm mb-3 text-left">The Chord Explorer shows all chords that fit your selected key and mode. You can:</p>
                             <div className="space-y-2 text-sm text-left">
@@ -314,9 +314,9 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                                 <div><strong className="text-white">Click ↓</strong> to see the individual notes in a chord</div>
                             </div>
                         </div>
-                        <div className="p-4 rounded-lg bg-mcb-secondary/30">
+                        <div className="p-4 rounded-lg">
                             <h5 className="text-white font-semibold mb-3 text-sm text-left">Building Sequences</h5>
-                            <p className="text-sm mb-3 text-left">Add chords to your sequence using the <span className="text-green-400 font-bold">+</span> button. Your chord sequence appears at the bottom where you can:</p>
+                            <p className="text-sm mb-3 text-left">Add chords to your sequence using the <span className="text-[var(--mcb-success-text)] font-bold">+</span> button. Your chord sequence appears at the bottom where you can:</p>
                             <div className="space-y-2 text-sm text-left">
                                 <div>Click any chord to play it immediately</div>
                                 <div>Use numbers 1-9 to jump between chords</div>
@@ -330,7 +330,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
 
                 <HelpSection title="Chord Editing">
                     <div className="space-y-4">
-                        <div className="p-4 rounded-lg bg-mcb-secondary/30">
+                        <div className="p-4 rounded-lg">
                             <h5 className="text-white font-semibold mb-3 text-sm text-left">Edit Mode</h5>
                             <p className="text-sm mb-3 text-left">Click the <span className="text-[var(--mcb-accent-text-primary)] font-bold">gear icon</span> next to your chord sequence to enter Edit Mode. In this mode, you can:</p>
                             <div className="space-y-2 text-sm text-left">
@@ -342,7 +342,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                         </div>
                         
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                            <div className="p-4 rounded-lg bg-mcb-secondary/30">
+                            <div className="p-4 rounded-lg">
                                 <h5 className="text-white font-semibold mb-3 text-sm text-left">Slash Chords</h5>
                                 <p className="text-sm mb-3 text-left">Create slash chords (like C/E) by specifying a bass note:</p>
                                 <div className="space-y-2 text-sm text-left">
@@ -352,7 +352,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                                     <div><strong className="text-white">Remove Bass:</strong> Clear the field to return to original chord</div>
                                 </div>
                             </div>
-                            <div className="p-4 rounded-lg bg-mcb-secondary/30">
+                            <div className="p-4 rounded-lg">
                                 <h5 className="text-white font-semibold mb-3 text-sm text-left">Note Reordering</h5>
                                 <p className="text-sm mb-3 text-left">Change the order of chord notes for different voicings:</p>
                                 <div className="space-y-2 text-sm text-left">
@@ -364,7 +364,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                             </div>
                         </div>
 
-                        <div className="p-4 rounded-lg bg-mcb-secondary/30">
+                        <div className="p-4 rounded-lg">
                             <h5 className="text-white font-semibold mb-3 text-sm text-left">Editor Controls</h5>
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                 <div className="space-y-2 text-sm text-left">
@@ -384,7 +384,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
 
                 <HelpSection title="Live Mode">
                     <div className="space-y-4">
-                        <div className="p-4 rounded-lg bg-mcb-secondary/30">
+                        <div className="p-4 rounded-lg">
                             <h5 className="text-white font-semibold mb-3 text-sm text-left">Performance Mode</h5>
                             <p className="text-sm mb-3 text-left">Live Mode expands your chord sequence into a full-screen performance interface perfect for:</p>
                             <div className="space-y-2">
@@ -408,7 +408,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                                 </div>
                             </div>
                         </div>
-                        <div className="p-4 rounded-lg bg-mcb-secondary/30">
+                        <div className="p-4 rounded-lg">
                             <h5 className="text-white font-semibold mb-3 text-sm text-left">Using Live Mode</h5>
                             <div className="space-y-2 text-sm text-left">
                                 <div>Click "Expand" in the chord sequence to enter Live Mode</div>
@@ -423,7 +423,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 <HelpSection title="Interface Tips">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <div className="space-y-4">
-                            <div className="p-4 rounded-lg bg-mcb-secondary/30">
+                            <div className="p-4 rounded-lg">
                                 <h5 className="text-white font-semibold mb-3 text-sm text-left">Navigation</h5>
                                 <div className="space-y-2 text-sm text-left">
                                     <div><strong className="text-white">Sequencer Header:</strong> Click to show/hide the pattern editor</div>
@@ -433,7 +433,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                             </div>
                         </div>
                         <div className="space-y-4">
-                            <div className="p-4 rounded-lg bg-mcb-secondary/30">
+                            <div className="p-4 rounded-lg">
                                 <h5 className="text-white font-semibold mb-3 text-sm text-left">Visual Feedback</h5>
                                 <div className="space-y-2 text-sm text-left">
                                     <div><strong className="text-white">Piano Keys:</strong> Scale notes are highlighted in blue</div>
@@ -444,7 +444,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                             </div>
                         </div>
                     </div>
-                    <div className="p-4 rounded-lg bg-mcb-secondary/30 mt-4">
+                    <div className="p-4 rounded-lg mt-4">
                         <h5 className="text-white font-semibold mb-3 text-sm text-left">Responsive Design</h5>
                         <p className="text-sm text-left">The interface adapts to different screen sizes. On mobile devices, some controls are simplified and touch-optimized for better usability.</p>
                     </div>
@@ -452,7 +452,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
 
                 <HelpSection title="Troubleshooting">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        <div className="p-4 rounded-lg bg-mcb-secondary/30">
+                        <div className="p-4 rounded-lg">
                             <h5 className="text-white font-semibold mb-3 text-sm text-left">Audio Issues</h5>
                             <div className="space-y-2 text-sm text-left">
                                 <div><strong className="text-white">No sound:</strong> Check device volume and ensure audio isn't muted</div>
@@ -460,7 +460,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                                 <div><strong className="text-white">Distorted audio:</strong> Lower the volume setting in piano controls</div>
                             </div>
                         </div>
-                        <div className="p-4 rounded-lg bg-mcb-secondary/30">
+                        <div className="p-4 rounded-lg">
                             <h5 className="text-white font-semibold mb-3 text-sm text-left">Performance</h5>
                             <div className="space-y-2 text-sm text-left">
                                 <div><strong className="text-white">Lag or glitches:</strong> Close other browser tabs using audio</div>
@@ -471,7 +471,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 </HelpSection>
 
                 {/* Footer */}
-                <div className="mt-8 pt-6 border-t border-mcb-primary/50">
+                <div className="mt-8 pt-6 border-t border-mcb-subtle">
                     <p className="text-xs text-mcb-tertiary text-left">
                         Need more help? Check the GitHub repository for detailed documentation and examples.
                     </p>

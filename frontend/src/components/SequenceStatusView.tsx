@@ -72,25 +72,28 @@ const SequenceStatusView: React.FC<SequenceStatusViewProps> = ({ className = "" 
 
     return (
         <div className={classNames("w-full px-2 mx-auto items-center", className)}>
-            <div className="px-6 py-3 bg-green-900 bg-opacity-50 rounded-lg border border-green-700 w-full max-w-7xl mx-auto">
-                <div className="text-sm text-green-300 flex items-center justify-center space-x-4">
+            <div
+                className="mcb-inset px-4 py-2 w-full max-w-7xl mx-auto"
+                style={{ borderColor: 'color-mix(in srgb, var(--mcb-success-primary) 40%, transparent)' }}
+            >
+                <div className="text-xs text-[var(--mcb-success-text)] flex items-center justify-center space-x-4">
                     <div className="flex items-center">
-                        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-2"></div>
-                        <span className="font-medium">Sequencer Active</span>
+                        <div className="mcb-led mcb-led--success animate-pulse mr-2"></div>
+                        <span className="mcb-label !text-[var(--mcb-success-text)]">Sequencer Active</span>
                     </div>
                     <div className="text-xs opacity-80 font-mono">
                         {patternString} |
                         {` ${bpm}`} BPM |
                         {/* Step {displayStep}/{patternLength} */}
-                        
+
                         {temporaryChord && (
-                            <span className="ml-2 text-yellow-300">{temporaryChord.name}</span>
+                            <span className="ml-2 text-[var(--mcb-warning-text)]">{temporaryChord.name}</span>
                         )}
 
                         {!temporaryChord && activeChord && (
                              <span className="ml-2 text-[var(--mcb-purple-text)]">{activeChord.name}</span>
                         )}
-                        
+
                     </div>
                 </div>
             </div>

@@ -64,8 +64,10 @@ export const ChordButton: React.FC<ChordButtonProps> = ({
   sizeConfig
 }) => {
   const baseClasses = `
-    font-medium transition-all duration-200 rounded-md border
-    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#2a2f38]
+    font-medium transition-all duration-200
+    focus:outline-none focus:ring-2
+    focus:ring-[color-mix(in_srgb,var(--mcb-accent-primary)_50%,transparent)]
+    focus:ring-offset-2 focus:ring-offset-[var(--mcb-bg-primary)]
     disabled:opacity-50 disabled:cursor-not-allowed
     flex items-center justify-center gap-1
   `;
@@ -76,19 +78,12 @@ export const ChordButton: React.FC<ChordButtonProps> = ({
     lg: 'py-3 px-6 text-base'
   };
 
+  // Pads: raised hardware look, lit in the semantic color of the current mode
   const variantClasses = {
-    primary: active 
-      ? 'bg-[var(--mcb-accent-secondary)] border-[var(--mcb-accent-primary)] text-white focus:ring-[var(--mcb-accent-primary)]'
-      : 'bg-[var(--mcb-accent-tertiary)] border-[var(--mcb-accent-secondary)] hover:bg-[var(--mcb-accent-secondary)] hover:border-[var(--mcb-accent-primary)] text-white focus:ring-[var(--mcb-accent-primary)]',
-    secondary: active
-      ? 'bg-mcb-active border-mcb-secondary text-white focus:ring-gray-500'
-      : 'bg-mcb-hover border-mcb-primary hover:bg-mcb-active hover:border-mcb-secondary text-white focus:ring-gray-500',
-    danger: active
-      ? 'bg-[var(--mcb-danger-primary)] border-[var(--mcb-danger-border)] text-white focus:ring-red-500'
-      : 'bg-[var(--mcb-danger-secondary)] border-red-600 hover:bg-[var(--mcb-danger-primary)] hover:border-[var(--mcb-danger-border)] text-white focus:ring-red-500',
-    success: active
-      ? 'bg-[var(--mcb-success-primary)] border-green-500 text-white focus:ring-green-500'
-      : 'bg-[var(--mcb-success-secondary)] border-green-600 hover:bg-[var(--mcb-success-primary)] hover:border-green-500 text-white focus:ring-green-500'
+    primary: classNames('mcb-pad text-mcb-primary', { 'mcb-pad--lit': active }),
+    secondary: 'mcb-pad mcb-pad--edit text-mcb-primary',
+    danger: 'mcb-pad mcb-pad--danger text-mcb-primary',
+    success: 'mcb-pad text-mcb-primary border-[color-mix(in_srgb,var(--mcb-success-primary)_60%,transparent)]'
   };
 
   // Enhanced classes for chord-specific functionality
@@ -99,8 +94,6 @@ export const ChordButton: React.FC<ChordButtonProps> = ({
     variantClasses[variant],
     {
       'transform': isHighlighted,
-      'shadow-xl': isLiveMode,
-      'border-[var(--mcb-accent-primary)] hover:border-[var(--mcb-accent-text-primary)]': isEditMode,
       'cursor-grab active:cursor-grabbing': isEditMode && !isMobile(),
       'opacity-80 shadow-2xl scale-105': isDragging,
       'select-none': isEditMode,
@@ -130,8 +123,8 @@ export const ChordButton: React.FC<ChordButtonProps> = ({
       >
         {/* Delete mode indicator */}
         {isDeleteMode && (
-          <XCircleIcon 
-            className={`absolute top-1 right-1 text-white bg-red-500 rounded-full shadow-sm ${
+          <XCircleIcon
+            className={`absolute top-1 right-1 text-white bg-[var(--mcb-danger-primary)] rounded-full shadow-sm ${
               isLiveMode ? 'h-6 w-6' : 'h-4 w-4'
             }`} 
           />

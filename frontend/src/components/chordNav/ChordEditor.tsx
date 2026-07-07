@@ -89,7 +89,7 @@ const StaticPianoVisualization: React.FC<{ activeMidiNotes: number[] }> = ({ act
             .ReactPiano__Key--active.ReactPiano__Key--natural[class*="ReactPiano__Key"]:active,
             .ReactPiano__Key--active.ReactPiano__Key--natural[class*="ReactPiano__Key"]:focus {
                 background: linear-gradient(to bottom, var(--mcb-accent-primary) 0%, var(--mcb-accent-secondary) 100%) !important;
-css             background-color: var(--mcb-accent-primary) !important;
+                background-color: var(--mcb-accent-primary) !important;
                 color: white !important;
                 border-top: 1px solid var(--mcb-accent-secondary) !important;
                 border-left: 1px solid var(--mcb-accent-secondary) !important;
@@ -109,7 +109,7 @@ css             background-color: var(--mcb-accent-primary) !important;
             .ReactPiano__Key--active.ReactPiano__Key--accidental[class*="ReactPiano__Key"]:focus {
                 background: linear-gradient(to bottom, var(--mcb-accent-tertiary) 0%, var(--mcb-accent-subtle) 100%) !important;
                 background-color: var(--mcb-accent-tertiary) !important;
-            s   color: white !important;
+                color: white !important;
                 border: 1px solid var(--mcb-accent-subtle) !important;
                 box-shadow: 
                     /* Uses --mcb-accent-subtle with 40% alpha (66) */
@@ -130,7 +130,7 @@ css             background-color: var(--mcb-accent-primary) !important;
             }
             
             .ReactPiano__Key--active.ReactPiano__Key--natural[style] {
-CSS             background: linear-gradient(to bottom, var(--mcb-accent-primary) 0%, var(--mcb-accent-secondary) 100%) !important;
+                background: linear-gradient(to bottom, var(--mcb-accent-primary) 0%, var(--mcb-accent-secondary) 100%) !important;
             }
             
             .ReactPiano__Key--active.ReactPiano__Key--accidental[style] {
@@ -271,23 +271,22 @@ const ChordEditor: React.FC<ChordEditorProps> = ({
                 {/* Top Row - Title and Save/Cancel buttons */}
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-2 flex-1 min-w-0">
-                        <h2 className="text-lg sm:text-xl font-bold text-white truncate">
+                        <h2 className="text-lg sm:text-xl font-bold text-mcb-primary truncate">
                             Edit: {editingChord.name.replace(/\/[A-G](##|#|bb|b)?\d*/, '')}
                         </h2>
-                        <span className="px-2 py-1 text-xs bg-[var(--mcb-text-subtle)] text-mcb-secondary rounded font-mono flex-shrink-0">
+                        <span className="mcb-inset px-2 py-1 text-xs text-mcb-secondary font-mono flex-shrink-0">
                             {editingChordIndex + 1} / {totalChords}
                         </span>
                     </div>
-                    
+
                     {/* Save/Cancel buttons - always in top right */}
                     <div className="flex items-center space-x-2 flex-shrink-0">
                         <Button
                             onClick={handleSave}
-                            variant="primary"
+                            variant="success"
                             size="sm"
                             disabled={!!slashNoteError}
                             className={classNames(
-                                "bg-[var(--mcb-success-primary)] hover:bg-[var(--mcb-success-secondary)]",
                                 slashNoteError && "opacity-50 cursor-not-allowed"
                             )}
                             title={slashNoteError ? "Fix slash note error before saving" : "Save changes"}
@@ -336,8 +335,8 @@ const ChordEditor: React.FC<ChordEditorProps> = ({
                 </div>
 
                 {/* Slash Note Input - More Compact */}
-                <div className="p-3 bg-mcb-primary rounded-lg border border-mcb-primary mb-4 mt-4">
-                    <label className="block text-sm font-medium text-mcb-secondary mb-2">
+                <div className="mcb-panel p-3 mb-4 mt-4">
+                    <label className="block mcb-label mb-2">
                         Slash Note (Bass Note)
                     </label>
                     <div className="flex items-center space-x-2">
@@ -353,16 +352,16 @@ const ChordEditor: React.FC<ChordEditorProps> = ({
                             }}
                             placeholder="e.g., C4, F#, Bb3"
                             className={classNames(
-                                "flex-1 px-3 py-2 bg-mcb-input border rounded text-white placeholder-gray-400 focus:outline-none transition-colors text-sm",
+                                "flex-1 px-3 py-2 bg-mcb-input border rounded-md shadow-[inset_0_2px_6px_rgba(0,0,0,0.35)] text-mcb-primary font-mono placeholder-[var(--mcb-text-disabled)] focus:outline-none transition-colors text-sm",
                                 slashNoteError
-                                    ? "border-[var(--mcb-danger-border)] focus:border-red-400"
-                                    : "border-mcb-primary focus:border-[var(--mcb-accent-primary)]"
+                                    ? "border-[var(--mcb-danger-border)] focus:border-[var(--mcb-danger-primary)]"
+                                    : "border-[var(--mcb-border-subtle)] focus:border-[var(--mcb-accent-primary)]"
                             )}
                         />
                         {slashNote.trim() && !slashNoteError && (
                             <button
                                 onClick={removeSlashNote}
-                                className="p-2 text-[var(--mcb-danger-text)] hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
+                                className="p-2 text-[var(--mcb-danger-text)] hover:bg-[color-mix(in_srgb,var(--mcb-danger-primary)_12%,transparent)] rounded transition-colors"
                                 title="Remove slash note"
                             >
                                 <XCircleIcon className="w-4 h-4" />
@@ -389,9 +388,9 @@ const ChordEditor: React.FC<ChordEditorProps> = ({
                     )}
                 </div>
 
-                {/* Piano Visualization */}
-                <div className="bg-mcb-primary rounded-lg border border-mcb-primary p-3 mb-4">
-                    <div className="bg-mcb-input rounded p-2 flex justify-center overflow-x-auto">
+                {/* Piano Visualization - a recessed screen inside its panel */}
+                <div className="mcb-panel p-3 mb-4">
+                    <div className="mcb-inset p-2 flex justify-center overflow-x-auto">
                         <StaticPianoVisualization activeMidiNotes={getActiveMidiNotes} />
                     </div>
                 </div>
@@ -399,7 +398,7 @@ const ChordEditor: React.FC<ChordEditorProps> = ({
 
             {/* Notes Editor - Scrollable and fills remaining space */}
             <div className="flex-1 max-w-4xl mx-auto px-4 w-full overflow-hidden flex flex-col -mt-4">
-                <div className="bg-mcb-primary rounded-lg border border-mcb-primary p-4 flex-1 flex flex-col min-h-0">
+                <div className="mcb-panel p-4 flex-1 flex flex-col min-h-0">
                     {/* Compact header with play button and centered text */}
                     <div className="flex items-center justify-between mb-3">
                         <Button
@@ -413,7 +412,7 @@ const ChordEditor: React.FC<ChordEditorProps> = ({
                             <span className="hidden sm:inline">Preview</span>
                         </Button>
                         <div className="flex-1 text-center mx-4">
-                            <h3 className="text-lg font-medium text-white leading-tight">Chord Notes</h3>
+                            <h3 className="mcb-panel-title leading-tight">Chord Notes</h3>
                             <p className="text-xs text-[var(--mcb-text-tertiary)] leading-tight">Drag to reorder</p>
                         </div>
                         <div className="w-16 sm:w-20"></div> {/* Spacer to balance the layout and match button width */}
@@ -451,19 +450,19 @@ const ChordEditor: React.FC<ChordEditorProps> = ({
                                                             {...provided.draggableProps}
                                                             {...provided.dragHandleProps}
                                                             className={classNames(
-                                                                "flex items-center space-x-3 p-3 rounded border transition-all duration-200",
+                                                                "flex items-center space-x-3 p-3 rounded-md border shadow-[inset_0_2px_6px_rgba(0,0,0,0.25)] transition-all duration-200",
                                                                 {
                                                                     'shadow-lg shadow-[var(--mcb-accent-primary)]/20 border-[var(--mcb-accent-primary)] transform scale-105': snapshot.isDragging,
                                                                     'cursor-grab': !snapshot.isDragging && !isLocked,
                                                                     'cursor-grabbing': snapshot.isDragging,
                                                                     'cursor-not-allowed': isLocked,
                                                                     // Slash note highlighting
-                                                                    'bg-[var(--mcb-warning-primary)] border-amber-500/50': isSlash && !snapshot.isDragging,
-                                                                    'hover:border-amber-400/70': isSlash && !snapshot.isDragging,
+                                                                    'bg-[var(--mcb-warning-primary)] border-[var(--mcb-warning-border)]': isSlash && !snapshot.isDragging,
+                                                                    'hover:border-[color-mix(in_srgb,var(--mcb-warning-text)_50%,transparent)]': isSlash && !snapshot.isDragging,
                                                                     // Locked note styling
-                                                                    'bg-amber-600/15 border-amber-600/60': isLocked && !snapshot.isDragging,
+                                                                    'bg-[var(--mcb-warning-primary)] border-[color-mix(in_srgb,var(--mcb-warning-text)_40%,transparent)]': isLocked && !snapshot.isDragging,
                                                                     // Regular note styling
-                                                                    'bg-mcb-input border-mcb-primary': !isSlash && !isLocked && !snapshot.isDragging,
+                                                                    'bg-mcb-input border-[var(--mcb-border-subtle)]': !isSlash && !isLocked && !snapshot.isDragging,
                                                                     'hover:border-mcb-secondary': !isSlash && !isLocked && !snapshot.isDragging,
                                                                 }
                                                             )}
@@ -471,15 +470,15 @@ const ChordEditor: React.FC<ChordEditorProps> = ({
                                                         >
                                                             <div className="flex-1 text-left">
                                                                 <div className="flex items-center justify-between mb-1">
-                                                                    <span className="text-white font-mono text-lg font-semibold">{note}</span>
+                                                                    <span className="text-mcb-primary font-mono text-lg font-semibold">{note}</span>
                                                                     <div className="flex items-center space-x-2">
                                                                         {isSlash && (
-                                                                            <span className="px-2 py-1 text-xs bg-amber-500/20 text-[var(--mcb-warning-text)] rounded border border-[var(--mcb-warning-border)] font-medium">
+                                                                            <span className="px-2 py-1 text-xs bg-[var(--mcb-warning-primary)] text-[var(--mcb-warning-text)] rounded border border-[var(--mcb-warning-border)] font-medium">
                                                                                 SLASH
                                                                             </span>
                                                                         )}
                                                                         {isLocked && (
-                                                                            <span className="px-2 py-1 text-xs bg-amber-600/20 text-[var(--mcb-warning-text-alt)] rounded border border-amber-600/30 font-medium flex items-center space-x-1">
+                                                                            <span className="px-2 py-1 text-xs bg-[var(--mcb-warning-primary)] text-[var(--mcb-warning-text-alt)] rounded border border-[var(--mcb-warning-border)] font-medium flex items-center space-x-1">
                                                                                 <LockClosedIcon className="w-3 h-3" />
                                                                                 <span>LOCKED</span>
                                                                             </span>
@@ -498,7 +497,7 @@ const ChordEditor: React.FC<ChordEditorProps> = ({
                                                                         moveNoteUp(index);
                                                                     }}
                                                                     disabled={index === 0 || isLocked || (index === 1 && isManualSlashNote(notes[0]))}
-                                                                    className="p-1 text-mcb-secondary hover:text-white hover:bg-mcb-hover rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                                                    className="p-1 text-mcb-secondary hover:text-mcb-primary hover:bg-mcb-hover rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                                                                     title={isLocked ? "Cannot move locked slash note" : (index === 1 && isManualSlashNote(notes[0])) ? "Cannot move past locked slash note" : "Move up"}
                                                                 >
                                                                     <ChevronUpIcon className="w-4 h-4" />
@@ -509,7 +508,7 @@ const ChordEditor: React.FC<ChordEditorProps> = ({
                                                                         moveNoteDown(index);
                                                                     }}
                                                                     disabled={index === notes.length - 1 || isLocked}
-                                                                    className="p-1 text-mcb-secondary hover:text-white hover:bg-mcb-hover rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                                                    className="p-1 text-mcb-secondary hover:text-mcb-primary hover:bg-mcb-hover rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                                                                     title={isLocked ? "Cannot move locked slash note" : "Move down"}
                                                                 >
                                                                     <ChevronDownIcon className="w-4 h-4" />

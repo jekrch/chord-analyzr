@@ -118,6 +118,12 @@ const Slider: React.FC<SliderProps> = ({
   // Get the current slider position value
   const sliderValue = enabled ? value : storedValue;
 
+  // Filled-track style: accent up to the current position, recessed track after
+  const fillPercent = ((sliderValue - min) / (max - min)) * 100;
+  const trackStyle: React.CSSProperties = {
+    background: `linear-gradient(to right, var(--mcb-accent-primary) 0%, var(--mcb-accent-primary) ${fillPercent}%, var(--mcb-bg-input) ${fillPercent}%, var(--mcb-bg-input) 100%)`
+  };
+
   if (variant === 'split') {
     return (
       <div className={className}>
@@ -134,7 +140,7 @@ const Slider: React.FC<SliderProps> = ({
                 onClick={handleBypassToggle}
                 className={`w-5 h-5 rounded flex items-center justify-center transition-all ${
                   enabled 
-                    ? 'bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30' 
+                    ? 'bg-[color-mix(in_srgb,var(--mcb-success-primary)_20%,transparent)] text-[var(--mcb-success-text)] hover:bg-[color-mix(in_srgb,var(--mcb-success-primary)_30%,transparent)]' 
                     : 'bg-[var(--mcb-text-subtle)]/50 text-mcb-disabled hover:bg-[var(--mcb-text-subtle)]/70'
                 }`}
                 title={enabled ? 'Bypass effect' : 'Enable effect'}
@@ -156,11 +162,12 @@ const Slider: React.FC<SliderProps> = ({
           value={sliderValue}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          className={`w-full h-1.5 bg-mcb-secondary rounded appearance-none cursor-pointer slider-thumb transition-opacity ${
+          style={trackStyle}
+          className={`w-full h-1.5 rounded-full appearance-none cursor-pointer slider-thumb transition-opacity ${
             enabled ? 'opacity-100' : 'opacity-40'
           }`}
         />
-        
+
         {showMinMax && (
           <div className="flex justify-between text-xs text-mcb-disabled mt-1">
             <span>{minLabel || min}</span>
@@ -186,7 +193,7 @@ const Slider: React.FC<SliderProps> = ({
             onClick={handleBypassToggle}
             className={`w-5 h-5 rounded flex items-center justify-center transition-all flex-shrink-0 ${
               enabled 
-                ? 'bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30' 
+                ? 'bg-[color-mix(in_srgb,var(--mcb-success-primary)_20%,transparent)] text-[var(--mcb-success-text)] hover:bg-[color-mix(in_srgb,var(--mcb-success-primary)_30%,transparent)]' 
                 : 'bg-[var(--mcb-text-subtle)]/50 text-mcb-disabled hover:bg-[var(--mcb-text-subtle)]/70'
             }`}
             title={enabled ? 'Bypass effect' : 'Enable effect'}
@@ -208,7 +215,8 @@ const Slider: React.FC<SliderProps> = ({
           value={sliderValue}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          className={`slider-mobile w-full h-1.5 bg-mcb-secondary rounded appearance-none cursor-pointer slider-thumb transition-opacity ${
+          style={trackStyle}
+          className={`slider-mobile w-full h-1.5 rounded-full appearance-none cursor-pointer slider-thumb transition-opacity ${
             enabled ? 'opacity-100' : 'opacity-40'
           }`}
         />

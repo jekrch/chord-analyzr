@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { PlayCircleIcon, PauseIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
+import Logo from '../Logo';
 import Dropdown from '../Dropdown';
 import { Button } from '../Button';
 import { usePianoStore } from '../../stores/pianoStore';
@@ -7,7 +8,6 @@ import { usePlaybackStore } from '../../stores/playbackStore';
 import { usePatternStore } from '../../stores/patternStore';
 import { normalizeNoteName } from '../../util/NoteUtil';
 import { useMusicStore } from '../../stores/musicStore';
-import Logo from '../Logo';
 import { AVAILABLE_KEYS } from '../../hooks/useIntegratedAppLogic';
 import Slider from '../Slider';
 import { useChordTranspose } from '../../hooks/useChordTranspose';
@@ -66,9 +66,34 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
         voice: 'w-[14rem]'
     };
 
-    const containerClass = isDesktop ?
-        "flex flex-col bg-mcb-secondary/30 border border-mcb-secondary rounded-lg px-6 py-4" :
-        "space-y-4";
+    const playButton = (
+        <Button
+            onClick={onToggleScalePlayback}
+            variant="play-stop"
+            size="icon"
+            className="!w-8 !h-8 flex items-center justify-center"
+            active={isPlayingScale}
+            title={isPlayingScale ? 'Stop scale' : `Play ${currentKey} ${mode} scale`}
+            disabled={!scaleNotes || scaleNotes.length === 0}
+        >
+            {isPlayingScale ? (
+                <PauseIcon className="w-5 h-5" />
+            ) : (
+                <PlayCircleIcon className="w-5 h-5" />
+            )}
+        </Button>
+    );
+
+    const transposeSwitch = (
+        <button
+            onClick={onToggleTranspose}
+            className={`mcb-switch h-10 ${transposeEnabled ? 'mcb-switch--on' : ''}`}
+            title="When enabled, changing key or mode will transpose all added chords"
+        >
+            <div className={`mcb-led ${transposeEnabled ? '' : 'mcb-led--off'}`} />
+            <span>Transpose</span>
+        </button>
+    );
 
     const separatorClass = isDesktop ? "w-px h-8 bg-[var(--mcb-border-primary)]/50 mx-8" : "hidden";
     const labelClass = isDesktop ?
@@ -77,7 +102,7 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
 
     if (isDesktop) {
         return (
-            <div className={containerClass}>
+            <div className="flex flex-col bg-mcb-secondary/30 border border-mcb-secondary rounded-lg px-6 py-4">
                 {/* First Row - All Dropdowns Aligned */}
                 <div className="flex items-center">
                     {/* Key Control Group */}
@@ -93,21 +118,7 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
                                 showSearch={false}
                                 options={AVAILABLE_KEYS}
                             />
-                            <Button
-                                onClick={onToggleScalePlayback}
-                                variant="play-stop"
-                                size="icon"
-                                className="!w-8 !h-8 flex items-center justify-center ml-1"
-                                active={isPlayingScale}
-                                title={isPlayingScale ? 'Stop scale' : `Play ${currentKey} ${mode} scale`}
-                                disabled={!scaleNotes || scaleNotes.length === 0}
-                            >
-                                {isPlayingScale ? (
-                                    <PauseIcon className="w-6 h-6" />
-                                ) : (
-                                    <PlayCircleIcon className="w-6 h-6" />
-                                )}
-                            </Button>
+                            {playButton}
                         </div>
                     </div>
 
@@ -148,24 +159,11 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
                     </div>
                 </div>
 
-                {/* Second Row - Transpose Button (aligned under Key section) */}
+                {/* Second Row - Transpose Switch (aligned under Key section) */}
                 <div className="flex items-start mt-3">
                     <div className="flex items-center gap-3">
-                        <span className="text-sm text-mcb-secondary font-medium whitespace-nowrap invisible">Key:</span>
-                        <button
-                            onClick={onToggleTranspose}
-                            className={`relative flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium uppercase tracking-wide transition-all duration-200 border ${transposeEnabled
-                                ? 'bg-gradient-to-r from-[var(--mcb-accent-secondary)] to-[var(--mcb-accent-tertiary)] text-white border-[var(--mcb-accent-secondary)] shadow-lg shadow-[var(--mcb-accent-secondary)]/25'
-                                : 'bg-mcb-secondary text-mcb-tertiary border-mcb-primary hover:bg-mcb-hover hover:text-mcb-secondary'
-                                }`}
-                            title="When enabled, changing key or mode will transpose all added chords"
-                        >
-                            <div className={`flex items-center gap-2 ${transposeEnabled ? 'text-white' : ''}`}>
-                                <div className={`w-2 h-2 rounded-full transition-colors duration-200 ${transposeEnabled ? 'bg-white' : 'bg-[var(--mcb-text-disabled)]'
-                                    }`} />
-                                <span>Transpose</span>
-                            </div>
-                        </button>
+                        <span className={`${labelClass} invisible`}>Key:</span>
+                        {transposeSwitch}
                     </div>
                 </div>
             </div>
@@ -174,7 +172,7 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
 
     // Mobile layout
     return (
-        <div className={containerClass}>
+        <div className="space-y-4">
             {/* Key Control Group */}
             <div className="flex items-start gap-3">
                 <span className={`${labelClass} mt-2`}>Key:</span>
@@ -189,36 +187,9 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
                             showSearch={false}
                             options={AVAILABLE_KEYS}
                         />
-                        <Button
-                            onClick={onToggleScalePlayback}
-                            variant="play-stop"
-                            size="icon"
-                            className="!w-8 !h-8 flex items-center justify-center ml-1"
-                            active={isPlayingScale}
-                            title={isPlayingScale ? 'Stop scale' : `Play ${currentKey} ${mode} scale`}
-                            disabled={!scaleNotes || scaleNotes.length === 0}
-                        >
-                            {isPlayingScale ? (
-                                <PauseIcon className="w-6 h-6" />
-                            ) : (
-                                <PlayCircleIcon className="w-6 h-6" />
-                            )}
-                        </Button>
+                        {playButton}
                     </div>
-                    <button
-                        onClick={onToggleTranspose}
-                        className={`relative flex items-center justify-center px-4 py-2 rounded-lg text-xs font-medium uppercase tracking-wide transition-all duration-200 border max-w-[13em] ${transposeEnabled
-                            ? 'bg-gradient-to-r from-[var(--mcb-accent-secondary)] to-[var(--mcb-accent-tertiary)] text-white border-[var(--mcb-accent-secondary)] shadow-lg shadow-[var(--mcb-accent-secondary)]/25'
-                            : 'bg-mcb-secondary text-mcb-tertiary border-mcb-primary hover:bg-mcb-hover hover:text-mcb-secondary'
-                            }`}
-                        title="When enabled, changing key or mode will transpose all added chords"
-                    >
-                        <div className={`flex items-center gap-2 ${transposeEnabled ? 'text-white' : ''}`}>
-                            <div className={`w-2 h-2 rounded-full transition-colors duration-200 ${transposeEnabled ? 'bg-white' : 'bg-[var(--mcb-text-disabled)]'
-                                }`} />
-                            <span>Transpose</span>
-                        </div>
-                    </button>
+                    {transposeSwitch}
                 </div>
             </div>
 
@@ -511,32 +482,25 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
 
     return (
         <div className={`w-full max-w-7xl mx-auto px-2 sm:mt-2 mt-0 mb-0 ${className}`}>
-            <div className="bg-mcb-secondary border border-mcb-primary rounded-lg overflow-hidden">
+            <div className="mcb-panel overflow-hidden">
                 {/* Main Controls Header */}
-                <div className="px-4 py-3 border-b border-mcb-primary">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-sm font-bold text-mcb-secondary uppercase tracking-wider">Controls</h2>
-                        <button
-                            onClick={() => setSettingsOpen(!settingsOpen)}
-                            className="w-[7em] h-8 flex items-center space-x-2 px-3 py-1.5 text-xs text-mcb-secondary hover:text-mcb-primary bg-mcb-hover hover:bg-mcb-active border border-mcb-primary rounded transition-all duration-200"
-                        >
-                            {settingsOpen ? (
-                                <>
-                                    <ChevronUpIcon className="w-3 h-3" />
-                                    <span>Settings</span>
-                                </>
-                            ) : (
-                                <>
-                                    <ChevronDownIcon className="w-3 h-3" />
-                                    <span>Settings</span>
-                                </>
-                            )}
-                        </button>
-                    </div>
+                <div className="mcb-panel-header">
+                    <h2 className="mcb-panel-title">Controls</h2>
+                    <button
+                        onClick={() => setSettingsOpen(!settingsOpen)}
+                        className="h-7 flex items-center space-x-1.5 px-3 text-[0.6875rem] uppercase tracking-wider text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover border border-mcb-subtle rounded-full transition-all duration-200"
+                    >
+                        {settingsOpen ? (
+                            <ChevronUpIcon className="w-3 h-3" />
+                        ) : (
+                            <ChevronDownIcon className="w-3 h-3" />
+                        )}
+                        <span>Settings</span>
+                    </button>
                 </div>
 
                 {/* Main Controls Content */}
-                <div className="p-6 py-4 bg-mcb-tertiary">
+                <div className="p-6 py-4">
                     <div className="flex flex-col lg:flex-row lg:items-start lg:justify-center gap-6">
                         {/* Desktop Layout */}
                         <div className="hidden lg:flex items-center justify-between w-full">
@@ -595,21 +559,21 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
 
                 {/* Expandable Piano Settings */}
                 <div className={`transition-all duration-300 ease-in-out overflow-hidden ${settingsOpen ? ' opacity-100' : 'max-h-0 opacity-0'}`}>
-                    <div className="border-t border-mcb-primary bg-mcb-secondary">
-                        <div className="px-4 py-3 border-b border-mcb-primary">
-                            <h3 className="text-left text-sm font-medium text-mcb-primary uppercase tracking-wider">
+                    <div className="border-t border-mcb-subtle">
+                        <div className="mcb-panel-header">
+                            <h3 className="mcb-panel-title">
                                 Piano Settings
                             </h3>
                         </div>
 
-                        <div className="p-6 bg-mcb-tertiary">
+                        <div className="p-6">
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-x-8 gap-y-8">
                                 {/* Column 1: Basic & Equalizer */}
                                 <div className="space-y-6">
                                     {/* Basic Section */}
                                     <div>
-                                        <div className="bg-mcb-secondary border border-mcb-primary rounded px-3 py-2 mb-4">
-                                            <h4 className="text-xs font-medium text-mcb-primary uppercase tracking-wider">Basic</h4>
+                                        <div className="pb-1.5 mb-4 border-b border-mcb-subtle">
+                                            <h4 className="mcb-label">Basic</h4>
                                         </div>
                                         <div className="space-y-4">
                                             <Slider
@@ -624,11 +588,11 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                             />
 
                                             <div>
-                                                <label className="block text-xs font-medium text-mcb-primary mb-2 uppercase tracking-wide">Octave Shift</label>
-                                                <div className="flex items-center justify-between bg-mcb-secondary border border-mcb-primary rounded-md p-1.5">
+                                                <label className="block mcb-label mb-2">Octave Shift</label>
+                                                <div className="flex items-center justify-between mcb-inset p-1.5">
                                                     <button
                                                         onClick={() => setOctaveOffset(Math.max(-3, pianoSettings.octaveOffset - 1))}
-                                                        className="w-6 h-6 flex items-center justify-center text-mcb-secondary hover:text-mcb-primary hover:bg-mcb-hover rounded transition-colors"
+                                                        className="w-6 h-6 flex items-center justify-center rounded-full border border-mcb-subtle text-mcb-secondary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                                         disabled={pianoSettings.octaveOffset <= -3}
                                                     >
                                                         −
@@ -638,7 +602,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                                     </span>
                                                     <button
                                                         onClick={() => setOctaveOffset(Math.min(3, pianoSettings.octaveOffset + 1))}
-                                                        className="w-6 h-6 flex items-center justify-center text-mcb-secondary hover:text-mcb-primary hover:bg-mcb-hover rounded transition-colors"
+                                                        className="w-6 h-6 flex items-center justify-center rounded-full border border-mcb-subtle text-mcb-secondary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                                         disabled={pianoSettings.octaveOffset >= 3}
                                                     >
                                                         +
@@ -660,7 +624,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                                 <label className="flex items-center cursor-pointer">
                                                     <input
                                                         type="checkbox"
-                                                        className="w-3.5 h-3.5 text-[var(--mcb-accent-secondary)] bg-mcb-secondary border-mcb-primary rounded focus:ring-[var(--mcb-accent-primary)] focus:ring-1"
+                                                        className="w-3.5 h-3.5 accent-[var(--mcb-accent-primary)]"
                                                         checked={pianoSettings.cutOffPreviousNotes}
                                                         onChange={(e) => setCutOffPreviousNotes(e.target.checked)}
                                                     />
@@ -672,8 +636,8 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
 
                                     {/* Equalizer Section */}
                                     <div className="pt-2">
-                                        <div className="bg-mcb-secondary border border-mcb-primary rounded px-3 py-2 mb-4">
-                                            <h4 className="text-xs font-medium text-mcb-primary uppercase tracking-wider">Equalizer</h4>
+                                        <div className="pb-1.5 mb-4 border-b border-mcb-subtle">
+                                            <h4 className="mcb-label">Equalizer</h4>
                                         </div>
                                         <div className="space-y-3">
                                             {[
@@ -703,8 +667,8 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
 
                                 {/* Column 2: Effects */}
                                 <div className="space-y-4">
-                                    <div className="bg-mcb-secondary border border-mcb-primary rounded px-3 py-2 mb-4">
-                                        <h4 className="text-xs font-medium text-mcb-primary uppercase tracking-wider">Effects</h4>
+                                    <div className="pb-1.5 mb-4 border-b border-mcb-subtle">
+                                        <h4 className="mcb-label">Effects</h4>
                                     </div>
 
                                     <Slider
@@ -776,8 +740,8 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
 
                                 {/* Column 3: Extended */}
                                 <div className="space-y-4">
-                                    <div className="bg-mcb-secondary border border-mcb-primary rounded px-3 py-2 mb-4">
-                                        <h4 className="text-xs font-medium text-mcb-primary uppercase tracking-wider">Extended</h4>
+                                    <div className="pb-1.5 mb-4 border-b border-mcb-subtle">
+                                        <h4 className="mcb-label">Extended</h4>
                                     </div>
 
                                     <Slider

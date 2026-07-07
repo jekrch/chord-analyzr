@@ -197,13 +197,13 @@ useEffect(() => {
     <div className={`space-y-4 ${className}`}>
       {/* Pattern Constraints Checkbox */}
       <div>
-        <label className="block text-xs font-medium text-mcb-primary mb-2 uppercase tracking-wide">Pattern Presets</label>
+        <label className="mcb-label block mb-2">Pattern Presets</label>
         <label className="flex items-center space-x-2 cursor-pointer">
           <input
             type="checkbox"
             checked={hideFewerNotePatterns}
             onChange={(e) => onHideFewerNotePatternsChange(e.target.checked)}
-            className="w-3 h-3 rounded border-mcb-primary bg-mcb-secondary text-[var(--mcb-accent-secondary)] focus:ring-[var(--mcb-accent-primary)] focus:ring-1"
+            className="w-3 h-3 accent-[var(--mcb-accent-primary)]"
           />
           <span className="text-xs text-mcb-primary">Hide patterns with fewer notes</span>
         </label>
@@ -223,7 +223,7 @@ useEffect(() => {
           }}
           options={stepCountOptions}
           className="flex-1"
-          buttonClassName="w-full p-2 bg-mcb-secondary border border-mcb-primary rounded text-mcb-primary text-xs transition-colors hover:bg-mcb-hover"
+          buttonClassName="w-full h-8 !text-xs"
         />
         <Dropdown
           value={categoryOptions[selectedCategory === 'all' ? 0 : categoryOptions.findIndex(opt => opt.toLowerCase() === selectedCategory)]}
@@ -236,14 +236,14 @@ useEffect(() => {
           }}
           options={categoryOptions}
           className="flex-1"
-          buttonClassName="w-full p-2 bg-mcb-secondary border border-mcb-primary rounded text-mcb-primary text-xs transition-colors hover:bg-mcb-hover"
+          buttonClassName="w-full h-8 !text-xs"
         />
       </div>
 
       {/* Preset List */}
-      <div 
+      <div
         ref={scrollContainerRef}
-        className="grid grid-cols-1 gap-2 max-h-80 overflow-y-auto pr-2 custom-scrollbar"
+        className="mcb-inset p-2 grid grid-cols-1 gap-1.5 max-h-80 overflow-y-auto custom-scrollbar"
       >
         {filteredPresets.length > 0 ? (
           filteredPresets.map((preset, index) => {
@@ -257,10 +257,10 @@ useEffect(() => {
                   presetRefs.current[index] = el;
                 }}
                 onClick={() => onApplyPreset(preset)}
-                className={`p-2 rounded text-xs transition-colors text-left border ${
-                  isSelected 
-                    ? 'bg-[var(--mcb-accent-secondary)]/20 text-[var(--mcb-text-primary)] border-[var(--mcb-accent-primary)] ring-1 ring-[var(--mcb-accent-primary)]/50' 
-                    : 'bg-mcb-secondary text-mcb-secondary hover:bg-mcb-hover hover:text-mcb-primary border-mcb-primary hover:border-mcb-secondary'
+                className={`p-2 rounded-md text-xs transition-colors text-left border ${
+                  isSelected
+                    ? 'bg-[color-mix(in_srgb,var(--mcb-accent-primary)_16%,var(--mcb-bg-input))] border-[color-mix(in_srgb,var(--mcb-accent-primary)_55%,transparent)] text-[var(--mcb-accent-text-secondary)]'
+                    : 'border-transparent text-mcb-secondary hover:bg-[var(--mcb-bg-hover)] hover:text-[var(--mcb-text-primary)]'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
@@ -272,7 +272,7 @@ useEffect(() => {
                     <span>{preset.icon}</span>
                   </div>
                 </div>
-                <div className={`text-xs opacity-60 ${isSelected ? 'text-mcb-tertiary' : 'text-mcb-disabled'}`}>
+                <div className={`text-xs font-mono opacity-60 ${isSelected ? 'text-mcb-tertiary' : 'text-mcb-disabled'}`}>
                   {preset.pattern.join('-')}
                 </div>
               </button>

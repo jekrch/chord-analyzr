@@ -153,16 +153,16 @@ const MidiRecorder: React.FC<MidiRecorderProps> = ({ className = '' }) => {
   return (
     <div className={`space-t-4 ${className}`}>
       {/* MIDI Recording Toggle */}
-      <div className="flex items-center justify-between p-3 bg-mcb-elevated rounded-lg border border-mcb-primary">
+      <div className="flex items-center justify-between p-3 mcb-inset">
         <div className="flex flex-col text-left">
-          <span className="text-xs uppercase font-medium text-[var(--mcb-text-tertiary)] text-left mr-6">
+          <span className="mcb-label text-left mr-6">
             MIDI Recording
           </span>
           <div className="flex items-center space-x-2">
             {isRecording && (
-              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse mt-[0.1em] mr-[0.25em]" />
+              <div className="mcb-led mcb-led--danger animate-pulse mt-[0.1em] mr-[0.25em]" />
             )}
-            <span className={`text-xs ${isRecording ? 'text-red-300 font-medium' : 'text-[var(--mcb-text-tertiary)]'}`}>
+            <span className={`text-xs ${isRecording ? 'text-[var(--mcb-danger-text)] font-medium' : 'text-[var(--mcb-text-tertiary)]'}`}>
               {midiRecordingEnabled
                 ? isRecording
                   ? 'Recording MIDI'
@@ -176,8 +176,8 @@ const MidiRecorder: React.FC<MidiRecorderProps> = ({ className = '' }) => {
         </div>
         <button
           onClick={handleToggleRecording}
-          className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[var(--mcb-accent-primary)] focus:ring-offset-2 focus:ring-offset-gray-800 ${
-            midiRecordingEnabled ? 'bg-[var(--mcb-accent-secondary)]' : 'bg-[var(--mcb-border-secondary)]'
+          className={`mcb-switch flex-shrink-0 ${
+            isRecording ? 'mcb-switch--danger' : midiRecordingEnabled ? 'mcb-switch--on' : ''
           }`}
           role="switch"
           aria-checked={midiRecordingEnabled}
@@ -185,10 +185,11 @@ const MidiRecorder: React.FC<MidiRecorderProps> = ({ className = '' }) => {
         >
           <span
             aria-hidden="true"
-            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-              midiRecordingEnabled ? 'translate-x-5' : 'translate-x-0'
+            className={`mcb-led ${
+              isRecording ? 'mcb-led--danger animate-pulse' : midiRecordingEnabled ? '' : 'mcb-led--off'
             }`}
           />
+          {midiRecordingEnabled ? 'On' : 'Off'}
         </button>
       </div>
 

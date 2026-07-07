@@ -50,40 +50,35 @@ const HeaderNav: React.FC = () => {
 
     return (
         <>
-            <div className="bg-mcb-secondary border-b border-mcb-primary">
+            <div className="bg-mcb-elevated border-b border-mcb-subtle shadow-[0_1px_0_rgba(0,0,0,0.3)]">
                 <div className="relative">
-                    <div className="flex items-center justify-between px-6 py-4">
+                    <div className="flex items-center justify-between px-4 py-2">
                         {/* Left side - App Name with Geometric Logo */}
-                        <div className="flex items-center space-x-4">
-                            <Logo className="mt-2"/> 
-                            
+                        <div className="flex items-center space-x-3">
+                            <Logo size={30}/>
+
                             {/* App Name */}
-                            <div className="flex items-center space-x-3">
-                                <div className="flex flex-col items-start">
-                                    <h1 className="text-xl font-bold text-[var(--mcb-accent-primary)] tracking-tight leading-none">
-                                        modal
-                                    </h1>
-                                    <div className="flex items-center space-x-0.5">
-                                        <span className="text-xs text-mcb-tertiary font-medium uppercase tracking-widest">chord</span>
-                                        <div className="w-1 h-1 mr-[0.2em] bg-[var(--mcb-text-tertiary)]"></div>
-                                        <span className="text-xs text-mcb-tertiary font-medium uppercase tracking-widest">buildr</span>
-                                    </div>
+                            <div className="flex items-baseline space-x-2">
+                                <h1 className="text-base font-bold text-[var(--mcb-accent-primary)] tracking-tight leading-none">
+                                    modal
+                                </h1>
+                                <div className="flex items-center space-x-1">
+                                    <span className="mcb-label">chord</span>
+                                    <div className="w-0.5 h-0.5 bg-[var(--mcb-text-tertiary)] rounded-full"></div>
+                                    <span className="mcb-label">buildr</span>
                                 </div>
                             </div>
                         </div>
 
                         {/* Center/Right - Status and Key/Mode (Desktop) and Menu */}
-                        <div className="flex items-center space-x-4">
-                           
+                        <div className="flex items-center space-x-3">
+
                             {/* Key/Mode Display - Hidden on small screens */}
-                            <div className="hidden sm:flex items-center space-x-2 text-sm">
-                                <div className="px-2 py-0.5 bg-mcb-tertiary border border-mcb-primary rounded text-mcb-secondary font-mono">
-                                    {key}
-                                </div>
-                                <div className="w-px h-4 bg-[var(--mcb-text-subtle)]"></div>
-                                <div className="px-2 py-1 bg-mcb-tertiary border border-mcb-primary rounded text-mcb-secondary text-xs font-mono">
-                                    {mode}
-                                </div>
+                            <div className="hidden sm:flex items-center mcb-inset px-3 py-1 space-x-2 font-mono text-xs text-mcb-secondary">
+                                <span className="mcb-label !text-[0.5625rem]">key</span>
+                                <span className="text-[var(--mcb-accent-text-primary)]">{key}</span>
+                                <div className="w-px h-3 bg-[var(--mcb-border-primary)]"></div>
+                                <span className="text-mcb-secondary">{mode}</span>
                             </div>
 
                             {/* Dropdown Menu */}
@@ -91,7 +86,7 @@ const HeaderNav: React.FC = () => {
                                 <button
                                     ref={buttonRef}
                                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                    className="w-9 h-9 flex items-center justify-center text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover rounded-lg transition-all duration-200 border border-transparent hover:border-mcb-primary"
+                                    className="w-8 h-8 flex items-center justify-center text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover rounded-md transition-all duration-200 border border-transparent hover:border-mcb-primary"
                                     title="Menu"
                                 >
                                     <EllipsisVerticalIcon className="w-5 h-5" />
@@ -101,28 +96,28 @@ const HeaderNav: React.FC = () => {
                                 {isDropdownOpen && (
                                     <div
                                         ref={dropdownRef}
-                                        className="absolute right-0 mt-2 w-64 bg-mcb-secondary border border-mcb-primary rounded-lg shadow-xl z-50 overflow-hidden"
+                                        className="absolute right-0 mt-2 w-64 mcb-panel !rounded-lg z-50 overflow-hidden"
                                     >
 
                                         {/* Menu Items */}
                                         <div className="py-2">
                                             <button
                                                 onClick={() => handleMenuItemClick(() => setShowThemeModal(true))}
-                                                className="w-full px-4 py-2.5 text-left flex items-center space-x-3 text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover transition-all duration-150"
+                                                className="w-full px-4 py-2.5 text-left flex items-center space-x-3 text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-all duration-150"
                                             >
                                                 <SwatchIcon className="w-4 h-4 flex-shrink-0" />
                                                 <span className="text-sm font-medium">Theme</span>
                                             </button>
                                             <button
                                                 onClick={() => handleMenuItemClick(() => setShowAboutModal(true))}
-                                                className="w-full px-4 py-2.5 text-left flex items-center space-x-3 text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover transition-all duration-150"
+                                                className="w-full px-4 py-2.5 text-left flex items-center space-x-3 text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-all duration-150"
                                             >
                                                 <InformationCircleIcon className="w-4 h-4 flex-shrink-0" />
                                                 <span className="text-sm font-medium">About</span>
                                             </button>
                                             <button
                                                 onClick={() => handleMenuItemClick(() => setShowHelpModal(true))}
-                                                className="w-full px-4 py-2.5 text-left flex items-center space-x-3 text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover transition-all duration-150"
+                                                className="w-full px-4 py-2.5 text-left flex items-center space-x-3 text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-all duration-150"
                                             >
                                                 <QuestionMarkCircleIcon className="w-4 h-4 flex-shrink-0" />
                                                 <span className="text-sm font-medium">Help</span>

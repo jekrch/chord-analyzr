@@ -155,8 +155,8 @@ function App() {
                     </div>
                 )}
 
-                <div className={`flex flex-col items-center justify-start text-[calc(10px+2vmin)] text-white p-4 space-y-4x pb-32 ${!isCompactHeight ? 'mt-2' : ''} ${isLiveMode ? 'pointer-events-none opacity-30' : ''}`}>
-                    <div className="w-full max-w-7xl mb-6">
+                <div className={`flex flex-col items-center justify-start text-[calc(10px+2vmin)] text-white px-3 pt-3 pb-32 ${isLiveMode ? 'pointer-events-none opacity-30' : ''}`}>
+                    <div className="w-full max-w-7xl mb-3">
                         <PianoControl hideConfigControls={true} />
                     </div>
 
@@ -164,9 +164,9 @@ function App() {
 
                     <PatternSystem/>
 
-                    <SequenceStatusView className="mt-4" />
+                    <SequenceStatusView className="mt-3" />
 
-                    <div className="w-full max-w-7xl mb-20 mt-4">
+                    <div className="w-full max-w-7xl mb-20 mt-3">
                         <ChordTable
                             onChordClick={handleChordClick}
                             addChordClick={addChordClick}

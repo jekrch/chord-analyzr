@@ -39,23 +39,23 @@ const Modal: React.FC<ModalProps> = ({
       />
       
       {/* Modal Content */}
-      <div className={`relative bg-mcb-secondary border border-mcb-primary rounded-lg shadow-xl w-full animate-in fade-in-0 zoom-in-95 duration-200 ${
+      <div className={`relative mcb-panel overflow-hidden w-full animate-in fade-in-0 zoom-in-95 duration-200 ${
         fixedHeader ? 'flex flex-col max-h-full' : ''
       } ${className}`}>
         {/* Header (optional) */}
         {(title || showCloseButton) && (
-          <div className={`flex items-center justify-between p-4 border-b border-mcb-primary bg-mcb-secondary rounded-t-lg ${
+          <div className={`mcb-panel-header ${
             fixedHeader ? 'flex-shrink-0' : ''
           }`}>
             {title && (
-              <h3 className="text-sm font-semibold text-mcb-primary uppercase tracking-wide">
+              <h3 className="mcb-panel-title">
                 {title}
               </h3>
             )}
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-[var(--mcb-text-subtle)] text-mcb-tertiary hover:text-mcb-primary transition-colors ml-auto"
+                className="w-6 h-6 flex items-center justify-center rounded-full text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-colors ml-auto"
               >
                 <XMarkIcon className="w-4 h-4" />
               </button>

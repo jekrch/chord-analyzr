@@ -124,12 +124,13 @@ const Dropdown: React.FC<DropdownProps> = ({
         ref={buttonRef}
         onClick={handleToggle}
         className={`
-          inline-flex w-full justify-between items-center gap-x-2 rounded-lg
-          bg-mcb-secondary border
+          inline-flex w-full justify-between items-center gap-x-2 rounded-md
+          bg-mcb-input border
+          shadow-[inset_0_2px_6px_rgba(0,0,0,0.35)]
           px-4 py-2.5 text-sm font-medium
-          text-mcb-primary 
-          ${isOpen ? 'border-[var(--mcb-accent-primary)] bg-mcb-hover' : 'border-mcb-primary hover:bg-mcb-hover hover:border-mcb-secondary'}
-          focus:outline-none focus:ring-2 focus:ring-[var(--mcb-accent-primary)]/50 focus:ring-offset-2 focus:ring-offset-[#2a2f38]
+          text-mcb-primary
+          ${isOpen ? 'border-[var(--mcb-accent-primary)]' : 'border-[var(--mcb-border-subtle)] hover:border-mcb-secondary'}
+          focus:outline-none focus:ring-1 focus:ring-[var(--mcb-accent-primary)]/50
           transition-all duration-200 ease-out
           ${buttonClassName.includes('h-') ? '' : 'h-10'}
           ${buttonClassName}
@@ -166,21 +167,21 @@ const Dropdown: React.FC<DropdownProps> = ({
               maxHeight: `${menuPosition.maxHeight}px`,
               minWidth: `${menuPosition.width}px`
             }}
-            className="dropdown-menu rounded-lg shadow-2xl ring-1 ring-black/30 overflow-hidden"
+            className="dropdown-menu rounded-lg overflow-hidden"
           >
-            <div className="bg-mcb-secondary border border-mcb-primary rounded-lg overflow-hidden shadow-2xl">
+            <div className="mcb-panel !rounded-lg overflow-hidden">
               {showSearch && (
-                <div className="p-3 border-b border-mcb-primary bg-mcb-tertiary">
+                <div className="p-3 border-b border-mcb-subtle bg-[color-mix(in_srgb,var(--mcb-bg-input)_30%,transparent)]">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-mcb-tertiary" />
                     <input
                       type="text"
-                      className="w-full text-mcb-primary pl-9 pr-3 py-2 text-sm font-normal 
-                        bg-mcb-primary border border-mcb-primary rounded-md 
-                        focus:outline-none focus:ring-2 focus:ring-[var(--mcb-accent-primary)]/50 focus:border-[var(--mcb-accent-primary)] 
-                        placeholder-[var(--mcb-text-disabled)] 
-                        transition-all duration-200
-                        hover:bg-[#333844] hover:border-mcb-secondary"
+                      className="w-full text-mcb-primary pl-9 pr-3 py-2 text-sm font-normal
+                        bg-mcb-input border border-[var(--mcb-border-subtle)] rounded-md
+                        shadow-[inset_0_2px_6px_rgba(0,0,0,0.35)]
+                        focus:outline-none focus:border-[var(--mcb-accent-primary)]
+                        placeholder-[var(--mcb-text-disabled)]
+                        transition-all duration-200"
                       placeholder="Search options..."
                       value={filter}                
                       onChange={(e) => setFilter(e.target.value)}

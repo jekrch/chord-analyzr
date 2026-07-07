@@ -80,9 +80,9 @@ const StepEditor = memo(({
         options={options}
         className="w-full"
         buttonClassName={`w-full h-10 text-xs pl-2.5 ${stepValue === 'x'
-          ? 'bg-mcb-secondary border-gray-700 text-mcb-tertiary'
+          ? 'bg-mcb-secondary border-[var(--mcb-border-subtle)] text-mcb-tertiary'
           : isExceedingNotes
-            ? 'bg-mcb-secondary border-gray-700 text-orange-400' // Different color for exceeded notes
+            ? 'bg-mcb-secondary border-[var(--mcb-border-subtle)] text-[var(--mcb-warning-text)]' // Different color for exceeded notes
             : 'bg-mcb-secondary border-mcb-primary text-mcb-primary hover:bg-mcb-hover'
           } border rounded transition-all duration-200`}
       />
@@ -287,15 +287,15 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
   return (
     <div className="w-full max-w-7xl mx-auto px-2 mt-4">
       {/* Main Header - Clean and Simple */}
-      <div className="bg-mcb-secondary border border-mcb-primary rounded-lg overflow-hidden">
-        
-        <div className="px-4 py-3">
+      <div className="mcb-panel overflow-hidden">
+
+        <div className="px-4 py-2.5">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-mcb-secondary uppercase tracking-wider">Sequencer</h2>
+            <h2 className="mcb-panel-title">Sequencer</h2>
             <div className="flex items-center space-x-3">
               <button
                 onClick={() => setIsSequencerExpanded(!isSequencerExpanded)}
-                className="w-[7em] h-8 flex items-center space-x-2 px-3 py-1.5 text-xs text-mcb-secondary hover:text-mcb-primary bg-mcb-hover hover:bg-mcb-active border border-mcb-primary rounded transition-all duration-200"
+                className="h-7 flex items-center space-x-1.5 px-3 text-[0.6875rem] uppercase tracking-wider text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover border border-mcb-subtle rounded-full transition-all duration-200"
               >
                 {isSequencerExpanded ? (
                   <>
@@ -332,7 +332,7 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
           </div>
           
           {/* MIDI Recorder Row - Always visible */}
-          <div className="mt-3 pt-3 border-t border-mcb-primary">
+          <div className="mt-2.5 pt-2.5 border-t border-mcb-subtle">
             <MidiRecorder />
           </div>
         </div>
@@ -342,9 +342,9 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
           isSequencerExpanded ? ' opacity-100' : 'max-h-0 opacity-0'
         }`}>
           {/* Pattern Editor Section */}
-          <div className="border-t border-mcb-primary bg-mcb-tertiary">
+          <div className="border-t border-mcb-subtle">
             {/* Pattern Controls Bar */}
-            <div className="px-4 py-3 border-b border-mcb-primary bg-mcb-secondary">
+            <div className="px-4 py-2.5 border-b border-mcb-subtle bg-[color-mix(in_srgb,var(--mcb-bg-input)_30%,transparent)]">
               {/* Mobile Layout: Single row with step controls left, chord label right */}
               <div className="flex items-center justify-between sm:hidden">
                 {/* Left: Step controls */}
@@ -438,7 +438,8 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
             </div>
 
             {/* Step Grid */}
-            <div className="p-6 px-3 sm:px-4">
+            <div className="p-3 sm:p-4">
+              <div className="mcb-inset p-3 sm:p-4">
               {/* Mobile Layout: 4 columns */}
               <div className="block md:hidden">
                 {stepGridConfig.rows.map((row, rowIndex) => (
@@ -522,19 +523,20 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
                   </div>
                 ))}
               </div>
+              </div>
             </div>
           </div>
 
           {/* Settings Section - Now completely inside the expandable area */}
-          <div className="bg-mcb-secondary border-t border-mcb-primary">
-            <div className="px-4 py-3 border-b border-mcb-primary">
+          <div className="border-t border-mcb-subtle">
+            <div className="px-4 py-2.5 border-b border-mcb-subtle bg-[color-mix(in_srgb,var(--mcb-bg-input)_30%,transparent)]">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-mcb-primary uppercase tracking-wider">
+                <h3 className="mcb-panel-title">
                   Settings
                 </h3>
                 <button
                   onClick={() => setIsSettingsExpanded(!isSettingsExpanded)}
-                  className="w-[7em] h-8 flex items-center space-x-2 px-3 py-1.5 text-xs text-mcb-secondary hover:text-mcb-primary bg-mcb-hover hover:bg-mcb-active border border-mcb-primary rounded transition-all duration-200"
+                  className="h-7 flex items-center space-x-1.5 px-3 text-[0.6875rem] uppercase tracking-wider text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover border border-mcb-subtle rounded-full transition-all duration-200"
                 >
                   {isSettingsExpanded ? (
                     <>
@@ -555,13 +557,13 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
             <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
               isSettingsExpanded ? ' opacity-100' : 'max-h-0 opacity-0'
             }`}>
-              <div className="p-6 bg-mcb-tertiary">
+              <div className="p-6">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-x-8 gap-y-6">
 
                   {/* Timing Controls */}
                   <div className="space-y-6">
                     <div>
-                      <label className="block text-xs font-medium text-mcb-primary mb-2 uppercase tracking-wide">Timing</label>
+                      <label className="block mcb-label mb-2">Timing</label>
                     </div>
 
                     <Slider
@@ -577,7 +579,7 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
                     />
 
                     <div>
-                      <label className="block text-xs font-medium text-mcb-primary mb-2 uppercase tracking-wide">Subdivision</label>
+                      <label className="block mcb-label mb-2">Subdivision</label>
                       <Dropdown
                         value={currentSubdivisionDisplay}
                         onChange={(value) => {
@@ -588,7 +590,7 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
                         }}
                         options={subdivisionOptions}
                         className="w-full"
-                        buttonClassName="w-full p-3 bg-mcb-secondary border border-mcb-primary rounded text-mcb-primary text-xs focus:border-[var(--mcb-accent-primary)] transition-colors hover:bg-mcb-hover"
+                        buttonClassName="w-full p-3 text-xs"
                       />
                     </div>
 
@@ -619,7 +621,7 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
                   {/* Custom Pattern Input - Compact */}
                   <div className="space-y-4">
                     <div className="flex items-center space-x-2">
-                      <label className="block text-xs font-medium text-mcb-primary uppercase tracking-wide">Custom</label>
+                      <label className="block mcb-label">Custom</label>
                       <React.Suspense fallback={<div className="w-4 h-4" />}>
                         <PatternNotationHelpModal />
                       </React.Suspense>
@@ -632,7 +634,7 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
                         onChange={(e) => setCustomPattern(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && applyCustomPattern()}
                         placeholder="1,x,3,2+"
-                        className="w-full p-2 bg-mcb-secondary border border-mcb-primary rounded text-mcb-primary text-xs focus:border-[var(--mcb-accent-primary)] transition-colors placeholder-[var(--mcb-text-disabled)]"
+                        className="w-full p-2 bg-mcb-input border border-[var(--mcb-border-subtle)] shadow-[inset_0_2px_6px_rgba(0,0,0,0.35)] rounded-md text-mcb-primary text-xs font-mono focus:border-[var(--mcb-accent-primary)] focus:outline-none transition-colors placeholder-[var(--mcb-text-disabled)]"
                       />
                       <button
                         onClick={applyCustomPattern}

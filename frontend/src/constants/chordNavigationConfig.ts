@@ -40,13 +40,13 @@ export const CHORD_NAVIGATION_CONFIG = {
         LIVE_DESKTOP: {
             container: 'py-8 px-6 text-lg min-h-[120px] flex flex-col items-center justify-center',
             number: 'text-xl mb-2',
-            name: 'text-base text-center text-white',
+            name: 'text-base text-center text-mcb-primary',
             icon: 'h-6 w-6'
         },
         LIVE_MOBILE: {
             container: 'py-8 px-6 text-lg min-h-[140px] flex flex-col items-center justify-center',
             number: 'text-xl mb-2',
-            name: 'text-base text-center text-white',
+            name: 'text-base text-center text-mcb-primary',
             icon: 'h-6 w-6'
         },
         COLLAPSED: {
@@ -55,20 +55,6 @@ export const CHORD_NAVIGATION_CONFIG = {
             name: 'text-xs',
             icon: 'h-4 w-4'
         }
-    },
-
-    // Color themes
-    COLORS: {
-        PRIMARY_BG: '#1a1e24',
-        SECONDARY_BG: '#2a2f38',
-        ACCENT_BG: '#4a5262',
-        ACCENT_HOVER: '#525a6b',
-        BORDER: 'border-mcb-primary',
-        TEXT_PRIMARY: 'text-white',
-        TEXT_SECONDARY: 'text-mcb-secondary',
-        TEXT_MUTED: 'text-mcb-tertiary',
-        BLUE_PRIMARY: 'text-[var(--mcb-accent-text-light)]',
-        BLUE_ACCENT: 'text-[var(--mcb-accent-text-primary)]'
     },
 
     // Responsive breakpoints for compact height

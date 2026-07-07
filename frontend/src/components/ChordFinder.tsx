@@ -517,7 +517,7 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
 
                 {/* Piano - scrollable if needed */}
                 <div className="max-w-3xl mx-auto px-4 w-full flex-1 min-h-0 overflow-y-auto">
-                    <div className="bg-mcb-primary rounded-lg border border-mcb-primary p-2 sm:p-3">
+                    <div className="mcb-inset p-2 sm:p-3">
                         <TogglePiano
                             selectedNotes={selectedNotes}
                             onToggleNote={toggleNote}
@@ -539,10 +539,10 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
                                         key={noteIdx}
                                         onClick={() => toggleNote(noteIdx)}
                                         className={classNames(
-                                            "px-1.5 py-0.5 text-xs text-white rounded font-mono transition-colors",
+                                            "px-1.5 py-0.5 text-xs rounded font-mono transition-colors border",
                                             idx === 0
-                                                ? "bg-amber-600 hover:bg-amber-500"
-                                                : "bg-[var(--mcb-accent-primary)] hover:bg-[var(--mcb-accent-secondary)]"
+                                                ? "bg-[var(--mcb-warning-primary)] border-[var(--mcb-warning-border)] text-[var(--mcb-warning-text)] hover:text-[var(--mcb-warning-text-alt)]"
+                                                : "bg-[var(--mcb-accent-primary)] border-transparent text-white hover:bg-[var(--mcb-accent-secondary)]"
                                         )}
                                         title={idx === 0 ? "Root note (click to remove)" : "Click to remove"}
                                     >
@@ -576,12 +576,12 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
 
             {/* Results - fills remaining space */}
             <div className="flex-1 max-w-3xl mx-auto px-4 w-full overflow-hidden flex flex-col min-h-0">
-                <div className="bg-mcb-primary rounded-lg border border-mcb-primary p-4 flex-1 flex flex-col min-h-0">
+                <div className="mcb-panel p-4 flex-1 flex flex-col min-h-0">
                     <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-lg font-medium text-white">
+                        <h3 className="mcb-panel-title">
                             Matching Chords
                             {matchingChords.length > 0 && (
-                                <span className="ml-2 text-sm text-mcb-tertiary">({matchingChords.length})</span>
+                                <span className="ml-2 text-mcb-tertiary">({matchingChords.length})</span>
                             )}
                         </h3>
                         {isLoading && <span className="text-xs text-mcb-tertiary">Loading...</span>}
@@ -607,7 +607,7 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
                                     // 1. Add 'relative' here so the absolute button positions relative to this card
                                     className={classNames(
                                         "relative w-full text-left p-3 rounded border transition-all",
-                                        "hover:border-[var(--mcb-accent-primary)] hover:bg-mcb-hover",
+                                        "hover:border-[var(--mcb-accent-primary)] hover:bg-[var(--mcb-bg-hover)]",
                                         match.matchType === 'exact'
                                             ? "bg-[var(--mcb-accent-primary)]/10 border-[var(--mcb-accent-primary)]/50"
                                             : "bg-mcb-input border-mcb-primary"
@@ -636,7 +636,7 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
                                                 <span className="text-white font-semibold text-lg">
                                                     {match.chord.chordName}
                                                     {match.slashNote && (
-                                                        <span className="text-amber-400">/{match.slashNote}</span>
+                                                        <span className="text-[var(--mcb-warning-text)]">/{match.slashNote}</span>
                                                     )}
                                                 </span>
                                                 {match.matchType === 'exact' && (
@@ -646,7 +646,7 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
                                                     </span>
                                                 )}
                                                 {match.matchType === 'with-slash' && (
-                                                    <span className="px-2 py-0.5 text-xs bg-amber-500/20 text-amber-300 rounded border border-amber-500/30">
+                                                    <span className="px-2 py-0.5 text-xs bg-[var(--mcb-warning-primary)] text-[var(--mcb-warning-text-alt)] rounded border border-[var(--mcb-warning-border)]">
                                                         Slash
                                                     </span>
                                                 )}

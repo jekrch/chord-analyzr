@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrashIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon, PlayIcon, PauseIcon, PlayCircleIcon } from '@heroicons/react/20/solid';
+import { ArrowsPointingOutIcon, ArrowsPointingInIcon, PlayIcon, PauseIcon, PlayCircleIcon } from '@heroicons/react/20/solid';
 import classNames from 'classnames';
 import { Button } from '../Button';
 
@@ -68,23 +68,18 @@ export const ControlBar: React.FC<ControlBarProps> = ({
                 </div>
                 
                 <div className="text-center sm:w-full sm:text-left sm:mx-4">
-                    <div className="hidden sm:block text-xs font-bold text-mcb-secondary uppercase tracking-wider">
+                    <div className="hidden sm:block mcb-label">
                         chords {isEditMode && <span className="text-[var(--mcb-accent-text-primary)]">(drag to reorder)</span>}
                     </div>
-                    <div className="block sm:hidden text-xs text-mcb-secondary uppercase tracking-wider">
+                    <div className="block sm:hidden mcb-label">
                         chords {isEditMode && <span className="text-[var(--mcb-accent-text-primary)]">(drag)</span>}
                     </div>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
-                    <button 
-                        onClick={onToggleLiveMode} 
-                        className={classNames(
-                            "w-[7em] h-8 flex items-center space-x-2 px-3 py-1.5 text-xs border rounded transition-all duration-200", 
-                            isLiveMode ? 
-                                "text-mcb-primary bg-mcb-hover border-mcb-primary hover:bg-mcb-active" : 
-                                "text-mcb-secondary hover:text-mcb-primary bg-mcb-hover hover:bg-mcb-active border-mcb-primary"
-                        )}
+                    <button
+                        onClick={onToggleLiveMode}
+                        className="w-[7.5em] h-7 flex items-center justify-center gap-1.5 px-3 rounded-full border border-mcb-subtle text-[0.6875rem] uppercase tracking-wider text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover transition-all duration-200"
                     >
                         {isLiveMode ? (
                             <>
@@ -98,28 +93,26 @@ export const ControlBar: React.FC<ControlBarProps> = ({
                             </>
                         )}
                     </button>
-                    
+
                     {!isLiveMode && (
                         <>
-                            <button 
-                                onClick={() => { 
-                                    if (isLiveMode) onToggleLiveMode(); 
-                                    onClearAll(); 
-                                }} 
-                                className="w-[5em] h-8 flex items-center justify-center px-3 py-1.5 text-xs text-mcb-secondary hover:text-mcb-primary bg-mcb-hover hover:bg-mcb-active border border-mcb-primary rounded transition-all duration-200"
+                            <button
+                                onClick={() => {
+                                    if (isLiveMode) onToggleLiveMode();
+                                    onClearAll();
+                                }}
+                                className="w-[5em] h-7 flex items-center justify-center px-3 rounded-full border border-mcb-subtle text-[0.6875rem] uppercase tracking-wider text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover transition-all duration-200"
                             >
                                 Clear
                             </button>
-                            <button 
-                                onClick={onToggleDeleteMode} 
+                            <button
+                                onClick={onToggleDeleteMode}
                                 className={classNames(
-                                    "w-[7em] h-8 flex items-center space-x-2 px-3 py-1.5 text-xs border rounded transition-all duration-200", 
-                                    isDeleteMode ? 
-                                        "text-white bg-[var(--mcb-danger-primary)] border-[var(--mcb-danger-border)] hover:bg-[var(--mcb-danger-secondary)]" : 
-                                        "text-mcb-secondary hover:text-mcb-primary bg-mcb-hover hover:bg-mcb-active border-mcb-primary"
+                                    "mcb-switch w-[7.5em] h-7 justify-center",
+                                    { "mcb-switch--danger": isDeleteMode }
                                 )}
                             >
-                                <TrashIcon className="h-3 w-3" />
+                                <span className={classNames("mcb-led", isDeleteMode ? "mcb-led--danger" : "mcb-led--off")} />
                                 <span>{isDeleteMode ? 'Done' : 'Delete'}</span>
                             </button>
                         </>

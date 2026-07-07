@@ -293,3 +293,187 @@
 .bg-mcb-danger { background-color: var(--mcb-danger-primary); }
 .text-mcb-danger { color: var(--mcb-danger-text); }
 .text-mcb-warning { color: var(--mcb-warning-text); }
+
+/* ===================================================================
+   Panel system — hardware-rack inspired surfaces.
+   Everything derives from the theme variables above via color-mix,
+   so all themes (default/forest/neon/sunset) pick this up for free.
+   =================================================================== */
+:root {
+  --mcb-radius-panel: 0.875rem;
+  --mcb-radius-control: 0.5rem;
+}
+
+/* Raised card: the main module chassis */
+.mcb-panel {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--mcb-bg-secondary) 45%, var(--mcb-bg-primary)),
+    var(--mcb-bg-primary)
+  );
+  border: 1px solid color-mix(in srgb, var(--mcb-border-primary) 55%, transparent);
+  border-radius: var(--mcb-radius-panel);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--mcb-text-primary) 7%, transparent),
+    0 12px 32px -16px rgba(0, 0, 0, 0.55),
+    0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+/* Slim panel header row */
+.mcb-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--mcb-border-primary) 40%, transparent);
+  background: color-mix(in srgb, var(--mcb-bg-input) 30%, transparent);
+}
+
+/* Recessed "screen" area (displays, grids, readouts) */
+.mcb-inset {
+  background: color-mix(in srgb, var(--mcb-bg-input) 88%, var(--mcb-bg-primary));
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  border-radius: 0.625rem;
+  box-shadow:
+    inset 0 2px 8px rgba(0, 0, 0, 0.4),
+    0 1px 0 color-mix(in srgb, var(--mcb-text-primary) 5%, transparent);
+}
+
+/* Small engraved control label */
+.mcb-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mcb-text-tertiary);
+}
+
+/* Section title inside panel headers */
+.mcb-panel-title {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mcb-text-tertiary);
+}
+
+/* Status LED dot */
+.mcb-led {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 9999px;
+  background: var(--mcb-accent-primary);
+  box-shadow: 0 0 6px 1px color-mix(in srgb, var(--mcb-accent-primary) 70%, transparent);
+}
+.mcb-led--off {
+  background: var(--mcb-text-disabled);
+  box-shadow: none;
+}
+.mcb-led--success {
+  background: var(--mcb-success-primary);
+  box-shadow: 0 0 6px 1px color-mix(in srgb, var(--mcb-success-primary) 70%, transparent);
+}
+.mcb-led--danger {
+  background: var(--mcb-danger-primary);
+  box-shadow: 0 0 6px 1px color-mix(in srgb, var(--mcb-danger-primary) 70%, transparent);
+}
+
+/* Pill toggle (hardware switch look) */
+.mcb-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.875rem;
+  border-radius: 9999px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: 1px solid color-mix(in srgb, var(--mcb-border-primary) 60%, transparent);
+  background: color-mix(in srgb, var(--mcb-bg-input) 60%, transparent);
+  color: var(--mcb-text-tertiary);
+  transition: all 0.2s ease;
+}
+.mcb-switch:hover {
+  color: var(--mcb-text-secondary);
+  border-color: var(--mcb-border-secondary);
+}
+.mcb-switch--on {
+  background: color-mix(in srgb, var(--mcb-accent-primary) 16%, var(--mcb-bg-input));
+  border-color: color-mix(in srgb, var(--mcb-accent-primary) 55%, transparent);
+  color: var(--mcb-accent-text-secondary);
+  box-shadow: 0 0 12px -2px color-mix(in srgb, var(--mcb-accent-primary) 45%, transparent);
+}
+.mcb-switch--danger {
+  background: color-mix(in srgb, var(--mcb-danger-primary) 18%, var(--mcb-bg-input));
+  border-color: color-mix(in srgb, var(--mcb-danger-primary) 55%, transparent);
+  color: var(--mcb-danger-text);
+  box-shadow: 0 0 12px -2px color-mix(in srgb, var(--mcb-danger-primary) 45%, transparent);
+}
+
+/* Performance pad (chord buttons): raised like .mcb-panel but tighter,
+   lit variants glow like a pressed hardware pad */
+.mcb-pad {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--mcb-bg-secondary) 70%, var(--mcb-bg-primary)),
+    color-mix(in srgb, var(--mcb-bg-secondary) 20%, var(--mcb-bg-primary))
+  );
+  border: 1px solid color-mix(in srgb, var(--mcb-border-primary) 60%, transparent);
+  border-radius: var(--mcb-radius-control);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--mcb-text-primary) 8%, transparent),
+    0 2px 6px rgba(0, 0, 0, 0.35);
+  transition: all 0.15s ease;
+}
+.mcb-pad:hover {
+  border-color: var(--mcb-border-secondary);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--mcb-bg-hover) 65%, var(--mcb-bg-primary)),
+    color-mix(in srgb, var(--mcb-bg-hover) 20%, var(--mcb-bg-primary))
+  );
+}
+.mcb-pad:active {
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+.mcb-pad--lit {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--mcb-accent-primary) 32%, var(--mcb-bg-primary)),
+    color-mix(in srgb, var(--mcb-accent-primary) 14%, var(--mcb-bg-primary))
+  );
+  border-color: color-mix(in srgb, var(--mcb-accent-primary) 70%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--mcb-text-primary) 10%, transparent),
+    0 0 14px -2px color-mix(in srgb, var(--mcb-accent-primary) 55%, transparent);
+}
+.mcb-pad--lit:hover {
+  border-color: var(--mcb-accent-primary);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--mcb-accent-primary) 38%, var(--mcb-bg-primary)),
+    color-mix(in srgb, var(--mcb-accent-primary) 18%, var(--mcb-bg-primary))
+  );
+}
+.mcb-pad--danger {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--mcb-danger-primary) 26%, var(--mcb-bg-primary)),
+    color-mix(in srgb, var(--mcb-danger-primary) 10%, var(--mcb-bg-primary))
+  );
+  border-color: color-mix(in srgb, var(--mcb-danger-primary) 60%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--mcb-text-primary) 8%, transparent),
+    0 0 12px -3px color-mix(in srgb, var(--mcb-danger-primary) 50%, transparent);
+}
+.mcb-pad--danger:hover {
+  border-color: var(--mcb-danger-border);
+}
+.mcb-pad--edit {
+  border-color: color-mix(in srgb, var(--mcb-accent-primary) 60%, transparent);
+  border-style: dashed;
+}
+.mcb-pad--edit:hover {
+  border-color: var(--mcb-accent-primary);
+}

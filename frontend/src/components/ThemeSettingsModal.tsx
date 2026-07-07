@@ -94,7 +94,7 @@ const ThemeSettingsModal: React.FC<ThemeSettingsModalProps> = ({ isOpen, onClose
         >
             <div className="p-6 space-y-6 overflow-y-auto max-h-[80vh]">
                 {/* Description */}
-                <div className="bg-mcb-primary rounded-lg border border-[var(--mcb-border-primary)] p-4">
+                <div className="mcb-inset p-4">
                     <p className="text-sm text-[var(--mcb-text-secondary)] text-left leading-relaxed">
                         Choose a color theme that suits your preference. Your selection will be saved and applied automatically when you return.
                     </p>
@@ -102,7 +102,7 @@ const ThemeSettingsModal: React.FC<ThemeSettingsModalProps> = ({ isOpen, onClose
 
                 {/* Theme Options */}
                 <div className="space-y-4">
-                    <h3 className="text-sm font-semibold text-white uppercase tracking-wide text-left">
+                    <h3 className="mcb-panel-title block text-left">
                         Available Themes
                     </h3>
 
@@ -111,9 +111,9 @@ const ThemeSettingsModal: React.FC<ThemeSettingsModalProps> = ({ isOpen, onClose
                             <button
                                 key={theme.id}
                                 onClick={() => handleThemeChange(theme.id)}
-                                className={`relative p-4 rounded-lg border-2 transition-all duration-200 text-left ${currentTheme === theme.id
-                                        ? 'border-[var(--mcb-accent-primary)] bg-[var(--mcb-bg-secondary)] shadow-lg shadow-[var(--mcb-accent-light)]'
-                                        : ' border-[var(--mcb-border-primary)] bg-[var(--mcb-bg-primary)] hover:border-[var(--mcb-border-secondary)] hover:bg-[var(--mcb-bg-secondary)]'
+                                className={`relative p-4 text-left ${currentTheme === theme.id
+                                        ? 'mcb-pad mcb-pad--lit'
+                                        : 'mcb-pad'
                                     }`}
                             >
                                 {/* Selected Indicator */}
@@ -157,9 +157,9 @@ const ThemeSettingsModal: React.FC<ThemeSettingsModalProps> = ({ isOpen, onClose
                 </div>
 
                 {/* Live Preview Section */}
-                <div className="bg-mcb-primary rounded-lg border  border-[var(--mcb-border-primary)] overflow-hidden">
-                    <div className="bg-[var(--mcb-bg-tertiary)] px-4 py-3 border-b  border-[var(--mcb-border-primary)]">
-                        <h4 className="text-sm font-semibold text-white uppercase tracking-wide">
+                <div className="mcb-inset overflow-hidden">
+                    <div className="px-4 py-2.5 border-b border-mcb-subtle">
+                        <h4 className="mcb-panel-title">
                             Live Preview
                         </h4>
                     </div>
@@ -185,7 +185,7 @@ const ThemeSettingsModal: React.FC<ThemeSettingsModalProps> = ({ isOpen, onClose
                 </div>
 
                 {/* Info */}
-                <div className="pt-4 border-t  border-[var(--mcb-border-primary)]/50">
+                <div className="pt-4 border-t border-mcb-subtle">
                     <p className="text-xs text-[var(--mcb-text-primary)] text-left">
                         💡 Your theme preference is saved locally and will persist between sessions.
                     </p>

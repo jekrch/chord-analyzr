@@ -230,7 +230,7 @@ const PianoControl: React.FC<PianoProps> = ({
     const noteNameWithoutOctave = MidiNumbers.getAttributes(midiNumber).note.slice(0, -1);
     const isScaleNote = normalizedScaleNotes.includes(normalizeNoteName(noteNameWithoutOctave)!);
     if (isScaleNote) {
-      return <div className={`mx-auto mb-2 w-2 h-2 rounded-full ${isAccidental ? 'bg-[var(--mcb-accent-text-secondary)]' : 'bg-[var(--mcb-accent-text-primary)]'}`} />;
+      return <div className="mx-auto mb-2 mcb-led" />;
     }
     return null;
   }, [normalizedScaleNotes]);
@@ -284,8 +284,8 @@ const PianoControl: React.FC<PianoProps> = ({
 
           return (
             <div ref={containerRef} className="relative w-full">
-              {/* Piano Container - Properly centered */}
-              <div className="w-full flex justify-center overflow-x-auto">
+              {/* Chassis bezel: recessed screen the keyboard sits in */}
+              <div className="mcb-inset p-2 sm:p-3 w-full flex justify-center overflow-x-auto">
                 <Piano
                   noteRange={{ first: firstNote, last: lastNote }}
                   playNote={playNoteWithOffset(playNote)}

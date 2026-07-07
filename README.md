@@ -1,4 +1,5 @@
 # Chord Analyzr :musical_note:
+[![Frontend CI](https://github.com/jekrch/chord-analyzr/actions/workflows/ci.yml/badge.svg)](https://github.com/jekrch/chord-analyzr/actions/workflows/ci.yml)
 
 [modal.chordbuildr.com](https://modal.chordbuildr.com/)
 

@@ -8,8 +8,10 @@ import { useMusicStore } from '../../stores/musicStore';
 import { usePianoStore } from '../../stores/pianoStore';
 import { usePlaybackStore } from '../../stores/playbackStore';
 import { usePatternStore } from '../../stores/patternStore';
+import { useUIStore, KeyboardDisplayMode } from '../../stores/uiStore';
 import { audioContext } from '../../piano/audioContext';
 import { sequencerScheduler } from '../../services/SequencerScheduler';
+import NotationView from './NotationView';
 
 interface PianoProps {
   hideConfigControls?: boolean;
@@ -17,6 +19,12 @@ interface PianoProps {
 
 export const startOctave = 4;
 export const endOctave = 7;
+
+const DISPLAY_MODES: { mode: KeyboardDisplayMode; label: string; title: string }[] = [
+  { mode: 'keyboard', label: 'Keys', title: 'Show the keyboard' },
+  { mode: 'notation', label: 'Score', title: 'Show staff notation instead of the keyboard' },
+  { mode: 'both', label: 'Both', title: 'Show staff notation above the keyboard' },
+];
 
 const PianoControl: React.FC<PianoProps> = ({
   hideConfigControls = false
@@ -34,6 +42,9 @@ const PianoControl: React.FC<PianoProps> = ({
   // Narrow subscription: only isPlaying. Subscribing to the whole
   // globalPatternState would re-render the piano on every sequencer step.
   const isPlaying = usePatternStore(state => state.globalPatternState.isPlaying);
+
+  const keyboardDisplayMode = useUIStore(state => state.keyboardDisplayMode);
+  const setKeyboardDisplayMode = useUIStore(state => state.setKeyboardDisplayMode);
 
   const soundfontHostname = 'https://d1pzp51pvbm36p.cloudfront.net';
   const stopAllNotesRef = useRef<(() => void) | null>(null);
@@ -284,8 +295,29 @@ const PianoControl: React.FC<PianoProps> = ({
 
           return (
             <div ref={containerRef} className="relative w-full">
-              {/* Chassis bezel: recessed screen the keyboard sits in */}
-              <div className="mcb-inset p-2 sm:p-3 w-full flex justify-center overflow-x-auto">
+              {/* Display-mode selector: keyboard, staff notation, or both */}
+              <div className="flex justify-end gap-1.5 mb-1.5">
+                {DISPLAY_MODES.map(({ mode, label, title }) => (
+                  <button
+                    key={mode}
+                    onClick={() => setKeyboardDisplayMode(mode)}
+                    className={`mcb-switch ${keyboardDisplayMode === mode ? 'mcb-switch--on' : ''}`}
+                    title={title}
+                  >
+                    <div className={`mcb-led ${keyboardDisplayMode === mode ? '' : 'mcb-led--off'}`} />
+                    <span>{label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {keyboardDisplayMode !== 'keyboard' && (
+                <NotationView className={keyboardDisplayMode === 'both' ? 'mb-2' : ''} />
+              )}
+
+              {/* Chassis bezel: recessed screen the keyboard sits in. Kept
+                  mounted (hidden) in Score mode — the SoundfontProvider
+                  above is the audio path for the sequencer. */}
+              <div className={`mcb-inset p-2 sm:p-3 w-full flex justify-center overflow-x-auto ${keyboardDisplayMode === 'notation' ? 'hidden' : ''}`}>
                 <Piano
                   noteRange={{ first: firstNote, last: lastNote }}
                   playNote={playNoteWithOffset(playNote)}

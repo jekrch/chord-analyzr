@@ -34,7 +34,7 @@ export interface ScheduledStep {
     durationMs: number;
 }
 
-const parsePatternStep = (step: string, noteCount: number) => {
+export const parsePatternStep = (step: string, noteCount: number) => {
     if (step === 'x' || step === 'X') return null; // Rest
 
     const isOctaveUp = step.includes('+');

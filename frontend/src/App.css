@@ -523,16 +523,17 @@ body {
 }
 
 /* ===================================================================
-   Keybed — react-piano restyled as a synth keybed (Korg-style):
-   squared matte keys in a dark key slot under a panel overhang.
-   Key faces stay ivory/black (they're the instrument) but pick up a
-   faint ambient tint from the theme; active keys light in accent.
+   Keybed — react-piano restyled as a vintage synth keybed:
+   flat matte keys, aged-ivory naturals and warm-charcoal sharps, in a
+   dark key slot under a panel overhang. Key faces stay ivory/black
+   (they're the instrument) but pick up a faint ambient tint from the
+   theme; a few keys carry subtle wear. Active keys light in accent.
    =================================================================== */
 .ReactPiano__Keyboard {
-  /* instrument-literal key colors, ambient-tinted per theme */
-  --keybed-ivory: color-mix(in srgb, var(--mcb-bg-app) 7%, #f0ede5);
-  --keybed-ivory-deep: color-mix(in srgb, var(--mcb-bg-app) 12%, #d6d3ca);
-  --keybed-black: color-mix(in srgb, var(--mcb-bg-input) 45%, #101115);
+  /* instrument-literal key colors, aged warm and ambient-tinted per theme */
+  --keybed-ivory: color-mix(in srgb, var(--mcb-bg-app) 7%, #ece3cd);
+  --keybed-ivory-deep: color-mix(in srgb, var(--mcb-bg-app) 12%, #d3c9ae);
+  --keybed-black: color-mix(in srgb, var(--mcb-bg-input) 40%, #17150f);
   --keybed-slot: color-mix(in srgb, var(--mcb-bg-input) 35%, #000);
   position: relative;
   isolation: isolate;
@@ -568,77 +569,137 @@ body {
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.4), transparent);
 }
 
-/* Natural (white) keys: matte ivory, squared front, subtle front lip */
+/* Natural (white) keys: flat aged ivory, squared front, matte grain.
+   No specular sweep — just a faint shade at the back of the key well
+   and a worn darker front lip. */
 .ReactPiano__Key--natural {
-  background: linear-gradient(
-    180deg,
-    var(--keybed-ivory-deep) 0%,
-    var(--keybed-ivory) 14%,
-    color-mix(in srgb, #fff 38%, var(--keybed-ivory)) 72%,
-    var(--keybed-ivory) 91%,
-    color-mix(in srgb, #000 18%, var(--keybed-ivory-deep)) 100%
-  );
+  background:
+    /* barely-there vertical grain, like brushed matte plastic */
+    repeating-linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.016) 0 1px,
+      transparent 1px 3px
+    ),
+    linear-gradient(
+      180deg,
+      var(--keybed-ivory-deep) 0%,
+      var(--keybed-ivory) 18%,
+      var(--keybed-ivory) 88%,
+      color-mix(in srgb, #000 14%, var(--keybed-ivory-deep)) 100%
+    );
   border: none;
   border-radius: 0 0 2px 2px;
   box-shadow:
-    inset -1px 0 0 rgba(0, 0, 0, 0.07),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.28);
+    inset -1px 0 0 rgba(0, 0, 0, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25);
 }
 
 .ReactPiano__Key--natural:not(.ReactPiano__Key--active):not(.ReactPiano__Key--disabled):hover {
   background: linear-gradient(
     180deg,
     var(--keybed-ivory) 0%,
-    color-mix(in srgb, #fff 55%, var(--keybed-ivory)) 72%,
+    color-mix(in srgb, #fff 22%, var(--keybed-ivory)) 55%,
     var(--keybed-ivory) 100%
   );
 }
 
-/* Accidental (black) keys: matte black, beveled front face */
+/* Weathering: a few naturals yellowed deeper, with faint stains and a
+   scuffed front edge. nth-child counts all keys (naturals + sharps),
+   so the primes below land on scattered, irregular-feeling keys. */
+.ReactPiano__Key--natural:nth-child(17n + 5):not(.ReactPiano__Key--active) {
+  background:
+    radial-gradient(
+      ellipse 80% 30% at 55% 82%,
+      rgba(146, 116, 58, 0.1),
+      transparent 70%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, #b89f6a 14%, var(--keybed-ivory-deep)) 0%,
+      color-mix(in srgb, #b89f6a 10%, var(--keybed-ivory)) 30%,
+      color-mix(in srgb, #b89f6a 12%, var(--keybed-ivory)) 100%
+    );
+}
+
+.ReactPiano__Key--natural:nth-child(23n + 11):not(.ReactPiano__Key--active) {
+  background:
+    radial-gradient(
+      ellipse 60% 18% at 30% 97%,
+      rgba(0, 0, 0, 0.12),
+      transparent 75%
+    ),
+    linear-gradient(
+      180deg,
+      var(--keybed-ivory-deep) 0%,
+      color-mix(in srgb, #8a8474 7%, var(--keybed-ivory)) 40%,
+      color-mix(in srgb, #8a8474 10%, var(--keybed-ivory)) 100%
+    );
+  box-shadow:
+    inset -1px 0 0 rgba(0, 0, 0, 0.08),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* Accidental (black) keys: flat warm charcoal, like worn bakelite —
+   no bevel highlight stripe, just a soft crest and a dark front drop. */
 .ReactPiano__Key--accidental {
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, #000 40%, var(--keybed-black)) 0%,
-    var(--keybed-black) 14%,
-    color-mix(in srgb, #fff 9%, var(--keybed-black)) 62%,
-    color-mix(in srgb, #fff 16%, var(--keybed-black)) 72%,
-    color-mix(in srgb, #000 30%, var(--keybed-black)) 78%,
-    color-mix(in srgb, #000 45%, var(--keybed-black)) 100%
+    color-mix(in srgb, #000 30%, var(--keybed-black)) 0%,
+    var(--keybed-black) 20%,
+    color-mix(in srgb, #fff 5%, var(--keybed-black)) 68%,
+    color-mix(in srgb, #000 25%, var(--keybed-black)) 80%,
+    color-mix(in srgb, #000 40%, var(--keybed-black)) 100%
   );
   border: none;
   border-radius: 0 0 3px 3px;
   box-shadow:
-    inset 1px 0 0 rgba(255, 255, 255, 0.05),
-    inset -1px 0 0 rgba(0, 0, 0, 0.55),
-    0 2px 4px rgba(0, 0, 0, 0.5);
+    inset 1px 0 0 rgba(255, 255, 255, 0.04),
+    inset -1px 0 0 rgba(0, 0, 0, 0.5),
+    0 2px 3px rgba(0, 0, 0, 0.45);
 }
 
-/* Active keys light up in accent — the "powered-on" glow of the system */
+/* Weathering: the odd sharp with its finish rubbed matte-grey along
+   the crest where fingers have worn the paint */
+.ReactPiano__Key--accidental:nth-child(13n + 7):not(.ReactPiano__Key--active) {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #9a9284 9%, var(--keybed-black)) 0%,
+    color-mix(in srgb, #9a9284 14%, var(--keybed-black)) 45%,
+    color-mix(in srgb, #9a9284 6%, var(--keybed-black)) 70%,
+    color-mix(in srgb, #000 30%, var(--keybed-black)) 100%
+  );
+}
+
+/* Active keys light up in accent — flat lit panels rather than glossy
+   glow, like backlit keys on an old console */
 .ReactPiano__Key--active.ReactPiano__Key--natural {
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--mcb-accent-primary) 55%, var(--keybed-ivory-deep)) 0%,
-    color-mix(in srgb, var(--mcb-accent-primary) 80%, #fff) 60%,
-    var(--mcb-accent-secondary) 100%
+    color-mix(in srgb, var(--mcb-accent-primary) 60%, var(--keybed-ivory-deep)) 0%,
+    color-mix(in srgb, var(--mcb-accent-primary) 75%, var(--keybed-ivory)) 55%,
+    color-mix(in srgb, var(--mcb-accent-secondary) 85%, var(--keybed-ivory-deep)) 100%
   );
   border: none;
   box-shadow:
-    inset 0 3px 8px color-mix(in srgb, var(--mcb-accent-tertiary) 50%, transparent),
+    inset 0 2px 5px color-mix(in srgb, var(--mcb-accent-tertiary) 40%, transparent),
     inset 0 -1px 0 rgba(0, 0, 0, 0.3),
-    0 0 14px -2px color-mix(in srgb, var(--mcb-accent-primary) 55%, transparent);
+    0 0 10px -2px color-mix(in srgb, var(--mcb-accent-primary) 45%, transparent);
 }
 
+/* Active sharps read unambiguously: strong accent fill, a lit crest
+   line, and a halo into the key slot */
 .ReactPiano__Key--active.ReactPiano__Key--accidental {
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--mcb-accent-primary) 40%, var(--keybed-black)) 0%,
-    color-mix(in srgb, var(--mcb-accent-primary) 70%, var(--keybed-black)) 70%,
-    color-mix(in srgb, var(--mcb-accent-primary) 45%, var(--keybed-black)) 100%
+    color-mix(in srgb, var(--mcb-accent-primary) 68%, var(--keybed-black)) 0%,
+    color-mix(in srgb, var(--mcb-accent-primary) 88%, var(--keybed-black)) 55%,
+    color-mix(in srgb, var(--mcb-accent-primary) 55%, var(--keybed-black)) 100%
   );
   border: none;
   box-shadow:
-    inset 0 2px 6px rgba(0, 0, 0, 0.4),
-    0 0 12px -2px color-mix(in srgb, var(--mcb-accent-primary) 60%, transparent);
+    inset 0 1px 0 color-mix(in srgb, var(--mcb-accent-primary) 55%, #fff),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.35),
+    0 0 16px 0 color-mix(in srgb, var(--mcb-accent-primary) 65%, transparent);
 }
 
 /* Disabled (soundfont loading): keys go dim, no highlights */

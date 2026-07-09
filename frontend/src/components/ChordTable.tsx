@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect, useCallback, memo } from 'react';
+import React, { useState, useMemo, useEffect, useLayoutEffect, useCallback, useRef, memo } from 'react';
 import { PlayCircleIcon, PlusCircleIcon, MagnifyingGlassIcon, ChevronDownIcon, ChevronUpIcon, MusicalNoteIcon } from '@heroicons/react/20/solid';
 import { ModeScaleChordDto } from '../api';
 import { useMusicStore } from '../stores/musicStore';
@@ -119,6 +119,13 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
   const [addingChords, setAddingChords] = useState<Set<number>>(new Set());
   const [currentColumns, setCurrentColumns] = useState<number>(1);
   const [isChordFinderOpen, setIsChordFinderOpen] = useState(false);
+  const [isFilterStuck, setIsFilterStuck] = useState(false);
+  const [isMobileFilterStuck, setIsMobileFilterStuck] = useState(false);
+  const filterSentinelRef = useRef<HTMLDivElement>(null);
+  const mobileFilterSentinelRef = useRef<HTMLDivElement>(null);
+  const bottomSpacerRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLElement | null>(null);
+  const lastScrollTopRef = useRef(0);
 
   const chords = useMusicStore((state) => state.chords);
   const loadingChords = useMusicStore((state) => state.loadingChords);
@@ -151,6 +158,85 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
     updateColumns();
     window.addEventListener('resize', updateColumns);
     return () => window.removeEventListener('resize', updateColumns);
+  }, []);
+
+  // Detect when the sticky filter panels pin to the top of the scroll container:
+  // each sentinel sits just above its panel, so it scrolls out of view (clipped
+  // by the overflow ancestor) at the moment the panel sticks
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.target === filterSentinelRef.current) {
+          setIsFilterStuck(!entry.isIntersecting);
+        } else if (entry.target === mobileFilterSentinelRef.current) {
+          setIsMobileFilterStuck(!entry.isIntersecting);
+        }
+      }
+    }, { threshold: 0 });
+    if (filterSentinelRef.current) observer.observe(filterSentinelRef.current);
+    if (mobileFilterSentinelRef.current) observer.observe(mobileFilterSentinelRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  // Track the scroll position of the container the sticky panels pin against.
+  // The browser clamps scrollTop the moment shrinking content is laid out, so
+  // the pre-change position has to be recorded continuously, not read late.
+  useEffect(() => {
+    let container: HTMLElement | null = bottomSpacerRef.current?.parentElement ?? null;
+    while (container) {
+      const { overflowY } = getComputedStyle(container);
+      if (overflowY === 'auto' || overflowY === 'scroll') break;
+      container = container.parentElement;
+    }
+    if (!container) return;
+    scrollContainerRef.current = container;
+    lastScrollTopRef.current = container.scrollTop;
+    const onScroll = () => {
+      lastScrollTopRef.current = container!.scrollTop;
+    };
+    container.addEventListener('scroll', onScroll, { passive: true });
+    return () => container!.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // When the filter panel is pinned and the visible chord list changes (root
+  // filter, search, chord set), keep the scroll position at the pin point so
+  // the panel stays put and the new list reads from its top. Without this the
+  // shrunken content lowers the scroll container's max scroll and the browser
+  // clamps upward, yanking the pinned panel loose. A spacer at the bottom is
+  // sized just large enough to keep the pin-point scroll offset reachable.
+  const holdPinnedFilterPosition = useCallback(() => {
+    const spacer = bottomSpacerRef.current;
+    const container = scrollContainerRef.current;
+    if (spacer) spacer.style.height = '0px';
+    if (!spacer || !container) return;
+
+    // The desktop sidebar and mobile bar are never visible at the same time;
+    // pick whichever is actually rendered (display:none => offsetParent null)
+    const desktopSentinel = filterSentinelRef.current;
+    const useDesktop = !!desktopSentinel && desktopSentinel.offsetParent !== null;
+    const sentinel = useDesktop ? desktopSentinel : mobileFilterSentinelRef.current;
+    if (!sentinel) return;
+
+    // Pin point: scroll offset where the sticky panel sits exactly at its
+    // pinned position (sentinel top minus the panel's sticky `top` offset)
+    const stickyEl = sentinel.nextElementSibling;
+    const stickyTop = stickyEl ? parseFloat(getComputedStyle(stickyEl).top) || 0 : 0;
+    const containerRect = container.getBoundingClientRect();
+    const sentinelRect = sentinel.getBoundingClientRect();
+    const pinPoint = Math.max(
+      0,
+      sentinelRect.top - containerRect.top + container.scrollTop - stickyTop
+    );
+
+    // Pinned means scrolled to (or past) the pin point. Compare against the
+    // tracked pre-change position; the live scrollTop may already be clamped.
+    const prevScrollTop = Math.max(lastScrollTopRef.current, container.scrollTop);
+    if (prevScrollTop < pinPoint - 1) return;
+
+    const deficit = pinPoint + container.clientHeight - container.scrollHeight;
+    if (deficit > 0) spacer.style.height = `${deficit}px`;
+    container.scrollTop = pinPoint;
+    lastScrollTopRef.current = pinPoint;
   }, []);
 
   // Helper function to calculate which row a chord belongs to
@@ -225,6 +311,10 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
   useEffect(() => {
     setExpandedRows(new Set());
   }, [currentColumns, filteredChords]);
+
+  useLayoutEffect(() => {
+    holdPinnedFilterPosition();
+  }, [filteredChords, currentLoading, holdPinnedFilterPosition]);
 
   const handleChordPlay = useCallback((chordNoteNames: string, index: number, chordName: string) => {
     // Trigger play animation
@@ -340,13 +430,29 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
     </div>
   ), [selectedRootNote, validChords.length, rootNotes, chordCounts]);
 
+  // Shared between the desktop header panel and the mobile sticky filter bar
+  const searchInput = (
+    <div className="relative">
+      <div className="absolute left-3 inset-y-0 flex items-center pointer-events-none">
+        <MagnifyingGlassIcon className="w-4 h-4 text-[var(--mcb-text-tertiary)]" />
+      </div>
+      <input
+        type="text"
+        placeholder="Search chords..."
+        value={searchQuery}
+        onChange={handleSearchChange}
+        className="w-full pl-10 pr-4 py-2 bg-mcb-input border border-[var(--mcb-border-subtle)] shadow-[inset_0_2px_6px_rgba(0,0,0,0.35)] rounded-md text-white placeholder-[var(--mcb-text-tertiary)] focus:border-[var(--mcb-accent-primary)] focus:outline-none transition-colors !text-sm"
+      />
+    </div>
+  );
+
   //console.log(`Rendering chord table`);
 
   return (
     <>
       <div className="w-full max-w-7xl mx-auto px-2">
-        {/* Header Section */}
-        <div className="mcb-panel overflow-hidden mb-4">
+        {/* Header Section (below lg it joins flush with the sticky filter bar under it) */}
+        <div className="mcb-panel overflow-hidden mb-4 max-lg:mb-0 max-lg:!rounded-b-none max-lg:!border-b-0">
           <div className="px-4 py-3">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-4">
@@ -396,25 +502,21 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
                 </button>
               </div>
 
-              {/* Search Bar */}
-
-              <div className="relative">
-                <div className="absolute left-3 inset-y-0 flex items-center pointer-events-none">
-                  <MagnifyingGlassIcon className="w-4 h-4 text-[var(--mcb-text-tertiary)]" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Search chords..."
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  className="w-full pl-10 pr-4 py-2 bg-mcb-input border border-[var(--mcb-border-subtle)] shadow-[inset_0_2px_6px_rgba(0,0,0,0.35)] rounded-md text-white placeholder-[var(--mcb-text-tertiary)] focus:border-[var(--mcb-accent-primary)] focus:outline-none transition-colors !text-sm"
-                />
+              {/* Search Bar (desktop; on mobile it lives in the sticky filter bar below) */}
+              <div className="hidden lg:block">
+                {searchInput}
               </div>
 
             </div>
+          </div>
+        </div>
 
-            {/* Mobile Root Note Filter */}
-            <div className="lg:hidden mt-4">
+        {/* Mobile Sticky Filter Bar: search + root filter pin to the top while chords scroll under */}
+        <div ref={mobileFilterSentinelRef} aria-hidden="true" className="lg:hidden h-px -mb-px" />
+        <div className="lg:hidden sticky top-0 z-[60] mb-4 bg-mcb-app">
+          <div className={`mcb-panel mcb-panel--flush-top px-4 pt-2 pb-1 ${isMobileFilterStuck ? 'mcb-panel--floating' : ''}`}>
+            {searchInput}
+            <div className="mt-3">
               {mobileFilterButtons}
             </div>
           </div>
@@ -424,14 +526,15 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
         <div className="flex flex-col lg:flex-row gap-3 lg:gap-4">
           {/* Desktop Sidebar Filter */}
           <div className="hidden lg:block lg:w-48 flex-shrink-0">
-            <div className="mcb-panel h-fit overflow-hidden">
-              <div className="mcb-panel-header">
+            <div ref={filterSentinelRef} aria-hidden="true" className="h-px -mb-px" />
+            <div className={`mcb-panel overflow-hidden sticky top-3 flex flex-col max-h-[calc(100dvh-11rem)] transition-[box-shadow,border-color] duration-300 ${isFilterStuck ? 'mcb-panel--floating' : ''}`}>
+              <div className="mcb-panel-header flex-shrink-0">
                 <h3 className="mcb-panel-title">
                   Filter by Root
                 </h3>
               </div>
 
-              <div className="p-2">
+              <div className="p-2 min-h-0 overflow-y-auto scrollbar-thin scrollbar-thumb-[var(--mcb-border-primary)] scrollbar-track-transparent">
                 <button
                   onClick={() => setSelectedRootNote('All')}
                   className={`w-full px-3 py-2 text-left transition-colors rounded-md border-l-4 ${selectedRootNote === 'All'
@@ -541,6 +644,9 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
           </div>
         </div>
 
+        {/* Sized imperatively (holdPinnedFilterPosition) to keep the pinned
+            filter's scroll offset reachable when the filtered list shrinks */}
+        <div ref={bottomSpacerRef} aria-hidden="true" />
 
       </div>
       <div className="!z-50">

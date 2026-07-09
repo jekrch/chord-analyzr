@@ -265,7 +265,7 @@ const ChordEditor: React.FC<ChordEditorProps> = ({
     const hasNext = editingChordIndex < totalChords - 1;
 
     return (
-        <div className="fixed inset-0 bg-mcb-input bg-opacity-95 backdrop-blur-sm z-50 flex flex-col">
+        <div className="fixed inset-0 bg-mcb-input bg-opacity-95 backdrop-blur-sm z-100 flex flex-col">
             {/* Header - Fixed */}
             <div className="flex-shrink-0 max-w-4xl mx-auto px-4 py-4 w-full">
                 {/* Top Row - Title and Save/Cancel buttons */}

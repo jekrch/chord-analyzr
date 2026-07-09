@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { useAppState } from './hooks/useIntegratedAppLogic';
 import EffectsManager from './EffectsManager';
 import ChordTable from './components/ChordTable';
-import PianoControl from './components/piano/PianoControl';
+import PianoControl, { PianoDisplayModeBar } from './components/piano/PianoControl';
+import { useUIStore } from './stores/uiStore';
 import PatternSystem from './components/PatternSystem';
 import ChordNavigation from './components/chordNav/ChordNavigation';
 import PianoControlPanel from './components/piano/PianoControlPanel';
@@ -10,6 +11,43 @@ import HeaderNav from './components/HeaderNav';
 import './App.css';
 import './themes.css';
 import SequenceStatusView from './components/SequenceStatusView';
+
+// Keyboard/score display with an optional pin-to-top. The mode bar above it
+// stays in normal flow, so only the display sticks. A sentinel just above the
+// sticky wrapper scrolls out of the container at the moment the wrapper pins
+// (same approach as ChordTable's filter panels), triggering the floating
+// elevation. Isolated in its own component so the uiStore subscription
+// doesn't re-render App.
+const PinnablePianoSection: React.FC = () => {
+    const pinKeyboardDisplay = useUIStore(state => state.pinKeyboardDisplay);
+    const [isPinStuck, setIsPinStuck] = useState(false);
+    const pinSentinelRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!pinKeyboardDisplay) {
+            setIsPinStuck(false);
+            return;
+        }
+        const observer = new IntersectionObserver(
+            ([entry]) => setIsPinStuck(!entry.isIntersecting),
+            { threshold: 0 }
+        );
+        if (pinSentinelRef.current) observer.observe(pinSentinelRef.current);
+        return () => observer.disconnect();
+    }, [pinKeyboardDisplay]);
+
+    return (
+        <>
+            <div className="w-full max-w-7xl">
+                <PianoDisplayModeBar />
+            </div>
+            <div ref={pinSentinelRef} className="w-full" />
+            <div className={`w-full max-w-7xl mb-3 ${pinKeyboardDisplay ? 'sticky top-0 z-70 bg-mcb-app pt-3 mcb-pinned-display' : ''} ${isPinStuck ? 'mcb-pinned-display--floating' : ''}`}>
+                <PianoControl hideConfigControls={true} />
+            </div>
+        </>
+    );
+};
 
 function App() {
     // Use the minimal hook for rendering - only subscribes to isLiveMode
@@ -22,19 +60,24 @@ function App() {
     const silentAudioRef = useRef<HTMLAudioElement>(null);
     const audioInitializedRef = useRef(false);
     const [isCompactHeight, setIsCompactHeight] = useState(false);
-    const lastCompactState = useRef(false);
+    const [isMobileWidth, setIsMobileWidth] = useState(false);
+    const lastHeaderScrollsState = useRef(false);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-    // height check with scroll restoration
+    // viewport check with scroll restoration; the header scrolls with content
+    // (instead of staying pinned) when the viewport is short or mobile-width
     const checkHeight = useCallback(() => {
         const vh = window.innerHeight;
         const em = parseFloat(getComputedStyle(document.documentElement).fontSize);
         const newIsCompact = vh < 35 * em;
-        
-        if (newIsCompact !== lastCompactState.current) {
-            lastCompactState.current = newIsCompact;
-            setIsCompactHeight(newIsCompact);
-            
+        const newIsMobile = window.innerWidth < 640;
+        setIsCompactHeight(newIsCompact);
+        setIsMobileWidth(newIsMobile);
+
+        const newHeaderScrolls = newIsCompact || newIsMobile;
+        if (newHeaderScrolls !== lastHeaderScrollsState.current) {
+            lastHeaderScrollsState.current = newHeaderScrolls;
+
             // Force scroll container refresh after state change
             setTimeout(() => {
                 if (scrollContainerRef.current) {
@@ -93,7 +136,9 @@ function App() {
             container.style.touchAction = 'pan-y';
             container.style.overscrollBehavior = 'contain';
         }
-    }, [isCompactHeight]);
+    }, [isCompactHeight, isMobileWidth]);
+
+    const headerScrollsWithContent = isCompactHeight || isMobileWidth;
 
     // Audio initialization 
     const initializeAudio = async () => {
@@ -131,8 +176,8 @@ function App() {
                 <source src="/silence.mp3" type="audio/mp3" />
             </audio>
 
-            {/* HeaderNav - fixed in normal mode, scrollable in compact mode */}
-            {!isCompactHeight && (
+            {/* HeaderNav - fixed on desktop, scrollable on mobile / compact height */}
+            {!headerScrollsWithContent && (
                 <div className="flex-shrink-0">
                     <HeaderNav />
                 </div>
@@ -148,17 +193,15 @@ function App() {
                     overscrollBehavior: 'contain'
                 }}
             >
-                {/* HeaderNav inside scroll area for compact mode */}
-                {isCompactHeight && (
+                {/* HeaderNav inside scroll area for mobile / compact mode */}
+                {headerScrollsWithContent && (
                     <div className="flex-shrink-0">
                         <HeaderNav />
                     </div>
                 )}
 
                 <div className={`flex flex-col items-center justify-start text-[calc(10px+2vmin)] text-white px-3 pt-3 pb-32 ${isLiveMode ? 'pointer-events-none opacity-30' : ''}`}>
-                    <div className="w-full max-w-7xl mb-3">
-                        <PianoControl hideConfigControls={true} />
-                    </div>
+                    <PinnablePianoSection />
 
                     <PianoControlPanel/>
 

@@ -319,6 +319,53 @@
     0 2px 6px rgba(0, 0, 0, 0.25);
 }
 
+/* Continuation section: reads as the bottom of the panel above it (no top
+   edge or highlight, flat background continuing the parent gradient's end).
+   Combined with --floating it detaches into an independent panel: top border
+   and full rounding return, and it slides down to give itself a top margin. */
+.mcb-panel--flush-top {
+  border-top-color: transparent;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  background: var(--mcb-bg-primary);
+  box-shadow:
+    0 12px 32px -16px rgba(0, 0, 0, 0.55),
+    0 2px 6px -2px rgba(0, 0, 0, 0.25);
+  transition:
+    box-shadow 0.3s ease,
+    border-color 0.3s ease,
+    border-radius 0.3s ease,
+    transform 0.3s ease;
+}
+
+.mcb-panel--flush-top.mcb-panel--floating {
+  border-color: color-mix(in srgb, var(--mcb-border-primary) 75%, transparent);
+  border-radius: var(--mcb-radius-panel);
+  transform: translateY(0.5rem);
+}
+
+/* Pinned keyboard/score display: the wrapper's backdrop matches the scroll
+   background (content disappears as it slides under, with no visible seams
+   or corners); each inset lifts with its own shadow once stuck */
+.mcb-pinned-display .mcb-inset {
+  transition: box-shadow 0.3s ease;
+}
+.mcb-pinned-display--floating .mcb-inset {
+  box-shadow:
+    inset 0 2px 8px rgba(0, 0, 0, 0.4),
+    0 1px 0 color-mix(in srgb, var(--mcb-text-primary) 5%, transparent),
+    0 6px 16px -8px rgba(0, 0, 0, 0.45);
+}
+
+/* Elevated state for a sticky panel once it detaches and floats over scrolling content */
+.mcb-panel--floating {
+  border-color: color-mix(in srgb, var(--mcb-border-primary) 75%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--mcb-text-primary) 7%, transparent),
+    0 18px 44px -14px rgba(0, 0, 0, 0.7),
+    0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
 /* Slim panel header row */
 .mcb-panel-header {
   display: flex;

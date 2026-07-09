@@ -88,8 +88,8 @@ const ChordNavigation: React.FC = () => {
     // Collapsed: a chassis strip pinned to the bottom edge — flat app-background
     // fill with a hairline top edge, so the pads read as modules sitting on it.
     const baseClasses = isLiveMode
-        ? "fixed inset-0 bg-mcb-input bg-opacity-95 backdrop-blur-sm z-50 flex flex-col"
-        : "fixed bottom-0 left-0 right-0 bg-mcb-app border-t border-mcb-subtle shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.5)] z-50";
+        ? "fixed inset-0 bg-mcb-input bg-opacity-95 backdrop-blur-sm z-100 flex flex-col"
+        : "fixed bottom-0 left-0 right-0 bg-mcb-app border-t border-mcb-subtle shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.5)] z-100";
 
     return (
         <div 

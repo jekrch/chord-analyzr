@@ -26,6 +26,41 @@ const DISPLAY_MODES: { mode: KeyboardDisplayMode; label: string; title: string }
   { mode: 'both', label: 'Both', title: 'Show staff notation above the keyboard' },
 ];
 
+// Display-mode selector + pin toggle. Rendered outside the pinnable display
+// area (see App.tsx) so the buttons themselves scroll away while the
+// keyboard/score they control stays pinned.
+export const PianoDisplayModeBar: React.FC = () => {
+  const keyboardDisplayMode = useUIStore(state => state.keyboardDisplayMode);
+  const setKeyboardDisplayMode = useUIStore(state => state.setKeyboardDisplayMode);
+  const pinKeyboardDisplay = useUIStore(state => state.pinKeyboardDisplay);
+  const togglePinKeyboardDisplay = useUIStore(state => state.togglePinKeyboardDisplay);
+
+  return (
+    <div className="flex justify-end items-center gap-1.5 mb-1.5">
+      {DISPLAY_MODES.map(({ mode, label, title }) => (
+        <button
+          key={mode}
+          onClick={() => setKeyboardDisplayMode(mode)}
+          className={`mcb-switch ${keyboardDisplayMode === mode ? 'mcb-switch--on' : ''}`}
+          title={title}
+        >
+          <div className={`mcb-led ${keyboardDisplayMode === mode ? '' : 'mcb-led--off'}`} />
+          <span>{label}</span>
+        </button>
+      ))}
+      <div className="mx-1 h-4 w-px" style={{ background: 'var(--mcb-border-subtle)' }} />
+      <button
+        onClick={togglePinKeyboardDisplay}
+        className={`mcb-switch ${pinKeyboardDisplay ? 'mcb-switch--on' : ''}`}
+        title="Keep the keyboard/score pinned to the top while scrolling"
+      >
+        <div className={`mcb-led ${pinKeyboardDisplay ? '' : 'mcb-led--off'}`} />
+        <span>Pin</span>
+      </button>
+    </div>
+  );
+};
+
 const PianoControl: React.FC<PianoProps> = ({
   hideConfigControls = false
 }) => {
@@ -44,7 +79,6 @@ const PianoControl: React.FC<PianoProps> = ({
   const isPlaying = usePatternStore(state => state.globalPatternState.isPlaying);
 
   const keyboardDisplayMode = useUIStore(state => state.keyboardDisplayMode);
-  const setKeyboardDisplayMode = useUIStore(state => state.setKeyboardDisplayMode);
 
   const soundfontHostname = 'https://d1pzp51pvbm36p.cloudfront.net';
   const stopAllNotesRef = useRef<(() => void) | null>(null);
@@ -295,21 +329,6 @@ const PianoControl: React.FC<PianoProps> = ({
 
           return (
             <div ref={containerRef} className="relative w-full">
-              {/* Display-mode selector: keyboard, staff notation, or both */}
-              <div className="flex justify-end gap-1.5 mb-1.5">
-                {DISPLAY_MODES.map(({ mode, label, title }) => (
-                  <button
-                    key={mode}
-                    onClick={() => setKeyboardDisplayMode(mode)}
-                    className={`mcb-switch ${keyboardDisplayMode === mode ? 'mcb-switch--on' : ''}`}
-                    title={title}
-                  >
-                    <div className={`mcb-led ${keyboardDisplayMode === mode ? '' : 'mcb-led--off'}`} />
-                    <span>{label}</span>
-                  </button>
-                ))}
-              </div>
-
               {keyboardDisplayMode !== 'keyboard' && (
                 <NotationView className={keyboardDisplayMode === 'both' ? 'mb-2' : ''} />
               )}

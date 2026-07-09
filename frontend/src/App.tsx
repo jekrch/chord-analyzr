@@ -22,6 +22,7 @@ const PinnablePianoSection: React.FC = () => {
     const pinKeyboardDisplay = useUIStore(state => state.pinKeyboardDisplay);
     const [isPinStuck, setIsPinStuck] = useState(false);
     const pinSentinelRef = useRef<HTMLDivElement>(null);
+    const pinWrapperRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (!pinKeyboardDisplay) {
@@ -36,13 +37,32 @@ const PinnablePianoSection: React.FC = () => {
         return () => observer.disconnect();
     }, [pinKeyboardDisplay]);
 
+    // Publish the pinned display's height so sticky elements further down
+    // (ChordTable's filter panels) can stop below it instead of sliding under
+    useEffect(() => {
+        const setPinnedDisplayHeight = useUIStore.getState().setPinnedDisplayHeight;
+        const el = pinWrapperRef.current;
+        if (!pinKeyboardDisplay || !el) {
+            setPinnedDisplayHeight(0);
+            return;
+        }
+        const update = () => setPinnedDisplayHeight(el.offsetHeight);
+        update();
+        const resizeObserver = new ResizeObserver(update);
+        resizeObserver.observe(el);
+        return () => {
+            resizeObserver.disconnect();
+            setPinnedDisplayHeight(0);
+        };
+    }, [pinKeyboardDisplay]);
+
     return (
         <>
             <div className="w-full max-w-7xl">
                 <PianoDisplayModeBar />
             </div>
             <div ref={pinSentinelRef} className="w-full" />
-            <div className={`w-full max-w-7xl mb-3 ${pinKeyboardDisplay ? 'sticky top-0 z-70 bg-mcb-app pt-3 mcb-pinned-display' : ''} ${isPinStuck ? 'mcb-pinned-display--floating' : ''}`}>
+            <div ref={pinWrapperRef} className={`w-full max-w-7xl mb-3 ${pinKeyboardDisplay ? 'sticky top-0 z-70 bg-mcb-app pt-3 mcb-pinned-display' : ''} ${isPinStuck ? 'mcb-pinned-display--floating' : ''}`}>
                 <PianoControl hideConfigControls={true} />
             </div>
         </>

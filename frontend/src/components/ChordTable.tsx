@@ -3,6 +3,7 @@ import React, { useState, useMemo, useEffect, useLayoutEffect, useCallback, useR
 import { PlayCircleIcon, PlusCircleIcon, MagnifyingGlassIcon, ChevronDownIcon, ChevronUpIcon, MusicalNoteIcon } from '@heroicons/react/20/solid';
 import { ModeScaleChordDto } from '../api';
 import { useMusicStore } from '../stores/musicStore';
+import { useUIStore } from '../stores/uiStore';
 import ChordFinderModal from './ChordFinder';
 import { createPortal } from 'react-dom';
 
@@ -138,6 +139,10 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
   const key = useMusicStore((state) => state.key);
   const mode = useMusicStore((state) => state.mode);
 
+  // When the keyboard/score display is pinned, sticky filter panels must stop
+  // below it rather than sliding underneath (it pins at the container top)
+  const pinnedDisplayHeight = useUIStore((state) => state.pinnedDisplayHeight);
+
   // Determine which chord set to use
   const currentChords = showAllChords ? allDistinctChords : chords;
   const currentLoading = showAllChords ? loadingAllChords : loadingChords;
@@ -160,24 +165,6 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
     return () => window.removeEventListener('resize', updateColumns);
   }, []);
 
-  // Detect when the sticky filter panels pin to the top of the scroll container:
-  // each sentinel sits just above its panel, so it scrolls out of view (clipped
-  // by the overflow ancestor) at the moment the panel sticks
-  useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.target === filterSentinelRef.current) {
-          setIsFilterStuck(!entry.isIntersecting);
-        } else if (entry.target === mobileFilterSentinelRef.current) {
-          setIsMobileFilterStuck(!entry.isIntersecting);
-        }
-      }
-    }, { threshold: 0 });
-    if (filterSentinelRef.current) observer.observe(filterSentinelRef.current);
-    if (mobileFilterSentinelRef.current) observer.observe(mobileFilterSentinelRef.current);
-    return () => observer.disconnect();
-  }, []);
-
   // Track the scroll position of the container the sticky panels pin against.
   // The browser clamps scrollTop the moment shrinking content is laid out, so
   // the pre-change position has to be recorded continuously, not read late.
@@ -197,6 +184,38 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
     container.addEventListener('scroll', onScroll, { passive: true });
     return () => container!.removeEventListener('scroll', onScroll);
   }, []);
+
+  // Detect when the sticky filter panels pin: each sentinel sits just above
+  // its panel, so it leaves the observed region at the moment the panel
+  // sticks. Each region's top is inset to 2px past that panel's own sticky
+  // `top` offset (which already includes the pinned display's height), so at
+  // the exact pin point — where holdPinnedFilterPosition parks the scroll —
+  // the sentinel is already outside and the panel stays floating; it only
+  // reattaches once the user scrolls up past the top of the chord list.
+  useEffect(() => {
+    const observers: IntersectionObserver[] = [];
+    const watch = (
+      sentinel: HTMLElement | null,
+      setStuck: (stuck: boolean) => void
+    ) => {
+      if (!sentinel) return;
+      const stickyEl = sentinel.nextElementSibling;
+      const stickyTop = stickyEl ? parseFloat(getComputedStyle(stickyEl).top) || 0 : 0;
+      const observer = new IntersectionObserver(
+        ([entry]) => setStuck(!entry.isIntersecting),
+        {
+          root: scrollContainerRef.current,
+          rootMargin: `${-(stickyTop + 2)}px 0px 0px 0px`,
+          threshold: 0,
+        }
+      );
+      observer.observe(sentinel);
+      observers.push(observer);
+    };
+    watch(filterSentinelRef.current, setIsFilterStuck);
+    watch(mobileFilterSentinelRef.current, setIsMobileFilterStuck);
+    return () => observers.forEach(observer => observer.disconnect());
+  }, [pinnedDisplayHeight]);
 
   // When the filter panel is pinned and the visible chord list changes (root
   // filter, search, chord set), keep the scroll position at the pin point so
@@ -513,7 +532,7 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
 
         {/* Mobile Sticky Filter Bar: search + root filter pin to the top while chords scroll under */}
         <div ref={mobileFilterSentinelRef} aria-hidden="true" className="lg:hidden h-px -mb-px" />
-        <div className="lg:hidden sticky top-0 z-[60] mb-4 bg-mcb-app">
+        <div className="lg:hidden sticky z-60 mb-4 bg-mcb-app" style={{ top: pinnedDisplayHeight }}>
           <div className={`mcb-panel mcb-panel--flush-top px-4 pt-2 pb-1 ${isMobileFilterStuck ? 'mcb-panel--floating' : ''}`}>
             {searchInput}
             <div className="mt-3">
@@ -527,7 +546,13 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
           {/* Desktop Sidebar Filter */}
           <div className="hidden lg:block lg:w-48 flex-shrink-0">
             <div ref={filterSentinelRef} aria-hidden="true" className="h-px -mb-px" />
-            <div className={`mcb-panel overflow-hidden sticky top-3 flex flex-col max-h-[calc(100dvh-11rem)] transition-[box-shadow,border-color] duration-300 ${isFilterStuck ? 'mcb-panel--floating' : ''}`}>
+            <div
+              className={`mcb-panel overflow-hidden sticky flex flex-col transition-[box-shadow,border-color] duration-300 ${isFilterStuck ? 'mcb-panel--floating' : ''}`}
+              style={{
+                top: `calc(0.75rem + ${pinnedDisplayHeight}px)`,
+                maxHeight: `calc(100dvh - 11rem - ${pinnedDisplayHeight}px)`,
+              }}
+            >
               <div className="mcb-panel-header flex-shrink-0">
                 <h3 className="mcb-panel-title">
                   Filter by Root

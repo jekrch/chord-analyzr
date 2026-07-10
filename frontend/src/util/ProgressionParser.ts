@@ -88,10 +88,10 @@ function getRelaxedTypeLookup(): Map<string, string> {
 
 function cleanupUnicode(text: string): string {
     return text
-        .replace(/[♯]/g, '#')
-        .replace(/[♭]/g, 'b')
-        .replace(/[𝄪]/g, '##')
-        .replace(/[𝄫]/g, 'bb');
+        .replace(/♯/g, '#')
+        .replace(/♭/g, 'b')
+        .replace(/𝄪/g, '##')
+        .replace(/𝄫/g, 'bb');
 }
 
 /** Split a progression string into chord tokens. */

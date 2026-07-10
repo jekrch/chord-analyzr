@@ -4,7 +4,12 @@ html, body {
   padding: 0;
   width: 100%;
   height: 100%;
-  overflow-x: hidden;
+  /* Lock both axes: the ONLY scrollable region is the inner content
+     container in App. Without this, a scroll gesture that misses that
+     container lets the document itself scroll, sliding the header off the
+     top on mobile (#root is 100vh, which exceeds the visible viewport). */
+  overflow: hidden;
+  overscroll-behavior: none;
   background-color: var(--mcb-bg-app);
 }
 
@@ -19,6 +24,7 @@ html, body {
   height: 100vh;
   margin: 0;
   padding: 0;
+  overflow: hidden;
   background-color: var(--mcb-bg-app);
 }
 

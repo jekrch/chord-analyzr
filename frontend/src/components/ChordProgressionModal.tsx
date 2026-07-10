@@ -13,9 +13,11 @@ import {
     progressionToString,
     inferKeyAndMode,
     buildProgressionChord,
+    reuseExistingChords,
     ParsedChordToken,
     KeyModeSuggestion,
 } from '../util/ProgressionParser';
+import { AddedChord } from '../stores/types';
 
 interface ChordProgressionModalProps {
     isOpen: boolean;
@@ -168,21 +170,40 @@ const ChordProgressionModal: React.FC<ChordProgressionModalProps> = ({
         if (!validTokens.length || isApplying) return;
         setIsApplying(true);
         try {
-            const built: { name: string; notes: string }[] = [];
-            for (const token of validTokens) {
-                const chord = await buildProgressionChord(token, targetKey, targetMode);
-                if (chord) built.push(chord);
-            }
-            if (!built.length) return;
-
-            const { clearAllChords, addChord } = usePlaybackStore.getState();
+            // Tokens still naming an already-loaded chord keep that chord's
+            // exact object — custom note order and per-chord pattern survive
+            // edits made to *other* chords in the progression
+            const existingChords = usePlaybackStore.getState().addedChords;
+            const reused = reuseExistingChords(validTokens, existingChords);
             const pattern = usePatternStore.getState().currentlyActivePattern;
 
+            const finalChords: AddedChord[] = [];
+            for (let i = 0; i < validTokens.length; i++) {
+                const existing = reused[i];
+                if (existing) {
+                    finalChords.push({ ...existing, pattern: [...existing.pattern] });
+                    continue;
+                }
+                const chord = await buildProgressionChord(validTokens[i], targetKey, targetMode);
+                if (chord) {
+                    finalChords.push({
+                        name: chord.name,
+                        notes: chord.notes,
+                        pattern: [...pattern],
+                        originalKey: targetKey,
+                        originalMode: targetMode,
+                        originalNotes: chord.notes,
+                    });
+                }
+            }
+            if (!finalChords.length) return;
+
+            const { clearAllChords, setAddedChords } = usePlaybackStore.getState();
             clearAllChords();
             if (targetKey !== currentKey || targetMode !== currentMode) {
                 useMusicStore.getState().setKeyAndMode(targetKey, targetMode);
             }
-            built.forEach(chord => addChord(chord.name, chord.notes, pattern, targetKey, targetMode));
+            setAddedChords(finalChords);
             onClose();
         } finally {
             setIsApplying(false);
@@ -207,12 +228,12 @@ const ChordProgressionModal: React.FC<ChordProgressionModalProps> = ({
                         onChange={(e) => setText(e.target.value)}
                         rows={2}
                         autoFocus
-                        placeholder="e.g.  Am F C G   or   Dm7, G7, Cmaj7"
+                        placeholder="e.g.  Am F C G   or   Dm7, G7, Cmaj7   — or paste a chord sheet with lyrics"
                         spellCheck={false}
                         className="w-full px-3 py-2 bg-mcb-input border border-[var(--mcb-border-subtle)] shadow-[inset_0_2px_6px_rgba(0,0,0,0.35)] rounded-md text-white placeholder-[var(--mcb-text-tertiary)] focus:border-[var(--mcb-accent-primary)] focus:outline-none transition-colors !text-sm font-mono resize-none"
                     />
                     <p className="text-xs text-mcb-tertiary mt-1">
-                        Separate chords with spaces or commas. Unrecognized chords get the closest match — click them to pick another.
+                        Separate chords with spaces or commas, or paste a chord sheet — chord lines are pulled out and lyric lines ignored. Unrecognized chords get the closest match — click them to pick another.
                     </p>
                 </div>
 

@@ -94,12 +94,58 @@ function cleanupUnicode(text: string): string {
         .replace(/𝄫/g, 'bb');
 }
 
-/** Split a progression string into chord tokens. */
-export function tokenizeProgression(input: string): string[] {
-    return cleanupUnicode(input)
+// A line counts as "chords" when confident chords are at least half its words
+// and there are either several of them or the whole line is nothing but chords.
+// This keeps a lone "C" sitting over lyrics while rejecting prose like "I am".
+const CHORD_LINE_RATIO = 0.5;
+
+/** Split one line into candidate word tokens (spaces, commas, bars, arrows). */
+function splitTokens(line: string): string[] {
+    return line
         .split(/[\s,;|]+|->|→/)
         .map(t => t.trim())
         .filter(Boolean);
+}
+
+/**
+ * Split a progression string into chord tokens.
+ *
+ * Understands pasted chord sheets where chords sit on their own line above the
+ * lyrics: each line is classified as chords or lyrics by how many of its words
+ * are confidently recognized chords, and only chord lines contribute tokens
+ * (any non-chord noise on a chord line — "x2", "N.C." — is dropped). When no
+ * chord-dominant line is found the whole input is treated as a flat
+ * progression, so single-line entries (and lone typo'd chords) are unchanged.
+ */
+export function tokenizeProgression(input: string): string[] {
+    const cleaned = cleanupUnicode(input);
+    const lines = cleaned.split(/\r?\n/);
+
+    const chordTokens: string[] = [];
+    for (const line of lines) {
+        const words = splitTokens(line);
+        if (!words.length) continue;
+
+        const analyzed = words.map(analyzeToken);
+        const confident = analyzed.filter(a => a.root !== null && a.resolved !== null).length;
+
+        const isChordLine =
+            confident >= 1 &&
+            confident / words.length >= CHORD_LINE_RATIO &&
+            (confident >= 2 || confident === words.length);
+        if (!isChordLine) continue;
+
+        // Keep every chord-shaped word (so typos still resolve to a near match)
+        // but drop pure noise like bar counts or "N.C." markers.
+        words.forEach((word, i) => {
+            if (analyzed[i].root !== null) chordTokens.push(word);
+        });
+    }
+
+    if (chordTokens.length) return chordTokens;
+
+    // No chord line detected — fall back to a flat split of the whole input.
+    return splitTokens(cleaned);
 }
 
 function normalizeRoot(letter: string, accidental: string | undefined): string {
@@ -194,8 +240,19 @@ function resolveSuffix(suffix: string): { type: string; via: 'exact' | 'alias' }
     return null;
 }
 
-/** Parse a single chord token (e.g. "F#m7b5" or "C/E"). */
-export function parseChordToken(token: string): ParsedChordToken {
+interface TokenAnalysis {
+    root: string | null;      // null when the token has no readable note root
+    suffix: string;           // chord-type text after the root
+    slash: string | null;     // slash bass note, if any
+    resolved: { type: string; via: 'exact' | 'alias' } | null; // confident match
+}
+
+/**
+ * Cheaply pull a token apart into root / suffix / slash and resolve the suffix
+ * to a known chord type when it matches exactly or via an alias. Does no fuzzy
+ * ranking, so it's safe to run over lyric words while classifying lines.
+ */
+function analyzeToken(token: string): TokenAnalysis {
     const cleaned = cleanupUnicode(token);
 
     // Only treat a trailing "/X" as a slash bass note when X is a plain note
@@ -214,10 +271,23 @@ export function parseChordToken(token: string): ParsedChordToken {
 
     const match = body.match(ROOT_REGEX);
     if (!match) {
+        return { root: null, suffix: body, slash, resolved: null };
+    }
+
+    const root = normalizeRoot(match[1], match[2]);
+    const suffix = match[3];
+    return { root, suffix, slash, resolved: resolveSuffix(suffix) };
+}
+
+/** Parse a single chord token (e.g. "F#m7b5" or "C/E"). */
+export function parseChordToken(token: string): ParsedChordToken {
+    const { root, suffix, slash, resolved } = analyzeToken(token);
+
+    if (root === null) {
         return {
             token,
             root: null,
-            requestedSuffix: body,
+            requestedSuffix: suffix,
             slash,
             matchType: 'invalid',
             selectedType: null,
@@ -225,10 +295,6 @@ export function parseChordToken(token: string): ParsedChordToken {
         };
     }
 
-    const root = normalizeRoot(match[1], match[2]);
-    const suffix = match[3];
-
-    const resolved = resolveSuffix(suffix);
     if (resolved) {
         return {
             token,
@@ -270,6 +336,32 @@ export function resolvedChordName(token: ParsedChordToken): string {
  */
 export function progressionToString(chordNames: string[]): string {
     return chordNames.map(name => name.replace(/\s+/g, '')).join(' ');
+}
+
+/**
+ * Pair each token with an already-loaded chord of the same resolved name, so
+ * chords the user didn't change keep their exact object (custom note order,
+ * per-chord pattern) instead of being regenerated. Each loaded chord is
+ * consumed at most once, in order, so duplicated names pair up sequentially.
+ * Returns one entry per token: the matched chord, or null to generate fresh.
+ */
+export function reuseExistingChords<T extends { name: string }>(
+    tokens: ParsedChordToken[],
+    existing: T[]
+): (T | null)[] {
+    const pool = existing.map(chord => ({
+        key: chord.name.replace(/\s+/g, ''),
+        chord,
+        consumed: false,
+    }));
+    return tokens.map(token => {
+        if (!token.root || token.selectedType === null) return null;
+        const key = resolvedChordName(token).replace(/\s+/g, '');
+        const hit = pool.find(entry => !entry.consumed && entry.key === key);
+        if (!hit) return null;
+        hit.consumed = true;
+        return hit.chord;
+    });
 }
 
 /**

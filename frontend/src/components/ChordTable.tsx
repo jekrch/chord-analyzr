@@ -1,10 +1,11 @@
 
 import React, { useState, useMemo, useEffect, useLayoutEffect, useCallback, useRef, memo } from 'react';
-import { PlayCircleIcon, PlusCircleIcon, MagnifyingGlassIcon, ChevronDownIcon, ChevronUpIcon, MusicalNoteIcon } from '@heroicons/react/20/solid';
+import { PlayCircleIcon, PlusCircleIcon, MagnifyingGlassIcon, ChevronDownIcon, ChevronUpIcon, MusicalNoteIcon, QueueListIcon } from '@heroicons/react/20/solid';
 import { ModeScaleChordDto } from '../api';
 import { useMusicStore } from '../stores/musicStore';
 import { useUIStore } from '../stores/uiStore';
 import ChordFinderModal from './ChordFinder';
+import ChordProgressionModal from './ChordProgressionModal';
 import { createPortal } from 'react-dom';
 
 interface ChordTableProps {
@@ -120,6 +121,7 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
   const [addingChords, setAddingChords] = useState<Set<number>>(new Set());
   const [currentColumns, setCurrentColumns] = useState<number>(1);
   const [isChordFinderOpen, setIsChordFinderOpen] = useState(false);
+  const [isProgressionOpen, setIsProgressionOpen] = useState(false);
   const [isFilterStuck, setIsFilterStuck] = useState(false);
   const [isMobileFilterStuck, setIsMobileFilterStuck] = useState(false);
   const filterSentinelRef = useRef<HTMLDivElement>(null);
@@ -473,15 +475,22 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
         {/* Header Section (below lg it joins flush with the sticky filter bar under it) */}
         <div className="mcb-panel overflow-hidden mb-4 max-lg:mb-0 max-lg:!rounded-b-none max-lg:!border-b-0">
           <div className="px-4 py-3">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-4">
-                <h2 className="mcb-panel-title">Chord Explorer</h2>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-3">
+              <h2 className="mcb-panel-title">Chord Explorer</h2>
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => setIsChordFinderOpen(true)}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--mcb-accent-primary)]/10 hover:bg-[var(--mcb-accent-primary)]/20 border border-[var(--mcb-accent-primary)]/20 hover:border-[var(--mcb-accent-primary)]/50 transition-all group"
+                  className="flex items-center gap-1.5 px-2.5 py-1 flex-shrink-0 whitespace-nowrap rounded-full bg-[var(--mcb-accent-primary)]/10 hover:bg-[var(--mcb-accent-primary)]/20 border border-[var(--mcb-accent-primary)]/20 hover:border-[var(--mcb-accent-primary)]/50 transition-all group"
                 >
-                  <MusicalNoteIcon className="w-3.5 h-3.5 text-[var(--mcb-accent-primary)]" />
+                  <MusicalNoteIcon className="w-3.5 h-3.5 flex-shrink-0 text-[var(--mcb-accent-primary)]" />
                   <span className="text-xs font-medium text-[var(--mcb-accent-text-primary)]">Find by Notes</span>
+                </button>
+                <button
+                  onClick={() => setIsProgressionOpen(true)}
+                  className="flex items-center gap-1.5 px-2.5 py-1 flex-shrink-0 whitespace-nowrap rounded-full bg-[var(--mcb-accent-primary)]/10 hover:bg-[var(--mcb-accent-primary)]/20 border border-[var(--mcb-accent-primary)]/20 hover:border-[var(--mcb-accent-primary)]/50 transition-all group"
+                >
+                  <QueueListIcon className="w-3.5 h-3.5 flex-shrink-0 text-[var(--mcb-accent-primary)]" />
+                  <span className="text-xs font-medium text-[var(--mcb-accent-text-primary)]">Enter Progression</span>
                 </button>
               </div>
               {/* <div className="text-xs text-[var(--mcb-text-tertiary)]">
@@ -683,6 +692,14 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
             currentMode={mode}
             onPlayNotes={(notes) => onChordClick(notes)}
             onSelectChord={handleFinderSelectChord}
+          />,
+          document.body
+        )}
+        {isProgressionOpen && createPortal(
+          <ChordProgressionModal
+            isOpen={isProgressionOpen}
+            onClose={() => setIsProgressionOpen(false)}
+            onPlayNotes={(notes) => onChordClick(notes)}
           />,
           document.body
         )}

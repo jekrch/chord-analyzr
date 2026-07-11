@@ -13,11 +13,10 @@ import {
     progressionToString,
     inferKeyAndMode,
     buildProgressionChord,
-    reuseExistingChords,
+    buildAddedChordsFromTokens,
     ParsedChordToken,
     KeyModeSuggestion,
 } from '../util/ProgressionParser';
-import { AddedChord } from '../stores/types';
 
 interface ChordProgressionModalProps {
     isOpen: boolean;
@@ -174,28 +173,10 @@ const ChordProgressionModal: React.FC<ChordProgressionModalProps> = ({
             // exact object — custom note order and per-chord pattern survive
             // edits made to *other* chords in the progression
             const existingChords = usePlaybackStore.getState().addedChords;
-            const reused = reuseExistingChords(validTokens, existingChords);
             const pattern = usePatternStore.getState().currentlyActivePattern;
-
-            const finalChords: AddedChord[] = [];
-            for (let i = 0; i < validTokens.length; i++) {
-                const existing = reused[i];
-                if (existing) {
-                    finalChords.push({ ...existing, pattern: [...existing.pattern] });
-                    continue;
-                }
-                const chord = await buildProgressionChord(validTokens[i], targetKey, targetMode);
-                if (chord) {
-                    finalChords.push({
-                        name: chord.name,
-                        notes: chord.notes,
-                        pattern: [...pattern],
-                        originalKey: targetKey,
-                        originalMode: targetMode,
-                        originalNotes: chord.notes,
-                    });
-                }
-            }
+            const finalChords = await buildAddedChordsFromTokens(
+                validTokens, targetKey, targetMode, pattern, existingChords
+            );
             if (!finalChords.length) return;
 
             const { clearAllChords, setAddedChords } = usePlaybackStore.getState();

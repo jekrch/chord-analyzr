@@ -32,6 +32,7 @@ export const CHORD_NAVIGATION_CONFIG = {
     // Grid layout configurations
     GRID_CLASSES: {
         LIVE_MODE: "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 auto-rows-max pt-0",
+        LIVE_MODE_COMPACT: "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2 auto-rows-max pt-0",
         COLLAPSED_MODE: "flex space-x-2 overflow-x-auto pb-2 chord-sequence-scroll -mx-2 px-2"
     },
 
@@ -48,6 +49,15 @@ export const CHORD_NAVIGATION_CONFIG = {
             number: 'text-xl mb-2',
             name: 'text-base text-center text-mcb-primary',
             icon: 'h-6 w-6'
+        },
+        // Compact live mode: no notes/pattern metadata, tighter padding so
+        // more chords fit on screen at once
+        LIVE_COMPACT: {
+            container: 'py-3 px-2 text-sm min-h-[64px] flex flex-col items-center justify-center',
+            number: 'text-xs mb-0.5',
+            name: 'text-sm text-center text-mcb-primary',
+            icon: 'h-4 w-4',
+            hideMeta: true
         },
         COLLAPSED: {
             container: 'py-4 px-2 text-sm min-w-[85px] bottom-nav-button chord-button space-x-1 mt-1 min-h-[60px] !min-w-[70px] flex flex-col items-center justify-center',

@@ -21,6 +21,16 @@ interface ScalesByKey {
   [key: string]: ScaleNoteDto[];
 }
 
+// Enharmonic spellings that may stand in for each other when the static data
+// only contains one of the pair (e.g. the data has "A#" but not "Bb")
+const ENHARMONIC_KEY_EQUIVALENTS: Record<string, string> = {
+  'Bb': 'A#', 'A#': 'Bb',
+  'Db': 'C#', 'C#': 'Db',
+  'Eb': 'D#', 'D#': 'Eb',
+  'Gb': 'F#', 'F#': 'Gb',
+  'Ab': 'G#', 'G#': 'Ab',
+};
+
 class StaticDataService {
   private baseUrl = `${import.meta.env.BASE_URL}data`;
   private indexCache: StaticDataIndex | null = null;
@@ -136,8 +146,13 @@ class StaticDataService {
       }
       const allChords: ModeScaleChordDto[] = await response.json();
 
-      // Filter by key
-      const keyChords = allChords.filter(chord => chord.keyName === normalizedKey);
+      // Filter by key, falling back to the enharmonic spelling if the data
+      // only contains the other one (e.g. "A#" but not "Bb")
+      let keyChords = allChords.filter(chord => chord.keyName === normalizedKey);
+      if (keyChords.length === 0 && ENHARMONIC_KEY_EQUIVALENTS[normalizedKey]) {
+        const equivalentKey = ENHARMONIC_KEY_EQUIVALENTS[normalizedKey];
+        keyChords = allChords.filter(chord => chord.keyName === equivalentKey);
+      }
 
       // If includeAllChords is false, filter for compatibility (static files already filtered by default)
       return keyChords;
@@ -252,7 +267,7 @@ class StaticDataService {
       // Check cache first
       if (this.scalesCache.has(modeId)) {
         const cached = this.scalesCache.get(modeId)!;
-        return cached[normalizedKey] || [];
+        return this.lookupScaleNotes(cached, normalizedKey);
       }
 
       // Load scales for this mode
@@ -264,11 +279,38 @@ class StaticDataService {
       const scalesByKey: ScalesByKey = await response.json();
       this.scalesCache.set(modeId, scalesByKey);
 
-      return scalesByKey[normalizedKey] || [];
+      return this.lookupScaleNotes(scalesByKey, normalizedKey);
     } catch (error) {
       console.error('Error loading scale notes from static data:', error);
       throw error;
     }
+  }
+
+  /**
+   * Look up scale notes for a key, falling back to its enharmonic equivalent
+   * when the data only contains the other spelling (e.g. "A#" but not "Bb").
+   * Fallback notes are respelled to match the requested key's accidental convention.
+   */
+  private lookupScaleNotes(scalesByKey: ScalesByKey, key: string): ScaleNoteDto[] {
+    const direct = scalesByKey[key];
+    if (direct && direct.length > 0) {
+      return direct;
+    }
+
+    const equivalentKey = ENHARMONIC_KEY_EQUIVALENTS[key];
+    const equivalentNotes = equivalentKey ? scalesByKey[equivalentKey] : undefined;
+    if (!equivalentNotes || equivalentNotes.length === 0) {
+      return [];
+    }
+
+    const chromaticSharp = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const chromaticFlat = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+    const chromatic = key.includes('b') ? chromaticFlat : chromaticSharp;
+
+    return equivalentNotes.map(note => ({
+      ...note,
+      noteName: note.noteName ? chromatic[noteNameToNumber(note.noteName)] : note.noteName,
+    }));
   }
 
 

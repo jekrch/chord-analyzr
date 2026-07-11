@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { InformationCircleIcon, QuestionMarkCircleIcon, EllipsisVerticalIcon, SwatchIcon } from '@heroicons/react/20/solid';
+import { InformationCircleIcon, QuestionMarkCircleIcon, EllipsisVerticalIcon, SwatchIcon, MusicalNoteIcon, Squares2X2Icon } from '@heroicons/react/20/solid';
 import AboutModal from './AboutModal';
 import HelpModal from './HelpModal';
 import ThemeSettingsModal from './ThemeSettingsModal';
 import { useMusicStore } from '../stores/musicStore';
+import { useHashRoute } from '../hooks/useHashRoute';
 import Logo from './Logo';
 
 
@@ -16,8 +17,9 @@ const HeaderNav: React.FC = () => {
     const buttonRef = useRef<HTMLButtonElement>(null);
 
     const musicStore = useMusicStore();
+    const [route, navigate] = useHashRoute();
 
-    const { 
+    const {
         key,
         mode
     } = musicStore;
@@ -101,6 +103,17 @@ const HeaderNav: React.FC = () => {
 
                                         {/* Menu Items */}
                                         <div className="py-2">
+                                            <button
+                                                onClick={() => handleMenuItemClick(() => navigate(route === 'songs' ? 'main' : 'songs'))}
+                                                className="w-full px-4 py-2.5 text-left flex items-center space-x-3 text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-all duration-150"
+                                            >
+                                                {route === 'songs'
+                                                    ? <Squares2X2Icon className="w-4 h-4 flex-shrink-0" />
+                                                    : <MusicalNoteIcon className="w-4 h-4 flex-shrink-0" />}
+                                                <span className="text-sm font-medium">
+                                                    {route === 'songs' ? 'Chord Builder' : 'Song Sheets'}
+                                                </span>
+                                            </button>
                                             <button
                                                 onClick={() => handleMenuItemClick(() => setShowThemeModal(true))}
                                                 className="w-full px-4 py-2.5 text-left flex items-center space-x-3 text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-all duration-150"

@@ -98,6 +98,64 @@ export const clearMidiNoteCache = () => {
     midiNoteCache.clear();
 };
 
+const FLAT_KEY_SIGNATURES = new Set(['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb']);
+
+const SHARP_TO_FLAT: Record<string, string> = {
+    'C#': 'Db',
+    'D#': 'Eb',
+    'F#': 'Gb',
+    'G#': 'Ab',
+    'A#': 'Bb',
+};
+
+const LETTER_PITCH_CLASS: Record<string, number> = {
+    'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11,
+};
+
+/**
+ * Builds a function that respells normalized (sharp-spelled) notes to match a
+ * key signature for display on a staff. Pitches that occur in the given scale
+ * use the scale's own spelling (e.g. Eb rather than D# in flat keys, or B#
+ * rather than C in C# major); out-of-scale pitches fall back to flat spellings
+ * in flat keys and are left as-is in sharp keys.
+ *
+ * @param scaleNoteNames - raw scale spellings, e.g. ["F", "G", "A", "Bb", ...]
+ * @param keySignature - the key signature tonic, e.g. "Bb"
+ * @returns (note, octave) -> spelling with an octave adjusted so respellings
+ *          across the B/C boundary (B#, Cb) keep the same sounding pitch
+ */
+export function createKeySpeller(
+    scaleNoteNames: (string | undefined)[],
+    keySignature: string
+): (note: string, octave: number) => { note: string; octave: number } {
+    const spellingByPitchClass = new Map<number, string>();
+    scaleNoteNames.forEach(name => {
+        if (!name) return;
+        const pitchClass = noteNameToNumber(name);
+        if (!spellingByPitchClass.has(pitchClass)) {
+            spellingByPitchClass.set(pitchClass, name);
+        }
+    });
+    const preferFlats = FLAT_KEY_SIGNATURES.has(keySignature);
+
+    return (note: string, octave: number) => {
+        const pitchClass = noteNameToNumber(note);
+        const spelled = spellingByPitchClass.get(pitchClass)
+            ?? (preferFlats ? SHARP_TO_FLAT[note] : undefined)
+            ?? note;
+        if (spelled === note) return { note, octave };
+
+        const letterPitchClass = LETTER_PITCH_CLASS[spelled.charAt(0).toUpperCase()];
+        if (letterPitchClass === undefined) return { note, octave };
+        const accidentals = spelled.slice(1);
+        const offset = (accidentals.match(/#/g) || []).length
+            - (accidentals.match(/b/g) || []).length;
+        // 0 for same-letter respellings, ±12 across the B/C boundary
+        const octaveShift = (pitchClass - letterPitchClass - offset) / 12;
+        return { note: spelled, octave: octave + octaveShift };
+    };
+}
+
 /**
    * Helper to convert note name to MIDI note number (0-11)
    */

@@ -288,14 +288,15 @@ export const encodeTiming = (
     subdivision: number,
     swing: number,
     showPattern: boolean,
-    liveMode: boolean
+    liveMode: boolean,
+    compactChords: boolean = false
 ): string => {
     const bpmClamped = Math.max(LIMITS.BPM_MIN, Math.min(LIMITS.BPM_MAX, bpm));
     const bpmEncoded = toBase36(bpmClamped - LIMITS.BPM_MIN);
     const sub = SUBDIVISION_MAP[subdivision] || '1';
     const swingClamped = Math.max(0, Math.min(LIMITS.SWING_MAX, swing));
     const swingEncoded = toBase36(swingClamped);
-    const flags = (showPattern ? 2 : 0) + (liveMode ? 1 : 0);
+    const flags = (compactChords ? 4 : 0) + (showPattern ? 2 : 0) + (liveMode ? 1 : 0);
     const f = toBase36(flags);
 
     return `${bpmEncoded}-${sub}-${swingEncoded}-${f}`;
@@ -314,7 +315,8 @@ export const decodeTiming = (encoded: string): TimingData => {
         subdivision,
         swing,
         showPattern: (flags & 2) !== 0,
-        liveMode: (flags & 1) !== 0
+        liveMode: (flags & 1) !== 0,
+        compactChords: (flags & 4) !== 0
     };
 };
 

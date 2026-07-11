@@ -38,6 +38,7 @@ export const encodeState = (
     swing: number,
     showPattern: boolean,
     liveMode: boolean,
+    compactChords: boolean,
     pianoSettings: PianoSettings,
     availableKeys: string[],
     availableModes: string[],
@@ -70,7 +71,7 @@ export const encodeState = (
             .join('.');
 
         // 5. Timing
-        const timing = encodeTiming(bpm, subdivision, swing, showPattern, liveMode);
+        const timing = encodeTiming(bpm, subdivision, swing, showPattern, liveMode, compactChords);
 
         // 6. Piano settings
         const piano = encodePianoSettings(pianoSettings, availableInstruments);
@@ -641,6 +642,7 @@ export const encodeAndSaveToUrl = (
     swing: number,
     showPattern: boolean,
     liveMode: boolean,
+    compactChords: boolean,
     pianoSettings: PianoSettings,
     availableKeys: string[],
     availableModes: string[],
@@ -651,7 +653,7 @@ export const encodeAndSaveToUrl = (
 ): void => {
     const encoded = encodeState(
         key, mode, addedChords, globalPattern, bpm, subdivision, swing,
-        showPattern, liveMode, pianoSettings, availableKeys, availableModes,
+        showPattern, liveMode, compactChords, pianoSettings, availableKeys, availableModes,
         availableInstruments, chords, chordTypes
     );
     saveStateToUrl(encoded, paramName);

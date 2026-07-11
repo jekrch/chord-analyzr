@@ -20,7 +20,7 @@ const ChordNavigation: React.FC = () => {
 
     // State from stores
     const { addedChords, activeChordIndex, highlightedChordIndex } = playbackStore;
-    const { isDeleteMode, isLiveMode } = uiStore;
+    const { isDeleteMode, isLiveMode, isCompactChords, toggleCompactChords } = uiStore;
     const { globalPatternState } = patternStore;
     const { chords } = musicStore;
 
@@ -107,10 +107,12 @@ const ChordNavigation: React.FC = () => {
                 isEditMode={isEditMode}
                 isDeleteMode={isDeleteMode}
                 isCompactHeight={isCompactHeight}
+                isCompactChords={isCompactChords}
                 globalPatternState={globalPatternState}
                 addedChords={addedChords}
                 onTogglePlayback={handleTogglePlayback}
                 onToggleLiveMode={handleToggleLiveMode}
+                onToggleCompactChords={toggleCompactChords}
                 onClearAll={handleClearAll}
                 onToggleDeleteMode={handleToggleDeleteMode}
             />
@@ -121,6 +123,7 @@ const ChordNavigation: React.FC = () => {
                 isEditMode={isEditMode}
                 isDeleteMode={isDeleteMode}
                 isCompactHeight={isCompactHeight}
+                isCompactChords={isCompactChords}
                 addedChords={addedChords}
                 activeChordIndex={activeChordIndex}
                 highlightedChordIndex={highlightedChordIndex}

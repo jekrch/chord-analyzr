@@ -11,6 +11,7 @@ import { Chord, Interval } from 'tonal';
 import { dynamicChordGenerator } from '../services/DynamicChordService';
 import { staticDataService } from '../services/StaticDataService';
 import { noteNameToNumber } from './NoteUtil';
+import { AddedChord } from './url/types';
 
 export interface ChordCandidate {
     chordType: string; // key into dynamicChordGenerator.chordTypes ('' = major)
@@ -279,6 +280,16 @@ function analyzeToken(token: string): TokenAnalysis {
     return { root, suffix, slash, resolved: resolveSuffix(suffix) };
 }
 
+/**
+ * Cheap chord-shaped check for a single word: whether it has a readable root
+ * and whether its suffix resolves confidently (exact or alias). Runs no fuzzy
+ * ranking, so it's safe to call over every word of a pasted document.
+ */
+export function analyzeChordWord(token: string): { root: string | null; confident: boolean } {
+    const { root, resolved } = analyzeToken(token);
+    return { root, confident: root !== null && resolved !== null };
+}
+
 /** Parse a single chord token (e.g. "F#m7b5" or "C/E"). */
 export function parseChordToken(token: string): ParsedChordToken {
     const { root, suffix, slash, resolved } = analyzeToken(token);
@@ -502,4 +513,40 @@ export async function buildProgressionChord(
     }
 
     return { name, notes };
+}
+
+/**
+ * Turn parsed tokens into loadable AddedChords in the given key/mode. Tokens
+ * still naming an already-loaded chord keep that chord's exact object (custom
+ * note order, per-chord pattern); the rest are generated fresh with the given
+ * pattern. Tokens that fail to build are skipped.
+ */
+export async function buildAddedChordsFromTokens(
+    tokens: ParsedChordToken[],
+    key: string,
+    mode: string,
+    pattern: string[],
+    existing: AddedChord[]
+): Promise<AddedChord[]> {
+    const reused = reuseExistingChords(tokens, existing);
+    const finalChords: AddedChord[] = [];
+    for (let i = 0; i < tokens.length; i++) {
+        const existingChord = reused[i];
+        if (existingChord) {
+            finalChords.push({ ...existingChord, pattern: [...existingChord.pattern] });
+            continue;
+        }
+        const chord = await buildProgressionChord(tokens[i], key, mode);
+        if (chord) {
+            finalChords.push({
+                name: chord.name,
+                notes: chord.notes,
+                pattern: [...pattern],
+                originalKey: key,
+                originalMode: mode,
+                originalNotes: chord.notes,
+            });
+        }
+    }
+    return finalChords;
 }

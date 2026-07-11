@@ -15,6 +15,8 @@ interface PlaybackState {
     addedChords: AddedChord[];
     temporaryChord: { name: string; notes: string } | null;
     isPlayingScale: boolean;
+    scalePlaybackNotes: ActiveNoteInfo[];
+    scalePlaybackStep: number;
     scalePlaybackTimeouts: NodeJS.Timeout[];
 
     // Actions
@@ -24,6 +26,8 @@ interface PlaybackState {
     setHighlightedChordIndex: (index: number | null) => void;
     setTemporaryChord: (chord: { name: string; notes: string } | null) => void;
     setIsPlayingScale: (isPlaying: boolean) => void;
+    setScalePlaybackNotes: (notes: ActiveNoteInfo[]) => void;
+    setScalePlaybackStep: (step: number) => void;
     addChord: (chordName: string, chordNotes: string, pattern: string[], key: string, mode: string) => void;
     updateChord: (chordIndex: number, updatedChord: AddedChord) => void;
     removeChord: (indexToRemove: number) => void;
@@ -44,6 +48,8 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
     addedChords: [],
     temporaryChord: null,
     isPlayingScale: false,
+    scalePlaybackNotes: [],
+    scalePlaybackStep: -1,
     scalePlaybackTimeouts: [],
 
     // Actions
@@ -57,7 +63,13 @@ export const usePlaybackStore = create<PlaybackState>((set, get) => ({
 
     setTemporaryChord: (chord: { name: string; notes: string } | null) => set({ temporaryChord: chord }),
 
-    setIsPlayingScale: (isPlaying: boolean) => set({ isPlayingScale: isPlaying }),
+    setIsPlayingScale: (isPlaying: boolean) => set(isPlaying
+        ? { isPlayingScale: true }
+        : { isPlayingScale: false, scalePlaybackNotes: [], scalePlaybackStep: -1 }),
+
+    setScalePlaybackNotes: (notes: ActiveNoteInfo[]) => set({ scalePlaybackNotes: notes }),
+
+    setScalePlaybackStep: (step: number) => set({ scalePlaybackStep: step }),
 
     addChord: (chordName: string, chordNotes: string, pattern: string[], key: string, mode: string) =>
         set(state => ({

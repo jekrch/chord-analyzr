@@ -11,6 +11,8 @@ import HeaderNav from './components/HeaderNav';
 import './App.css';
 import './themes.css';
 import SequenceStatusView from './components/SequenceStatusView';
+import SongSheetPage from './components/songs/SongSheetPage';
+import { useHashRoute } from './hooks/useHashRoute';
 
 // Keyboard/score display with an optional pin-to-top. The mode bar above it
 // stays in normal flow, so only the display sticks. A sentinel just above the
@@ -76,6 +78,11 @@ function App() {
         handleChordClick,
         addChordClick,
     } = useAppState();
+
+    // The main view stays mounted (display:none) while on #/songs so the
+    // piano audio sink, sequencer and all main-page state keep working.
+    const [route] = useHashRoute();
+    const onSongsPage = route === 'songs';
 
     const silentAudioRef = useRef<HTMLAudioElement>(null);
     const audioInitializedRef = useRef(false);
@@ -220,7 +227,7 @@ function App() {
                     </div>
                 )}
 
-                <div className={`flex flex-col items-center justify-start text-[calc(10px+2vmin)] text-white px-3 pt-3 pb-32 ${isLiveMode ? 'pointer-events-none opacity-30' : ''}`}>
+                <div className={`${onSongsPage ? 'hidden' : 'flex'} flex-col items-center justify-start text-[calc(10px+2vmin)] text-white px-3 pt-3 pb-32 ${isLiveMode ? 'pointer-events-none opacity-30' : ''}`}>
                     <PinnablePianoSection />
 
                     <PianoControlPanel/>
@@ -236,10 +243,12 @@ function App() {
                         />
                     </div>
                 </div>
+
+                {onSongsPage && <SongSheetPage />}
             </div>
 
             {/* ChordNavigation - always fixed at bottom */}
-            <div className="flex-shrink-0">
+            <div className={onSongsPage ? 'hidden' : 'flex-shrink-0'}>
                 <ChordNavigation/>
             </div>
         </div>

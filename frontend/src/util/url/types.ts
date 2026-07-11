@@ -54,6 +54,7 @@ export interface EncodedState {
     swing: number;
     showPattern: boolean;
     liveMode: boolean;
+    compactChords: boolean;
     addedChords: AddedChord[];
     pianoSettings: PianoSettings;
 }
@@ -74,6 +75,7 @@ export interface TimingData {
     swing: number;
     showPattern: boolean;
     liveMode: boolean;
+    compactChords: boolean;
 }
 
 // ============================================================================

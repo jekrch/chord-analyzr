@@ -445,7 +445,7 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
           onClick={() => setSelectedRootNote(note)}
           className={`mcb-switch flex-shrink-0 whitespace-nowrap ${selectedRootNote === note ? 'mcb-switch--on' : ''}`}
         >
-          {note} ({chordCounts[note] || 0})
+          <span className="normal-case">{note}</span> ({chordCounts[note] || 0})
         </button>
       ))}
     </div>
@@ -453,16 +453,14 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
 
   // Shared between the desktop header panel and the mobile sticky filter bar
   const searchInput = (
-    <div className="relative">
-      <div className="absolute left-3 inset-y-0 flex items-center pointer-events-none">
-        <MagnifyingGlassIcon className="w-4 h-4 text-[var(--mcb-text-tertiary)]" />
-      </div>
+    <div className="flex items-center gap-3 pl-3 pr-4 py-2 bg-mcb-input border border-[var(--mcb-border-subtle)] shadow-[inset_0_2px_6px_rgba(0,0,0,0.35)] rounded-md focus-within:border-[var(--mcb-accent-primary)] transition-colors">
+      <MagnifyingGlassIcon className="w-4 h-4 flex-shrink-0 text-[var(--mcb-text-tertiary)]" />
       <input
         type="text"
         placeholder="Search chords..."
         value={searchQuery}
         onChange={handleSearchChange}
-        className="w-full pl-10 pr-4 py-2 bg-mcb-input border border-[var(--mcb-border-subtle)] shadow-[inset_0_2px_6px_rgba(0,0,0,0.35)] rounded-md text-white placeholder-[var(--mcb-text-tertiary)] focus:border-[var(--mcb-accent-primary)] focus:outline-none transition-colors !text-sm"
+        className="w-full min-w-0 bg-transparent text-white placeholder-[var(--mcb-text-tertiary)] focus:outline-none !text-sm"
       />
     </div>
   );

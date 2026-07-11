@@ -279,7 +279,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
         setStereoWidthLevel,
         setCompressorLevel,
     } = usePianoStore();
-    const { setIsPlayingScale, clearScalePlaybackTimeouts, setActiveNotes } = usePlaybackStore();
+    const { setIsPlayingScale, clearScalePlaybackTimeouts, setActiveNotes, setScalePlaybackNotes, setScalePlaybackStep } = usePlaybackStore();
 
     // Local state
     const [settingsOpen, setSettingsOpen] = useState(false);
@@ -437,10 +437,14 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
             previousNoteIndex = currentNoteIndex;
         }
 
+        setScalePlaybackNotes(scaleNotesForPlayback);
+        setScalePlaybackStep(-1);
+
         scaleNotesForPlayback.forEach((noteObj, index) => {
             const timeout = setTimeout(() => {
                 if (!scalePlaybackRef.current) return;
                 setActiveNotes([noteObj]);
+                setScalePlaybackStep(index);
 
                 const noteOffTimeout = setTimeout(() => {
                     if (!scalePlaybackRef.current) return;
@@ -457,7 +461,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
             }, index * noteDuration);
             scaleTimeoutsRef.current.push(timeout);
         });
-    }, [scaleNotes, globalPatternState, setIsPlayingScale, setActiveNotes, clearScaleTimeouts, calculateNoteDuration]);
+    }, [scaleNotes, globalPatternState, setIsPlayingScale, setActiveNotes, setScalePlaybackNotes, setScalePlaybackStep, clearScaleTimeouts, calculateNoteDuration]);
 
     const stopScale = useCallback(() => {
         clearScaleTimeouts();

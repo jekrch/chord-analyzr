@@ -37,7 +37,7 @@ export const LiveModeFooter: React.FC<LiveModeFooterProps> = ({
                     <button
                         onClick={onToggleDeleteMode}
                         className={classNames(
-                            "mcb-switch w-[7.5em] h-7 justify-center",
+                            "mcb-switch mcb-switch--pill w-[8.5em] h-7",
                             { "mcb-switch--danger": isDeleteMode }
                         )}
                     >

@@ -207,8 +207,10 @@ export const useIntegratedAppLogic = () => {
     // uiStore selectors
     const isDeleteMode = useUIStore((state) => state.isDeleteMode);
     const isLiveMode = useUIStore((state) => state.isLiveMode);
+    const isCompactChords = useUIStore((state) => state.isCompactChords);
     const showPatternSystem = useUIStore((state) => state.showPatternSystem);
     const setIsLiveMode = useUIStore((state) => state.setIsLiveMode);
+    const setIsCompactChords = useUIStore((state) => state.setIsCompactChords);
     const setShowPatternSystem = useUIStore((state) => state.setShowPatternSystem);
     const togglePatternSystem = useUIStore((state) => state.togglePatternSystem);
     const toggleLiveMode = useUIStore((state) => state.toggleLiveMode);
@@ -376,6 +378,7 @@ export const useIntegratedAppLogic = () => {
                 swing,
                 showPatternSystem,
                 isLiveMode,
+                isCompactChords,
                 pianoSettings,
                 AVAILABLE_KEYS,
                 modes,
@@ -393,6 +396,7 @@ export const useIntegratedAppLogic = () => {
         swing,
         showPatternSystem,
         isLiveMode,
+        isCompactChords,
         pianoSettings,
         availableInstruments,
         modes
@@ -430,6 +434,7 @@ export const useIntegratedAppLogic = () => {
 
                 setShowPatternSystem(decoded.showPattern);
                 setIsLiveMode(decoded.liveMode);
+                setIsCompactChords(decoded.compactChords);
                 updatePianoSettings(decoded.pianoSettings);
             }
         }
@@ -666,6 +671,7 @@ export const useIntegratedAppLogic = () => {
         swing,
         showPatternSystem,
         isLiveMode,
+        isCompactChords,
         pianoSettings,
         chords?.length,
         modes?.length,

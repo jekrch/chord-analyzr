@@ -457,6 +457,17 @@
   color: var(--mcb-danger-text);
   box-shadow: 0 0 12px -2px color-mix(in srgb, var(--mcb-danger-primary) 45%, transparent);
 }
+/* Fixed-width switch pill: the led+label group is centered as a unit and the
+   LED can never be crushed by flex shrink. Side padding is minimal since the
+   fixed width + centering make it redundant. */
+.mcb-switch--pill {
+  justify-content: center;
+  padding-left: 0.375rem;
+  padding-right: 0.375rem;
+}
+.mcb-switch--pill .mcb-led {
+  flex-shrink: 0;
+}
 
 /* Performance pad (chord buttons): raised like .mcb-panel but tighter,
    lit variants glow like a pressed hardware pad */

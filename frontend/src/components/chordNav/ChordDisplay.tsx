@@ -26,6 +26,7 @@ interface ChordDisplayProps {
     isEditMode: boolean;
     isDeleteMode: boolean;
     isCompactHeight: boolean;
+    isCompactChords: boolean;
     addedChords: any[];
     activeChordIndex: number | null;
     highlightedChordIndex: number | null;
@@ -44,6 +45,7 @@ export const ChordDisplay = forwardRef<HTMLDivElement, ChordDisplayProps>(({
     isEditMode,
     isDeleteMode,
     isCompactHeight,
+    isCompactChords,
     addedChords,
     activeChordIndex,
     highlightedChordIndex,
@@ -94,8 +96,10 @@ export const ChordDisplay = forwardRef<HTMLDivElement, ChordDisplayProps>(({
             }
         };
 
-        const sizeConfig = isLiveMode 
-            ? (isMobile() ? CHORD_NAVIGATION_CONFIG.BUTTON_SIZES.LIVE_MOBILE : CHORD_NAVIGATION_CONFIG.BUTTON_SIZES.LIVE_DESKTOP)
+        const sizeConfig = isLiveMode
+            ? (isCompactChords
+                ? CHORD_NAVIGATION_CONFIG.BUTTON_SIZES.LIVE_COMPACT
+                : (isMobile() ? CHORD_NAVIGATION_CONFIG.BUTTON_SIZES.LIVE_MOBILE : CHORD_NAVIGATION_CONFIG.BUTTON_SIZES.LIVE_DESKTOP))
             : CHORD_NAVIGATION_CONFIG.BUTTON_SIZES.COLLAPSED;
 
         return (
@@ -132,10 +136,14 @@ export const ChordDisplay = forwardRef<HTMLDivElement, ChordDisplayProps>(({
         />
     );
 
+    const liveGridClasses = isCompactChords
+        ? CHORD_NAVIGATION_CONFIG.GRID_CLASSES.LIVE_MODE_COMPACT
+        : CHORD_NAVIGATION_CONFIG.GRID_CLASSES.LIVE_MODE;
+
     const nonEditModeView = (
         isLiveMode ? (
             // LIVE MODE - CSS Grid (non-edit)
-            <div className={CHORD_NAVIGATION_CONFIG.GRID_CLASSES.LIVE_MODE}>
+            <div className={liveGridClasses}>
                 {addedChords.map((chord, index) => (
                     <div key={index}>
                         {renderChordButton(chord, index)}
@@ -175,9 +183,9 @@ export const ChordDisplay = forwardRef<HTMLDivElement, ChordDisplayProps>(({
                 strategy={rectSortingStrategy}
             >
                 {/* Use the SAME grid layout as non-edit mode with forced gap */}
-                <div 
-                    className={CHORD_NAVIGATION_CONFIG.GRID_CLASSES.LIVE_MODE}
-                    style={{ gap: '1rem' }} // Force consistent 1rem gap (gap-4)
+                <div
+                    className={liveGridClasses}
+                    style={{ gap: isCompactChords ? '0.5rem' : '1rem' }} // Force gap matching non-edit mode
                 >
                     {addedChords.map((chord, index) => (
                         <SortableChordItem

@@ -5,7 +5,7 @@ import { usePatternStore } from '../../stores/patternStore';
 import { usePlaybackStore } from '../../stores/playbackStore';
 import { convertScaleToMajorKey } from '../../util/KeySignatureUtil';
 import { getMidiNotes } from '../../util/ChordUtil';
-import { getMidiNote } from '../../util/NoteUtil';
+import { createKeySpeller, getMidiNote } from '../../util/NoteUtil';
 import { parsePatternStep } from '../../services/SequencerScheduler';
 
 const START_OCTAVE = 4;
@@ -50,6 +50,9 @@ const NotationView: React.FC<NotationViewProps> = ({ className = '' }) => {
     const currentlyActivePattern = usePatternStore(state => state.currentlyActivePattern);
 
     const activeNotes = usePlaybackStore(state => state.activeNotes);
+    const isPlayingScale = usePlaybackStore(state => state.isPlayingScale);
+    const scalePlaybackNotes = usePlaybackStore(state => state.scalePlaybackNotes);
+    const scalePlaybackStep = usePlaybackStore(state => state.scalePlaybackStep);
     const temporaryChord = usePlaybackStore(state => state.temporaryChord);
     const activeChordIndex = usePlaybackStore(state => state.activeChordIndex);
     const addedChords = usePlaybackStore(state => state.addedChords);
@@ -78,6 +81,19 @@ const NotationView: React.FC<NotationViewProps> = ({ className = '' }) => {
         return majorKey ? majorKey.split(' ')[0] : 'C';
     }, [scaleNotes]);
 
+    // Store notes are normalized to sharp spellings; respell them to match the
+    // key signature so in-key notes don't get redundant accidentals drawn
+    const spellKey = useMemo(() => {
+        const speller = createKeySpeller(
+            scaleNotes.map(scaleNote => scaleNote.noteName),
+            keySignature
+        );
+        return (note: string, octave: number) => {
+            const spelled = speller(note, octave);
+            return toVexKey(spelled.note, spelled.octave);
+        };
+    }, [scaleNotes, keySignature]);
+
     // Same chord/pattern resolution the scheduler uses at schedule time
     const steps: DisplayStep[] = useMemo(() => {
         const selectedChord =
@@ -85,6 +101,12 @@ const NotationView: React.FC<NotationViewProps> = ({ className = '' }) => {
         const chord = temporaryChord ?? selectedChord ?? null;
         const pattern =
             !temporaryChord && selectedChord ? selectedChord.pattern : currentlyActivePattern;
+
+        // Scale playback: the whole ascending scale at once, one note per step
+        if (isPlayingScale && scalePlaybackNotes.length > 0) {
+            return scalePlaybackNotes.map(({ note, octave }) =>
+                [spellKey(note, octave ?? START_OCTAVE)]);
+        }
 
         if (isPlaying) {
             if (!chord || pattern.length === 0) return [];
@@ -97,7 +119,7 @@ const NotationView: React.FC<NotationViewProps> = ({ className = '' }) => {
                 if (parsed.octaveUp) finalOctave += 1;
                 if (parsed.octaveDown) finalOctave -= 1;
                 finalOctave = Math.max(1, Math.min(8, finalOctave));
-                return [toVexKey(note, finalOctave)];
+                return [spellKey(note, finalOctave)];
             });
         }
 
@@ -107,11 +129,14 @@ const NotationView: React.FC<NotationViewProps> = ({ className = '' }) => {
             .sort((a, b) =>
                 getMidiNote(a.note, a.octave ?? START_OCTAVE) -
                 getMidiNote(b.note, b.octave ?? START_OCTAVE))
-            .map(({ note, octave = START_OCTAVE }) => toVexKey(note, octave));
+            .map(({ note, octave = START_OCTAVE }) => spellKey(note, octave));
         return [keys];
-    }, [isPlaying, temporaryChord, activeChordIndex, addedChords, currentlyActivePattern, activeNotes]);
+    }, [isPlaying, isPlayingScale, scalePlaybackNotes, temporaryChord, activeChordIndex, addedChords, currentlyActivePattern, activeNotes, spellKey]);
 
-    const highlightIndex = isPlaying && steps.length > 0 ? currentStep % steps.length : -1;
+    const scaleMode = isPlayingScale && scalePlaybackNotes.length > 0;
+    const highlightIndex = scaleMode
+        ? scalePlaybackStep
+        : isPlaying && steps.length > 0 ? currentStep % steps.length : -1;
 
     useEffect(() => {
         const host = drawRef.current;
@@ -122,7 +147,10 @@ const NotationView: React.FC<NotationViewProps> = ({ className = '' }) => {
         const ink = style.getPropertyValue('--mcb-text-primary').trim() || '#cbd5e1';
         const accent = style.getPropertyValue('--mcb-accent-primary').trim() || '#22d3ee';
 
-        const duration = isPlaying ? (DURATION_BY_SUBDIVISION[subdivision] ?? 'q') : 'w';
+        // Scale playback sounds each note for half a beat -> eighth notes
+        const duration = scaleMode
+            ? '8'
+            : isPlaying ? (DURATION_BY_SUBDIVISION[subdivision] ?? 'q') : 'w';
         const width = Math.max(
             availableWidth,
             NOTE_START_PAD + Math.max(steps.length, 1) * MIN_STEP_PX
@@ -162,7 +190,7 @@ const NotationView: React.FC<NotationViewProps> = ({ className = '' }) => {
             beam.setStyle({ fillStyle: ink, strokeStyle: ink });
             beam.setContext(context).draw();
         });
-    }, [steps, highlightIndex, isPlaying, subdivision, keySignature, availableWidth]);
+    }, [steps, highlightIndex, isPlaying, scaleMode, subdivision, keySignature, availableWidth]);
 
     return (
         <div className={`mcb-inset p-2 sm:p-3 w-full ${className}`}>

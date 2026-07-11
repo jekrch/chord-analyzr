@@ -8,10 +8,12 @@ interface ControlBarProps {
     isEditMode: boolean;
     isDeleteMode: boolean;
     isCompactHeight: boolean;
+    isCompactChords: boolean;
     globalPatternState: { isPlaying: boolean };
     addedChords: any[];
     onTogglePlayback: () => void;
     onToggleLiveMode: () => void;
+    onToggleCompactChords: () => void;
     onClearAll: () => void;
     onToggleDeleteMode: () => void;
 }
@@ -21,16 +23,18 @@ export const ControlBar: React.FC<ControlBarProps> = ({
     isEditMode,
     isDeleteMode,
     isCompactHeight,
+    isCompactChords,
     globalPatternState,
     addedChords,
     onTogglePlayback,
     onToggleLiveMode,
+    onToggleCompactChords,
     onClearAll,
     onToggleDeleteMode
 }) => {
     return (
-        <div className={`${isLiveMode ? 'flex-shrink-0' : ''} max-w-7xl mx-auto px-4 ${isLiveMode ? (isCompactHeight ? 'pt-2 z-10' : 'pt-4 z-10') : 'pt-2'} w-full`}>
-            <div className={`flex items-center justify-between ${isLiveMode ? (isCompactHeight ? 'mb-1' : 'mb-3') : 'mb-2'}`}>
+        <div className={`${isLiveMode ? 'flex-shrink-0' : ''} max-w-7xl mx-auto px-4 ${isLiveMode ? 'pt-2 z-10' : 'pt-2'} w-full`}>
+            <div className={`flex items-center justify-between ${isLiveMode ? (isCompactHeight ? 'mb-1' : 'mb-2') : 'mb-2'}`}>
                 <div className="flex items-center space-x-4">
                     {!isLiveMode && (
                         <Button 
@@ -77,18 +81,31 @@ export const ControlBar: React.FC<ControlBarProps> = ({
                 </div>
 
                 <div className="flex items-center space-x-2">
+                    {isLiveMode && (
+                        <button
+                            onClick={onToggleCompactChords}
+                            className={classNames(
+                                "mcb-switch mcb-switch--pill w-[9.5em] h-7",
+                                { "mcb-switch--on": isCompactChords }
+                            )}
+                            title={isCompactChords ? "Show chord details" : "Smaller chord pads, more on screen"}
+                        >
+                            <span className={classNames("mcb-led", { "mcb-led--off": !isCompactChords })} />
+                            <span>Compact</span>
+                        </button>
+                    )}
                     <button
                         onClick={onToggleLiveMode}
-                        className="w-[7.5em] h-7 flex items-center justify-center gap-1.5 px-3 rounded-full border border-mcb-subtle text-[0.6875rem] uppercase tracking-wider text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover transition-all duration-200"
+                        className="w-[9em] h-7 flex items-center justify-center gap-1.5 px-2 rounded-full border border-mcb-subtle text-[0.6875rem] uppercase tracking-wider text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover transition-all duration-200"
                     >
                         {isLiveMode ? (
                             <>
-                                <ArrowsPointingInIcon className="h-3 w-3" />
+                                <ArrowsPointingInIcon className="h-3 w-3 shrink-0" />
                                 <span>Collapse</span>
                             </>
                         ) : (
                             <>
-                                <ArrowsPointingOutIcon className="h-3 w-3" />
+                                <ArrowsPointingOutIcon className="h-3 w-3 shrink-0" />
                                 <span>Expand</span>
                             </>
                         )}
@@ -108,7 +125,7 @@ export const ControlBar: React.FC<ControlBarProps> = ({
                             <button
                                 onClick={onToggleDeleteMode}
                                 className={classNames(
-                                    "mcb-switch w-[7.5em] h-7 justify-center",
+                                    "mcb-switch mcb-switch--pill w-[8.5em] h-7",
                                     { "mcb-switch--danger": isDeleteMode }
                                 )}
                             >
@@ -121,18 +138,17 @@ export const ControlBar: React.FC<ControlBarProps> = ({
             </div>
             
             {isLiveMode && !isCompactHeight && (
-                <div className="mb-4 text-sm text-center text-mcb-tertiary">
-                    <div>Use 1-{Math.min(addedChords.length, 9)} or click chords</div>
-                    <div className="mt-2 text-xs">
-                        <span className="inline-block w-3 h-3 mr-2 bg-[var(--mcb-accent-primary)] rounded-full"></span> 
-                        Active Chord
-                        {isEditMode && (
-                            <>
-                                <span className="mx-2">•</span>
-                                <span className="text-[var(--mcb-accent-text-primary)]">Drag chords to reorder</span>
-                            </>
-                        )}
-                    </div>
+                <div className="mb-2 text-xs text-center text-mcb-tertiary">
+                    Use 1-{Math.min(addedChords.length, 9)} or click chords
+                    <span className="mx-2">•</span>
+                    <span className="inline-block w-2.5 h-2.5 mr-1.5 bg-[var(--mcb-accent-primary)] rounded-full align-middle"></span>
+                    Active Chord
+                    {isEditMode && (
+                        <>
+                            <span className="mx-2">•</span>
+                            <span className="text-[var(--mcb-accent-text-primary)]">Drag chords to reorder</span>
+                        </>
+                    )}
                 </div>
             )}
         </div>

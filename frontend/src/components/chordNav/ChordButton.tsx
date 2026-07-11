@@ -160,8 +160,8 @@ export const ChordButton: React.FC<ChordButtonProps> = ({
           {chord.name}
         </div>
 
-        {/* Live mode additional info */}
-        {isLiveMode && (
+        {/* Live mode additional info (hidden in compact mode) */}
+        {isLiveMode && !sizeConfig?.hideMeta && (
           <>
             <div className="mt-4 text-xs text-center text-mcb-secondary">
               {chord.notes.replace(/,/g, ' • ')}

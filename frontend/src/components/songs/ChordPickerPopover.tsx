@@ -2,9 +2,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { PlayIcon, TrashIcon } from '@heroicons/react/20/solid';
 import classNames from 'classnames';
-import { useMusicStore } from '../../stores/musicStore';
 import { usePlaybackStore } from '../../stores/playbackStore';
-import { playChordNotes } from '../../stores/songStore';
+import { getActiveSheetKeyMode, playChordNotes } from '../../stores/songStore';
 import {
     ParsedChordToken,
     buildProgressionChord,
@@ -87,7 +86,7 @@ const ChordPickerPopover: React.FC<ChordPickerPopoverProps> = ({
     }, [onClose]);
 
     const previewToken = async (token: ParsedChordToken, overrideType?: string) => {
-        const { key, mode } = useMusicStore.getState();
+        const { key, mode } = getActiveSheetKeyMode();
         const previewed = overrideType !== undefined ? { ...token, selectedType: overrideType } : token;
         const built = await buildProgressionChord(previewed, key, mode).catch(() => null);
         if (built) playChordNotes(built.notes);

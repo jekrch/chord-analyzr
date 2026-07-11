@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+    ArrowDownIcon,
     ArrowPathIcon,
     ArrowRightStartOnRectangleIcon,
+    ArrowUpIcon,
     CameraIcon,
     DocumentTextIcon,
     PencilSquareIcon,
@@ -10,8 +12,12 @@ import {
     QueueListIcon,
 } from '@heroicons/react/20/solid';
 import { Button } from '../Button';
+import Dropdown from '../Dropdown';
+import { AVAILABLE_KEYS } from '../../hooks/useIntegratedAppLogic';
 import { useHashRoute } from '../../hooks/useHashRoute';
+import { useMusicStore } from '../../stores/musicStore';
 import { Song, playSheetChord, useSongStore } from '../../stores/songStore';
+import { inferKeyAndMode } from '../../util/ProgressionParser';
 import { ParsedSong } from '../../util/SongSheetParser';
 import { exportSongImage, exportSongPdf, exportSongText } from '../../util/songExport';
 
@@ -34,10 +40,38 @@ const SongToolbar: React.FC<SongToolbarProps> = ({ song, parsed }) => {
     const setViewMode = useSongStore(state => state.setViewMode);
     const stepIndex = useSongStore(state => state.stepIndex);
     const resetStep = useSongStore(state => state.resetStep);
+    const inferredKeyMode = useSongStore(state => state.inferredKeyMode);
+    const modes = useMusicStore(state => state.modes);
+    const globalKey = useMusicStore(state => state.key);
+    const globalMode = useMusicStore(state => state.mode);
     const [, navigate] = useHashRoute();
     const [isLoadingProgression, setIsLoadingProgression] = useState(false);
 
     const totalChords = parsed.chordSequence.length;
+
+    // The key/mode the sheet plays in: the song's own choice, else the one
+    // detected from its chords, else the app's global key/mode.
+    const hasExplicitKey = !!(song.key && song.mode);
+    const inferredForSong = inferredKeyMode?.songId === song.id ? inferredKeyMode : null;
+    const sheetKey = song.key ?? inferredForSong?.key ?? globalKey;
+    const sheetMode = song.mode ?? inferredForSong?.mode ?? globalMode;
+
+    // Detect the key/mode from the song's chords whenever it has no explicit
+    // choice; keyed by the chord sequence so edits re-run the detection.
+    const chordSignature = parsed.chordSequence.map(c => c.name).join('|');
+    useEffect(() => {
+        if (hasExplicitKey || !totalChords || !modes.length) return;
+        let cancelled = false;
+        inferKeyAndMode(parsed.chordSequence.map(c => c.parsed), modes)
+            .then(suggestion => {
+                if (suggestion && !cancelled) {
+                    useSongStore.getState().setInferredKeyMode(song.id, suggestion.key, suggestion.mode);
+                }
+            })
+            .catch(() => {});
+        return () => { cancelled = true; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [song.id, hasExplicitKey, chordSignature, modes]);
 
     const handleStep = () => {
         const index = useSongStore.getState().stepNext(totalChords);
@@ -104,6 +138,59 @@ const SongToolbar: React.FC<SongToolbarProps> = ({ song, parsed }) => {
                 aria-label="Reset step position"
             >
                 <ArrowPathIcon className="w-3.5 h-3.5" />
+            </Button>
+
+            <div className="w-px h-5 bg-[var(--mcb-border-primary)] mx-1" />
+
+            {/* Key/mode the sheet plays in, plus semitone transposition */}
+            <div
+                className="flex items-center gap-1.5"
+                title={hasExplicitKey
+                    ? 'Key and mode for this song'
+                    : 'Key and mode detected from the song\'s chords — pick one to override'}
+            >
+                <Dropdown
+                    value={sheetKey}
+                    onChange={key => useSongStore.getState().setSongKeyMode(song.id, key, sheetMode)}
+                    options={AVAILABLE_KEYS}
+                    className="w-[4.25rem]"
+                    buttonClassName="px-2 py-1 text-center font-medium text-xs h-7 flex items-center justify-center"
+                    menuClassName="min-w-[4.25rem]"
+                />
+                <Dropdown
+                    value={sheetMode}
+                    onChange={mode => useSongStore.getState().setSongKeyMode(song.id, sheetKey, mode)}
+                    options={modes}
+                    showSearch
+                    className="w-[7.5rem]"
+                    buttonClassName="px-2 py-1 text-left font-medium text-xs h-7 flex items-center"
+                    menuClassName="min-w-[7.5rem]"
+                />
+                {!hasExplicitKey && (
+                    <span className="mcb-label !text-[0.5625rem] text-mcb-tertiary select-none">
+                        auto
+                    </span>
+                )}
+            </div>
+            <Button
+                onClick={() => useSongStore.getState().transposeSong(song.id, -1)}
+                variant="icon"
+                size="icon"
+                disabled={!totalChords}
+                title="Transpose down a semitone"
+                aria-label="Transpose down a semitone"
+            >
+                <ArrowDownIcon className="w-3.5 h-3.5" />
+            </Button>
+            <Button
+                onClick={() => useSongStore.getState().transposeSong(song.id, 1)}
+                variant="icon"
+                size="icon"
+                disabled={!totalChords}
+                title="Transpose up a semitone"
+                aria-label="Transpose up a semitone"
+            >
+                <ArrowUpIcon className="w-3.5 h-3.5" />
             </Button>
 
             <div className="flex-1" />

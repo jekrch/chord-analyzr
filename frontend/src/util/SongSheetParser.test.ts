@@ -9,6 +9,7 @@ import {
     insertChordInSource,
     replaceChordInSource,
     removeChordFromSource,
+    transposeSongSource,
 } from './SongSheetParser';
 
 const STAND_BY_ME = [
@@ -277,5 +278,59 @@ describe('chordSpansInSource', () => {
 
     it('skips section labels and non-chord brackets', () => {
         expect(chordSpansInSource('[Chorus]\nla la [Repeat] la')).toEqual([]);
+    });
+});
+
+describe('transposeSongSource', () => {
+    it('transposes inline markers, preserving the typed suffix and lyrics', () => {
+        expect(transposeSongSource('Hello [Am]darkness my old [Fmaj7]friend', 2, false)).toBe(
+            'Hello [Bm]darkness my old [Gmaj7]friend'
+        );
+    });
+
+    it('transposes slash chords including the bass note', () => {
+        expect(transposeSongSource('[C/E] la', 1, true)).toBe('[Db/F] la');
+    });
+
+    it('spells accidentals by preference', () => {
+        expect(transposeSongSource('[C] [F] [G]', 1, true)).toBe('[Db] [Gb] [Ab]');
+        expect(transposeSongSource('[C] [F] [G]', 1, false)).toBe('[C#] [F#] [G#]');
+    });
+
+    it('transposes down and wraps around the octave', () => {
+        expect(transposeSongSource('[C]', -1, false)).toBe('[B]');
+        expect(transposeSongSource('[B]', 1, false)).toBe('[C]');
+    });
+
+    it('transposes bare chord words on chord lines but never lyrics', () => {
+        const sheet = 'C              G\nWhen the night has come';
+        expect(transposeSongSource(sheet, 2, false)).toBe(
+            'D              A\nWhen the night has come'
+        );
+    });
+
+    it('keeps chord columns aligned when names grow on chord lines', () => {
+        const sheet = 'C              G\nWhen the night has come';
+        // C -> Db grows by one; the following run of spaces absorbs it so G stays put
+        expect(transposeSongSource(sheet, 1, true)).toBe(
+            'Db             Ab\nWhen the night has come'
+        );
+    });
+
+    it('pads when names shrink so following chords keep their columns', () => {
+        const sheet = 'Db             Ab\nWhen the night has come';
+        expect(transposeSongSource(sheet, -1, false)).toBe(
+            'C              G\nWhen the night has come'
+        );
+    });
+
+    it('leaves section labels and non-chord brackets alone', () => {
+        expect(transposeSongSource('[Chorus]\nla la [Repeat] la', 2, false)).toBe(
+            '[Chorus]\nla la [Repeat] la'
+        );
+    });
+
+    it('is a no-op at zero semitones apart from spelling normalization', () => {
+        expect(transposeSongSource('Hello [Am]darkness', 0, false)).toBe('Hello [Am]darkness');
     });
 });

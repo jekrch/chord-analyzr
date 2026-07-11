@@ -14,6 +14,7 @@ import {
     parseChordToken,
     resolvedChordName,
 } from './ProgressionParser';
+import { transposeNoteName } from './NoteUtil';
 
 export type SongFormat = 'chordpro' | 'chords-over-lyrics' | 'plain';
 
@@ -415,6 +416,57 @@ export function replaceChordInSource(source: string, chord: SheetChord, chordNam
         `[${chordName.replace(/\s+/g, '')}]` +
         source.slice(chord.sourceEnd)
     );
+}
+
+/**
+ * Transpose every recognizable chord in raw song source by a number of
+ * semitones, in both formats: inline [Am] markers and bare chord words on
+ * chords-over-lyrics lines. The typed chord-type suffix is preserved; only
+ * the root (and slash bass) are respelled, with accidentals following
+ * `preferFlats`. On bare chord lines the surrounding spacing is adjusted so
+ * chords keep their columns over the lyric line below where possible.
+ */
+export function transposeSongSource(
+    source: string,
+    semitones: number,
+    preferFlats: boolean
+): string {
+    return source
+        .split('\n')
+        .map(raw => {
+            const hasCR = raw.endsWith('\r');
+            let line = hasCR ? raw.slice(0, -1) : raw;
+            const hits = lineChords(line);
+            // Right-to-left so earlier hit offsets stay valid.
+            for (let i = hits.length - 1; i >= 0; i--) {
+                const hit = hits[i];
+                if (!hit.parsed.root) continue;
+                const root = transposeNoteName(hit.parsed.root, semitones, preferFlats);
+                const slash = hit.parsed.slash
+                    ? `/${transposeNoteName(hit.parsed.slash, semitones, preferFlats)}`
+                    : '';
+                const name = `${root}${hit.parsed.requestedSuffix}${slash}`;
+
+                let end = hit.end;
+                let pad = '';
+                if (!hit.isMarker) {
+                    // Keep column alignment: absorb/emit spaces after the word,
+                    // always leaving at least one space before a following word.
+                    let delta = name.length - (hit.end - hit.start);
+                    while (delta > 0 && line[end] === ' ' && line[end + 1] === ' ') {
+                        end++;
+                        delta--;
+                    }
+                    if (delta < 0 && line[end] === ' ') pad = ' '.repeat(-delta);
+                }
+                line =
+                    line.slice(0, hit.start) +
+                    (hit.isMarker ? `[${name}]` : name + pad) +
+                    line.slice(end);
+            }
+            return hasCR ? `${line}\r` : line;
+        })
+        .join('\n');
 }
 
 /** Remove a chord marker, collapsing the double space it may leave behind. */

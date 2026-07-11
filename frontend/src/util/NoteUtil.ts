@@ -156,6 +156,29 @@ export function createKeySpeller(
     };
 }
 
+const PITCH_NAMES_SHARP = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const PITCH_NAMES_FLAT = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+
+// Spellings used when the caller expresses no flat/sharp preference: the
+// key signature with fewer accidentals (Db, Eb, Ab, Bb) except F#, which is
+// conventionally preferred over Gb.
+const PITCH_NAMES_CONVENTIONAL = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+
+/**
+ * Transpose a note name by a number of semitones. Accidental spelling for
+ * the black keys follows `preferFlats`; when omitted, conventional key
+ * spellings are used (Db, Eb, F#, Ab, Bb).
+ */
+export function transposeNoteName(
+    note: string,
+    semitones: number,
+    preferFlats?: boolean
+): string {
+    const pc = (((noteNameToNumber(note) + semitones) % 12) + 12) % 12;
+    if (preferFlats === undefined) return PITCH_NAMES_CONVENTIONAL[pc];
+    return preferFlats ? PITCH_NAMES_FLAT[pc] : PITCH_NAMES_SHARP[pc];
+}
+
 /**
    * Helper to convert note name to MIDI note number (0-11)
    */

@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { getMidiNotes } from '../util/ChordUtil';
+import { transposeNoteName } from '../util/NoteUtil';
 import { buildAddedChordsFromTokens, buildProgressionChord, inferKeyAndMode } from '../util/ProgressionParser';
-import { ParsedSong, SheetChord } from '../util/SongSheetParser';
+import { ParsedSong, SheetChord, transposeSongSource } from '../util/SongSheetParser';
 import { useMusicStore } from './musicStore';
 import { usePatternStore } from './patternStore';
 import { usePlaybackStore } from './playbackStore';
@@ -12,6 +13,8 @@ export interface Song {
     source: string;     // lyrics with inline [Am] chord markers
     createdAt: string;  // ISO
     updatedAt: string;  // ISO
+    key?: string;       // key/mode the user picked for this song; absent = auto-detect
+    mode?: string;
 }
 
 export interface SongLibraryFile {
@@ -70,6 +73,9 @@ interface SongState {
     currentSongId: string | null;
     viewMode: 'edit' | 'sheet';
     stepIndex: number | null; // cursor into the current song's chord sequence
+    // Key/mode detected from a song's chords, for songs without an explicit
+    // choice. Session-only; keyed by song so stale results are ignored.
+    inferredKeyMode: { songId: string; key: string; mode: string } | null;
 
     createSong: (title?: string) => string;
     updateSongSource: (id: string, source: string) => void;
@@ -77,6 +83,9 @@ interface SongState {
     deleteSong: (id: string) => void;
     selectSong: (id: string | null) => void;
     setViewMode: (mode: 'edit' | 'sheet') => void;
+    setSongKeyMode: (id: string, key: string, mode: string) => void;
+    setInferredKeyMode: (songId: string, key: string, mode: string) => void;
+    transposeSong: (id: string, semitones: number) => void;
 
     stepNext: (sequenceLength: number) => number | null;
     resetStep: () => void;
@@ -86,10 +95,31 @@ interface SongState {
     loadSongIntoProgression: (parsed: ParsedSong) => Promise<number>;
 }
 
+/**
+ * The key/mode a song's chords should sound in: the song's own choice when
+ * set, else the detected one, else the app's global key/mode.
+ */
+function effectiveKeyMode(song: Song | undefined): { key: string; mode: string } {
+    if (song?.key && song.mode) return { key: song.key, mode: song.mode };
+    const inferred = useSongStore.getState().inferredKeyMode;
+    if (song && inferred && inferred.songId === song.id) {
+        return { key: inferred.key, mode: inferred.mode };
+    }
+    const music = useMusicStore.getState();
+    return { key: music.key, mode: music.mode };
+}
+
+/** Effective key/mode for the currently selected song (see effectiveKeyMode). */
+export function getActiveSheetKeyMode(): { key: string; mode: string } {
+    const { songs, currentSongId } = useSongStore.getState();
+    return effectiveKeyMode(songs.find(s => s.id === currentSongId));
+}
+
 export const useSongStore = create<SongState>((set, get) => ({
     ...loadFromStorage(),
     viewMode: 'edit',
     stepIndex: null,
+    inferredKeyMode: null,
 
     createSong: (title?: string) => {
         const now = new Date().toISOString();
@@ -138,6 +168,38 @@ export const useSongStore = create<SongState>((set, get) => ({
     selectSong: (id: string | null) => set({ currentSongId: id, stepIndex: null }),
 
     setViewMode: (mode: 'edit' | 'sheet') => set({ viewMode: mode }),
+
+    setSongKeyMode: (id: string, key: string, mode: string) =>
+        set(state => ({
+            songs: state.songs.map(s =>
+                s.id === id ? { ...s, key, mode, updatedAt: new Date().toISOString() } : s
+            ),
+        })),
+
+    setInferredKeyMode: (songId: string, key: string, mode: string) =>
+        set({ inferredKeyMode: { songId, key, mode } }),
+
+    /**
+     * Rewrite every chord in the song's source shifted by `semitones`, and
+     * pin the song's key to the correspondingly shifted key (so repeated
+     * transposes accumulate from a stable reference). Accidental spelling
+     * follows the new key's signature.
+     */
+    transposeSong: (id: string, semitones: number) => {
+        const song = get().songs.find(s => s.id === id);
+        if (!song) return;
+        const { key, mode } = effectiveKeyMode(song);
+        const newKey = transposeNoteName(key, semitones);
+        const preferFlats = newKey.includes('b') || newKey === 'F';
+        const source = transposeSongSource(song.source, semitones, preferFlats);
+        set(state => ({
+            songs: state.songs.map(s =>
+                s.id === id
+                    ? { ...s, source, key: newKey, mode, updatedAt: new Date().toISOString() }
+                    : s
+            ),
+        }));
+    },
 
     // Advance the step cursor (wrapping) and return the new index so the
     // caller can play that chord; null when the song has no chords.
@@ -196,10 +258,23 @@ export const useSongStore = create<SongState>((set, get) => ({
             .map(c => c.parsed);
         if (!tokens.length) return 0;
 
+        // The song's own key/mode (picked or already detected) wins; songs
+        // without one fall back to inferring from the chords right here.
         const musicStore = useMusicStore.getState();
-        const suggestion = await inferKeyAndMode(tokens, musicStore.modes).catch(() => null);
-        const key = suggestion?.key ?? musicStore.key;
-        const mode = suggestion?.mode ?? musicStore.mode;
+        const song = get().songs.find(s => s.id === get().currentSongId);
+        const inferred = get().inferredKeyMode;
+        let key: string;
+        let mode: string;
+        if (song?.key && song.mode) {
+            key = song.key;
+            mode = song.mode;
+        } else if (song && inferred && inferred.songId === song.id) {
+            ({ key, mode } = inferred);
+        } else {
+            const suggestion = await inferKeyAndMode(tokens, musicStore.modes).catch(() => null);
+            key = suggestion?.key ?? musicStore.key;
+            mode = suggestion?.mode ?? musicStore.mode;
+        }
 
         const pattern = usePatternStore.getState().currentlyActivePattern;
         const existing = usePlaybackStore.getState().addedChords;
@@ -239,7 +314,7 @@ const chordNotesCache = new Map<string, string | null>();
 export async function getSheetChordNotes(
     chord: Pick<SheetChord, 'name' | 'parsed'>
 ): Promise<string | null> {
-    const { key, mode } = useMusicStore.getState();
+    const { key, mode } = getActiveSheetKeyMode();
     const cacheKey = `${chord.name}|${key}|${mode}`;
     if (!chordNotesCache.has(cacheKey)) {
         const built = await buildProgressionChord(chord.parsed, key, mode).catch(() => null);

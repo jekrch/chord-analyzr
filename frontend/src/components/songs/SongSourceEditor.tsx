@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useLayoutEffect, useMemo, useRef } from 'react';
 import { Button } from '../Button';
 import { Song, playSheetChord, useSongStore } from '../../stores/songStore';
 import {
@@ -21,13 +21,37 @@ interface SongSourceEditorProps {
 /**
  * Raw text editor for a song. Accepts plain lyrics, inline [Am] markers, or
  * chords-over-lyrics sheets, and can convert the text between the inline and
- * chords-above representations at any time. Pasted chord sheets are inlined
- * automatically unless the document is already kept in the above format.
+ * chords-above representations at any time. A pasted chord sheet keeps its
+ * chords-above layout; it's only inlined when dropped into a document that is
+ * already inline, so the two formats never mix in one source.
  */
 const SongSourceEditor: React.FC<SongSourceEditorProps> = ({ song }) => {
     const updateSongSource = useSongStore(state => state.updateSongSource);
     const format = detectFormat(song.source);
     const highlightRef = useRef<HTMLDivElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    // The textarea's scrollbars shrink its content area, but an inset-0
+    // overlay keeps the full box — lines near the wrap boundary then wrap at
+    // different points in the two layers, and the visible overlay text
+    // drifts a line away from the real (invisible) text, so selections seem
+    // to happen in a phantom copy of the line. Keep the overlay's edges
+    // flush with the textarea's actual content area instead. Content-box
+    // observation fires both when a scrollbar (dis)appears and when the
+    // user drags the resize handle.
+    useLayoutEffect(() => {
+        const el = textareaRef.current;
+        const overlay = highlightRef.current;
+        if (!el || !overlay) return;
+        const syncInsets = () => {
+            overlay.style.right = `${el.offsetWidth - el.clientWidth}px`;
+            overlay.style.bottom = `${el.offsetHeight - el.clientHeight}px`;
+        };
+        syncInsets();
+        const observer = new ResizeObserver(syncInsets);
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
 
     // Column-aligned sources must never soft-wrap: a chord line and the lyric
     // line under it would wrap independently and scramble the pairs, so they
@@ -59,7 +83,10 @@ const SongSourceEditor: React.FC<SongSourceEditorProps> = ({ song }) => {
     const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
         const pasted = e.clipboardData.getData('text/plain');
         if (!pasted || detectFormat(pasted) !== 'chords-over-lyrics') return;
-        if (format === 'chords-over-lyrics') return; // keep the document's own format
+        // Keep a pasted chords-above sheet in its own format — the default
+        // browser paste drops it in verbatim. Only inline it when the
+        // surrounding document is already inline, so the two never mix.
+        if (format !== 'chordpro') return;
         e.preventDefault();
         const el = e.currentTarget;
         const converted = normalizeToChordPro(pasted);
@@ -89,6 +116,7 @@ const SongSourceEditor: React.FC<SongSourceEditorProps> = ({ song }) => {
         <div className="flex flex-col gap-2">
             <div className="relative w-full bg-mcb-input border border-[var(--mcb-border-subtle)] shadow-[inset_0_2px_6px_rgba(0,0,0,0.35)] rounded-md focus-within:border-[var(--mcb-accent-primary)] transition-colors overflow-hidden">
                 <textarea
+                    ref={textareaRef}
                     value={song.source}
                     onChange={e => updateSongSource(song.id, e.target.value)}
                     onPaste={handlePaste}

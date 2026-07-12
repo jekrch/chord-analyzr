@@ -7,6 +7,11 @@
  * a free-form character column plus source offsets (so chords can be
  * placed/edited by splicing the source), and serializes a parsed song back
  * to aligned chords-over-lyrics plain text.
+ *
+ * Words on a chord line that don't read as chords become [*annotations]
+ * (ChordPro's annotation syntax): they render above the lyrics at their
+ * exact column like every other chord, but are inert — never played,
+ * transposed, or counted in the chord sequence.
  */
 
 import {
@@ -20,13 +25,14 @@ import { transposeNoteName } from './NoteUtil';
 export type SongFormat = 'chordpro' | 'chords-over-lyrics' | 'plain';
 
 export interface SheetChord {
-    raw: string;              // marker text as typed (without brackets)
+    raw: string;              // marker text as typed (without brackets, and without the '*' on annotations)
     parsed: ParsedChordToken;
-    name: string;             // display name with the resolved chord type
+    name: string;             // display name with the resolved chord type (raw text for annotations)
+    annotation: boolean;      // a [*text] marker: positional text above the lyrics, not a playable chord
     col: number;              // character column in the line's stripped lyric text
     sourceStart: number;      // offset of '[' in the song source
     sourceEnd: number;        // offset just past ']'
-    seqIndex: number;         // position in the song's flat chord sequence
+    seqIndex: number;         // position in the song's flat chord sequence (-1 for annotations)
 }
 
 export interface SheetLine {
@@ -70,10 +76,29 @@ function parseChordMarker(content: string): ParsedChordToken | null {
     return null;
 }
 
+/** Inert parse carried by [*annotation] chords so SheetChord keeps its shape
+ * without ever resolving to something playable or transposable. */
+function annotationToken(text: string): ParsedChordToken {
+    return {
+        token: text,
+        root: null,
+        requestedSuffix: text,
+        slash: null,
+        matchType: 'invalid',
+        selectedType: null,
+        candidates: [],
+    };
+}
+
+/** Marker for a word taken off a chord line: a chord when it reads as one,
+ * otherwise a [*annotation] so it still keeps its column above the lyrics. */
+function chordLineMarker(text: string): string {
+    return parseChordMarker(text) ? `[${text}]` : `[*${text}]`;
+}
+
 interface LineWord {
     text: string;
     col: number;              // character column within the line
-    isChordShaped: boolean;   // has a readable root (typos still count)
     confident: boolean;       // suffix resolved exactly or via alias
 }
 
@@ -82,8 +107,8 @@ function lineWords(line: string): LineWord[] {
     const re = /[^\s,;|]+/g;
     let m: RegExpExecArray | null;
     while ((m = re.exec(line))) {
-        const { root, confident } = analyzeChordWord(m[0]);
-        words.push({ text: m[0], col: m.index, isChordShaped: root !== null, confident });
+        const { confident } = analyzeChordWord(m[0]);
+        words.push({ text: m[0], col: m.index, confident });
     }
     return words;
 }
@@ -115,11 +140,13 @@ export function detectFormat(input: string): SongFormat {
 }
 
 /**
- * Convert chords-over-lyrics text into inline ChordPro-style markers: each
- * chord on a chord line is inserted as [Chord] into the following lyric line
- * at its character column (chords past the end of the lyric are appended).
+ * Convert chords-over-lyrics text into inline ChordPro-style markers: every
+ * word on a chord line is inserted into the following lyric line at its
+ * character column (words past the end of the lyric are appended) — as a
+ * [Chord] when it reads as one, otherwise as a [*annotation] so unreadable
+ * chords and stray tokens ("x2", "N.C.") keep their place above the text.
  * Chord lines with no lyric line under them (intros, instrumentals) keep
- * their layout with each chord bracketed in place. Lines that are already
+ * their layout with each word bracketed in place. Lines that are already
  * ChordPro or plain lyrics pass through unchanged, so this is idempotent.
  */
 export function normalizeToChordPro(input: string): string {
@@ -133,8 +160,6 @@ export function normalizeToChordPro(input: string): string {
             continue;
         }
 
-        // Right-to-left so earlier splice offsets stay valid.
-        const chordWords = words.filter(w => w.isChordShaped);
         const next = i + 1 < lines.length ? lines[i + 1] : null;
         const nextIsLyric =
             next !== null && next.trim().length > 0 && !isChordLine(lineWords(next));
@@ -142,30 +167,30 @@ export function normalizeToChordPro(input: string): string {
         if (nextIsLyric) {
             const orig = next!;
             let lyric = orig;
-            // Inline chords right-to-left so earlier splice offsets stay valid.
-            for (let j = chordWords.length - 1; j >= 0; j--) {
-                const w = chordWords[j];
+            // Inline words right-to-left so earlier splice offsets stay valid.
+            for (let j = words.length - 1; j >= 0; j--) {
+                const w = words[j];
                 if (w.col >= orig.length) continue;
-                lyric = lyric.slice(0, w.col) + `[${w.text}]` + lyric.slice(w.col);
+                lyric = lyric.slice(0, w.col) + chordLineMarker(w.text) + lyric.slice(w.col);
             }
-            // Chords past the end of the lyric keep their column via padding
+            // Words past the end of the lyric keep their column via padding
             // (markers don't count: they're stripped from the rendered line).
             let strippedLen = orig.length;
-            for (const w of chordWords) {
+            for (const w of words) {
                 if (w.col < orig.length) continue;
                 const pad = Math.max(w.col, strippedLen + 1) - strippedLen;
-                lyric += ' '.repeat(pad) + `[${w.text}]`;
+                lyric += ' '.repeat(pad) + chordLineMarker(w.text);
                 strippedLen += pad;
             }
             out.push(lyric);
             i++; // the lyric line was consumed
         } else {
-            // Each chord word becomes a marker followed by spaces covering its
+            // Each word becomes a marker followed by spaces covering its
             // own footprint, so the stripped line keeps every original column.
             let rebuilt = '';
             let pos = 0;
-            for (const w of chordWords) {
-                rebuilt += line.slice(pos, w.col) + `[${w.text}]` + ' '.repeat(w.text.length);
+            for (const w of words) {
+                rebuilt += line.slice(pos, w.col) + chordLineMarker(w.text) + ' '.repeat(w.text.length);
                 pos = w.col + w.text.length;
             }
             rebuilt += line.slice(pos);
@@ -180,8 +205,9 @@ export function normalizeToChordPro(input: string): string {
  * are stripped out of the lyric text; each chord records the character column
  * it occupied in the stripped line, so the view can place it free-form at
  * that exact position above the lyrics — no anchoring to words. Every chord
- * carries its source offsets so edits are plain string splices. Bracket text
- * that isn't a chord stays visible as literal lyric text.
+ * carries its source offsets so edits are plain string splices. [*text]
+ * markers become inert annotation chords; other bracket text that isn't a
+ * chord stays visible as literal lyric text.
  */
 export function parseSong(source: string): ParsedSong {
     const lines: SheetLine[] = [];
@@ -213,20 +239,24 @@ export function parseSong(source: string): ParsedSong {
         const markerRe = /\[([^[\]\n]*)\]/g;
         let marker: RegExpExecArray | null;
         while ((marker = markerRe.exec(text))) {
-            const parsed = parseChordMarker(marker[1]);
-            if (!parsed) continue; // literal bracket text stays in the lyric line
+            const annotation = marker[1].startsWith('*');
+            const raw = (annotation ? marker[1].slice(1) : marker[1]).trim();
+            const parsed = annotation ? null : parseChordMarker(marker[1]);
+            // Literal bracket text (and an empty [*]) stays in the lyric line.
+            if (annotation ? !raw : !parsed) continue;
             lyricText += text.slice(pos, marker.index);
             const chord: SheetChord = {
-                raw: marker[1].trim(),
-                parsed,
-                name: resolvedChordName(parsed),
+                raw,
+                parsed: parsed ?? annotationToken(raw),
+                name: parsed ? resolvedChordName(parsed) : raw,
+                annotation,
                 col: lyricText.length,
                 sourceStart: lineStart + marker.index,
                 sourceEnd: lineStart + marker.index + marker[0].length,
-                seqIndex: chordSequence.length,
+                seqIndex: annotation ? -1 : chordSequence.length,
             };
             chords.push(chord);
-            chordSequence.push(chord);
+            if (!annotation) chordSequence.push(chord);
             pos = marker.index + marker[0].length;
         }
         lyricText += text.slice(pos);
@@ -257,6 +287,8 @@ export function sourceOffsetAtCol(line: SheetLine, col: number): number {
  * export format). Chord names are placed at their exact column in the
  * stripped lyric line; colliding chords are pushed right. Names keep their
  * spaces stripped so each chord stays a single token when re-imported.
+ * Annotations serialize as their bare text in the chord row, like the
+ * pasted sheet they came from.
  */
 export function songToText(parsed: ParsedSong): string {
     const out: string[] = [];
@@ -359,6 +391,7 @@ export function chordAtOffset(
                 raw: hit.raw,
                 parsed: hit.parsed,
                 name: resolvedChordName(hit.parsed),
+                annotation: false,
                 sourceStart: lineStart + hit.start,
                 sourceEnd: lineStart + hit.end,
             };
@@ -387,6 +420,40 @@ export function chordSpansInSource(source: string): { start: number; end: number
 /** Insert a chord marker into the source at the given offset. */
 export function insertChordInSource(source: string, offset: number, chordName: string): string {
     return source.slice(0, offset) + `[${chordName.replace(/\s+/g, '')}]` + source.slice(offset);
+}
+
+/**
+ * Insert a new chord marker at a column on `line`, extending the line with
+ * spaces first if the column falls past its current lyric text (see
+ * `moveChordToColumn`), so a chord placed by clicking or dragging past the
+ * end of short lyrics doesn't silently clamp back onto one already there.
+ * `padBefore` adds a single separating space before the marker when it
+ * would otherwise land directly against a non-space character (e.g. the
+ * "add at end of line" action).
+ */
+export function insertChordAtColumn(
+    source: string,
+    line: SheetLine,
+    col: number,
+    chordName: string,
+    padBefore = false
+): string {
+    const target = Math.max(0, col);
+    if (target <= line.lyricText.length) {
+        let offset = sourceOffsetAtCol(line, target);
+        let spliced = source;
+        if (padBefore && offset > 0 && !/\s/.test(spliced[offset - 1])) {
+            spliced = `${spliced.slice(0, offset)} ${spliced.slice(offset)}`;
+            offset += 1;
+        }
+        return insertChordInSource(spliced, offset, chordName);
+    }
+    const pad = ' '.repeat(target - line.lyricText.length);
+    return insertChordInSource(
+        source.slice(0, line.sourceEnd) + pad + source.slice(line.sourceEnd),
+        line.sourceEnd + pad.length,
+        chordName
+    );
 }
 
 /** Replace an existing chord marker with a different chord. */
@@ -460,4 +527,70 @@ export function removeChordFromSource(source: string, chord: SheetChord): string
         start--; // "word [Am] next" -> "word next", not "word  next"
     }
     return source.slice(0, start) + source.slice(end);
+}
+
+/**
+ * Move a chord marker to a column on `targetLine` — e.g. a drag-and-drop
+ * relocation, possibly onto a different line. `targetLine` and `targetCol`
+ * are read against the *original* `source` (same one `chord`'s own offsets
+ * refer to), same as the still-current parse `sourceOffsetAtCol` uses.
+ * Vacates the old spot with the same space-collapsing rule as
+ * `removeChordFromSource`, then re-inserts the marker's exact original text
+ * so a move never changes a chord's spelling. A column past the target
+ * line's current lyric text pads the line out to it with spaces first, so a
+ * chord can be dragged further right than the words beneath it (e.g. a
+ * trailing hit after the last word).
+ */
+export function moveChordToColumn(
+    source: string,
+    chord: SheetChord,
+    targetLine: SheetLine,
+    targetCol: number
+): string {
+    let start = chord.sourceStart;
+    const end = chord.sourceEnd;
+    if (
+        start > 0 && source[start - 1] === ' ' &&
+        (end >= source.length || source[end] === ' ' || source[end] === '\n' || source[end] === '\r')
+    ) {
+        start--;
+    }
+    const marker = source.slice(chord.sourceStart, end);
+    const withoutChord = source.slice(0, start) + source.slice(end);
+
+    const col = Math.max(0, targetCol);
+    let rawInsertOffset: number;
+    let pad = '';
+    if (col <= targetLine.lyricText.length) {
+        rawInsertOffset = sourceOffsetAtCol(targetLine, col);
+    } else {
+        rawInsertOffset = targetLine.sourceEnd;
+        pad = ' '.repeat(col - targetLine.lyricText.length);
+    }
+
+    let insertAt = rawInsertOffset;
+    if (insertAt > end) insertAt -= end - start;
+    else if (insertAt > start) insertAt = start;
+
+    return withoutChord.slice(0, insertAt) + pad + marker + withoutChord.slice(insertAt);
+}
+
+/**
+ * Nearest column to `col` on `line` that isn't already occupied by another
+ * chord (so a placed/moved chord never lands exactly on top of one already
+ * there, which would render fully overlapping) — walks outward, preferring
+ * rightward on ties. `ignore` excludes a chord from the occupied set, e.g.
+ * the one currently being dragged, so dropping it back near its own spot
+ * doesn't get needlessly bumped away from itself.
+ */
+export function nextFreeColumn(line: SheetLine, col: number, ignore?: SheetChord): number {
+    const occupied = new Set(
+        line.chords.filter(c => c !== ignore).map(c => c.col)
+    );
+    const start = Math.max(0, col);
+    if (!occupied.has(start)) return start;
+    for (let step = 1; ; step++) {
+        if (!occupied.has(start + step)) return start + step;
+        if (start - step >= 0 && !occupied.has(start - step)) return start - step;
+    }
 }

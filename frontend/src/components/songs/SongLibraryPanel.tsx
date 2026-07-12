@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     ArrowDownTrayIcon,
     ArrowUpTrayIcon,
@@ -54,7 +54,7 @@ const SongLibraryPanel: React.FC = () => {
     const loadFromDrive = useGoogleDriveStore(state => state.loadFromDrive);
     const disconnectDrive = useGoogleDriveStore(state => state.disconnect);
 
-    const handleSaveLibrary = async () => {
+    const handleSaveLibrary = useCallback(async () => {
         const file = useSongStore.getState().exportLibrary();
         const json = JSON.stringify(file, null, 2);
         if (await saveToLinkedFile(json)) {
@@ -64,7 +64,21 @@ const SongLibraryPanel: React.FC = () => {
             return;
         }
         downloadBlob(json, 'chordbuildr-songs.json', 'application/json');
-    };
+    }, []);
+
+    // Ctrl/Cmd+S saves the library instead of opening the browser's save
+    // dialog. The panel only mounts on the songs page, so the shortcut is
+    // scoped to it — including while typing in the source editor.
+    useEffect(() => {
+        const onKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                handleSaveLibrary();
+            }
+        };
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [handleSaveLibrary]);
 
     const applyLibraryText = (text: string, handle?: LibraryFileHandle) => {
         setImportError(null);

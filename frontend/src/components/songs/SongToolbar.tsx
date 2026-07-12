@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
+    AdjustmentsHorizontalIcon,
     ArrowDownIcon,
     ArrowPathIcon,
     ArrowRightStartOnRectangleIcon,
     ArrowUpIcon,
+    ArrowsPointingOutIcon,
     CameraIcon,
     DocumentTextIcon,
     PencilSquareIcon,
@@ -16,11 +18,13 @@ import Dropdown from '../Dropdown';
 import { AVAILABLE_KEYS } from '../../hooks/useIntegratedAppLogic';
 import { useHashRoute } from '../../hooks/useHashRoute';
 import { useMusicStore } from '../../stores/musicStore';
-import { Song, playSheetChord, useSongStore } from '../../stores/songStore';
+import { Song, playSheetChord, syncGlobalKeyMode, useSongStore } from '../../stores/songStore';
 import { noteNameToNumber } from '../../util/NoteUtil';
 import { inferKeyAndMode } from '../../util/ProgressionParser';
 import { ParsedSong } from '../../util/SongSheetParser';
 import { exportSongImage, exportSongPdf, exportSongText } from '../../util/songExport';
+import KeyChangePopover from './KeyChangePopover';
+import SheetExportOptionsPopover from './SheetExportOptionsPopover';
 
 interface SongToolbarProps {
     song: Song;
@@ -47,6 +51,19 @@ const SongToolbar: React.FC<SongToolbarProps> = ({ song, parsed }) => {
     const globalMode = useMusicStore(state => state.mode);
     const [, navigate] = useHashRoute();
     const [isLoadingProgression, setIsLoadingProgression] = useState(false);
+    const [exportOptionsAnchor, setExportOptionsAnchor] = useState<DOMRect | null>(null);
+    const exportOptionsButtonRef = useRef<HTMLSpanElement>(null);
+    // A key picked in the dropdown but not yet applied — the popover asks
+    // whether to transpose the chords into it or just pin it as the key.
+    const [pendingKeyChange, setPendingKeyChange] = useState<{ key: string; anchor: DOMRect } | null>(null);
+    const keyDropdownRef = useRef<HTMLSpanElement>(null);
+
+    const handlePrint = () =>
+        withSheetNode(() => exportSongPdf(useSongStore.getState().sheetExportSettings));
+    const handleSaveImage = () =>
+        withSheetNode(node =>
+            exportSongImage(node, song.title, useSongStore.getState().sheetExportSettings)
+        );
 
     const totalChords = parsed.chordSequence.length;
 
@@ -56,6 +73,13 @@ const SongToolbar: React.FC<SongToolbarProps> = ({ song, parsed }) => {
     const inferredForSong = inferredKeyMode?.songId === song.id ? inferredKeyMode : null;
     const sheetKey = song.key ?? inferredForSong?.key ?? globalKey;
     const sheetMode = song.mode ?? inferredForSong?.mode ?? globalMode;
+
+    // The sheet on screen sets the app-wide key/mode — this covers the song
+    // already open when the page mounts, which never goes through selectSong.
+    useEffect(() => {
+        if (hasExplicitKey) syncGlobalKeyMode(song.key!, song.mode!);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [song.id, hasExplicitKey]);
 
     // Detect the key/mode from the song's chords whenever it has no explicit
     // choice; keyed by the chord sequence so edits re-run the detection.
@@ -73,6 +97,32 @@ const SongToolbar: React.FC<SongToolbarProps> = ({ song, parsed }) => {
         return () => { cancelled = true; };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [song.id, hasExplicitKey, chordSignature, modes]);
+
+    // Apply a key picked in the dropdown: either shift every chord into the
+    // new key, or keep the chords sounding as they are and just pin the key.
+    // Both paths respell accidentals (sharps vs flats) to match the new key.
+    const applyKeyChange = (key: string, transpose: boolean) => {
+        setPendingKeyChange(null);
+        if (transpose) {
+            const semitones =
+                ((noteNameToNumber(key) - noteNameToNumber(sheetKey)) % 12 + 12) % 12;
+            useSongStore.getState().transposeSong(song.id, semitones, key);
+        } else {
+            // 0-semitone transpose: pins the key and only respells accidentals
+            useSongStore.getState().transposeSong(song.id, 0, key);
+        }
+    };
+
+    const handleKeyPick = (key: string) => {
+        if (key === sheetKey) return;
+        // Nothing to transpose or respell — just pin the key directly
+        if (!totalChords) {
+            useSongStore.getState().setSongKeyMode(song.id, key, sheetMode);
+            return;
+        }
+        const anchor = keyDropdownRef.current?.getBoundingClientRect();
+        if (anchor) setPendingKeyChange({ key, anchor });
+    };
 
     const handleStep = () => {
         const index = useSongStore.getState().stepNext(totalChords);
@@ -113,6 +163,15 @@ const SongToolbar: React.FC<SongToolbarProps> = ({ song, parsed }) => {
                 <QueueListIcon className="w-3.5 h-3.5" />
                 Sheet
             </Button>
+            <Button
+                onClick={() => useSongStore.getState().setSheetFullscreen(true)}
+                variant="icon"
+                size="icon"
+                title="Show the sheet full screen"
+                aria-label="Show the sheet full screen"
+            >
+                <ArrowsPointingOutIcon className="w-3.5 h-3.5" />
+            </Button>
 
             <div className="w-px h-5 bg-[var(--mcb-border-primary)] mx-1" />
 
@@ -144,25 +203,24 @@ const SongToolbar: React.FC<SongToolbarProps> = ({ song, parsed }) => {
             <div className="w-px h-5 bg-[var(--mcb-border-primary)] mx-1" />
 
             {/* Key/mode the sheet plays in, plus semitone transposition.
-                Picking a different key transposes the song's chords to it. */}
+                Picking a different key asks whether to transpose the chords
+                into it or just pin it as the key. */}
             <div
                 className="flex items-center gap-1.5"
                 title={hasExplicitKey
-                    ? 'Key and mode for this song — picking a new key transposes the chords'
-                    : 'Key and mode detected from the song\'s chords — picking a new key transposes the chords'}
+                    ? 'Key and mode for this song — picking a new key asks whether to transpose the chords or just set the key'
+                    : 'Key and mode detected from the song\'s chords — picking a new key asks whether to transpose the chords or just set the key'}
             >
-                <Dropdown
-                    value={sheetKey}
-                    onChange={(key: string) => {
-                        const semitones =
-                            ((noteNameToNumber(key) - noteNameToNumber(sheetKey)) % 12 + 12) % 12;
-                        useSongStore.getState().transposeSong(song.id, semitones, key);
-                    }}
-                    options={AVAILABLE_KEYS}
-                    className="w-[5.5rem]"
-                    buttonClassName="px-2.5 py-1 font-medium text-xs h-7 flex items-center"
-                    menuClassName="min-w-[5.5rem]"
-                />
+                <span ref={keyDropdownRef} className="inline-flex">
+                    <Dropdown
+                        value={sheetKey}
+                        onChange={handleKeyPick}
+                        options={AVAILABLE_KEYS}
+                        className="w-[5.5rem]"
+                        buttonClassName="px-2.5 py-1 font-medium text-xs h-7 flex items-center"
+                        menuClassName="min-w-[5.5rem]"
+                    />
+                </span>
                 <Dropdown
                     value={sheetMode}
                     onChange={mode => useSongStore.getState().setSongKeyMode(song.id, sheetKey, mode)}
@@ -178,6 +236,16 @@ const SongToolbar: React.FC<SongToolbarProps> = ({ song, parsed }) => {
                     </span>
                 )}
             </div>
+            {pendingKeyChange && (
+                <KeyChangePopover
+                    fromKey={sheetKey}
+                    toKey={pendingKeyChange.key}
+                    anchorRect={pendingKeyChange.anchor}
+                    onTranspose={() => applyKeyChange(pendingKeyChange.key, true)}
+                    onSetKeyOnly={() => applyKeyChange(pendingKeyChange.key, false)}
+                    onClose={() => setPendingKeyChange(null)}
+                />
+            )}
             <Button
                 onClick={() => useSongStore.getState().transposeSong(song.id, -1)}
                 variant="icon"
@@ -212,7 +280,7 @@ const SongToolbar: React.FC<SongToolbarProps> = ({ song, parsed }) => {
                 <DocumentTextIcon className="w-3.5 h-3.5" />
             </Button>
             <Button
-                onClick={() => withSheetNode(() => exportSongPdf())}
+                onClick={handlePrint}
                 variant="icon"
                 size="icon"
                 title="Print / save as PDF"
@@ -221,7 +289,7 @@ const SongToolbar: React.FC<SongToolbarProps> = ({ song, parsed }) => {
                 <PrinterIcon className="w-3.5 h-3.5" />
             </Button>
             <Button
-                onClick={() => withSheetNode(node => exportSongImage(node, song.title))}
+                onClick={handleSaveImage}
                 variant="icon"
                 size="icon"
                 title="Export as image (.png)"
@@ -229,6 +297,41 @@ const SongToolbar: React.FC<SongToolbarProps> = ({ song, parsed }) => {
             >
                 <CameraIcon className="w-3.5 h-3.5" />
             </Button>
+            {/* Layout options for print / image export. The wrapper eats
+                mousedown/touchstart so the popover's outside-click closer
+                doesn't fire first and turn the toggle into a reopen. */}
+            <span
+                ref={exportOptionsButtonRef}
+                className="inline-flex"
+                onMouseDown={e => e.stopPropagation()}
+                onTouchStart={e => e.stopPropagation()}
+            >
+                <Button
+                    onClick={() =>
+                        setExportOptionsAnchor(anchor =>
+                            anchor
+                                ? null
+                                : exportOptionsButtonRef.current?.getBoundingClientRect() ?? null
+                        )
+                    }
+                    variant="icon"
+                    size="icon"
+                    active={!!exportOptionsAnchor}
+                    title="Print & image options"
+                    aria-label="Print and image options"
+                    aria-expanded={!!exportOptionsAnchor}
+                >
+                    <AdjustmentsHorizontalIcon className="w-3.5 h-3.5" />
+                </Button>
+            </span>
+            {exportOptionsAnchor && (
+                <SheetExportOptionsPopover
+                    anchorRect={exportOptionsAnchor}
+                    onClose={() => setExportOptionsAnchor(null)}
+                    onPrint={handlePrint}
+                    onSaveImage={handleSaveImage}
+                />
+            )}
 
             <div className="w-px h-5 bg-[var(--mcb-border-primary)] mx-1" />
 

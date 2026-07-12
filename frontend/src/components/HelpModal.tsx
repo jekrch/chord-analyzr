@@ -420,6 +420,54 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     </div>
                 </HelpSection>
 
+                <HelpSection title="Song Sheets">
+                    <div className="space-y-4">
+                        <div className="p-4 rounded-lg">
+                            <h5 className="text-white font-semibold mb-3 text-sm text-left">What Song Sheets Are</h5>
+                            <p className="text-sm mb-3 text-left">Song Sheets turn free-form lyrics and chords into a structured, playable, printable chart. Open them from the app menu &rarr; <strong className="text-white">Song Sheets</strong>. Songs are saved in your browser and can be exported to a file or synced to Google Drive.</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            <div className="p-4 rounded-lg">
+                                <h5 className="text-white font-semibold mb-3 text-sm text-left">Adding a Song</h5>
+                                <div className="space-y-2 text-sm text-left">
+                                    <div><strong className="text-white">Paste Lyrics & Chords:</strong> Paste chords-over-lyrics or ChordPro text and the parser detects chords and section headers automatically</div>
+                                    <div><strong className="text-white">Free-form Placement:</strong> Chords align to the exact character above each lyric, so spacing is preserved</div>
+                                    <div><strong className="text-white">Set Key/Mode:</strong> Pin a song's key and mode, or let the app auto-detect it. Picking a new key asks whether to transpose the chords into it or just set the key — either way the chords are respelled (sharps vs flats) to match</div>
+                                </div>
+                            </div>
+                            <div className="p-4 rounded-lg">
+                                <h5 className="text-white font-semibold mb-3 text-sm text-left">Editing</h5>
+                                <div className="space-y-2 text-sm text-left">
+                                    <div><strong className="text-white">Add/Edit Chords:</strong> Click a spot on a line to add a chord, or click an existing chord to change it</div>
+                                    <div><strong className="text-white">Drag to Reposition:</strong> Drag a chord along the line to move it</div>
+                                    <div><strong className="text-white">Transpose:</strong> Shift the whole song up or down by semitones</div>
+                                    <div><strong className="text-white">Undo:</strong> Step back through your recent edits</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            <div className="p-4 rounded-lg">
+                                <h5 className="text-white font-semibold mb-3 text-sm text-left">Playback</h5>
+                                <div className="space-y-2 text-sm text-left">
+                                    <div><strong className="text-white">Click to Hear:</strong> Click any chord to play it through the app's audio engine</div>
+                                    <div><strong className="text-white">Step Through:</strong> Move chord by chord using the same voices, effects, and patterns as the rest of the app</div>
+                                    <div><strong className="text-white">Sheet View:</strong> Switch to a clean, full-screen view for performance</div>
+                                </div>
+                            </div>
+                            <div className="p-4 rounded-lg">
+                                <h5 className="text-white font-semibold mb-3 text-sm text-left">Exporting & Printing</h5>
+                                <div className="space-y-2 text-sm text-left">
+                                    <div><strong className="text-white">Formats:</strong> Export to plain text, a PNG image, or a PDF (via the browser print dialog)</div>
+                                    <div><strong className="text-white">Layout Options:</strong> Tune page orientation, margins, columns, line spacing, and font sizes</div>
+                                    <div><strong className="text-white">Library:</strong> Save songs to a JSON file or sync them to Google Drive</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </HelpSection>
+
                 <HelpSection title="Interface Tips">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <div className="space-y-4">

@@ -152,6 +152,32 @@ Returns:
 - 3-band equalizer for sound shaping
 - Adjustable note duration and octave controls
 
+### Song Sheets
+
+A lyrics-and-chords workspace for turning songs into playable, printable sheets.
+
+**Import & parsing**
+- Paste free-form chords-over-lyrics or ChordPro text and the parser auto-detects chords, section headers (Verse, Chorus, Bridge…), and layout
+- Chords are positioned by exact character column over the lyrics, so alignment is preserved regardless of word spacing
+- Songs are stored as a single ChordPro-style source string with inline `[Am]` markers
+
+**Editing**
+- Click anywhere on a line to add a chord, or click an existing chord to edit it via the chord-picker popover
+- Drag chords to reposition them, right-click for a context menu, and undo edits
+- Transpose an entire song up or down; each song can pin its own key/mode or auto-detect
+
+**Playback**
+- Click any chord to hear it through the app's audio engine, or step through the sheet
+- Chords play with the same instrument voices, effects, and pattern engine used elsewhere in the app
+
+**Views & export**
+- Switch between an edit view and a clean, full-screen sheet view for performance
+- Export to plain text (aligned chords-over-lyrics), PNG image, or PDF (via the browser print dialog)
+- Tunable print/export layout: page orientation, margins, columns, line spacing, and lyric/chord font sizes
+
+**Library**
+- Songs live in the browser (localStorage) and can be saved/loaded as a local JSON file, or synced to Google Drive (see below)
+
 ### Data Architecture
 
 The frontend leverages the PostgreSQL-driven backend that provides:
@@ -177,7 +203,7 @@ The feature is entirely client-side (Google Identity Services token flow with th
 4. Put the client id in `frontend/.env.local`:
 
    ```
-   VITE_GOOGLE_CLIENT_ID=123
+   VITE_GOOGLE_CLIENT_ID=1234567890-abc123.apps.googleusercontent.com
    ```
 
 For the GitHub Pages deploy, set the same value as a repository *variable* named `VITE_GOOGLE_CLIENT_ID` (client ids are public, no secret needed). When unset, the Drive buttons simply don't render.

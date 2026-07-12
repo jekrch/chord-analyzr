@@ -101,7 +101,7 @@ const ChordPickerPopover: React.FC<ChordPickerPopoverProps> = ({
         : { left, top: anchorRect.bottom + 4 };
 
     return createPortal(
-        <div ref={menuRef} style={style} className="fixed w-72 mcb-panel !rounded-lg z-[1100] overflow-hidden text-left">
+        <div ref={menuRef} style={style} data-chord-picker className="fixed w-72 mcb-panel !rounded-lg z-[1100] overflow-hidden text-left">
             <div className="mcb-panel-header !py-1.5 flex items-center justify-between">
                 <span className="mcb-label">{editingChord ? `Change ${editingChord.name}` : 'Add chord'}</span>
                 {onRemove && (

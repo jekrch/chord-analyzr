@@ -8,8 +8,11 @@ import {
     songToText,
     sourceOffsetAtCol,
     insertChordInSource,
+    insertChordAtColumn,
     replaceChordInSource,
     removeChordFromSource,
+    moveChordToColumn,
+    nextFreeColumn,
     transposeSongSource,
 } from './SongSheetParser';
 
@@ -57,7 +60,19 @@ describe('normalizeToChordPro', () => {
         expect(normalizeToChordPro('Am F C G\n\nHello darkness')).toBe(
             '[Am]   [F]  [C]  [G]\n\nHello darkness'
         );
-        expect(normalizeToChordPro('Am F x2')).toBe('[Am]   [F]  x2');
+        expect(normalizeToChordPro('Am F x2')).toBe('[Am]   [F]  [*x2]');
+    });
+
+    it('turns unreadable words on chord lines into [*annotations] at their column', () => {
+        // "Badchord" has a note-shaped root but no readable suffix; it keeps
+        // its place above the lyrics instead of being dropped or left inline.
+        expect(normalizeToChordPro('C  G   Badchord\nWhen the night has come')).toBe(
+            '[C]Whe[G]n th[*Badchord]e night has come'
+        );
+        // ...including past the end of a short lyric line
+        expect(normalizeToChordPro('C        G N.C.\nSo short')).toBe(
+            '[C]So short [G]  [*N.C.]'
+        );
     });
 
     it('handles two stacked chord lines', () => {
@@ -158,6 +173,28 @@ describe('parseSong', () => {
         expect(song.chordSequence[0].parsed.matchType).toBe('nearest');
     });
 
+    it('parses [*text] markers as inert annotations at their column', () => {
+        const song = parseSong('[C]Whe[G]n th[*Badchord]e night');
+        const line = song.lines[0];
+        expect(line.lyricText).toBe('When the night');
+        expect(line.chords.map(c => ({ name: c.name, col: c.col, annotation: c.annotation })))
+            .toEqual([
+                { name: 'C', col: 0, annotation: false },
+                { name: 'G', col: 3, annotation: false },
+                { name: 'Badchord', col: 7, annotation: true },
+            ]);
+        // Annotations stay out of the playable sequence
+        expect(song.chordSequence.map(c => c.name)).toEqual(['C', 'G']);
+        expect(line.chords[2].seqIndex).toBe(-1);
+        expect(line.chords[2].parsed.root).toBeNull();
+    });
+
+    it('keeps an empty [*] as literal lyric text', () => {
+        const song = parseSong('la la [*] la');
+        expect(song.lines[0].chords).toHaveLength(0);
+        expect(song.lines[0].lyricText).toBe('la la [*] la');
+    });
+
     it('classifies empty and whitespace lines', () => {
         const song = parseSong('[Am]Hi\n\n   \nBye');
         expect(song.lines.map(l => l.kind)).toEqual(['lyrics', 'empty', 'empty', 'lyrics']);
@@ -189,10 +226,20 @@ describe('songToText', () => {
         expect(text.split('\n')[0].trim()).toBe('Cmadd(9)');
     });
 
+    it('serializes annotations as bare text in the chord row', () => {
+        const text = songToText(parseSong('[C]Whe[G]n th[*Badchord]e night'));
+        expect(text).toBe('C  G   Badchord\nWhen the night');
+    });
+
     it('is stable under re-import round trips', () => {
         const once = songToText(parseSong(normalizeToChordPro(STAND_BY_ME)));
         const twice = songToText(parseSong(normalizeToChordPro(once)));
         expect(twice).toBe(once);
+    });
+
+    it('round-trips annotations through export and re-import', () => {
+        const sheet = 'C  G   Badchord\nWhen the night has come';
+        expect(songToText(parseSong(normalizeToChordPro(sheet)))).toBe(sheet);
     });
 });
 
@@ -241,6 +288,77 @@ describe('source splicing helpers', () => {
             .toBe('word next');
         const atEnd = 'word [Am]';
         expect(removeChordFromSource(atEnd, parseSong(atEnd).chordSequence[0])).toBe('word');
+    });
+
+    it('moves a chord forward to a new column, past its old spot', () => {
+        const source = 'Hello [Am]darkness';
+        const parsed = parseSong(source);
+        const line = parsed.lines[0];
+        const chord = parsed.chordSequence[0];
+        expect(moveChordToColumn(source, chord, line, 10)).toBe('Hello dark[Am]ness'); // "Hello dark|ness"
+    });
+
+    it('moves a standalone chord backward and collapses the vacated space', () => {
+        const source = 'word [Am] next';
+        const parsed = parseSong(source);
+        const line = parsed.lines[0];
+        const chord = parsed.chordSequence[0];
+        expect(moveChordToColumn(source, chord, line, 0)).toBe('[Am]word next');
+    });
+
+    it('preserves the chord\'s exact raw text when moving it', () => {
+        const source = 'Hello [f#m7]darkness';
+        const parsed = parseSong(source);
+        const line = parsed.lines[0];
+        const chord = parsed.chordSequence[0];
+        expect(moveChordToColumn(source, chord, line, 0)).toBe('[f#m7]Hello darkness');
+    });
+
+    it('extends a line with spaces when a chord moves past its last character', () => {
+        const source = '[Am]Hi';
+        const parsed = parseSong(source);
+        const line = parsed.lines[0]; // lyricText "Hi", length 2
+        const chord = parsed.chordSequence[0];
+        expect(moveChordToColumn(source, chord, line, 5)).toBe('Hi   [Am]');
+    });
+});
+
+describe('insertChordAtColumn', () => {
+    it('inserts at a column within the existing text', () => {
+        const source = 'Hello darkness';
+        const line = parseSong(source).lines[0];
+        expect(insertChordAtColumn(source, line, 6, 'Am')).toBe('Hello [Am]darkness');
+    });
+
+    it('pads a single separating space before the marker when requested', () => {
+        const source = 'word';
+        const line = parseSong(source).lines[0];
+        expect(insertChordAtColumn(source, line, 4, 'Am', true)).toBe('word [Am]');
+    });
+
+    it('extends a short line with spaces past its last character', () => {
+        const source = 'Hi';
+        const line = parseSong(source).lines[0];
+        expect(insertChordAtColumn(source, line, 5, 'Am')).toBe('Hi   [Am]');
+    });
+});
+
+describe('nextFreeColumn', () => {
+    it('leaves an already-free column untouched', () => {
+        const line = parseSong('word [Am] next').lines[0];
+        expect(nextFreeColumn(line, 2)).toBe(2);
+    });
+
+    it('bumps off a column already holding a chord, preferring rightward', () => {
+        const line = parseSong('word [Am] next').lines[0]; // Am sits at col 5
+        expect(nextFreeColumn(line, 5)).toBe(6);
+    });
+
+    it('excludes an ignored chord, so it can land back near its own spot', () => {
+        const parsed = parseSong('word [Am] next');
+        const line = parsed.lines[0];
+        const chord = parsed.chordSequence[0];
+        expect(nextFreeColumn(line, 5, chord)).toBe(5);
     });
 });
 
@@ -301,6 +419,10 @@ describe('chordSpansInSource', () => {
     it('skips section labels and non-chord brackets', () => {
         expect(chordSpansInSource('[Chorus]\nla la [Repeat] la')).toEqual([]);
     });
+
+    it('skips [*annotation] markers', () => {
+        expect(chordSpansInSource('[Am]la [*x2]')).toEqual([{ start: 0, end: 4 }]);
+    });
 });
 
 describe('transposeSongSource', () => {
@@ -349,6 +471,12 @@ describe('transposeSongSource', () => {
     it('leaves section labels and non-chord brackets alone', () => {
         expect(transposeSongSource('[Chorus]\nla la [Repeat] la', 2, false)).toBe(
             '[Chorus]\nla la [Repeat] la'
+        );
+    });
+
+    it('never transposes [*annotations], even chord-shaped ones', () => {
+        expect(transposeSongSource('[C]la [*Badchord] [*x2]', 2, false)).toBe(
+            '[D]la [*Badchord] [*x2]'
         );
     });
 

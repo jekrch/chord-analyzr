@@ -70,6 +70,10 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose, onOpenHelp }) 
                                 <div className="w-2 h-2 rounded-full bg-[var(--mcb-accent-text-primary)] mt-2 flex-shrink-0"></div>
                                 <span className="text-sm text-mcb-secondary text-left">Live mode for performance and improvisation</span>
                             </div>
+                            <div className="flex items-start space-x-3 p-2 rounded-md transition-colors">
+                                <div className="w-2 h-2 rounded-full bg-[var(--mcb-accent-text-primary)] mt-2 flex-shrink-0"></div>
+                                <span className="text-sm text-mcb-secondary text-left">Song sheets for editing, playing, and printing chords-over-lyrics</span>
+                            </div>
                         </div>
                     </div>
                 </div>

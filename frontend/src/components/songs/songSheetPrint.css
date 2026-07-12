@@ -1,10 +1,26 @@
 /* Print only the rendered song sheet, black on white, when exporting to PDF */
 @media print {
-    /* Zero page margin leaves the browser nowhere to print its own header
-       (page title, top) and footer (full URL, bottom); the sheet supplies
-       its own padding and footer instead. */
+    /* Vertical margins must be real page margins: the sheet's own padding
+       only exists at the start and end of its content, so on middle pages
+       padded content would run edge to edge. Horizontal margins stay as
+       sheet padding (the sheet spans every page, so they hold everywhere).
+       The print button injects this rule again with the user's chosen
+       margin and orientation (see exportSongPdf); this is the fallback for
+       a direct Ctrl+P. Note: with nonzero vertical margins the browser has
+       room for its own optional header/footer — that's the "Headers and
+       footers" checkbox in the print dialog. */
     @page {
-        margin: 0;
+        margin: 0.6in 0;
+    }
+    /* The app paints html/body/#root with the dark theme background; hiding
+       elements doesn't stop those backgrounds from printing, so any page area
+       the sheet doesn't cover would come out as a dark box. */
+    html,
+    body,
+    #root {
+        background: #fff !important;
+        height: auto !important;
+        overflow: visible !important;
     }
     body * {
         visibility: hidden;
@@ -19,19 +35,21 @@
         top: 0;
         width: 100%;
         margin: 0;
-        padding: 0.6in 0.6in 1in;
+        padding: 0 calc(var(--sheet-margin, 0.6) * 1in);
         background: #fff !important;
         color: #000 !important;
         border: none !important;
         box-shadow: none !important;
         overflow: visible !important;
     }
-    /* Our own footer: just the site, bottom left of every page */
+    /* Credit line, in flow a few lines below the last line. It can't be a
+       position:fixed per-page footer — fixed boxes sit inside the page
+       area, where content flows all the way down, so they'd overlap the
+       last line of every full page; and the margin area clips. */
     #song-sheet-print::after {
-        content: 'modal.chordbuildr.com';
-        position: fixed;
-        bottom: 0.4in;
-        left: 0.6in;
+        content: 'created with modal.chordbuildr.com';
+        display: block;
+        margin-top: 3em;
         font-size: 8pt;
         color: #555;
         visibility: visible;
@@ -42,17 +60,46 @@
         text-shadow: none !important;
         box-shadow: none !important;
     }
+    /* Export layout options (see SheetExportSettings): lyric columns, line
+       spacing, and independent lyric/chord font sizes */
+    #song-sheet-print .sheet-lines {
+        column-count: var(--sheet-columns, 1);
+        column-gap: 0.35in;
+    }
+    #song-sheet-print .sheet-lyric {
+        font-size: calc(var(--sheet-lyric-size, 11) * 1pt) !important;
+        line-height: var(--sheet-line-spacing, 1.3) !important;
+    }
+    /* The on-screen anchor height (2em of the lyric size) assumes chords no
+       bigger than the lyrics; a larger chord font needs the anchor to grow
+       so the chord (1.25 line-height) clears the lyric ascenders (~1em). */
+    #song-sheet-print [data-chord-anchor] {
+        height: max(2em, calc(var(--sheet-chord-size, 10) * 1.25pt + 1em)) !important;
+    }
     /* Chords stay visually distinct in print */
     #song-sheet-print button.font-mono {
         font-weight: 700 !important;
+        font-size: calc(var(--sheet-chord-size, 10) * 1pt) !important;
     }
     #song-sheet-print .print-hidden {
         display: none !important;
     }
+    /* Printing straight out of the live preview: the preview's scaler must
+       not shrink the printed page, and being position:relative it would
+       become the absolute sheet's containing block, pinning it mid-page —
+       neutralize it entirely for the duration of the print. */
+    .sheet-preview-scale {
+        position: static !important;
+        transform: none !important;
+        width: auto !important;
+        margin: 0 !important;
+    }
 }
 
-/* Same black-on-white treatment while capturing the sheet as a PNG */
+/* Same black-on-white treatment while capturing the sheet as a PNG; the
+   capture code sets the node to the page width for the chosen orientation */
 #song-sheet-print.song-sheet-exporting {
+    padding: calc(var(--sheet-margin, 0.6) * 1in);
     background: #fff !important;
     color: #000 !important;
     border: none !important;
@@ -69,9 +116,29 @@
        class is added, before any transition-colors fade would finish. */
     transition: none !important;
 }
+#song-sheet-print.song-sheet-exporting .sheet-lines {
+    column-count: var(--sheet-columns, 1);
+    column-gap: 0.35in;
+}
+#song-sheet-print.song-sheet-exporting .sheet-lyric {
+    font-size: calc(var(--sheet-lyric-size, 11) * 1pt) !important;
+    line-height: var(--sheet-line-spacing, 1.3) !important;
+}
+#song-sheet-print.song-sheet-exporting [data-chord-anchor] {
+    height: max(2em, calc(var(--sheet-chord-size, 10) * 1.25pt + 1em)) !important;
+}
 #song-sheet-print.song-sheet-exporting button.font-mono {
     font-weight: 700 !important;
+    font-size: calc(var(--sheet-chord-size, 10) * 1pt) !important;
 }
 #song-sheet-print.song-sheet-exporting .print-hidden {
     display: none !important;
+}
+/* Same credit line on the exported image */
+#song-sheet-print.song-sheet-exporting::after {
+    content: 'created with modal.chordbuildr.com';
+    display: block;
+    margin-top: 3em;
+    font-size: 8pt;
+    color: #555;
 }

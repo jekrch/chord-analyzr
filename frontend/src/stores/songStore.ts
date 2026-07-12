@@ -27,6 +27,26 @@ export interface SongLibraryFile {
 export const SONG_LIBRARY_FORMAT = 'mcb-song-library';
 export const SONG_LIBRARY_VERSION = 1;
 const STORAGE_KEY = 'mcb-song-library';
+const EXPORT_SETTINGS_KEY = 'mcb-sheet-export-settings';
+
+/** Layout options for printing / image export of the rendered sheet. */
+export interface SheetExportSettings {
+    orientation: 'portrait' | 'landscape';
+    margin: number;      // page margin, inches
+    lineSpacing: number; // lyric line-height multiplier
+    lyricSize: number;   // lyric font size, pt
+    chordSize: number;   // chord font size, pt
+    columns: number;     // lyric columns per page
+}
+
+export const DEFAULT_SHEET_EXPORT_SETTINGS: SheetExportSettings = {
+    orientation: 'portrait',
+    margin: 0.6,
+    lineSpacing: 1.3,
+    lyricSize: 11,
+    chordSize: 10,
+    columns: 1,
+};
 
 const START_OCTAVE = 4;
 const END_OCTAVE = 7;
@@ -68,14 +88,30 @@ function loadFromStorage(): { songs: Song[]; currentSongId: string | null } {
     return { songs: [], currentSongId: null };
 }
 
+function loadExportSettings(): SheetExportSettings {
+    try {
+        const raw = localStorage.getItem(EXPORT_SETTINGS_KEY);
+        if (raw) return { ...DEFAULT_SHEET_EXPORT_SETTINGS, ...JSON.parse(raw) };
+    } catch {
+        // Corrupt or unavailable storage — fall back to the defaults
+    }
+    return { ...DEFAULT_SHEET_EXPORT_SETTINGS };
+}
+
 interface SongState {
     songs: Song[];
     currentSongId: string | null;
     viewMode: 'edit' | 'sheet';
+    sheetFullscreen: boolean; // sheet view shown as a full-viewport overlay
+    // Sheet renders as a live print preview while the export options popover
+    // is open. Session-only.
+    sheetExportPreview: boolean;
     stepIndex: number | null; // cursor into the current song's chord sequence
     // Key/mode detected from a song's chords, for songs without an explicit
     // choice. Session-only; keyed by song so stale results are ignored.
     inferredKeyMode: { songId: string; key: string; mode: string } | null;
+    // Print / image export layout, shared by all songs and persisted.
+    sheetExportSettings: SheetExportSettings;
 
     createSong: (title?: string) => string;
     updateSongSource: (id: string, source: string) => void;
@@ -83,8 +119,12 @@ interface SongState {
     deleteSong: (id: string) => void;
     selectSong: (id: string | null) => void;
     setViewMode: (mode: 'edit' | 'sheet') => void;
+    setSheetFullscreen: (on: boolean) => void;
+    setSheetExportPreview: (on: boolean) => void;
     setSongKeyMode: (id: string, key: string, mode: string) => void;
     setInferredKeyMode: (songId: string, key: string, mode: string) => void;
+    setSheetExportSettings: (patch: Partial<SheetExportSettings>) => void;
+    resetSheetExportSettings: () => void;
     transposeSong: (id: string, semitones: number, targetKey?: string) => void;
 
     stepNext: (sequenceLength: number) => number | null;
@@ -115,11 +155,25 @@ export function getActiveSheetKeyMode(): { key: string; mode: string } {
     return effectiveKeyMode(songs.find(s => s.id === currentSongId));
 }
 
+/**
+ * Mirror a song's key/mode choice to the app-wide key/mode, so the top-nav
+ * pill, chord explorer, and piano highlighting follow the sheet.
+ */
+export function syncGlobalKeyMode(key: string, mode: string) {
+    const music = useMusicStore.getState();
+    if (music.key !== key || music.mode !== mode) {
+        music.setKeyAndMode(key, mode);
+    }
+}
+
 export const useSongStore = create<SongState>((set, get) => ({
     ...loadFromStorage(),
     viewMode: 'edit',
+    sheetFullscreen: false,
+    sheetExportPreview: false,
     stepIndex: null,
     inferredKeyMode: null,
+    sheetExportSettings: loadExportSettings(),
 
     createSong: (title?: string) => {
         const now = new Date().toISOString();
@@ -165,26 +219,55 @@ export const useSongStore = create<SongState>((set, get) => ({
             };
         }),
 
-    selectSong: (id: string | null) => set({ currentSongId: id, stepIndex: null }),
+    // Opening a song brings the app-wide key/mode along with it. Songs
+    // without an explicit choice sync later, once detection lands (see
+    // setInferredKeyMode).
+    selectSong: (id: string | null) => {
+        set({ currentSongId: id, stepIndex: null });
+        const song = get().songs.find(s => s.id === id);
+        if (song?.key && song.mode) syncGlobalKeyMode(song.key, song.mode);
+    },
 
     setViewMode: (mode: 'edit' | 'sheet') => set({ viewMode: mode }),
 
-    setSongKeyMode: (id: string, key: string, mode: string) =>
+    // Entering full screen always shows the rendered sheet, whatever the
+    // current view mode.
+    setSheetFullscreen: (on: boolean) =>
+        set(on ? { sheetFullscreen: true, viewMode: 'sheet' } : { sheetFullscreen: false }),
+
+    // Previewing always shows the rendered sheet — the preview is the sheet
+    // itself restyled as the printed page (see SongSheetView).
+    setSheetExportPreview: (on: boolean) =>
+        set(on ? { sheetExportPreview: true, viewMode: 'sheet' } : { sheetExportPreview: false }),
+
+    setSongKeyMode: (id: string, key: string, mode: string) => {
         set(state => ({
             songs: state.songs.map(s =>
                 s.id === id ? { ...s, key, mode, updatedAt: new Date().toISOString() } : s
             ),
-        })),
+        }));
+        syncGlobalKeyMode(key, mode);
+    },
 
-    setInferredKeyMode: (songId: string, key: string, mode: string) =>
-        set({ inferredKeyMode: { songId, key, mode } }),
+    setInferredKeyMode: (songId: string, key: string, mode: string) => {
+        set({ inferredKeyMode: { songId, key, mode } });
+        // The detected key is the song's effective key — reflect it app-wide
+        if (get().currentSongId === songId) syncGlobalKeyMode(key, mode);
+    },
+
+    setSheetExportSettings: (patch: Partial<SheetExportSettings>) =>
+        set(state => ({ sheetExportSettings: { ...state.sheetExportSettings, ...patch } })),
+
+    resetSheetExportSettings: () =>
+        set({ sheetExportSettings: { ...DEFAULT_SHEET_EXPORT_SETTINGS } }),
 
     /**
      * Rewrite every chord in the song's source shifted by `semitones`, and
      * pin the song's key to the correspondingly shifted key (so repeated
      * transposes accumulate from a stable reference). `targetKey` overrides
      * the new key's spelling (e.g. the exact name picked in the key
-     * dropdown). Accidental spelling follows the new key's signature.
+     * dropdown). Accidental spelling follows the new key's signature. The
+     * app-wide key/mode follows the change (see syncGlobalKeyMode).
      */
     transposeSong: (id: string, semitones: number, targetKey?: string) => {
         const song = get().songs.find(s => s.id === id);
@@ -200,6 +283,7 @@ export const useSongStore = create<SongState>((set, get) => ({
                     : s
             ),
         }));
+        syncGlobalKeyMode(newKey, mode);
     },
 
     // Advance the step cursor (wrapping) and return the new index so the
@@ -284,9 +368,7 @@ export const useSongStore = create<SongState>((set, get) => ({
 
         const { clearAllChords, setAddedChords } = usePlaybackStore.getState();
         clearAllChords();
-        if (key !== musicStore.key || mode !== musicStore.mode) {
-            useMusicStore.getState().setKeyAndMode(key, mode);
-        }
+        syncGlobalKeyMode(key, mode);
         setAddedChords(finalChords);
         return finalChords.length;
     },
@@ -305,6 +387,16 @@ useSongStore.subscribe((state, prev) => {
             // Storage full or unavailable — the user can still export to file
         }
     }, 500);
+});
+
+// Persist export settings whenever they change (tiny payload, no debounce)
+useSongStore.subscribe((state, prev) => {
+    if (state.sheetExportSettings === prev.sheetExportSettings) return;
+    try {
+        localStorage.setItem(EXPORT_SETTINGS_KEY, JSON.stringify(state.sheetExportSettings));
+    } catch {
+        // Storage unavailable — settings just won't survive a reload
+    }
 });
 
 // ---------------------------------------------------------------------------

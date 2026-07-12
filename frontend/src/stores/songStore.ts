@@ -85,7 +85,7 @@ interface SongState {
     setViewMode: (mode: 'edit' | 'sheet') => void;
     setSongKeyMode: (id: string, key: string, mode: string) => void;
     setInferredKeyMode: (songId: string, key: string, mode: string) => void;
-    transposeSong: (id: string, semitones: number) => void;
+    transposeSong: (id: string, semitones: number, targetKey?: string) => void;
 
     stepNext: (sequenceLength: number) => number | null;
     resetStep: () => void;
@@ -182,14 +182,15 @@ export const useSongStore = create<SongState>((set, get) => ({
     /**
      * Rewrite every chord in the song's source shifted by `semitones`, and
      * pin the song's key to the correspondingly shifted key (so repeated
-     * transposes accumulate from a stable reference). Accidental spelling
-     * follows the new key's signature.
+     * transposes accumulate from a stable reference). `targetKey` overrides
+     * the new key's spelling (e.g. the exact name picked in the key
+     * dropdown). Accidental spelling follows the new key's signature.
      */
-    transposeSong: (id: string, semitones: number) => {
+    transposeSong: (id: string, semitones: number, targetKey?: string) => {
         const song = get().songs.find(s => s.id === id);
         if (!song) return;
         const { key, mode } = effectiveKeyMode(song);
-        const newKey = transposeNoteName(key, semitones);
+        const newKey = targetKey ?? transposeNoteName(key, semitones);
         const preferFlats = newKey.includes('b') || newKey === 'F';
         const source = transposeSongSource(song.source, semitones, preferFlats);
         set(state => ({

@@ -1,10 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { InformationCircleIcon, QuestionMarkCircleIcon, EllipsisVerticalIcon, SwatchIcon, MusicalNoteIcon, Squares2X2Icon } from '@heroicons/react/20/solid';
+import React, { useState } from 'react';
 import AboutModal from './AboutModal';
 import HelpModal from './HelpModal';
 import ThemeSettingsModal from './ThemeSettingsModal';
+import FullScreenMenu from './FullScreenMenu';
 import { useMusicStore } from '../stores/musicStore';
-import { useHashRoute } from '../hooks/useHashRoute';
 import Logo from './Logo';
 
 
@@ -12,39 +11,14 @@ const HeaderNav: React.FC = () => {
     const [showAboutModal, setShowAboutModal] = useState(false);
     const [showHelpModal, setShowHelpModal] = useState(false);
     const [showThemeModal, setShowThemeModal] = useState(false);
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const dropdownRef = useRef<HTMLDivElement>(null);
-    const buttonRef = useRef<HTMLButtonElement>(null);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const musicStore = useMusicStore();
-    const [route, navigate] = useHashRoute();
 
     const {
         key,
         mode
     } = musicStore;
-
-    // Close dropdown when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (
-                dropdownRef.current &&
-                buttonRef.current &&
-                !dropdownRef.current.contains(event.target as Node) &&
-                !buttonRef.current.contains(event.target as Node)
-            ) {
-                setIsDropdownOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    const handleMenuItemClick = (action: () => void) => {
-        action();
-        setIsDropdownOpen(false);
-    };
 
     const handleOpenHelp = () => {
         setShowHelpModal(true);
@@ -83,73 +57,37 @@ const HeaderNav: React.FC = () => {
                                 <span className="text-mcb-secondary">{mode}</span>
                             </div>
 
-                            {/* Dropdown Menu */}
-                            <div className="relative">
-                                <button
-                                    ref={buttonRef}
-                                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                    className="w-8 h-8 flex items-center justify-center text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover rounded-md transition-all duration-200 border border-transparent hover:border-mcb-primary"
-                                    title="Menu"
-                                >
-                                    <EllipsisVerticalIcon className="w-5 h-5" />
-                                </button>
-
-                                {/* Dropdown Menu */}
-                                {isDropdownOpen && (
-                                    <div
-                                        ref={dropdownRef}
-                                        className="absolute right-0 mt-2 w-64 mcb-panel !rounded-lg z-50 overflow-hidden"
-                                    >
-
-                                        {/* Menu Items */}
-                                        <div className="py-2">
-                                            <button
-                                                onClick={() => handleMenuItemClick(() => navigate(route === 'songs' ? 'main' : 'songs'))}
-                                                className="w-full px-4 py-2.5 text-left flex items-center space-x-3 text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-all duration-150"
-                                            >
-                                                {route === 'songs'
-                                                    ? <Squares2X2Icon className="w-4 h-4 flex-shrink-0" />
-                                                    : <MusicalNoteIcon className="w-4 h-4 flex-shrink-0" />}
-                                                <span className="text-sm font-medium">
-                                                    {route === 'songs' ? 'Chord Builder' : 'Song Sheets'}
-                                                </span>
-                                            </button>
-                                            <button
-                                                onClick={() => handleMenuItemClick(() => setShowThemeModal(true))}
-                                                className="w-full px-4 py-2.5 text-left flex items-center space-x-3 text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-all duration-150"
-                                            >
-                                                <SwatchIcon className="w-4 h-4 flex-shrink-0" />
-                                                <span className="text-sm font-medium">Theme</span>
-                                            </button>
-                                            <button
-                                                onClick={() => handleMenuItemClick(() => setShowAboutModal(true))}
-                                                className="w-full px-4 py-2.5 text-left flex items-center space-x-3 text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-all duration-150"
-                                            >
-                                                <InformationCircleIcon className="w-4 h-4 flex-shrink-0" />
-                                                <span className="text-sm font-medium">About</span>
-                                            </button>
-                                            <button
-                                                onClick={() => handleMenuItemClick(() => setShowHelpModal(true))}
-                                                className="w-full px-4 py-2.5 text-left flex items-center space-x-3 text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-all duration-150"
-                                            >
-                                                <QuestionMarkCircleIcon className="w-4 h-4 flex-shrink-0" />
-                                                <span className="text-sm font-medium">Help</span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                            {/* Menu Trigger */}
+                            <button
+                                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                                className={`mcb-burger ${isMenuOpen ? 'is-open' : ''} text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover rounded-md transition-all duration-200 border border-transparent hover:border-mcb-primary`}
+                                title="Menu"
+                                aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+                                aria-expanded={isMenuOpen}
+                            >
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <AboutModal 
+            <FullScreenMenu
+                isOpen={isMenuOpen}
+                onClose={() => setIsMenuOpen(false)}
+                onOpenTheme={() => setShowThemeModal(true)}
+                onOpenAbout={() => setShowAboutModal(true)}
+                onOpenHelp={() => setShowHelpModal(true)}
+            />
+
+            <AboutModal
                 isOpen={showAboutModal}
                 onClose={() => setShowAboutModal(false)}
                 onOpenHelp={handleOpenHelp}
             />
-            <HelpModal 
+            <HelpModal
                 isOpen={showHelpModal}
                 onClose={() => setShowHelpModal(false)}
             />

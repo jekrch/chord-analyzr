@@ -6,6 +6,7 @@ import {
     normalizeToChordPro,
     parseSong,
     songToText,
+    sourceOffsetAtCol,
     insertChordInSource,
     replaceChordInSource,
     removeChordFromSource,
@@ -50,16 +51,18 @@ describe('normalizeToChordPro', () => {
         expect(normalizeToChordPro(sheet)).toBe('[C]So short [G]');
     });
 
-    it('brackets chords in place on instrumental lines with no lyric below', () => {
+    it('brackets chords on instrumental lines, keeping their columns once stripped', () => {
+        // Each marker is followed by spaces covering the word it replaced, so
+        // the stripped line still has every chord at its original column.
         expect(normalizeToChordPro('Am F C G\n\nHello darkness')).toBe(
-            '[Am] [F] [C] [G]\n\nHello darkness'
+            '[Am]   [F]  [C]  [G]\n\nHello darkness'
         );
-        expect(normalizeToChordPro('Am F x2')).toBe('[Am] [F] x2');
+        expect(normalizeToChordPro('Am F x2')).toBe('[Am]   [F]  x2');
     });
 
     it('handles two stacked chord lines', () => {
         expect(normalizeToChordPro('Am F\nC G\nHello darkness my friend')).toBe(
-            '[Am] [F]\n[C]He[G]llo darkness my friend'
+            '[Am]   [F]\n[C]He[G]llo darkness my friend'
         );
     });
 
@@ -87,30 +90,30 @@ describe('normalizeToChordPro', () => {
 });
 
 describe('parseSong', () => {
-    it('attaches each chord to the following word', () => {
+    it('strips markers and records each chord at its column in the lyric text', () => {
         const song = parseSong('Hello [Am]darkness my old [F]friend');
         expect(song.lines).toHaveLength(1);
-        const tokens = song.lines[0].tokens;
-        expect(tokens.map(t => t.text)).toEqual(['Hello', 'darkness', 'my', 'old', 'friend']);
-        expect(tokens[0].chord).toBeNull();
-        expect(tokens[1].chord?.name).toBe('Am');
-        expect(tokens[4].chord?.name).toBe('F');
+        const line = song.lines[0];
+        expect(line.lyricText).toBe('Hello darkness my old friend');
+        expect(line.chords.map(c => c.name)).toEqual(['Am', 'F']);
+        expect(line.chords.map(c => c.col)).toEqual([6, 22]);
         expect(song.chordSequence.map(c => c.name)).toEqual(['Am', 'F']);
         expect(song.chordSequence.map(c => c.seqIndex)).toEqual([0, 1]);
     });
 
-    it('reports source offsets that slice back to the original text', () => {
+    it('preserves the exact spacing of the lyric text', () => {
+        const song = parseSong('Hello   [Am]darkness  my friend');
+        expect(song.lines[0].lyricText).toBe('Hello   darkness  my friend');
+        expect(song.lines[0].chords[0].col).toBe(8);
+    });
+
+    it('reports source offsets that slice back to the original markers', () => {
         const source = 'Hello [Am]darkness\n[F]and more';
         const song = parseSong(source);
-        for (const line of song.lines) {
-            for (const token of line.tokens) {
-                expect(source.slice(token.sourceStart, token.sourceEnd)).toBe(token.text);
-                if (token.chord) {
-                    expect(source.slice(token.chord.sourceStart, token.chord.sourceEnd))
-                        .toBe(`[${token.chord.raw}]`);
-                }
-            }
+        for (const chord of song.chordSequence) {
+            expect(source.slice(chord.sourceStart, chord.sourceEnd)).toBe(`[${chord.raw}]`);
         }
+        expect(song.lines.map(l => l.lyricText)).toEqual(['Hello darkness', 'and more']);
     });
 
     it('keeps offsets correct across CRLF line endings', () => {
@@ -120,14 +123,15 @@ describe('parseSong', () => {
         expect(source.slice(f.sourceStart, f.sourceEnd)).toBe('[F]');
     });
 
-    it('creates chord-only slots for markers with no lyric after them', () => {
-        const song = parseSong('So short [G]\n[Am] [F]');
-        const firstLine = song.lines[0].tokens;
-        expect(firstLine[firstLine.length - 1]).toMatchObject({ text: '', chord: expect.anything() });
-        expect(firstLine[firstLine.length - 1].chord?.name).toBe('G');
-        const secondLine = song.lines[1].tokens;
-        expect(secondLine.map(t => t.text)).toEqual(['', '']);
-        expect(secondLine.map(t => t.chord?.name)).toEqual(['Am', 'F']);
+    it('keeps chords with no lyric after them at their column', () => {
+        const song = parseSong('So short [G]\n[Am]   [F]');
+        const firstLine = song.lines[0];
+        expect(firstLine.lyricText).toBe('So short ');
+        expect(firstLine.chords[0]).toMatchObject({ name: 'G', col: 9 });
+        const secondLine = song.lines[1];
+        expect(secondLine.lyricText).toBe('   ');
+        expect(secondLine.chords.map(c => ({ name: c.name, col: c.col })))
+            .toEqual([{ name: 'Am', col: 0 }, { name: 'F', col: 3 }]);
     });
 
     it('recognizes section headers but not inline chords as sections', () => {
@@ -145,7 +149,7 @@ describe('parseSong', () => {
     it('keeps non-chord bracket text as literal lyrics', () => {
         const song = parseSong('la la [Repeat] la [x2]');
         expect(song.chordSequence).toHaveLength(0);
-        expect(song.lines[0].tokens.map(t => t.text)).toEqual(['la', 'la', '[Repeat]', 'la', '[x2]']);
+        expect(song.lines[0].lyricText).toBe('la la [Repeat] la [x2]');
     });
 
     it('still resolves typo\'d chords in brackets to a near match', () => {
@@ -193,11 +197,29 @@ describe('songToText', () => {
 });
 
 describe('source splicing helpers', () => {
-    it('inserts a chord before a word', () => {
+    it('inserts a chord at any lyric column, even mid-word', () => {
         const source = 'Hello darkness';
-        const song = parseSong(source);
-        const word = song.lines[0].tokens[1];
-        expect(insertChordInSource(source, word.sourceStart, 'Am')).toBe('Hello [Am]darkness');
+        const line = parseSong(source).lines[0];
+        expect(insertChordInSource(source, sourceOffsetAtCol(line, 6), 'Am'))
+            .toBe('Hello [Am]darkness');
+        expect(insertChordInSource(source, sourceOffsetAtCol(line, 10), 'Am'))
+            .toBe('Hello dark[Am]ness');
+    });
+
+    it('maps lyric columns past existing markers to source offsets', () => {
+        const source = 'Hello [Am]darkness';
+        const line = parseSong(source).lines[0];
+        // columns before the marker are plain offsets
+        expect(sourceOffsetAtCol(line, 0)).toBe(0);
+        expect(sourceOffsetAtCol(line, 5)).toBe(5);
+        // the marker's own column resolves to just after it
+        expect(sourceOffsetAtCol(line, 6)).toBe(10);
+        // columns beyond it skip the marker's length
+        expect(insertChordInSource(source, sourceOffsetAtCol(line, 10), 'F'))
+            .toBe('Hello [Am]dark[F]ness');
+        // out-of-range columns clamp to the line ends
+        expect(sourceOffsetAtCol(line, 99)).toBe(source.length);
+        expect(sourceOffsetAtCol(line, -5)).toBe(0);
     });
 
     it('strips spaces from inserted chord names', () => {

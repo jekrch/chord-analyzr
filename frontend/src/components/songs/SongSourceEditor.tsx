@@ -29,6 +29,13 @@ const SongSourceEditor: React.FC<SongSourceEditorProps> = ({ song }) => {
     const format = detectFormat(song.source);
     const highlightRef = useRef<HTMLDivElement>(null);
 
+    // Column-aligned sources must never soft-wrap: a chord line and the lyric
+    // line under it would wrap independently and scramble the pairs, so they
+    // scroll horizontally instead. Inline sources wrap freely — each [Am]
+    // marker travels with the word that follows it.
+    const columnAligned = format === 'chords-over-lyrics';
+    const wrapClasses = columnAligned ? 'whitespace-pre' : 'whitespace-pre-wrap break-words';
+
     // The source text split into plain and chord-colored segments for the
     // highlight overlay. A trailing zero-width space keeps a trailing empty
     // line from collapsing, so overlay and textarea heights stay in step.
@@ -87,6 +94,7 @@ const SongSourceEditor: React.FC<SongSourceEditorProps> = ({ song }) => {
                     onPaste={handlePaste}
                     onClick={handleClick}
                     onScroll={syncScroll}
+                    wrap={columnAligned ? 'off' : 'soft'}
                     rows={18}
                     placeholder={
                         'Paste or type lyrics here.\n\n' +
@@ -95,14 +103,14 @@ const SongSourceEditor: React.FC<SongSourceEditorProps> = ({ song }) => {
                         'with the Chords buttons below.'
                     }
                     spellCheck={false}
-                    className={`block w-full bg-transparent text-transparent caret-white placeholder-[var(--mcb-text-tertiary)] focus:outline-none resize-y select-text whitespace-pre-wrap break-words ${EDITOR_TEXT_CLASSES}`}
+                    className={`block w-full bg-transparent text-transparent caret-white placeholder-[var(--mcb-text-tertiary)] focus:outline-none resize-y select-text ${wrapClasses} ${EDITOR_TEXT_CLASSES}`}
                 />
                 {/* Highlight overlay: same text, chords colored; the textarea
                     above it stays fully interactive with an invisible font. */}
                 <div
                     ref={highlightRef}
                     aria-hidden
-                    className={`absolute inset-0 overflow-hidden whitespace-pre-wrap break-words text-white pointer-events-none ${EDITOR_TEXT_CLASSES}`}
+                    className={`absolute inset-0 overflow-hidden text-white pointer-events-none ${wrapClasses} ${EDITOR_TEXT_CLASSES}`}
                 >
                     {highlighted}
                 </div>

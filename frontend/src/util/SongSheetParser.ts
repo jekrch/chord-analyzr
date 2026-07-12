@@ -3,9 +3,10 @@
  * Turns free-form lyric documents into a structured, chord-aware song sheet.
  * The persisted form of a song is a single ChordPro-style source string with
  * inline [Am] markers; this module converts pasted chords-over-lyrics text
- * into that form, parses the source into renderable lines/tokens with source
- * offsets (so chords can be placed/edited by splicing the source), and
- * serializes a parsed song back to aligned chords-over-lyrics plain text.
+ * into that form, parses the source into renderable lines whose chords carry
+ * a free-form character column plus source offsets (so chords can be
+ * placed/edited by splicing the source), and serializes a parsed song back
+ * to aligned chords-over-lyrics plain text.
  */
 
 import {
@@ -22,22 +23,17 @@ export interface SheetChord {
     raw: string;              // marker text as typed (without brackets)
     parsed: ParsedChordToken;
     name: string;             // display name with the resolved chord type
+    col: number;              // character column in the line's stripped lyric text
     sourceStart: number;      // offset of '[' in the song source
     sourceEnd: number;        // offset just past ']'
     seqIndex: number;         // position in the song's flat chord sequence
 }
 
-export interface SheetToken {
-    text: string;             // lyric word ('' for a chord with no lyric under it)
-    sourceStart: number;      // offsets of the lyric text in the song source
-    sourceEnd: number;
-    chord: SheetChord | null;
-}
-
 export interface SheetLine {
     kind: 'lyrics' | 'section' | 'empty';
     label?: string;           // section name, e.g. "Chorus 2"
-    tokens: SheetToken[];
+    lyricText: string;        // line text with chord markers stripped, spacing intact
+    chords: SheetChord[];     // chords on this line, in column order
     sourceStart: number;
     sourceEnd: number;
 }
@@ -144,40 +140,48 @@ export function normalizeToChordPro(input: string): string {
             next !== null && next.trim().length > 0 && !isChordLine(lineWords(next));
 
         if (nextIsLyric) {
-            let lyric = next!;
-            const trailing: string[] = [];
+            const orig = next!;
+            let lyric = orig;
+            // Inline chords right-to-left so earlier splice offsets stay valid.
             for (let j = chordWords.length - 1; j >= 0; j--) {
                 const w = chordWords[j];
-                if (w.col >= lyric.length) {
-                    trailing.unshift(`[${w.text}]`);
-                } else {
-                    lyric = lyric.slice(0, w.col) + `[${w.text}]` + lyric.slice(w.col);
-                }
+                if (w.col >= orig.length) continue;
+                lyric = lyric.slice(0, w.col) + `[${w.text}]` + lyric.slice(w.col);
             }
-            if (trailing.length) lyric = `${lyric} ${trailing.join(' ')}`;
+            // Chords past the end of the lyric keep their column via padding
+            // (markers don't count: they're stripped from the rendered line).
+            let strippedLen = orig.length;
+            for (const w of chordWords) {
+                if (w.col < orig.length) continue;
+                const pad = Math.max(w.col, strippedLen + 1) - strippedLen;
+                lyric += ' '.repeat(pad) + `[${w.text}]`;
+                strippedLen += pad;
+            }
             out.push(lyric);
             i++; // the lyric line was consumed
         } else {
-            let rebuilt = line;
-            for (let j = chordWords.length - 1; j >= 0; j--) {
-                const w = chordWords[j];
-                rebuilt =
-                    rebuilt.slice(0, w.col) +
-                    `[${w.text}]` +
-                    rebuilt.slice(w.col + w.text.length);
+            // Each chord word becomes a marker followed by spaces covering its
+            // own footprint, so the stripped line keeps every original column.
+            let rebuilt = '';
+            let pos = 0;
+            for (const w of chordWords) {
+                rebuilt += line.slice(pos, w.col) + `[${w.text}]` + ' '.repeat(w.text.length);
+                pos = w.col + w.text.length;
             }
-            out.push(rebuilt);
+            rebuilt += line.slice(pos);
+            out.push(rebuilt.replace(/\s+$/, ''));
         }
     }
     return out.join('\n');
 }
 
 /**
- * Parse a ChordPro-style source string into renderable lines. Every token and
- * chord carries its source offsets so edits are plain string splices. A chord
- * marker attaches to the next word on its line; markers followed by another
- * marker or the line end become chord-only slots. Bracket text that isn't a
- * chord stays visible as literal lyric text.
+ * Parse a ChordPro-style source string into renderable lines. Chord markers
+ * are stripped out of the lyric text; each chord records the character column
+ * it occupied in the stripped line, so the view can place it free-form at
+ * that exact position above the lyrics — no anchoring to words. Every chord
+ * carries its source offsets so edits are plain string splices. Bracket text
+ * that isn't a chord stays visible as literal lyric text.
  */
 export function parseSong(source: string): ParsedSong {
     const lines: SheetLine[] = [];
@@ -191,88 +195,68 @@ export function parseSong(source: string): ParsedSong {
         offset += raw.length + 1;
 
         if (!text.trim()) {
-            lines.push({ kind: 'empty', tokens: [], sourceStart: lineStart, sourceEnd: lineEnd });
+            lines.push({ kind: 'empty', lyricText: '', chords: [], sourceStart: lineStart, sourceEnd: lineEnd });
             continue;
         }
 
         const section = text.match(SECTION_LINE_REGEX);
         if (section) {
             const label = section[1] + (section[2] ? ` ${section[2].trim()}` : '');
-            lines.push({ kind: 'section', label, tokens: [], sourceStart: lineStart, sourceEnd: lineEnd });
+            lines.push({ kind: 'section', label, lyricText: '', chords: [], sourceStart: lineStart, sourceEnd: lineEnd });
             continue;
         }
 
-        const tokens: SheetToken[] = [];
-        let pending: SheetChord | null = null;
-
-        const pushWords = (segStart: number, segEnd: number) => {
-            const seg = text.slice(segStart, segEnd);
-            const re = /\S+/g;
-            let m: RegExpExecArray | null;
-            while ((m = re.exec(seg))) {
-                tokens.push({
-                    text: m[0],
-                    sourceStart: lineStart + segStart + m.index,
-                    sourceEnd: lineStart + segStart + m.index + m[0].length,
-                    chord: pending,
-                });
-                pending = null;
-            }
-        };
-        const flushPending = (col: number) => {
-            if (!pending) return;
-            tokens.push({
-                text: '',
-                sourceStart: lineStart + col,
-                sourceEnd: lineStart + col,
-                chord: pending,
-            });
-            pending = null;
-        };
+        const chords: SheetChord[] = [];
+        let lyricText = '';
+        let pos = 0;
 
         const markerRe = /\[([^[\]\n]*)\]/g;
-        let pos = 0;
         let marker: RegExpExecArray | null;
         while ((marker = markerRe.exec(text))) {
-            pushWords(pos, marker.index);
-            flushPending(marker.index);
-
             const parsed = parseChordMarker(marker[1]);
-            if (parsed) {
-                const chord: SheetChord = {
-                    raw: marker[1].trim(),
-                    parsed,
-                    name: resolvedChordName(parsed),
-                    sourceStart: lineStart + marker.index,
-                    sourceEnd: lineStart + marker.index + marker[0].length,
-                    seqIndex: chordSequence.length,
-                };
-                chordSequence.push(chord);
-                pending = chord;
-            } else {
-                tokens.push({
-                    text: marker[0],
-                    sourceStart: lineStart + marker.index,
-                    sourceEnd: lineStart + marker.index + marker[0].length,
-                    chord: null,
-                });
-            }
+            if (!parsed) continue; // literal bracket text stays in the lyric line
+            lyricText += text.slice(pos, marker.index);
+            const chord: SheetChord = {
+                raw: marker[1].trim(),
+                parsed,
+                name: resolvedChordName(parsed),
+                col: lyricText.length,
+                sourceStart: lineStart + marker.index,
+                sourceEnd: lineStart + marker.index + marker[0].length,
+                seqIndex: chordSequence.length,
+            };
+            chords.push(chord);
+            chordSequence.push(chord);
             pos = marker.index + marker[0].length;
         }
-        pushWords(pos, text.length);
-        flushPending(text.length);
+        lyricText += text.slice(pos);
 
-        lines.push({ kind: 'lyrics', tokens, sourceStart: lineStart, sourceEnd: lineEnd });
+        lines.push({ kind: 'lyrics', lyricText, chords, sourceStart: lineStart, sourceEnd: lineEnd });
     }
 
     return { lines, chordSequence };
 }
 
 /**
+ * Source offset where text inserted at a column of the stripped lyric text
+ * lands: the column itself plus every chord marker at or before it. Columns
+ * outside the line are clamped, so any click maps to a valid splice point.
+ */
+export function sourceOffsetAtCol(line: SheetLine, col: number): number {
+    const clamped = Math.max(0, Math.min(col, line.lyricText.length));
+    let offset = line.sourceStart + clamped;
+    for (const chord of line.chords) {
+        if (chord.col > clamped) break;
+        offset += chord.sourceEnd - chord.sourceStart;
+    }
+    return offset;
+}
+
+/**
  * Serialize a parsed song to aligned chords-over-lyrics plain text (the
- * export format). Chord names are placed at the column of the word they sit
- * over; colliding chords are pushed right. Names keep their spaces stripped
- * so each chord stays a single token when re-imported.
+ * export format). Chord names are placed at their exact column in the
+ * stripped lyric line; colliding chords are pushed right. Names keep their
+ * spaces stripped so each chord stays a single token when re-imported.
  */
 export function songToText(parsed: ParsedSong): string {
     const out: string[] = [];
@@ -286,19 +270,15 @@ export function songToText(parsed: ParsedSong): string {
             continue;
         }
 
-        let lyricRow = '';
         let chordRow = '';
-        for (const token of line.tokens) {
-            if (token.text && lyricRow) lyricRow += ' ';
-            if (token.chord) {
-                const name = token.chord.name.replace(/\s+/g, '');
-                const at = chordRow.length === 0
-                    ? lyricRow.length
-                    : Math.max(lyricRow.length, chordRow.length + 1);
-                chordRow = chordRow.padEnd(at, ' ') + name;
-            }
-            lyricRow += token.text;
+        for (const chord of line.chords) {
+            const name = chord.name.replace(/\s+/g, '');
+            const at = chordRow.length === 0
+                ? chord.col
+                : Math.max(chord.col, chordRow.length + 1);
+            chordRow = chordRow.padEnd(at, ' ') + name;
         }
+        const lyricRow = line.lyricText.replace(/\s+$/, '');
 
         if (chordRow) out.push(chordRow);
         if (lyricRow) out.push(lyricRow);
@@ -364,7 +344,7 @@ function lineChords(line: string): LineChordHit[] {
 export function chordAtOffset(
     source: string,
     offset: number
-): Omit<SheetChord, 'seqIndex'> | null {
+): Omit<SheetChord, 'seqIndex' | 'col'> | null {
     if (offset < 0 || offset > source.length) return null;
     const lineStart = source.lastIndexOf('\n', offset - 1) + 1;
     let lineEnd = source.indexOf('\n', offset);

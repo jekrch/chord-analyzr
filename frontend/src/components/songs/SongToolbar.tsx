@@ -17,6 +17,7 @@ import { AVAILABLE_KEYS } from '../../hooks/useIntegratedAppLogic';
 import { useHashRoute } from '../../hooks/useHashRoute';
 import { useMusicStore } from '../../stores/musicStore';
 import { Song, playSheetChord, useSongStore } from '../../stores/songStore';
+import { noteNameToNumber } from '../../util/NoteUtil';
 import { inferKeyAndMode } from '../../util/ProgressionParser';
 import { ParsedSong } from '../../util/SongSheetParser';
 import { exportSongImage, exportSongPdf, exportSongText } from '../../util/songExport';
@@ -142,20 +143,25 @@ const SongToolbar: React.FC<SongToolbarProps> = ({ song, parsed }) => {
 
             <div className="w-px h-5 bg-[var(--mcb-border-primary)] mx-1" />
 
-            {/* Key/mode the sheet plays in, plus semitone transposition */}
+            {/* Key/mode the sheet plays in, plus semitone transposition.
+                Picking a different key transposes the song's chords to it. */}
             <div
                 className="flex items-center gap-1.5"
                 title={hasExplicitKey
-                    ? 'Key and mode for this song'
-                    : 'Key and mode detected from the song\'s chords — pick one to override'}
+                    ? 'Key and mode for this song — picking a new key transposes the chords'
+                    : 'Key and mode detected from the song\'s chords — picking a new key transposes the chords'}
             >
                 <Dropdown
                     value={sheetKey}
-                    onChange={key => useSongStore.getState().setSongKeyMode(song.id, key, sheetMode)}
+                    onChange={(key: string) => {
+                        const semitones =
+                            ((noteNameToNumber(key) - noteNameToNumber(sheetKey)) % 12 + 12) % 12;
+                        useSongStore.getState().transposeSong(song.id, semitones, key);
+                    }}
                     options={AVAILABLE_KEYS}
-                    className="w-[4.25rem]"
-                    buttonClassName="px-2 py-1 text-center font-medium text-xs h-7 flex items-center justify-center"
-                    menuClassName="min-w-[4.25rem]"
+                    className="w-[5.5rem]"
+                    buttonClassName="px-2.5 py-1 font-medium text-xs h-7 flex items-center"
+                    menuClassName="min-w-[5.5rem]"
                 />
                 <Dropdown
                     value={sheetMode}

@@ -5,6 +5,7 @@
 interface ViteEnv {
   VITE_USE_STATIC_DATA?: string;
   VITE_API_BASE_URL?: string;
+  VITE_GOOGLE_CLIENT_ID?: string;
   DEV?: boolean;
   PROD?: boolean;
 }

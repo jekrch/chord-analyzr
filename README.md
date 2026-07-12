@@ -164,3 +164,20 @@ Data is served through two pathways:
 2. **Static JSON files** generated from database views for optimal performance
 
 The static data generator extracts chord relationships from views like `mode_scale_chord_relation_view`, ensuring the frontend has instant access to music theory data without database latency during performance.
+
+### Google Drive sync (optional)
+
+The song library normally lives in the browser (localStorage) and can be saved/loaded as a local JSON file. Optionally, users can also keep that JSON file (`chordbuildr-songs.json`) in their Google Drive via "Drive Save" / "Drive Load" buttons in the song library panel.
+
+The feature is entirely client-side (Google Identity Services token flow with the non-sensitive `drive.file` scope — the app can only see files it created) and is hidden unless a Google OAuth client id is configured:
+
+1. Create a project at [console.cloud.google.com](https://console.cloud.google.com/) and enable the **Google Drive API**.
+2. Configure the OAuth consent screen (External; publish it or add test users).
+3. Create an **OAuth client ID** of type *Web application* with Authorized JavaScript origins `http://localhost:5173` (dev) and your production origin, e.g. `https://modal.chordbuildr.com`. No redirect URIs are needed for the token flow.
+4. Put the client id in `frontend/.env.local`:
+
+   ```
+   VITE_GOOGLE_CLIENT_ID=123
+   ```
+
+For the GitHub Pages deploy, set the same value as a repository *variable* named `VITE_GOOGLE_CLIENT_ID` (client ids are public, no secret needed). When unset, the Drive buttons simply don't render.

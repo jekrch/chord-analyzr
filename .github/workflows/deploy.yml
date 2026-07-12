@@ -24,6 +24,9 @@ jobs:
         working-directory: ./frontend
         env:
           VITE_USE_STATIC_DATA: 'true'
+          # OAuth client ids are public by design — repo variable, not a secret.
+          # Leave the variable unset to build without Google Drive sync.
+          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3

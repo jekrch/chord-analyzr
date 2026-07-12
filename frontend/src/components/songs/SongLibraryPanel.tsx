@@ -2,6 +2,8 @@ import React, { useRef, useState } from 'react';
 import {
     ArrowDownTrayIcon,
     ArrowUpTrayIcon,
+    CloudArrowDownIcon,
+    CloudArrowUpIcon,
     PlusIcon,
     TrashIcon,
 } from '@heroicons/react/20/solid';
@@ -13,6 +15,8 @@ import {
     isSongLibraryFile,
     useSongStore,
 } from '../../stores/songStore';
+import { useGoogleDriveStore } from '../../stores/googleDriveStore';
+import { isDriveConfigured } from '../../util/googleAuth';
 import { downloadBlob } from '../../util/songExport';
 import {
     LibraryFileHandle,
@@ -42,6 +46,13 @@ const SongLibraryPanel: React.FC = () => {
     const [importError, setImportError] = useState<string | null>(null);
     const [linkedName, setLinkedName] = useState<string | null>(linkedFileName());
     const [savedNotice, setSavedNotice] = useState<string | null>(null);
+
+    const driveConnected = useGoogleDriveStore(state => state.connected);
+    const driveBusy = useGoogleDriveStore(state => state.busy);
+    const driveError = useGoogleDriveStore(state => state.error);
+    const saveToDrive = useGoogleDriveStore(state => state.saveToDrive);
+    const loadFromDrive = useGoogleDriveStore(state => state.loadFromDrive);
+    const disconnectDrive = useGoogleDriveStore(state => state.disconnect);
 
     const handleSaveLibrary = async () => {
         const file = useSongStore.getState().exportLibrary();
@@ -97,6 +108,24 @@ const SongLibraryPanel: React.FC = () => {
         reader.onload = () => applyLibraryText(String(reader.result));
         reader.onerror = () => setImportError('Could not read that file.');
         reader.readAsText(file);
+    };
+
+    const handleDriveSave = async () => {
+        if (await saveToDrive()) {
+            setSavedNotice('Saved to Google Drive');
+            setTimeout(() => setSavedNotice(null), 2500);
+        }
+    };
+
+    const handleDriveLoad = async () => {
+        setImportError(null);
+        const data = await loadFromDrive();
+        if (!data) return;
+        if (useSongStore.getState().songs.length === 0) {
+            useSongStore.getState().importLibrary(data, 'replace');
+        } else {
+            setPendingImport({ file: data });
+        }
     };
 
     const resolveImport = (mode: 'replace' | 'merge') => {
@@ -177,6 +206,51 @@ const SongLibraryPanel: React.FC = () => {
                         Load
                     </Button>
                 </div>
+                {isDriveConfigured() && (
+                    <>
+                        <div className="flex items-center justify-between pt-1">
+                            <span className="text-[0.625rem] uppercase tracking-wide text-mcb-tertiary">
+                                Google Drive
+                            </span>
+                            {driveConnected && (
+                                <button
+                                    onClick={disconnectDrive}
+                                    className="text-[0.625rem] text-mcb-tertiary underline hover:text-mcb-secondary transition-colors"
+                                    title="Disconnect this app from your Google Drive"
+                                >
+                                    Disconnect
+                                </button>
+                            )}
+                        </div>
+                        <div className="flex gap-1.5">
+                            <Button
+                                onClick={handleDriveSave}
+                                variant="secondary"
+                                size="sm"
+                                className="flex-1"
+                                disabled={driveBusy !== null}
+                                title="Save all songs to a JSON file in your Google Drive"
+                            >
+                                <CloudArrowUpIcon className="w-3.5 h-3.5 shrink-0" />
+                                {driveBusy === 'save' ? 'Saving…' : 'Save'}
+                            </Button>
+                            <Button
+                                onClick={handleDriveLoad}
+                                variant="secondary"
+                                size="sm"
+                                className="flex-1"
+                                disabled={driveBusy !== null}
+                                title="Load your song library from Google Drive"
+                            >
+                                <CloudArrowDownIcon className="w-3.5 h-3.5 shrink-0" />
+                                {driveBusy === 'load' ? 'Loading…' : 'Load'}
+                            </Button>
+                        </div>
+                        {driveError && (
+                            <p className="text-[0.625rem] text-[var(--mcb-danger-text)] text-left">{driveError}</p>
+                        )}
+                    </>
+                )}
                 {importError && (
                     <p className="text-[0.625rem] text-[var(--mcb-danger-text)] text-left">{importError}</p>
                 )}

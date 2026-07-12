@@ -3,6 +3,7 @@
 interface ImportMetaEnv {
   readonly VITE_USE_STATIC_DATA: string;
   readonly VITE_API_BASE_URL: string;
+  readonly VITE_GOOGLE_CLIENT_ID: string;
 }
 
 interface ImportMeta {

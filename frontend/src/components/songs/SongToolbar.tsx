@@ -22,22 +22,13 @@ import { Song, playSheetChord, syncGlobalKeyMode, useSongStore } from '../../sto
 import { noteNameToNumber } from '../../util/NoteUtil';
 import { inferKeyAndMode } from '../../util/ProgressionParser';
 import { ParsedSong } from '../../util/SongSheetParser';
-import { exportSongImage, exportSongPdf, exportSongText } from '../../util/songExport';
+import { exportSongImage, exportSongPdf, exportSongText, withSheetPrintNode } from '../../util/songExport';
 import KeyChangePopover from './KeyChangePopover';
 import SheetExportOptionsPopover from './SheetExportOptionsPopover';
 
 interface SongToolbarProps {
     song: Song;
     parsed: ParsedSong;
-}
-
-/** Wait for the sheet view to be visible, then hand its node to `action`. */
-function withSheetNode(action: (node: HTMLElement) => void) {
-    useSongStore.getState().setViewMode('sheet');
-    setTimeout(() => {
-        const node = document.getElementById('song-sheet-print');
-        if (node) action(node);
-    }, 150);
 }
 
 const SongToolbar: React.FC<SongToolbarProps> = ({ song, parsed }) => {
@@ -59,9 +50,9 @@ const SongToolbar: React.FC<SongToolbarProps> = ({ song, parsed }) => {
     const keyDropdownRef = useRef<HTMLSpanElement>(null);
 
     const handlePrint = () =>
-        withSheetNode(() => exportSongPdf(useSongStore.getState().sheetExportSettings));
+        withSheetPrintNode(() => exportSongPdf(useSongStore.getState().sheetExportSettings));
     const handleSaveImage = () =>
-        withSheetNode(node =>
+        withSheetPrintNode(node =>
             exportSongImage(node, song.title, useSongStore.getState().sheetExportSettings)
         );
 

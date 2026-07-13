@@ -2,7 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { PlusIcon } from '@heroicons/react/20/solid';
 import classNames from 'classnames';
-import { Song, playSheetChord, useSongStore } from '../../stores/songStore';
+import { SheetExportSettings, Song, playSheetChord, useSongStore } from '../../stores/songStore';
 import {
     ParsedSong,
     SheetChord,
@@ -28,6 +28,12 @@ interface SongSheetViewProps {
     /** Inline-format source that `parsed`'s offsets refer to. */
     source: string;
     onSourceChange: (nextInlineSource: string) => void;
+    /** Apply the sheet layout settings live as the on-screen reading style
+     * (full-screen view). Keeps the theme colors; not a print preview. */
+    displayMode?: boolean;
+    /** Layout to render with, overriding the shared export settings — the
+     * current song's saved view in full screen. */
+    settingsOverride?: SheetExportSettings;
 }
 
 interface PickerTarget {
@@ -178,9 +184,12 @@ interface DragInfo {
     dragging: boolean;
 }
 
-const SongSheetView: React.FC<SongSheetViewProps> = ({ song, parsed, source, onSourceChange }) => {
+const SongSheetView: React.FC<SongSheetViewProps> = ({ song, parsed, source, onSourceChange, displayMode = false, settingsOverride }) => {
     const stepIndex = useSongStore(state => state.stepIndex);
-    const exportSettings = useSongStore(state => state.sheetExportSettings);
+    const globalExportSettings = useSongStore(state => state.sheetExportSettings);
+    // The layout this sheet renders with: a caller override (the song's saved
+    // view in full screen) wins over the shared export settings.
+    const exportSettings = settingsOverride ?? globalExportSettings;
     const previewing = useSongStore(state => state.sheetExportPreview);
     const [picker, setPicker] = useState<PickerTarget | null>(null);
     const [dragGhost, setDragGhost] = useState<DragGhost | null>(null);
@@ -188,6 +197,10 @@ const SongSheetView: React.FC<SongSheetViewProps> = ({ song, parsed, source, onS
     // Scale and unscaled sheet height of the live print preview, measured
     // once the sheet is laid out at page width (null while not previewing).
     const [preview, setPreview] = useState<{ scale: number; sheetHeight: number } | null>(null);
+    // Natural content width of the full-screen sheet — the widest line laid
+    // across its columns — so it stops widening a bit past the text instead of
+    // filling an arbitrarily wide viewport (null when not in display mode).
+    const [displayMaxWidth, setDisplayMaxWidth] = useState<number | null>(null);
     const previewContainerRef = useRef<HTMLDivElement>(null);
 
     // Undo, scoped to this sheet's own chord edits (add/move/delete) rather
@@ -266,6 +279,46 @@ const SongSheetView: React.FC<SongSheetViewProps> = ({ song, parsed, source, onS
         observer.observe(node);
         return () => observer.disconnect();
     }, [previewing, exportSettings, parsed]);
+
+    // Full-screen reading view: cap the sheet a bit past its widest line so it
+    // doesn't stretch to an arbitrarily wide viewport (which pulls adjacent
+    // columns far apart). Measure each lyric line's intrinsic, unwrapped width
+    // synchronously — flipping it to no-wrap, reading scrollWidth, restoring —
+    // before paint, then size the cap for the current column count, gap and
+    // margin. A smaller screen-width setting can still force a narrower,
+    // wrapping column; the cap only stops it going too wide.
+    useLayoutEffect(() => {
+        const node = sheetRef.current;
+        if (!displayMode || previewing || !node) {
+            setDisplayMaxWidth(null);
+            return;
+        }
+        const measure = () => {
+            let widest = 0;
+            const consider = (el: HTMLElement) => {
+                const prev = el.style.whiteSpace;
+                el.style.whiteSpace = 'pre';
+                widest = Math.max(widest, el.scrollWidth);
+                el.style.whiteSpace = prev;
+            };
+            node.querySelectorAll<HTMLElement>('.sheet-lyric').forEach(consider);
+            const title = node.querySelector<HTMLElement>('h2');
+            if (title) widest = Math.max(widest, title.scrollWidth);
+            if (!widest) {
+                setDisplayMaxWidth(null);
+                return;
+            }
+            const cols = Math.max(1, exportSettings.columns);
+            const COLUMN_GAP_PX = 32; // 2rem, matching the display column-gap
+            const paddingPx = exportSettings.margin * 96 * 2; // side margins, 96px/in
+            const PAST_LINE_PX = 40; // "a bit past the widest line"
+            setDisplayMaxWidth(
+                Math.round(widest * cols + COLUMN_GAP_PX * (cols - 1) + paddingPx + PAST_LINE_PX)
+            );
+        };
+        measure();
+        document.fonts?.ready.then(measure);
+    }, [displayMode, previewing, parsed, exportSettings.columns, exportSettings.lyricSize, exportSettings.chordSize, exportSettings.lineSpacing, exportSettings.margin]);
 
     const commitChange = (next: string) => {
         undoStackRef.current.push(source);
@@ -586,7 +639,8 @@ const SongSheetView: React.FC<SongSheetViewProps> = ({ song, parsed, source, onS
                     ref={sheetRef}
                     className={classNames(
                         'mcb-inset p-4 space-y-1.5 text-left',
-                        previewing && 'song-sheet-exporting'
+                        previewing && 'song-sheet-exporting',
+                        displayMode && !previewing && 'song-sheet-display'
                     )}
                     style={{
                         '--sheet-margin': exportSettings.margin,
@@ -595,6 +649,12 @@ const SongSheetView: React.FC<SongSheetViewProps> = ({ song, parsed, source, onS
                         '--sheet-lyric-size': exportSettings.lyricSize,
                         '--sheet-chord-size': exportSettings.chordSize,
                         ...(previewing && { width: pageWidth }),
+                        // Cap the full-screen sheet near its natural content
+                        // width and center it, so wide viewports don't fan the
+                        // columns apart (a smaller screen width still narrows it).
+                        ...(displayMode && !previewing && displayMaxWidth
+                            ? { maxWidth: displayMaxWidth, marginLeft: 'auto', marginRight: 'auto' }
+                            : {}),
                     } as React.CSSProperties}
                 >
                     {song.title.trim() && (

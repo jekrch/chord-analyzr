@@ -15,6 +15,9 @@ export interface Song {
     updatedAt: string;  // ISO
     key?: string;       // key/mode the user picked for this song; absent = auto-detect
     mode?: string;
+    // The song's own saved on-screen layout (full-screen reading view). Absent
+    // = use the shared default (sheetExportSettings). See the full-screen menu.
+    viewSettings?: SheetExportSettings;
 }
 
 export interface SongLibraryFile {
@@ -29,14 +32,18 @@ export const SONG_LIBRARY_VERSION = 1;
 const STORAGE_KEY = 'mcb-song-library';
 const EXPORT_SETTINGS_KEY = 'mcb-sheet-export-settings';
 
-/** Layout options for printing / image export of the rendered sheet. */
+/** Layout options for the rendered sheet — printing / image export and the
+ *  on-screen full-screen reading view. */
 export interface SheetExportSettings {
     orientation: 'portrait' | 'landscape';
-    margin: number;      // page margin, inches
+    margin: number;      // page / side margin, inches
     lineSpacing: number; // lyric line-height multiplier
     lyricSize: number;   // lyric font size, pt
     chordSize: number;   // chord font size, pt
     columns: number;     // lyric columns per page
+    // How much of the screen the full-screen sheet fills, as a percent of the
+    // available width (100 = fill). On-screen only; print/export ignore it.
+    screenWidth: number;
 }
 
 export const DEFAULT_SHEET_EXPORT_SETTINGS: SheetExportSettings = {
@@ -46,6 +53,7 @@ export const DEFAULT_SHEET_EXPORT_SETTINGS: SheetExportSettings = {
     lyricSize: 11,
     chordSize: 10,
     columns: 1,
+    screenWidth: 100,
 };
 
 const START_OCTAVE = 4;
@@ -125,6 +133,10 @@ interface SongState {
     setInferredKeyMode: (songId: string, key: string, mode: string) => void;
     setSheetExportSettings: (patch: Partial<SheetExportSettings>) => void;
     resetSheetExportSettings: () => void;
+    // Per-song saved view (full-screen reading layout).
+    saveSongView: (id: string) => void;                                  // pin the current layout to the song
+    updateSongViewSettings: (id: string, patch: Partial<SheetExportSettings>) => void;
+    clearSongView: (id: string) => void;                                 // drop it, back to the shared default
     transposeSong: (id: string, semitones: number, targetKey?: string) => void;
 
     stepNext: (sequenceLength: number) => number | null;
@@ -260,6 +272,35 @@ export const useSongStore = create<SongState>((set, get) => ({
 
     resetSheetExportSettings: () =>
         set({ sheetExportSettings: { ...DEFAULT_SHEET_EXPORT_SETTINGS } }),
+
+    // Snapshot the layout the song currently displays with (its own view if it
+    // has one, else the shared default) onto the song, so it reopens that way.
+    saveSongView: (id: string) =>
+        set(state => ({
+            songs: state.songs.map(s =>
+                s.id === id
+                    ? { ...s, viewSettings: { ...(s.viewSettings ?? state.sheetExportSettings) } }
+                    : s
+            ),
+        })),
+
+    // Edit a song's own saved view (no-op if it hasn't saved one yet). Doesn't
+    // bump updatedAt — a layout tweak isn't a content edit.
+    updateSongViewSettings: (id: string, patch: Partial<SheetExportSettings>) =>
+        set(state => ({
+            songs: state.songs.map(s =>
+                s.id === id && s.viewSettings
+                    ? { ...s, viewSettings: { ...s.viewSettings, ...patch } }
+                    : s
+            ),
+        })),
+
+    clearSongView: (id: string) =>
+        set(state => ({
+            songs: state.songs.map(s =>
+                s.id === id ? { ...s, viewSettings: undefined } : s
+            ),
+        })),
 
     /**
      * Rewrite every chord in the song's source shifted by `semitones`, and

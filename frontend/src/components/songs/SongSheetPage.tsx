@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowsPointingInIcon, PlusIcon } from '@heroicons/react/20/solid';
+import { ArrowsPointingInIcon, Bars3Icon, PlusIcon } from '@heroicons/react/20/solid';
 import { Button } from '../Button';
 import { useSongStore } from '../../stores/songStore';
 import {
@@ -9,6 +9,7 @@ import {
     parseSong,
     songToText,
 } from '../../util/SongSheetParser';
+import SheetFullscreenMenu from './SheetFullscreenMenu';
 import SongLibraryPanel from './SongLibraryPanel';
 import SongSheetView from './SongSheetView';
 import SongSourceEditor from './SongSourceEditor';
@@ -28,8 +29,22 @@ const SongSheetPage: React.FC = () => {
     const setSheetFullscreen = useSongStore(state => state.setSheetFullscreen);
     const createSong = useSongStore(state => state.createSong);
     const renameSong = useSongStore(state => state.renameSong);
+    const exportSettings = useSongStore(state => state.sheetExportSettings);
+
+    // The full-screen sheet's flyover — song switcher + layout settings.
+    const [menuOpen, setMenuOpen] = useState(false);
+
+    // Keep the overlay mounted through its collapse animation: expand plays
+    // on enter, collapse plays before unmount (mirrors the fullscreen menu).
+    const [overlayMounted, setOverlayMounted] = useState(false);
+    const [overlayPhase, setOverlayPhase] = useState<'enter' | 'open' | 'closing'>('enter');
+    const overlayCloseTimer = useRef<ReturnType<typeof setTimeout>>();
 
     const currentSong = songs.find(s => s.id === currentSongId) ?? null;
+
+    // The layout the full-screen sheet reads with: the song's own saved view
+    // if it has one, else the shared default.
+    const fullscreenSettings = currentSong?.viewSettings ?? exportSettings;
 
     // Parse against the inline form regardless of how the document stores its
     // chords: sources kept in the chords-above format are normalized first
@@ -45,7 +60,10 @@ const SongSheetPage: React.FC = () => {
         if (!sheetFullscreen) return;
         const onKey = (e: KeyboardEvent) => {
             if (e.key !== 'Escape') return;
+            // A chord picker or the flyover handles its own Escape first, so
+            // one press peels back one layer instead of dropping full screen.
             if (document.querySelector('[data-chord-picker]')) return;
+            if (document.querySelector('[data-sheet-flyover]')) return;
             setSheetFullscreen(false);
         };
         document.addEventListener('keydown', onKey);
@@ -56,6 +74,30 @@ const SongSheetPage: React.FC = () => {
             document.body.style.overflow = prevOverflow;
         };
     }, [sheetFullscreen, setSheetFullscreen]);
+
+    // Leaving full screen dismisses the flyover with it.
+    useEffect(() => {
+        if (!sheetFullscreen) setMenuOpen(false);
+    }, [sheetFullscreen]);
+
+    // Drive the expand / collapse animation: mount and flip to `open` next
+    // frame so the transition runs; on exit, play `closing` before unmount.
+    useEffect(() => {
+        if (sheetFullscreen) {
+            clearTimeout(overlayCloseTimer.current);
+            setOverlayMounted(true);
+            setOverlayPhase('enter');
+            const raf = requestAnimationFrame(() =>
+                requestAnimationFrame(() => setOverlayPhase('open'))
+            );
+            return () => cancelAnimationFrame(raf);
+        }
+        if (overlayMounted) {
+            setOverlayPhase('closing');
+            overlayCloseTimer.current = setTimeout(() => setOverlayMounted(false), 320);
+            return () => clearTimeout(overlayCloseTimer.current);
+        }
+    }, [sheetFullscreen]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Sheet-view edits splice the inline source; write them back in the
     // document's own format so a chords-above document stays chords-above.
@@ -113,29 +155,61 @@ const SongSheetPage: React.FC = () => {
                 </div>
             </div>
 
-            {sheetFullscreen && currentSong && createPortal(
+            {overlayMounted && currentSong && createPortal(
                 <div
-                    className="fixed inset-0 z-[900] bg-mcb-app overflow-y-auto"
+                    className={`mcb-sheet-overlay ${
+                        overlayPhase === 'open' ? 'is-open' : overlayPhase === 'closing' ? 'is-closing' : ''
+                    } fixed inset-0 z-[900] bg-mcb-app overflow-y-auto ${
+                        // Slide the sheet clear of the flyover so it stays in
+                        // view (and updating) while its layout is tuned.
+                        menuOpen ? 'lg:pr-[24rem]' : ''
+                    }`}
                     role="dialog"
                     aria-modal="true"
                     aria-label="Song sheet full screen"
                 >
-                    <button
-                        onClick={() => setSheetFullscreen(false)}
-                        className="fixed top-4 right-4 z-10 w-9 h-9 flex items-center justify-center rounded-full border border-mcb-subtle bg-mcb-app text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] hover:border-mcb-primary transition-all duration-200"
-                        title="Exit full screen (Esc)"
-                        aria-label="Exit full screen"
+                    <div className="mcb-sheet-overlay-controls fixed top-4 right-4 z-10 flex items-center gap-2">
+                        <button
+                            onClick={() => setMenuOpen(true)}
+                            className="w-9 h-9 flex items-center justify-center rounded-full border border-mcb-subtle bg-mcb-app text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] hover:border-mcb-primary transition-all duration-200"
+                            title="Songs & sheet options"
+                            aria-label="Open sheet options"
+                            aria-expanded={menuOpen}
+                        >
+                            <Bars3Icon className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={() => setSheetFullscreen(false)}
+                            className="w-9 h-9 flex items-center justify-center rounded-full border border-mcb-subtle bg-mcb-app text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] hover:border-mcb-primary transition-all duration-200"
+                            title="Exit full screen (Esc)"
+                            aria-label="Exit full screen"
+                        >
+                            <ArrowsPointingInIcon className="w-4 h-4" />
+                        </button>
+                    </div>
+                    <div
+                        className="mcb-sheet-overlay-content mx-auto px-4 sm:px-8 py-8 text-left text-sm"
+                        // Screen-fill width: 100% fills the available space,
+                        // less centers a narrower reading column.
+                        style={{ maxWidth: `${fullscreenSettings.screenWidth}%` }}
                     >
-                        <ArrowsPointingInIcon className="w-4 h-4" />
-                    </button>
-                    <div className="max-w-4xl mx-auto px-4 sm:px-8 py-8 text-left text-sm">
                         <SongSheetView
                             song={currentSong}
                             parsed={parsed}
                             source={inlineSource}
                             onSourceChange={handleSheetSourceChange}
+                            displayMode
+                            settingsOverride={fullscreenSettings}
                         />
                     </div>
+
+                    <SheetFullscreenMenu
+                        song={currentSong}
+                        parsed={parsed}
+                        isOpen={menuOpen}
+                        onClose={() => setMenuOpen(false)}
+                        onExitFullscreen={() => setSheetFullscreen(false)}
+                    />
                 </div>,
                 document.body
             )}

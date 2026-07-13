@@ -5,9 +5,22 @@
  */
 
 import { toPng } from 'html-to-image';
-import { SheetExportSettings } from '../stores/songStore';
+import { SheetExportSettings, useSongStore } from '../stores/songStore';
 import { ParsedSong, songToText } from './SongSheetParser';
 import { layoutSheetChords } from './sheetChordLayout';
+
+/**
+ * Make sure the rendered sheet is on screen, then hand its DOM node to
+ * `action` — the export helpers all need `#song-sheet-print` laid out. The
+ * short delay lets a switch out of edit view paint before we measure.
+ */
+export function withSheetPrintNode(action: (node: HTMLElement) => void): void {
+    useSongStore.getState().setViewMode('sheet');
+    setTimeout(() => {
+        const node = document.getElementById('song-sheet-print');
+        if (node) action(node);
+    }, 150);
+}
 
 // Letter-size page at CSS resolution (96px/in); the PNG mimics the printed
 // page's width so margins, font sizes and columns come out the same.

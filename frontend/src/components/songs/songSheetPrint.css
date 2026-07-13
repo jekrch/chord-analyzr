@@ -96,6 +96,30 @@
     }
 }
 
+/* On-screen reading view (the full-screen sheet): the same layout controls —
+   columns, side margin, line spacing, and independent lyric / chord font
+   sizes — applied live in the UI. Unlike the print / PNG treatment this keeps
+   the app's theme colors; it only restyles typography and flow. Font sizes
+   stay in pt so the screen reads at the same proportions it prints. */
+#song-sheet-print.song-sheet-display {
+    padding-left: calc(var(--sheet-margin, 0.6) * 1in);
+    padding-right: calc(var(--sheet-margin, 0.6) * 1in);
+}
+#song-sheet-print.song-sheet-display .sheet-lines {
+    column-count: var(--sheet-columns, 1);
+    column-gap: 2rem;
+}
+#song-sheet-print.song-sheet-display .sheet-lyric {
+    font-size: calc(var(--sheet-lyric-size, 11) * 1pt) !important;
+    line-height: var(--sheet-line-spacing, 1.3) !important;
+}
+#song-sheet-print.song-sheet-display [data-chord-anchor] {
+    height: max(2em, calc(var(--sheet-chord-size, 10) * 1.25pt + 1em)) !important;
+}
+#song-sheet-print.song-sheet-display button.font-mono {
+    font-size: calc(var(--sheet-chord-size, 10) * 1pt) !important;
+}
+
 /* Same black-on-white treatment while capturing the sheet as a PNG; the
    capture code sets the node to the page width for the chosen orientation */
 #song-sheet-print.song-sheet-exporting {

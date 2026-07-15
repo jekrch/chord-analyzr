@@ -5,7 +5,7 @@
 import { describe, expect, it, beforeAll } from 'vitest';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { parseProgression, inferKeyAndMode, buildProgressionChord } from './ProgressionParser';
+import { parseProgression, inferKeyAndMode, buildProgressionChord, buildAddedChordsFromTokens } from './ProgressionParser';
 
 const MODES = ['Ionian', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Aeolian', 'Locrian',
     'Melodic Minor', 'Dorian b2', 'Lydian Augmented', 'Lydian Dominant', 'Mixolydian b6',
@@ -77,5 +77,44 @@ describe('inferKeyAndMode (integration)', () => {
         const built = await buildProgressionChord(token, 'C', 'Ionian');
         expect(built).not.toBeNull();
         expect(built!.notes.length).toBeGreaterThan(0);
+    });
+
+    it('returns null for a token with no readable root', async () => {
+        const [token] = parseProgression('xyz');
+        expect(await buildProgressionChord(token, 'C', 'Ionian')).toBeNull();
+    });
+});
+
+describe('buildAddedChordsFromTokens (integration)', () => {
+    it('generates fresh chords carrying the given pattern and key/mode', async () => {
+        const tokens = parseProgression('C F G');
+        const built = await buildAddedChordsFromTokens(tokens, 'C', 'Ionian', ['1', '2'], []);
+        expect(built.map(c => c.name)).toEqual(['C', 'F', 'G']);
+        expect(built[0].pattern).toEqual(['1', '2']);
+        expect(built[0]).toMatchObject({ originalKey: 'C', originalMode: 'Ionian' });
+    });
+
+    it('reuses an already-loaded chord object instead of regenerating it', async () => {
+        const tokens = parseProgression('C F');
+        const existing = [{
+            name: 'C',
+            notes: 'C, E, G',
+            pattern: ['x', 'x', 'x'],       // custom pattern that must survive
+            originalKey: 'C',
+            originalMode: 'Ionian',
+            originalNotes: 'C, E, G',
+        }];
+        const built = await buildAddedChordsFromTokens(tokens, 'C', 'Ionian', ['1', '2'], existing);
+        expect(built).toHaveLength(2);
+        // reused chord keeps its custom pattern; the fresh one takes the default
+        expect(built[0].pattern).toEqual(['x', 'x', 'x']);
+        expect(built[1].name).toBe('F');
+        expect(built[1].pattern).toEqual(['1', '2']);
+    });
+
+    it('skips tokens that cannot be built', async () => {
+        const tokens = parseProgression('C xyz G');
+        const built = await buildAddedChordsFromTokens(tokens, 'C', 'Ionian', ['1'], []);
+        expect(built.map(c => c.name)).toEqual(['C', 'G']);
     });
 });

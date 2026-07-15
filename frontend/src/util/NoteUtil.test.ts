@@ -4,6 +4,10 @@ import {
   normalizeNoteWithOctave,
   convertToStandardNoteName,
   noteNameToNumber,
+  transposeNoteName,
+  createKeySpeller,
+  getMidiNote,
+  clearMidiNoteCache,
 } from './NoteUtil';
 
 describe('normalizeNoteName', () => {
@@ -69,5 +73,67 @@ describe('noteNameToNumber', () => {
 
   it('ignores octave digits', () => {
     expect(noteNameToNumber('G4')).toBe(7);
+  });
+});
+
+describe('transposeNoteName', () => {
+  it('uses conventional spellings when no preference is given', () => {
+    expect(transposeNoteName('C', 2)).toBe('D');
+    expect(transposeNoteName('C', 1)).toBe('Db'); // conventional prefers Db
+    expect(transposeNoteName('C', 6)).toBe('F#'); // ...but F# over Gb
+  });
+
+  it('honors an explicit flat/sharp preference', () => {
+    expect(transposeNoteName('C', 1, false)).toBe('C#');
+    expect(transposeNoteName('C', 1, true)).toBe('Db');
+  });
+
+  it('wraps around the octave', () => {
+    expect(transposeNoteName('A', 3)).toBe('C');
+    expect(transposeNoteName('C', -1, false)).toBe('B');
+  });
+});
+
+describe('createKeySpeller', () => {
+  it('respells to the scale spelling in a flat key (A# -> Bb)', () => {
+    const speller = createKeySpeller(['F', 'G', 'A', 'Bb', 'C', 'D', 'E'], 'Bb');
+    expect(speller('A#', 4)).toEqual({ note: 'Bb', octave: 4 });
+  });
+
+  it('flattens out-of-scale pitches in a flat key (F# -> Gb)', () => {
+    const speller = createKeySpeller(['F', 'G', 'A', 'Bb', 'C', 'D', 'E'], 'Bb');
+    expect(speller('F#', 4)).toEqual({ note: 'Gb', octave: 4 });
+  });
+
+  it('leaves a note that already matches the scale untouched', () => {
+    const speller = createKeySpeller(['F', 'G', 'A', 'Bb', 'C', 'D', 'E'], 'Bb');
+    expect(speller('C', 4)).toEqual({ note: 'C', octave: 4 });
+  });
+
+  it('adjusts the octave across the B/C boundary (C -> B# drops an octave)', () => {
+    const speller = createKeySpeller(['C#', 'D#', 'E#', 'F#', 'G#', 'A#', 'B#'], 'C#');
+    expect(speller('C', 5)).toEqual({ note: 'B#', octave: 4 });
+  });
+
+  it('leaves out-of-scale pitches as-is in a sharp key', () => {
+    const speller = createKeySpeller(['D', 'E', 'F#', 'G', 'A', 'B', 'C#'], 'D');
+    expect(speller('A#', 4)).toEqual({ note: 'A#', octave: 4 });
+  });
+});
+
+describe('getMidiNote', () => {
+  it('is an octave (12 semitones) apart between adjacent octaves', () => {
+    expect(getMidiNote('C', 5) - getMidiNote('C', 4)).toBe(12);
+  });
+
+  it('treats enharmonic spellings as the same pitch', () => {
+    expect(getMidiNote('C#', 4)).toBe(getMidiNote('Db', 4));
+  });
+
+  it('returns a cached value on the second lookup', () => {
+    clearMidiNoteCache();
+    const first = getMidiNote('G', 3);
+    expect(getMidiNote('G', 3)).toBe(first);
+    clearMidiNoteCache(); // does not throw
   });
 });

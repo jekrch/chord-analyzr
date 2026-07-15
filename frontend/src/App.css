@@ -509,6 +509,40 @@ body {
   animation: animate-in 0.2s ease-out;
 }
 
+@keyframes animate-out {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(-2px);
+  }
+}
+
+.animate-out {
+  animation: animate-out 0.2s ease-out forwards;
+}
+
+@keyframes backdrop-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes backdrop-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.backdrop-fade-in {
+  animation: backdrop-fade-in 0.2s ease-out;
+}
+
+.backdrop-fade-out {
+  animation: backdrop-fade-out 0.2s ease-out forwards;
+}
+
 .dropdown-menu::-webkit-scrollbar {
   width: 6px;
 }

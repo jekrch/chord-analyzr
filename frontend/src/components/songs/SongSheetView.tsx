@@ -174,6 +174,8 @@ interface ContextMenuTarget {
     chord: SheetChord;
     x: number;
     y: number;
+    /** The chord button's rect, so "Change chord" can anchor the picker to it. */
+    anchorRect: DOMRect;
 }
 
 interface DragInfo {
@@ -395,7 +397,14 @@ const SongSheetView: React.FC<SongSheetViewProps> = ({ song, parsed, source, onS
         e.stopPropagation();
         dragInfoRef.current = null;
         clearLongPressTimer();
-        setContextMenu({ chord, x: e.clientX, y: e.clientY });
+        setContextMenu({ chord, x: e.clientX, y: e.clientY, anchorRect: e.currentTarget.getBoundingClientRect() });
+    };
+
+    const handleContextMenuChange = () => {
+        if (contextMenu) {
+            setPicker({ anchorRect: contextMenu.anchorRect, insert: null, chord: contextMenu.chord });
+        }
+        setContextMenu(null);
     };
 
     const handleContextMenuDelete = () => {
@@ -415,13 +424,14 @@ const SongSheetView: React.FC<SongSheetViewProps> = ({ song, parsed, source, onS
         };
         if (e.pointerType === 'touch') {
             const { clientX, clientY } = e;
+            const anchorRect = e.currentTarget.getBoundingClientRect();
             longPressTimerRef.current = setTimeout(() => {
                 longPressTimerRef.current = null;
                 const info = dragInfoRef.current;
                 if (!info || info.dragging) return;
                 dragInfoRef.current = null;
                 suppressClickRef.current = true;
-                setContextMenu({ chord: info.chord, x: clientX, y: clientY });
+                setContextMenu({ chord: info.chord, x: clientX, y: clientY, anchorRect });
             }, LONG_PRESS_MS);
         }
     };
@@ -694,6 +704,7 @@ const SongSheetView: React.FC<SongSheetViewProps> = ({ song, parsed, source, onS
                             chord={contextMenu.chord}
                             x={contextMenu.x}
                             y={contextMenu.y}
+                            onChange={handleContextMenuChange}
                             onDelete={handleContextMenuDelete}
                             onClose={() => setContextMenu(null)}
                         />

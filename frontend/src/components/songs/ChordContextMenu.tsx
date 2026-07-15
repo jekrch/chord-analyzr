@@ -1,12 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { TrashIcon } from '@heroicons/react/20/solid';
+import { PencilSquareIcon, TrashIcon } from '@heroicons/react/20/solid';
 import { SheetChord } from '../../util/SongSheetParser';
 
 interface ChordContextMenuProps {
     chord: SheetChord;
     x: number;
     y: number;
+    onChange: () => void;
     onDelete: () => void;
     onClose: () => void;
 }
@@ -15,10 +16,10 @@ const MENU_WIDTH = 160;
 
 /**
  * Compact floating menu opened by right-click (desktop) or a long press
- * (touch) on a placed chord — currently just the one action a right-click
- * conventionally offers on a placed item: delete it.
+ * (touch) on a placed chord: swap it for a different chord (via the same
+ * picker used to add one) or delete it.
  */
-const ChordContextMenu: React.FC<ChordContextMenuProps> = ({ chord, x, y, onDelete, onClose }) => {
+const ChordContextMenu: React.FC<ChordContextMenuProps> = ({ chord, x, y, onChange, onDelete, onClose }) => {
     const menuRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -56,6 +57,13 @@ const ChordContextMenu: React.FC<ChordContextMenuProps> = ({ chord, x, y, onDele
             <div className="mcb-panel-header !py-1.5">
                 <span className="mcb-label">{chord.name}</span>
             </div>
+            <button
+                onClick={onChange}
+                className="w-full flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-mcb-secondary hover:bg-[var(--mcb-bg-hover)] hover:text-white transition-colors"
+            >
+                <PencilSquareIcon className="w-3.5 h-3.5" />
+                Change chord
+            </button>
             <button
                 onClick={onDelete}
                 className="w-full flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-[var(--mcb-danger-text)] hover:bg-[var(--mcb-danger-primary)]/15 transition-colors"

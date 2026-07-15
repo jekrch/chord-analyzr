@@ -12,7 +12,7 @@ A Postgres driven solution for analyzing chord progressions and generating chord
 
 Execute ```docker-compose up``` to create a postgres database named chordanalyzr on ```localhost:5432``` with user credentials from ```flyway/flyway.conf```. 
 
-Services for a spring boot API and react frontend will also be started, with the frontend available at `localhost:3000`
+Services for a Go API and react frontend will also be started, with the frontend available at `localhost:3000`
 
 <hr>
 <h3>chord views</h3> 
@@ -114,6 +114,40 @@ Returns:
 
 <br>
 
+<hr>
+<h3>voice leading & harmonic pathfinding</h3>
+
+The same chord/scale relations are also exposed as a **weighted graph**. Each in-scale chord is a node, and every pair of chords is joined by an edge weighted by *voice-leading distance* — the minimal total semitone motion needed to move one chord's notes to another's (common tones cost nothing, so lower-weight moves are smoother). This turns the database into a live progression engine that answers questions too combinatorially large to precompute into static data.
+
+Generate the smoothest four-chord progression in C Ionian, starting on `Cmaj7`:
+
+```
+SELECT * FROM fn_smooth_progression('Ionian', 'C', 'Cmaj7', 4);
+```
+Returns (columns `step, chord, vl_from_prev, total_cost`), e.g.:
+```
+ step | chord     | vl_from_prev | total_cost
+------+-----------+--------------+------------
+    1 | Cmaj7     |            0 |          4
+    2 | Am add(2) |            2 |          4
+    3 | Esus4     |            1 |          4
+    4 | Fb5       |            1 |          4
+```
+
+Supporting building blocks: `fn_voice_leading_distance(int[], int[])` (metric between two pitch-class sets), `mode_key_chord_view` (graph nodes — the diatonic chords of a key/mode), and `mode_key_chord_edge_view` (weighted edges). See [`flyway/sql/views/R__voice_leading.sql`](flyway/sql/views/R__voice_leading.sql) for the implementation and [`docs/voice-leading-demo.sql`](docs/voice-leading-demo.sql) for runnable examples.
+
+<hr>
+<h3>API</h3>
+
+The Go API (`api-go/`, served at `localhost:8080`, interactive docs at `/swagger-ui.html`) exposes the views and the pathfinding engine over HTTP:
+
+| Endpoint | Description |
+| --- | --- |
+| `GET /api/modes` | All modes |
+| `GET /api/scales?key=C&mode=Ionian` | Notes of a scale |
+| `GET /api/chords?key=C&mode=Ionian` | Chords that fit within a key/mode |
+| `GET /api/progressions?key=C&mode=Ionian&startChord=Cmaj7&length=4` | Smoothest progression of `length` chords starting on `startChord` |
+
 ## Frontend
 
 **modal.chordbuildr.com** is a comprehensive web-based music composition and performance tool built with React. The application provides an intuitive interface for exploring musical scales, building chord progressions, and creating rhythmic patterns.
@@ -186,7 +220,7 @@ The frontend leverages the PostgreSQL-driven backend that provides:
 - **Harmonic relationship mapping** that identifies which chords naturally fit within each scale
 
 Data is served through two pathways:
-1. **Live API** via Spring Boot backend for dynamic queries
+1. **Live API** via Go backend for dynamic queries
 2. **Static JSON files** generated from database views for optimal performance
 
 The static data generator extracts chord relationships from views like `mode_scale_chord_relation_view`, ensuring the frontend has instant access to music theory data without database latency during performance.

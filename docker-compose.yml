@@ -1,7 +1,6 @@
-version: '3'
 services:
   flyway:
-    image: flyway/flyway:10
+    image: flyway/flyway:11
     command: -configFiles=/flyway/conf/flyway.config -locations=filesystem:/flyway/sql -connectRetries=60 migrate
     volumes:
       - ./flyway/sql:/flyway/sql
@@ -10,7 +9,7 @@ services:
       - postgres
 
   postgres:
-    image: postgres:17.5
+    image: postgres:18.4
     restart: always
     ports:
     - "5432:5432"
@@ -38,7 +37,7 @@ services:
 
   api:
     build:
-      context: ./api
+      context: ./api-go
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
@@ -46,14 +45,12 @@ services:
       - postgres
       - flyway
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/chordanalyzr
-      - SPRING_DATASOURCE_DB=chordanalyzr
-      - SPRING_DATASOURCE_PORT=5432
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=pass
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=validate
-      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
-      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.PostgreSQLDialect
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=chordanalyzr
+      - DB_USER=postgres
+      - DB_PASSWORD=pass
+      - CORS_ALLOWED_ORIGINS=http://localhost:5173
 
   frontend:
     build:

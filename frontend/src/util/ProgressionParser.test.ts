@@ -6,6 +6,8 @@ import {
     resolvedChordName,
     progressionToString,
     reuseExistingChords,
+    rankChordTypeCandidates,
+    analyzeChordWord,
 } from './ProgressionParser';
 
 describe('tokenizeProgression', () => {
@@ -208,5 +210,45 @@ describe('resolvedChordName', () => {
         expect(resolvedChordName(token)).toBe('Am7/G');
         const plain = parseChordToken('Db');
         expect(resolvedChordName(plain)).toBe('Db');
+    });
+
+    it('falls back to the raw token when the root is unreadable', () => {
+        const invalid = parseChordToken('xyz');
+        expect(invalid.root).toBeNull();
+        expect(resolvedChordName(invalid)).toBe('xyz');
+    });
+});
+
+describe('analyzeChordWord', () => {
+    it('flags a readable chord word as confident', () => {
+        expect(analyzeChordWord('Cmaj7')).toEqual({ root: 'C', confident: true });
+        // slash chord with an empty (major) suffix still resolves confidently
+        expect(analyzeChordWord('C/E')).toEqual({ root: 'C', confident: true });
+    });
+
+    it('reports a non-chord word as not confident', () => {
+        expect(analyzeChordWord('the')).toEqual({ root: null, confident: false });
+    });
+});
+
+describe('rankChordTypeCandidates', () => {
+    it('ranks an exact suffix to the top', () => {
+        const candidates = rankChordTypeCandidates('C', 'maj7');
+        expect(candidates[0].chordType).toBe('maj7');
+    });
+
+    it('returns scores in descending order, capped at the limit', () => {
+        const candidates = rankChordTypeCandidates('C', 'm7', 4);
+        expect(candidates.length).toBeLessThanOrEqual(4);
+        for (let i = 1; i < candidates.length; i++) {
+            expect(candidates[i - 1].score).toBeGreaterThanOrEqual(candidates[i].score);
+        }
+    });
+
+    it('still ranks by string distance when the symbol is nonsense to tonal', () => {
+        // tonal can't hear "zzz", so ranking falls back to string similarity
+        const candidates = rankChordTypeCandidates('C', 'zzz');
+        expect(candidates.length).toBeGreaterThan(0);
+        expect(candidates[0]).toHaveProperty('chordType');
     });
 });

@@ -1,0 +1,157 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "chord-analyzr API",
+    "description": "API for chord-analyzr",
+    "version": "0.0.1"
+  },
+  "servers": [{ "url": "http://localhost:8080" }],
+  "paths": {
+    "/api/modes": {
+      "get": {
+        "tags": ["mode-controller"],
+        "summary": "Get modes",
+        "description": "Get all modes",
+        "operationId": "getModes",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ModeDto" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scales": {
+      "get": {
+        "tags": ["scale-controller"],
+        "summary": "Get scale notes",
+        "description": "Get scale notes",
+        "operationId": "getScaleNotes",
+        "parameters": [
+          { "name": "key", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "mode", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ScaleNoteDto" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chords": {
+      "get": {
+        "tags": ["chord-controller"],
+        "summary": "Get chords by mode and key name",
+        "description": "Get chords by mode and key name",
+        "operationId": "getModeKeyChords",
+        "parameters": [
+          { "name": "key", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "mode", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ModeScaleChordDto" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/progressions": {
+      "get": {
+        "tags": ["progression-controller"],
+        "summary": "Generate a smooth chord progression",
+        "description": "Generates the smoothest (minimal voice-leading) progression of the given length that starts on startChord and stays within the key/mode. rootWeight (>= 0) biases the search toward purposeful functional root motion; slashWeight (>= 0) enables inversions / slash chords chosen to smooth the bass line. Both default to 0 (off). pinned lists further chords the progression must contain, each as 'Chord' (placed wherever it fits most smoothly) or 'Chord@step' (fixed at that 1-based step, e.g. pinned=Am7,G7@3); the search fills the remaining steps around them. Pinned chords and the start chord may use notes outside the key/mode.",
+        "operationId": "getSmoothProgression",
+        "parameters": [
+          { "name": "key", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "mode", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "startChord", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "length", "in": "query", "required": false, "schema": { "type": "integer", "format": "int32", "default": 4 } },
+          { "name": "rootWeight", "in": "query", "required": false, "schema": { "type": "number", "format": "double", "default": 0 } },
+          { "name": "slashWeight", "in": "query", "required": false, "schema": { "type": "number", "format": "double", "default": 0 } },
+          { "name": "pinned", "in": "query", "required": false, "schema": { "type": "array", "items": { "type": "string" } } }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ProgressionStep" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ModeDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "format": "int64" },
+          "name": { "type": "string" }
+        }
+      },
+      "ScaleNoteDto": {
+        "type": "object",
+        "properties": {
+          "seqNote": { "type": "integer", "format": "int64" },
+          "noteName": { "type": "string" }
+        }
+      },
+      "ModeScaleChordDto": {
+        "type": "object",
+        "properties": {
+          "modeId": { "type": "integer", "format": "int64" },
+          "chordTypeId": { "type": "integer", "format": "int64" },
+          "chordNote": { "type": "integer", "format": "int32" },
+          "keyNote": { "type": "integer", "format": "int32" },
+          "mode": { "type": "string" },
+          "keyName": { "type": "string" },
+          "chordNoteName": { "type": "string" },
+          "chordName": { "type": "string" },
+          "modeNotes": { "type": "array", "items": { "type": "integer", "format": "int32" } },
+          "chordNotes": { "type": "string" },
+          "chordNoteNames": { "type": "string" },
+          "modeChordNoteDiff": { "type": "array", "items": { "type": "integer", "format": "int32" } },
+          "modeChordNoteDiffCount": { "type": "integer", "format": "int32" }
+        }
+      },
+      "ProgressionStep": {
+        "type": "object",
+        "properties": {
+          "step": { "type": "integer", "format": "int32" },
+          "chord": { "type": "string" },
+          "vlFromPrev": { "type": "integer", "format": "int32" },
+          "totalCost": { "type": "integer", "format": "int32" }
+        }
+      }
+    }
+  }
+}

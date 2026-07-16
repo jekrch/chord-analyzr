@@ -54,6 +54,14 @@ type Pin struct {
 	Position int
 }
 
+// RequiredNote is a note the chord at a given step must contain -- e.g. a
+// melody note to reharmonize under. Position is the 1-based step; the SQL
+// function drops entries at step 1 (the start chord) or out of range.
+type RequiredNote struct {
+	Note     string
+	Position int
+}
+
 type Store interface {
 	Modes(ctx context.Context) ([]Mode, error)
 	ScaleNotes(ctx context.Context, mode, key string) ([]ScaleNote, error)
@@ -64,5 +72,6 @@ type Store interface {
 		length int,
 		rootWeight, slashWeight float64,
 		pins []Pin,
+		required []RequiredNote,
 	) ([]ProgressionStep, error)
 }

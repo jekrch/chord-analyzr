@@ -23,7 +23,7 @@ type Service interface {
 		mode, key, startChord string,
 		length int,
 		rootWeight, slashWeight float64,
-		pinned []string,
+		pinned, required []string,
 	) ([]store.ProgressionStep, error)
 }
 
@@ -94,15 +94,19 @@ func (h *handlers) getSmoothProgression(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// a pinned param may repeat and each value may itself be a
-	// comma-separated list (chord names never contain commas)
+	// the pinned and required params may repeat and each value may itself be
+	// a comma-separated list (chord and note names never contain commas)
 	var pinned []string
 	for _, raw := range q["pinned"] {
 		pinned = append(pinned, strings.Split(raw, ",")...)
 	}
+	var required []string
+	for _, raw := range q["required"] {
+		required = append(required, strings.Split(raw, ",")...)
+	}
 
 	steps, err := h.svc.SmoothProgression(
-		r.Context(), mode, key, startChord, length, rootWeight, slashWeight, pinned)
+		r.Context(), mode, key, startChord, length, rootWeight, slashWeight, pinned, required)
 	if err != nil {
 		h.serverError(w, r, err)
 		return

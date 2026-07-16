@@ -16,6 +16,7 @@ type fakeStore struct {
 	length                  int
 	rootWeight, slashWeight float64
 	pins                    []store.Pin
+	required                []store.RequiredNote
 }
 
 func (f *fakeStore) SmoothProgression(
@@ -24,11 +25,13 @@ func (f *fakeStore) SmoothProgression(
 	length int,
 	rootWeight, slashWeight float64,
 	pins []store.Pin,
+	required []store.RequiredNote,
 ) ([]store.ProgressionStep, error) {
 	f.mode, f.key, f.startChord = mode, key, startChord
 	f.length = length
 	f.rootWeight, f.slashWeight = rootWeight, slashWeight
 	f.pins = pins
+	f.required = required
 	return nil, nil
 }
 
@@ -36,7 +39,7 @@ func callProgression(t *testing.T, length int, rootWeight, slashWeight float64, 
 	t.Helper()
 	fs := &fakeStore{}
 	_, err := New(fs).SmoothProgression(
-		context.Background(), "Ionian", key, "Cmaj7", length, rootWeight, slashWeight, pinned)
+		context.Background(), "Ionian", key, "Cmaj7", length, rootWeight, slashWeight, pinned, nil)
 	if err != nil {
 		t.Fatalf("SmoothProgression returned error: %v", err)
 	}
@@ -138,6 +141,59 @@ func TestParsePins(t *testing.T) {
 				t.Errorf("ParsePins(%q) = %v, want %v", tt.pinned, got, tt.want)
 			}
 		})
+	}
+}
+
+func TestParseRequiredNotes(t *testing.T) {
+	tests := []struct {
+		name     string
+		required []string
+		want     []store.RequiredNote
+	}{
+		{
+			// same "@step" syntax as pins; several entries may share a step
+			name:     "splits entries into notes and positions",
+			required: []string{"A@3", "Eb@3", "F@5"},
+			want: []store.RequiredNote{
+				{Note: "A", Position: 3}, {Note: "Eb", Position: 3}, {Note: "F", Position: 5},
+			},
+		},
+		{
+			// a step-less or negative-step entry parses to position 0, which
+			// the SQL function drops
+			name:     "step-less and negative-step entries float to zero",
+			required: []string{"A", "Bb@-2"},
+			want:     []store.RequiredNote{{Note: "A"}, {Note: "Bb"}},
+		},
+		{
+			name:     "trims entries and skips blank ones",
+			required: []string{" Eb @ 3 ", "  "},
+			want:     []store.RequiredNote{{Note: "Eb", Position: 3}},
+		},
+		{
+			name:     "nil input yields no requirements",
+			required: nil,
+			want:     nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ParseRequiredNotes(tt.required); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ParseRequiredNotes(%q) = %v, want %v", tt.required, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestPassesRequiredNotesThrough(t *testing.T) {
+	fs := &fakeStore{}
+	_, err := New(fs).SmoothProgression(
+		context.Background(), "Ionian", "C", "Cmaj7", 4, 0, 0, nil, []string{"A@3"})
+	if err != nil {
+		t.Fatalf("SmoothProgression returned error: %v", err)
+	}
+	if want := []store.RequiredNote{{Note: "A", Position: 3}}; !reflect.DeepEqual(fs.required, want) {
+		t.Errorf("required = %v, want %v", fs.required, want)
 	}
 }
 

@@ -21,7 +21,7 @@ type fakeService struct {
 	mode, key, startChord   string
 	length                  int
 	rootWeight, slashWeight float64
-	pinned                  []string
+	pinned, required        []string
 }
 
 func (f *fakeService) SmoothProgression(
@@ -29,12 +29,13 @@ func (f *fakeService) SmoothProgression(
 	mode, key, startChord string,
 	length int,
 	rootWeight, slashWeight float64,
-	pinned []string,
+	pinned, required []string,
 ) ([]store.ProgressionStep, error) {
 	f.mode, f.key, f.startChord = mode, key, startChord
 	f.length = length
 	f.rootWeight, f.slashWeight = rootWeight, slashWeight
 	f.pinned = pinned
+	f.required = required
 	return f.steps, nil
 }
 
@@ -69,10 +70,11 @@ func TestReturnsProgressionAndDefaultsLengthAndWeights(t *testing.T) {
 		t.Errorf("unexpected body: %v", body)
 	}
 
-	// length, both weights and pins omitted -> handler defaults (4, 0, 0, none)
-	if svc.length != 4 || svc.rootWeight != 0 || svc.slashWeight != 0 || svc.pinned != nil {
-		t.Errorf("got length=%d rootWeight=%v slashWeight=%v pinned=%v, want defaults",
-			svc.length, svc.rootWeight, svc.slashWeight, svc.pinned)
+	// length, weights, pins and required notes omitted -> handler defaults
+	if svc.length != 4 || svc.rootWeight != 0 || svc.slashWeight != 0 ||
+		svc.pinned != nil || svc.required != nil {
+		t.Errorf("got length=%d rootWeight=%v slashWeight=%v pinned=%v required=%v, want defaults",
+			svc.length, svc.rootWeight, svc.slashWeight, svc.pinned, svc.required)
 	}
 	if svc.mode != "Ionian" || svc.key != "C" || svc.startChord != "Cmaj7" {
 		t.Errorf("got mode=%q key=%q startChord=%q", svc.mode, svc.key, svc.startChord)
@@ -106,6 +108,21 @@ func TestPassesPinnedChordsThrough(t *testing.T) {
 	}
 	if want := []string{"Am7", "G7@3"}; !reflect.DeepEqual(svc.pinned, want) {
 		t.Errorf("pinned = %v, want %v", svc.pinned, want)
+	}
+}
+
+func TestPassesRequiredNotesThrough(t *testing.T) {
+	svc := &fakeService{}
+
+	// required notes bind the same way pinned chords do: repeatable param,
+	// comma-separated entries, '@step' inside each entry
+	rec := serve(t, svc, "/api/progressions?key=C&mode=Ionian&startChord=Cmaj7&required=A@3,Eb@4")
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", rec.Code)
+	}
+	if want := []string{"A@3", "Eb@4"}; !reflect.DeepEqual(svc.required, want) {
+		t.Errorf("required = %v, want %v", svc.required, want)
 	}
 }
 

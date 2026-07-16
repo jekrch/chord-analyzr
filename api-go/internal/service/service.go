@@ -1,6 +1,6 @@
 // Package service holds the input-shaping rules between the HTTP layer and
 // the database: key-name normalization, length/weight clamping, and parsing
-// of pinned-chord entries.
+// of pinned-chord and required-note entries.
 package service
 
 import (
@@ -19,6 +19,10 @@ const (
 	// the voice-leading knobs are ordering-key coefficients, not search-space
 	// controls, so they only need a sane upper bound rather than tight limits
 	maxWeight = 10.0
+
+	// several notes may be required on one step, so the cap is looser than
+	// the pin cap; past a few per step the entries can't all be satisfiable
+	maxRequiredNotes = 4 * maxLength
 )
 
 type Service struct {
@@ -46,7 +50,7 @@ func (s *Service) SmoothProgression(
 	mode, key, startChord string,
 	length int,
 	rootWeight, slashWeight float64,
-	pinned []string,
+	pinned, required []string,
 ) ([]store.ProgressionStep, error) {
 	return s.store.SmoothProgression(
 		ctx,
@@ -57,6 +61,7 @@ func (s *Service) SmoothProgression(
 		clampWeight(rootWeight),
 		clampWeight(slashWeight),
 		ParsePins(pinned),
+		ParseRequiredNotes(required),
 	)
 }
 
@@ -77,22 +82,47 @@ func SanitizeKeyName(keyName string) string {
 func ParsePins(pinned []string) []store.Pin {
 	var pins []store.Pin
 	for _, entry := range pinned[:min(len(pinned), maxLength)] {
-		chord := entry
-		step := 0
-		if at := strings.LastIndex(entry, "@"); at >= 0 {
-			if n, err := strconv.Atoi(strings.TrimSpace(entry[at+1:])); err == nil {
-				step = n
-				chord = entry[:at]
-			}
-			// otherwise: not a step suffix; treat the whole entry as the chord name
-		}
-		chord = strings.ReplaceAll(strings.TrimSpace(chord), ",", "") // commas are the pin separator
+		chord, step := splitStepSuffix(entry)
 		if chord == "" {
 			continue
 		}
-		pins = append(pins, store.Pin{Chord: chord, Position: max(step, 0)})
+		pins = append(pins, store.Pin{Chord: chord, Position: step})
 	}
 	return pins
+}
+
+// ParseRequiredNotes turns required-note entries into store.RequiredNotes.
+// Each entry is "Note@step" ('Bb@3'): the chord at that 1-based step must
+// contain the note; several entries may name one step. Entries without a
+// step parse to position 0, which the SQL function drops, as it does
+// unresolvable note names.
+func ParseRequiredNotes(required []string) []store.RequiredNote {
+	var notes []store.RequiredNote
+	for _, entry := range required[:min(len(required), maxRequiredNotes)] {
+		note, step := splitStepSuffix(entry)
+		if note == "" {
+			continue
+		}
+		notes = append(notes, store.RequiredNote{Note: note, Position: step})
+	}
+	return notes
+}
+
+// splitStepSuffix splits a "Name@step" entry into its name and 1-based step.
+// Without a numeric '@' suffix the whole entry is the name, at step 0; a
+// negative step also floats to 0. Names are trimmed and lose any commas
+// (the entry separator).
+func splitStepSuffix(entry string) (string, int) {
+	name := entry
+	step := 0
+	if at := strings.LastIndex(entry, "@"); at >= 0 {
+		if n, err := strconv.Atoi(strings.TrimSpace(entry[at+1:])); err == nil {
+			step = max(n, 0)
+			name = entry[:at]
+		}
+		// otherwise: not a step suffix; treat the whole entry as the name
+	}
+	return strings.ReplaceAll(strings.TrimSpace(name), ",", ""), step
 }
 
 func clampLength(length int) int {

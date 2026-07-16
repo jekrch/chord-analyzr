@@ -2,7 +2,10 @@ package store
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log/slog"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -15,6 +18,26 @@ type Postgres struct {
 
 func NewPostgres(pool *pgxpool.Pool) *Postgres {
 	return &Postgres{pool: pool}
+}
+
+// WaitReady blocks until the largest materialized view (which flyway
+// populates last) is queryable.
+func (p *Postgres) WaitReady(ctx context.Context, timeout time.Duration, log *slog.Logger) error {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+	for {
+		var one int
+		err := p.pool.QueryRow(ctx, "SELECT 1 FROM mode_scale_chord_relation_view LIMIT 1").Scan(&one)
+		if err == nil || errors.Is(err, pgx.ErrNoRows) {
+			return nil
+		}
+		log.Info("waiting for flyway migrations to be applied", "error", err)
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(time.Second):
+		}
+	}
 }
 
 func (p *Postgres) Modes(ctx context.Context) ([]Mode, error) {

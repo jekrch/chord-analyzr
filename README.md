@@ -148,6 +148,32 @@ The Go API (`api-go/`, served at `localhost:8080`, interactive docs at `/swagger
 | `GET /api/chords?key=C&mode=Ionian` | Chords that fit within a key/mode |
 | `GET /api/progressions?key=C&mode=Ionian&startChord=Cmaj7&length=4` | Smoothest progression of `length` chords starting on `startChord` |
 
+<hr>
+<h3>MCP server</h3>
+
+The same engine is exposed as an [MCP](https://modelcontextprotocol.io/) server (`api-go/cmd/mcp`), so LLM clients like Claude Code or Claude Desktop can prompt for chord progressions in natural language. It shares the API's service layer and talks to Postgres directly.
+
+| Tool | Description |
+| --- | --- |
+| `list_modes` | Available scale modes |
+| `get_scale_notes` | Notes of a scale for a key/mode |
+| `list_chords` | Chords diatonic to a key/mode |
+| `generate_progression` | Voice-leading-optimized progression, with optional pinned chords (`G7@3`) and required melody notes (`Bb@2`) |
+
+`docker-compose up` starts it alongside the database and API, speaking streamable HTTP at `http://localhost:8081/mcp`. Register it with Claude Code:
+
+```
+claude mcp add --transport http chord-analyzr http://localhost:8081/mcp
+```
+
+For clients that only speak stdio, run the binary directly against a reachable Postgres:
+
+```
+go run ./api-go/cmd/mcp -stdio
+```
+
+Example prompt once connected: *"Generate a smooth 6-chord progression in D Dorian starting on Dm7 that lands on G7 at step 4."*
+
 ## Frontend
 
 **modal.chordbuildr.com** is a comprehensive web-based music composition and performance tool built with React. The application provides an intuitive interface for exploring musical scales, building chord progressions, and creating rhythmic patterns.

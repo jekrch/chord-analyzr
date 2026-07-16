@@ -1,9 +1,12 @@
-// Command api serves the chord-analyzr HTTP API.
+// Command mcp serves the chord-analyzr MCP server. By default it speaks
+// streamable HTTP on /mcp; with -stdio it serves a single session over
+// stdin/stdout for local clients.
 package main
 
 import (
 	"context"
 	"errors"
+	"flag"
 	"log/slog"
 	"net"
 	"net/http"
@@ -13,22 +16,29 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
 
 	"github.com/jekrch/chord-analyzr/api-go/internal/config"
-	"github.com/jekrch/chord-analyzr/api-go/internal/httpapi"
+	"github.com/jekrch/chord-analyzr/api-go/internal/mcpserver"
 	"github.com/jekrch/chord-analyzr/api-go/internal/service"
 	"github.com/jekrch/chord-analyzr/api-go/internal/store"
 )
 
+const version = "0.1.0"
+
 func main() {
-	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	if err := run(log); err != nil {
+	stdio := flag.Bool("stdio", false, "serve a single MCP session over stdin/stdout instead of HTTP")
+	flag.Parse()
+
+	// stdout carries the protocol in stdio mode, so logs always go to stderr
+	log := slog.New(slog.NewJSONHandler(os.Stderr, nil))
+	if err := run(log, *stdio); err != nil {
 		log.Error("fatal", "error", err)
 		os.Exit(1)
 	}
 }
 
-func run(log *slog.Logger) error {
+func run(log *slog.Logger, stdio bool) error {
 	cfg := config.Load()
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -46,19 +56,30 @@ func run(log *slog.Logger) error {
 	}
 	log.Info("database is ready")
 
-	handler := httpapi.NewHandler(service.New(pg), log, cfg.CORSAllowedOrigins)
+	server := mcpserver.New(service.New(pg), version)
+
+	if stdio {
+		return server.Run(ctx, &mcp.StdioTransport{})
+	}
+
+	mux := http.NewServeMux()
+	mux.Handle("/mcp", mcp.NewStreamableHTTPHandler(
+		func(*http.Request) *mcp.Server { return server }, nil))
+	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
 
 	srv := &http.Server{
 		Addr:              net.JoinHostPort("", cfg.Port),
-		Handler:           handler,
+		Handler:           mux,
 		ReadHeaderTimeout: 10 * time.Second,
-		// no WriteTimeout: progression search on large lengths can be slow
+		// no WriteTimeout: MCP sessions hold long-lived streaming responses
 		IdleTimeout: time.Minute,
 	}
 
 	errCh := make(chan error, 1)
 	go func() {
-		log.Info("listening", "port", cfg.Port)
+		log.Info("mcp server listening", "port", cfg.Port, "path", "/mcp")
 		if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			errCh <- err
 		}

@@ -52,6 +52,25 @@ services:
       - DB_PASSWORD=pass
       - CORS_ALLOWED_ORIGINS=http://localhost:5173
 
+  mcp:
+    build:
+      context: ./api-go
+      dockerfile: Dockerfile
+      args:
+        CMD: mcp  # same module as the api; builds cmd/mcp instead of cmd/api
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres
+      - flyway
+    environment:
+      - PORT=8081
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=chordanalyzr
+      - DB_USER=postgres
+      - DB_PASSWORD=pass
+
   frontend:
     build:
       context: ./frontend

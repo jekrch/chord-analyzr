@@ -1,2 +1,5 @@
 # Local working docs (not committed)
 /docs/
+
+# Dependencies
+node_modules/

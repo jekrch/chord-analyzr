@@ -19,9 +19,14 @@ type fakeService struct {
 	steps  []store.ProgressionStep
 	err    error
 
-	gotMode, gotKey, gotStart string
-	gotLength                 int
-	gotPinned, gotRequired    []string
+	gotMode, gotKey, gotStart   string
+	gotLength                   int
+	gotRandomness               float64
+	gotExtraNotes               []string
+	gotPinned, gotRequired      []string
+	gotMaxNotes, gotResultCount int
+	gotColorWeight              float64
+	gotColorDevices             []string
 }
 
 func (f *fakeService) Modes(context.Context) ([]store.Mode, error) {
@@ -42,12 +47,22 @@ func (f *fakeService) SmoothProgression(
 	_ context.Context,
 	mode, key, startChord string,
 	length int,
+	randomness float64,
+	extraNotes []string,
 	_, _ float64,
 	pinned, required []string,
+	maxNotes, resultCount int,
+	colorWeight float64,
+	colorDevices []string,
 ) ([]store.ProgressionStep, error) {
 	f.gotMode, f.gotKey, f.gotStart = mode, key, startChord
 	f.gotLength = length
+	f.gotRandomness = randomness
+	f.gotExtraNotes = extraNotes
 	f.gotPinned, f.gotRequired = pinned, required
+	f.gotMaxNotes, f.gotResultCount = maxNotes, resultCount
+	f.gotColorWeight = colorWeight
+	f.gotColorDevices = colorDevices
 	return f.steps, f.err
 }
 
@@ -195,11 +210,83 @@ func TestGenerateProgression(t *testing.T) {
 	if svc.gotLength != 4 {
 		t.Errorf("length defaulted to %d, want 4", svc.gotLength)
 	}
+	if svc.gotResultCount != 1 {
+		t.Errorf("result count defaulted to %d, want 1", svc.gotResultCount)
+	}
 	if len(svc.gotPinned) != 1 || svc.gotPinned[0] != "Am7@2" {
 		t.Errorf("pinned = %v", svc.gotPinned)
 	}
 	if len(svc.gotRequired) != 1 || svc.gotRequired[0] != "E@2" {
 		t.Errorf("required = %v", svc.gotRequired)
+	}
+	if len(out.Alternatives) != 0 {
+		t.Errorf("alternatives = %+v, want none for a single result", out.Alternatives)
+	}
+}
+
+func TestGenerateProgressionPassesCreativeKnobs(t *testing.T) {
+	svc := &fakeService{}
+	session := connect(t, svc)
+
+	var out progressionOutput
+	call(t, session, "generate_progression", map[string]any{
+		"key": "C", "mode": "Ionian", "start_chord": "Cmaj7",
+		"randomness": 0.5, "extra_notes": []string{"F#"}, "max_notes": 4,
+	}, &out)
+
+	if svc.gotRandomness != 0.5 || svc.gotMaxNotes != 4 {
+		t.Errorf("got randomness=%v maxNotes=%d, want 0.5 4", svc.gotRandomness, svc.gotMaxNotes)
+	}
+	if len(svc.gotExtraNotes) != 1 || svc.gotExtraNotes[0] != "F#" {
+		t.Errorf("extra notes = %v, want [F#]", svc.gotExtraNotes)
+	}
+}
+
+func TestGenerateProgressionPassesColorKnobs(t *testing.T) {
+	svc := &fakeService{}
+	session := connect(t, svc)
+
+	var out progressionOutput
+	call(t, session, "generate_progression", map[string]any{
+		"key": "C", "mode": "Ionian", "start_chord": "Cmaj7",
+		"color_weight": 2.0, "color_devices": []string{"mediant"},
+	}, &out)
+
+	if svc.gotColorWeight != 2.0 {
+		t.Errorf("color weight = %v, want 2", svc.gotColorWeight)
+	}
+	if len(svc.gotColorDevices) != 1 || svc.gotColorDevices[0] != "mediant" {
+		t.Errorf("color devices = %v, want [mediant]", svc.gotColorDevices)
+	}
+}
+
+func TestGenerateProgressionAlternatives(t *testing.T) {
+	svc := &fakeService{steps: []store.ProgressionStep{
+		{ProgressionID: 1, Step: 1, Chord: "Cmaj7", VLFromPrev: 0, TotalCost: 3},
+		{ProgressionID: 1, Step: 2, Chord: "Am7", VLFromPrev: 3, TotalCost: 3},
+		{ProgressionID: 2, Step: 1, Chord: "Cmaj7", VLFromPrev: 0, TotalCost: 5},
+		{ProgressionID: 2, Step: 2, Chord: "Em7", VLFromPrev: 5, TotalCost: 5},
+	}}
+	session := connect(t, svc)
+
+	var out progressionOutput
+	call(t, session, "generate_progression", map[string]any{
+		"key": "C", "mode": "Ionian", "start_chord": "Cmaj7", "result_count": 2,
+	}, &out)
+
+	if svc.gotResultCount != 2 {
+		t.Errorf("result count = %d, want 2", svc.gotResultCount)
+	}
+	// the best progression fills the top-level fields, the rest are alternatives
+	if len(out.Steps) != 2 || out.Steps[1].Chord != "Am7" || out.TotalCost != 3 {
+		t.Errorf("best steps = %+v total = %d", out.Steps, out.TotalCost)
+	}
+	if len(out.Alternatives) != 1 {
+		t.Fatalf("alternatives = %+v, want 1", out.Alternatives)
+	}
+	alt := out.Alternatives[0]
+	if len(alt.Steps) != 2 || alt.Steps[1].Chord != "Em7" || alt.TotalCost != 5 {
+		t.Errorf("alternative = %+v", alt)
 	}
 }
 

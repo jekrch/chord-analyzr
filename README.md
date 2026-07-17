@@ -158,7 +158,7 @@ The same engine is exposed as an [MCP](https://modelcontextprotocol.io/) server 
 | `list_modes` | Available scale modes |
 | `get_scale_notes` | Notes of a scale for a key/mode |
 | `list_chords` | Chords diatonic to a key/mode |
-| `generate_progression` | Voice-leading-optimized progression, with optional pinned chords (`G7@3`) and required melody notes (`Bb@2`) |
+| `generate_progression` | Voice-leading-optimized progression, with optional pinned chords (`G7@3`), required melody notes (`Bb@2`), and flavor knobs: cadential root motion, slash-chord bass lines, borrowed color notes, chord-size cap, randomness, and multiple ranked alternatives |
 
 `docker-compose up` starts it alongside the database and API, speaking streamable HTTP at `http://localhost:8081/mcp`. Register it with Claude Code:
 

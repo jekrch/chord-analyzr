@@ -14,24 +14,39 @@ type fakeStore struct {
 
 	mode, key, startChord   string
 	length                  int
+	randomness              float64
+	extraNotes              []string
 	rootWeight, slashWeight float64
 	pins                    []store.Pin
 	required                []store.RequiredNote
+	maxNotes, resultCount   int
+	colorWeight             float64
+	colorDevices            []string
 }
 
 func (f *fakeStore) SmoothProgression(
 	_ context.Context,
 	mode, key, startChord string,
 	length int,
+	randomness float64,
+	extraNotes []string,
 	rootWeight, slashWeight float64,
 	pins []store.Pin,
 	required []store.RequiredNote,
+	maxNotes, resultCount int,
+	colorWeight float64,
+	colorDevices []string,
 ) ([]store.ProgressionStep, error) {
 	f.mode, f.key, f.startChord = mode, key, startChord
 	f.length = length
+	f.randomness = randomness
+	f.extraNotes = extraNotes
 	f.rootWeight, f.slashWeight = rootWeight, slashWeight
 	f.pins = pins
 	f.required = required
+	f.maxNotes, f.resultCount = maxNotes, resultCount
+	f.colorWeight = colorWeight
+	f.colorDevices = colorDevices
 	return nil, nil
 }
 
@@ -39,7 +54,8 @@ func callProgression(t *testing.T, length int, rootWeight, slashWeight float64, 
 	t.Helper()
 	fs := &fakeStore{}
 	_, err := New(fs).SmoothProgression(
-		context.Background(), "Ionian", key, "Cmaj7", length, rootWeight, slashWeight, pinned, nil)
+		context.Background(), "Ionian", key, "Cmaj7", length,
+		0, nil, rootWeight, slashWeight, pinned, nil, 0, 1, 0, nil)
 	if err != nil {
 		t.Fatalf("SmoothProgression returned error: %v", err)
 	}
@@ -188,12 +204,107 @@ func TestParseRequiredNotes(t *testing.T) {
 func TestPassesRequiredNotesThrough(t *testing.T) {
 	fs := &fakeStore{}
 	_, err := New(fs).SmoothProgression(
-		context.Background(), "Ionian", "C", "Cmaj7", 4, 0, 0, nil, []string{"A@3"})
+		context.Background(), "Ionian", "C", "Cmaj7", 4, 0, nil, 0, 0, nil, []string{"A@3"}, 0, 1, 0, nil)
 	if err != nil {
 		t.Fatalf("SmoothProgression returned error: %v", err)
 	}
 	if want := []store.RequiredNote{{Note: "A", Position: 3}}; !reflect.DeepEqual(fs.required, want) {
 		t.Errorf("required = %v, want %v", fs.required, want)
+	}
+}
+
+// the creative knobs: randomness clamps to [0,1], extra notes are trimmed and
+// blanks dropped, max notes floors at 0, result count clamps to 1..10
+func TestClampsCreativeKnobs(t *testing.T) {
+	call := func(randomness float64, extra []string, maxNotes, resultCount int) *fakeStore {
+		t.Helper()
+		fs := &fakeStore{}
+		_, err := New(fs).SmoothProgression(
+			context.Background(), "Ionian", "C", "Cmaj7", 4,
+			randomness, extra, 0, 0, nil, nil, maxNotes, resultCount, 0, nil)
+		if err != nil {
+			t.Fatalf("SmoothProgression returned error: %v", err)
+		}
+		return fs
+	}
+
+	if fs := call(2.5, nil, -3, 0); fs.randomness != 1 || fs.maxNotes != 0 || fs.resultCount != 1 {
+		t.Errorf("got randomness=%v maxNotes=%d resultCount=%d, want 1 0 1",
+			fs.randomness, fs.maxNotes, fs.resultCount)
+	}
+	if fs := call(-1, nil, 4, 100); fs.randomness != 0 || fs.maxNotes != 4 || fs.resultCount != 10 {
+		t.Errorf("got randomness=%v maxNotes=%d resultCount=%d, want 0 4 10",
+			fs.randomness, fs.maxNotes, fs.resultCount)
+	}
+	if fs := call(0.5, []string{" F# ", "  ", "Bb"}, 0, 3); fs.randomness != 0.5 ||
+		!reflect.DeepEqual(fs.extraNotes, []string{"F#", "Bb"}) || fs.resultCount != 3 {
+		t.Errorf("got randomness=%v extraNotes=%v resultCount=%d, want 0.5 [F# Bb] 3",
+			fs.randomness, fs.extraNotes, fs.resultCount)
+	}
+}
+
+// color: the weight clamps like the other weights, device tags are trimmed
+// with blanks dropped, and a positive weight lifts the length cap to 12
+func TestColorKnobs(t *testing.T) {
+	call := func(length int, colorWeight float64, devices []string) *fakeStore {
+		t.Helper()
+		fs := &fakeStore{}
+		_, err := New(fs).SmoothProgression(
+			context.Background(), "Ionian", "C", "Cmaj7", length,
+			0, nil, 0, 0, nil, nil, 0, 1, colorWeight, devices)
+		if err != nil {
+			t.Fatalf("SmoothProgression returned error: %v", err)
+		}
+		return fs
+	}
+
+	if fs := call(4, 50, nil); fs.colorWeight != 10 {
+		t.Errorf("colorWeight = %v, want 10", fs.colorWeight)
+	}
+	if fs := call(4, -2, nil); fs.colorWeight != 0 {
+		t.Errorf("colorWeight = %v, want 0", fs.colorWeight)
+	}
+	if fs := call(4, 2, []string{" mediant ", "  ", "borrowed"}); !reflect.DeepEqual(
+		fs.colorDevices, []string{"mediant", "borrowed"}) {
+		t.Errorf("colorDevices = %v, want [mediant borrowed]", fs.colorDevices)
+	}
+
+	// without color the length cap stays at 8; with color it rises to 12
+	if fs := call(100, 0, nil); fs.length != 8 {
+		t.Errorf("length = %d, want 8 with color off", fs.length)
+	}
+	if fs := call(100, 2, nil); fs.length != 12 {
+		t.Errorf("length = %d, want 12 with color on", fs.length)
+	}
+	// a negative weight clamps to 0, so it must not lift the cap
+	if fs := call(100, -2, nil); fs.length != 8 {
+		t.Errorf("length = %d, want 8 with a negative color weight", fs.length)
+	}
+}
+
+func TestParseColorDevicesCapsEntries(t *testing.T) {
+	many := make([]string, 10)
+	for i := range many {
+		many[i] = "borrowed"
+	}
+	if got := ParseColorDevices(many); len(got) != 5 {
+		t.Errorf("len = %d, want 5", len(got))
+	}
+	if got := ParseColorDevices(nil); got != nil {
+		t.Errorf("ParseColorDevices(nil) = %v, want nil", got)
+	}
+}
+
+func TestParseExtraNotesCapsEntries(t *testing.T) {
+	many := make([]string, 20)
+	for i := range many {
+		many[i] = "F#"
+	}
+	if got := ParseExtraNotes(many); len(got) != 12 {
+		t.Errorf("len = %d, want 12", len(got))
+	}
+	if got := ParseExtraNotes(nil); got != nil {
+		t.Errorf("ParseExtraNotes(nil) = %v, want nil", got)
 	}
 }
 

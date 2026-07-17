@@ -20,22 +20,37 @@ type fakeService struct {
 
 	mode, key, startChord   string
 	length                  int
+	randomness              float64
+	extraNotes              []string
 	rootWeight, slashWeight float64
 	pinned, required        []string
+	maxNotes, resultCount   int
+	colorWeight             float64
+	colorDevices            []string
 }
 
 func (f *fakeService) SmoothProgression(
 	_ context.Context,
 	mode, key, startChord string,
 	length int,
+	randomness float64,
+	extraNotes []string,
 	rootWeight, slashWeight float64,
 	pinned, required []string,
+	maxNotes, resultCount int,
+	colorWeight float64,
+	colorDevices []string,
 ) ([]store.ProgressionStep, error) {
 	f.mode, f.key, f.startChord = mode, key, startChord
 	f.length = length
+	f.randomness = randomness
+	f.extraNotes = extraNotes
 	f.rootWeight, f.slashWeight = rootWeight, slashWeight
 	f.pinned = pinned
 	f.required = required
+	f.maxNotes, f.resultCount = maxNotes, resultCount
+	f.colorWeight = colorWeight
+	f.colorDevices = colorDevices
 	return f.steps, nil
 }
 
@@ -70,11 +85,14 @@ func TestReturnsProgressionAndDefaultsLengthAndWeights(t *testing.T) {
 		t.Errorf("unexpected body: %v", body)
 	}
 
-	// length, weights, pins and required notes omitted -> handler defaults
+	// everything optional omitted -> handler defaults
 	if svc.length != 4 || svc.rootWeight != 0 || svc.slashWeight != 0 ||
-		svc.pinned != nil || svc.required != nil {
-		t.Errorf("got length=%d rootWeight=%v slashWeight=%v pinned=%v required=%v, want defaults",
-			svc.length, svc.rootWeight, svc.slashWeight, svc.pinned, svc.required)
+		svc.pinned != nil || svc.required != nil ||
+		svc.randomness != 0 || svc.extraNotes != nil || svc.maxNotes != 0 || svc.resultCount != 1 {
+		t.Errorf("got length=%d rootWeight=%v slashWeight=%v pinned=%v required=%v "+
+			"randomness=%v extraNotes=%v maxNotes=%d resultCount=%d, want defaults",
+			svc.length, svc.rootWeight, svc.slashWeight, svc.pinned, svc.required,
+			svc.randomness, svc.extraNotes, svc.maxNotes, svc.resultCount)
 	}
 	if svc.mode != "Ionian" || svc.key != "C" || svc.startChord != "Cmaj7" {
 		t.Errorf("got mode=%q key=%q startChord=%q", svc.mode, svc.key, svc.startChord)
@@ -93,6 +111,43 @@ func TestPassesRootAndSlashWeightsThrough(t *testing.T) {
 	if svc.length != 5 || svc.rootWeight != 2.0 || svc.slashWeight != 3.0 {
 		t.Errorf("got length=%d rootWeight=%v slashWeight=%v, want 5 2 3",
 			svc.length, svc.rootWeight, svc.slashWeight)
+	}
+}
+
+func TestPassesCreativeKnobsThrough(t *testing.T) {
+	svc := &fakeService{}
+
+	// extraNotes binds like pinned: repeatable param, comma-separated entries
+	rec := serve(t, svc, "/api/progressions?key=C&mode=Ionian&startChord=Cmaj7"+
+		"&randomness=0.5&extraNotes=F%23,Bb&maxNotes=4&resultCount=3")
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", rec.Code)
+	}
+	if svc.randomness != 0.5 || svc.maxNotes != 4 || svc.resultCount != 3 {
+		t.Errorf("got randomness=%v maxNotes=%d resultCount=%d, want 0.5 4 3",
+			svc.randomness, svc.maxNotes, svc.resultCount)
+	}
+	if want := []string{"F#", "Bb"}; !reflect.DeepEqual(svc.extraNotes, want) {
+		t.Errorf("extraNotes = %v, want %v", svc.extraNotes, want)
+	}
+}
+
+func TestPassesColorKnobsThrough(t *testing.T) {
+	svc := &fakeService{}
+
+	// colorDevices binds like the other list params
+	rec := serve(t, svc, "/api/progressions?key=C&mode=Ionian&startChord=Cmaj7"+
+		"&colorWeight=2&colorDevices=mediant,borrowed")
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", rec.Code)
+	}
+	if svc.colorWeight != 2.0 {
+		t.Errorf("colorWeight = %v, want 2", svc.colorWeight)
+	}
+	if want := []string{"mediant", "borrowed"}; !reflect.DeepEqual(svc.colorDevices, want) {
+		t.Errorf("colorDevices = %v, want %v", svc.colorDevices, want)
 	}
 }
 

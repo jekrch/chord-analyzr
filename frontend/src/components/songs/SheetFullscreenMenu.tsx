@@ -224,7 +224,7 @@ const SheetFullscreenMenu: React.FC<SheetFullscreenMenuProps> = ({
                             settings={effective}
                             onChange={applyLayout}
                             showOrientation={false}
-                            showScreenWidth
+                            showColumnWidth
                         />
                         <p className="mt-3 text-[0.625rem] text-mcb-tertiary leading-relaxed">
                             {hasView

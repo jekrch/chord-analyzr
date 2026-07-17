@@ -199,10 +199,10 @@ const SongSheetView: React.FC<SongSheetViewProps> = ({ song, parsed, source, onS
     // Scale and unscaled sheet height of the live print preview, measured
     // once the sheet is laid out at page width (null while not previewing).
     const [preview, setPreview] = useState<{ scale: number; sheetHeight: number } | null>(null);
-    // Natural content width of the full-screen sheet — the widest line laid
-    // across its columns — so it stops widening a bit past the text instead of
-    // filling an arbitrarily wide viewport (null when not in display mode).
-    const [displayMaxWidth, setDisplayMaxWidth] = useState<number | null>(null);
+    // Width the full-screen sheet renders at: its columns at the size the
+    // column-width setting asks for, plus gaps and margins (null when not in
+    // display mode). See the measuring effect below.
+    const [displayWidth, setDisplayWidth] = useState<number | null>(null);
     const previewContainerRef = useRef<HTMLDivElement>(null);
 
     // Undo, scoped to this sheet's own chord edits (add/move/delete) rather
@@ -282,45 +282,58 @@ const SongSheetView: React.FC<SongSheetViewProps> = ({ song, parsed, source, onS
         return () => observer.disconnect();
     }, [previewing, exportSettings, parsed]);
 
-    // Full-screen reading view: cap the sheet a bit past its widest line so it
-    // doesn't stretch to an arbitrarily wide viewport (which pulls adjacent
-    // columns far apart). Measure each lyric line's intrinsic, unwrapped width
-    // synchronously — flipping it to no-wrap, reading scrollWidth, restoring —
-    // before paint, then size the cap for the current column count, gap and
-    // margin. A smaller screen-width setting can still force a narrower,
-    // wrapping column; the cap only stops it going too wide.
+    // Full-screen reading view: give the sheet a static per-column width. The
+    // natural fit is the widest lyric line rendered without wrapping, measured
+    // synchronously — flipping each line to no-wrap, reading scrollWidth,
+    // restoring — before paint; the column-width setting scales that fit in or
+    // out (100% = fit, narrower wraps), and the sheet width follows from the
+    // column count, gap and side margin, independent of the viewport.
     useLayoutEffect(() => {
         const node = sheetRef.current;
         if (!displayMode || previewing || !node) {
-            setDisplayMaxWidth(null);
+            setDisplayWidth(null);
             return;
         }
         const measure = () => {
-            let widest = 0;
-            const consider = (el: HTMLElement) => {
+            // Range-measure the unwrapped text itself: scrollWidth won't do —
+            // these are stretched flex/block elements, so it's floored at
+            // their current laid-out width, which would bake the viewport
+            // size at measure time into the "intrinsic" fit.
+            const intrinsicWidth = (el: HTMLElement) => {
                 const prev = el.style.whiteSpace;
                 el.style.whiteSpace = 'pre';
-                widest = Math.max(widest, el.scrollWidth);
+                const range = document.createRange();
+                range.selectNodeContents(el);
+                const width = range.getBoundingClientRect().width;
                 el.style.whiteSpace = prev;
+                return Math.ceil(width);
             };
-            node.querySelectorAll<HTMLElement>('.sheet-lyric').forEach(consider);
-            const title = node.querySelector<HTMLElement>('h2');
-            if (title) widest = Math.max(widest, title.scrollWidth);
+            let widest = 0;
+            node.querySelectorAll<HTMLElement>('.sheet-lyric').forEach(el => {
+                widest = Math.max(widest, intrinsicWidth(el));
+            });
             if (!widest) {
-                setDisplayMaxWidth(null);
+                setDisplayWidth(null);
                 return;
             }
+            // Each lyric row also holds its append button behind a small gap,
+            // and scrollWidth rounds — a little slack keeps the fit unwrapped.
+            const LINE_EXTRAS_PX = 22;
             const cols = Math.max(1, exportSettings.columns);
             const COLUMN_GAP_PX = 32; // 2rem, matching the display column-gap
             const paddingPx = exportSettings.margin * 96 * 2; // side margins, 96px/in
-            const PAST_LINE_PX = 40; // "a bit past the widest line"
-            setDisplayMaxWidth(
-                Math.round(widest * cols + COLUMN_GAP_PX * (cols - 1) + paddingPx + PAST_LINE_PX)
-            );
+            // Older saved views predate the setting; read them as fit.
+            const scale = (exportSettings.columnWidth ?? 100) / 100;
+            const colWidth = Math.round((widest + LINE_EXTRAS_PX) * scale);
+            // The title spans the whole sheet, so it only sets a floor.
+            const title = node.querySelector<HTMLElement>('h2');
+            const titleWidth = title ? intrinsicWidth(title) : 0;
+            const inner = Math.max(colWidth * cols + COLUMN_GAP_PX * (cols - 1), titleWidth);
+            setDisplayWidth(Math.round(inner + paddingPx));
         };
         measure();
         document.fonts?.ready.then(measure);
-    }, [displayMode, previewing, parsed, exportSettings.columns, exportSettings.lyricSize, exportSettings.chordSize, exportSettings.lineSpacing, exportSettings.margin]);
+    }, [displayMode, previewing, parsed, exportSettings.columns, exportSettings.columnWidth, exportSettings.lyricSize, exportSettings.chordSize, exportSettings.lineSpacing, exportSettings.margin]);
 
     const commitChange = (next: string) => {
         undoStackRef.current.push(source);
@@ -659,11 +672,11 @@ const SongSheetView: React.FC<SongSheetViewProps> = ({ song, parsed, source, onS
                         '--sheet-lyric-size': exportSettings.lyricSize,
                         '--sheet-chord-size': exportSettings.chordSize,
                         ...(previewing && { width: pageWidth }),
-                        // Cap the full-screen sheet near its natural content
-                        // width and center it, so wide viewports don't fan the
-                        // columns apart (a smaller screen width still narrows it).
-                        ...(displayMode && !previewing && displayMaxWidth
-                            ? { maxWidth: displayMaxWidth, marginLeft: 'auto', marginRight: 'auto' }
+                        // Hold the full-screen sheet at its computed column
+                        // width and center it; a narrow screen still caps it
+                        // (columns wrap) rather than scrolling sideways.
+                        ...(displayMode && !previewing && displayWidth
+                            ? { width: displayWidth, maxWidth: '100%', marginLeft: 'auto', marginRight: 'auto' }
                             : {}),
                     } as React.CSSProperties}
                 >

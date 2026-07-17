@@ -80,9 +80,14 @@ func (p *Postgres) SmoothProgression(
 	ctx context.Context,
 	mode, key, startChord string,
 	length int,
+	randomness float64,
+	extraNotes []string,
 	rootWeight, slashWeight float64,
 	pins []Pin,
 	required []RequiredNote,
+	maxNotes, resultCount int,
+	colorWeight float64,
+	colorDevices []string,
 ) ([]ProgressionStep, error) {
 	var pinnedChords []string
 	var pinnedPositions []int32
@@ -97,13 +102,16 @@ func (p *Postgres) SmoothProgression(
 		requiredPositions = append(requiredPositions, int32(req.Position))
 	}
 	rows, err := p.pool.Query(ctx, `
-		SELECT step, chord, vl_from_prev, total_cost
+		SELECT progression_id, step, chord, vl_from_prev, total_cost
 		FROM fn_smooth_progression($1, $2, $3, $4,
-		                           0, '{}'::text[], $5, $6, $7, $8,
-		                           0, $9, $10)
-		ORDER BY step`,
-		mode, key, startChord, length, rootWeight, slashWeight,
-		pinnedChords, pinnedPositions, requiredNotes, requiredPositions)
+		                           $5, $6, $7, $8, $9, $10,
+		                           $11, $12, $13, $14, $15, $16)
+		ORDER BY progression_id, step`,
+		mode, key, startChord, length,
+		randomness, extraNotes, rootWeight, slashWeight,
+		pinnedChords, pinnedPositions,
+		maxNotes, requiredNotes, requiredPositions, resultCount,
+		colorWeight, colorDevices)
 	if err != nil {
 		return nil, fmt.Errorf("query smooth progression: %w", err)
 	}

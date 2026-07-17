@@ -44,14 +44,14 @@ interface SheetExportControlsProps {
     /** Show the page orientation toggle — off for the on-screen reading view,
      * which has no page to orient (see the full-screen flyover). */
     showOrientation?: boolean;
-    /** Show the screen-fill width slider — on only for the on-screen reading
+    /** Show the column width slider — on only for the on-screen reading
      * view; print / image have a fixed page width. */
-    showScreenWidth?: boolean;
+    showColumnWidth?: boolean;
 }
 
 /**
  * The sheet layout controls: columns, margin, line spacing, lyric / chord
- * font sizes, and (print only) page orientation / (screen only) fill width.
+ * font sizes, and (print only) page orientation / (screen only) column width.
  * Presentational — the caller owns the settings, so the toolbar popover drives
  * the shared print/export layout and the full-screen flyover drives whichever
  * layout the current song reads with.
@@ -60,7 +60,7 @@ const SheetExportControls: React.FC<SheetExportControlsProps> = ({
     settings,
     onChange: setSettings,
     showOrientation = true,
-    showScreenWidth = false,
+    showColumnWidth = false,
 }) => {
     return (
         <div className="space-y-3">
@@ -75,18 +75,6 @@ const SheetExportControls: React.FC<SheetExportControlsProps> = ({
                     onChange={orientation => setSettings({ orientation })}
                 />
             )}
-            {showScreenWidth && (
-                <Slider
-                    variant="split"
-                    label="Screen width"
-                    value={settings.screenWidth}
-                    min={40}
-                    max={100}
-                    step={5}
-                    onChange={screenWidth => setSettings({ screenWidth })}
-                    formatValue={v => (v >= 100 ? 'Full' : `${v}%`)}
-                />
-            )}
             <SegmentedRow
                 label="Columns"
                 value={settings.columns}
@@ -97,6 +85,20 @@ const SheetExportControls: React.FC<SheetExportControlsProps> = ({
                 ]}
                 onChange={columns => setSettings({ columns })}
             />
+            {showColumnWidth && (
+                <Slider
+                    variant="split"
+                    label="Column width"
+                    // Percent of the natural fit — the widest line unwrapped.
+                    // Older saved views predate the setting; read them as fit.
+                    value={settings.columnWidth ?? 100}
+                    min={50}
+                    max={150}
+                    step={5}
+                    onChange={columnWidth => setSettings({ columnWidth })}
+                    formatValue={v => (v === 100 ? 'Fit' : `${v}%`)}
+                />
+            )}
             <Slider
                 variant="split"
                 label="Margin"

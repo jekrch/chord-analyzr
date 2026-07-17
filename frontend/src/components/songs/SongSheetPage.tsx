@@ -159,11 +159,7 @@ const SongSheetPage: React.FC = () => {
                 <div
                     className={`mcb-sheet-overlay ${
                         overlayPhase === 'open' ? 'is-open' : overlayPhase === 'closing' ? 'is-closing' : ''
-                    } fixed inset-0 z-[900] bg-mcb-app overflow-y-auto ${
-                        // Slide the sheet clear of the flyover so it stays in
-                        // view (and updating) while its layout is tuned.
-                        menuOpen ? 'lg:pr-[24rem]' : ''
-                    }`}
+                    } fixed inset-0 z-[900] bg-mcb-app overflow-y-auto`}
                     role="dialog"
                     aria-modal="true"
                     aria-label="Song sheet full screen"
@@ -187,12 +183,9 @@ const SongSheetPage: React.FC = () => {
                             <ArrowsPointingInIcon className="w-4 h-4" />
                         </button>
                     </div>
-                    <div
-                        className="mcb-sheet-overlay-content mx-auto px-4 sm:px-8 py-8 text-left text-sm"
-                        // Screen-fill width: 100% fills the available space,
-                        // less centers a narrower reading column.
-                        style={{ maxWidth: `${fullscreenSettings.screenWidth}%` }}
-                    >
+                    {/* The sheet sizes itself to its columns (see the
+                        display-mode width in SongSheetView) and centers here. */}
+                    <div className="mcb-sheet-overlay-content mx-auto px-4 sm:px-8 py-8 text-left text-sm">
                         <SongSheetView
                             song={currentSong}
                             parsed={parsed}

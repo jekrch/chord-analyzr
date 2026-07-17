@@ -41,9 +41,10 @@ export interface SheetExportSettings {
     lyricSize: number;   // lyric font size, pt
     chordSize: number;   // chord font size, pt
     columns: number;     // lyric columns per page
-    // How much of the screen the full-screen sheet fills, as a percent of the
-    // available width (100 = fill). On-screen only; print/export ignore it.
-    screenWidth: number;
+    // Width of each reading column in the full-screen sheet, as a percent of
+    // its natural fit — the widest line rendered without wrapping (100 = fit).
+    // On-screen only; print/export ignore it.
+    columnWidth: number;
 }
 
 export const DEFAULT_SHEET_EXPORT_SETTINGS: SheetExportSettings = {
@@ -53,7 +54,7 @@ export const DEFAULT_SHEET_EXPORT_SETTINGS: SheetExportSettings = {
     lyricSize: 11,
     chordSize: 10,
     columns: 1,
-    screenWidth: 100,
+    columnWidth: 100,
 };
 
 const START_OCTAVE = 4;

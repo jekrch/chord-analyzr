@@ -128,7 +128,7 @@
      "progression-controller"
     ],
     "summary": "Generate a smooth chord progression",
-    "description": "Generates the smoothest (minimal voice-leading) progression of the given length that starts on startChord and stays within the key/mode. rootWeight (>= 0) biases the search toward purposeful functional root motion; slashWeight (>= 0) enables inversions / slash chords chosen to smooth the bass line. Both default to 0 (off). pinned lists further chords the progression must contain, each as 'Chord' (placed wherever it fits most smoothly) or 'Chord@step' (fixed at that 1-based step, e.g. pinned=Am7,G7@3); the search fills the remaining steps around them. Pinned chords and the start chord may use notes outside the key/mode. required lists notes the progression must voice, each as 'Note@step' (1-based step, e.g. required=A@3,Eb@4): the chord at that step will contain the note -- pass a melody note per step to reharmonize under it. Several entries may name one step. A required note outside the key/mode is honored, but only at the steps that require it; a requirement on step 1 or on a pinned step gives way to that chord.",
+    "description": "Generates the smoothest (minimal voice-leading) progression of the given length that starts on startChord and stays within the key/mode. rootWeight (>= 0) biases the search toward purposeful functional root motion; slashWeight (>= 0) enables inversions / slash chords chosen to smooth the bass line. Both default to 0 (off). randomness (0-1) adds variety: each call picks a different near-smoothest progression instead of always the same one; reported costs stay the true voice-leading motion. extraNotes lists non-scale notes chords may borrow (e.g. extraNotes=F%23,Bb) for chromatic color -- at least one chord will use one when possible. maxNotes (> 0) softly caps chord size for leaner chords; oversized chords still appear when nothing leaner comes close. pinned lists further chords the progression must contain, each as 'Chord' (placed wherever it fits most smoothly) or 'Chord@step' (fixed at that 1-based step, e.g. pinned=Am7,G7@3); the search fills the remaining steps around them. Pinned chords and the start chord may use notes outside the key/mode. required lists notes the progression must voice, each as 'Note@step' (1-based step, e.g. required=A@3,Eb@4): the chord at that step will contain the note -- pass a melody note per step to reharmonize under it. Several entries may name one step. A required note outside the key/mode is honored, but only at the steps that require it; a requirement on step 1 or on a pinned step gives way to that chord. resultCount (1-10, default 1) returns that many alternative progressions, best first, each a distinct chord sequence grouped by progressionId in the response rows. colorWeight (> 0) admits chords rooted outside the scale -- bVI, bVII, the Neapolitan, chromatic mediants (modal-interchange color); higher = bolder, try 1-3, and the length cap rises from 8 to 12. colorDevices restricts that color to specific devices: borrowed, mediant, secondary_dominant, tritone_sub, chromatic (e.g. colorDevices=mediant for chromatic-mediant chains); empty allows all.",
     "operationId": "getSmoothProgression",
     "parameters": [
      {
@@ -186,6 +186,37 @@
       }
      },
      {
+      "name": "randomness",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "number",
+       "format": "double",
+       "default": 0
+      }
+     },
+     {
+      "name": "extraNotes",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     {
+      "name": "maxNotes",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "format": "int32",
+       "default": 0
+      }
+     },
+     {
       "name": "pinned",
       "in": "query",
       "required": false,
@@ -198,6 +229,37 @@
      },
      {
       "name": "required",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      }
+     },
+     {
+      "name": "resultCount",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "format": "int32",
+       "default": 1
+      }
+     },
+     {
+      "name": "colorWeight",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "number",
+       "format": "double",
+       "default": 0
+      }
+     },
+     {
+      "name": "colorDevices",
       "in": "query",
       "required": false,
       "schema": {
@@ -312,6 +374,10 @@
    "ProgressionStep": {
     "type": "object",
     "properties": {
+     "progressionId": {
+      "type": "integer",
+      "format": "int32"
+     },
      "step": {
       "type": "integer",
       "format": "int32"

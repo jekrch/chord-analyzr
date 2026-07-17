@@ -16,6 +16,13 @@ const (
 	maxLength = 8
 	minLength = 2
 
+	// with color on, borrowed roots open the 5 non-scale pitch classes, so
+	// progressions past the 7 scale degrees become satisfiable
+	maxColorLength = 12
+
+	// there are only 5 device tags, so more entries can't add anything
+	maxColorDevices = 5
+
 	// the voice-leading knobs are ordering-key coefficients, not search-space
 	// controls, so they only need a sane upper bound rather than tight limits
 	maxWeight = 10.0
@@ -23,6 +30,13 @@ const (
 	// several notes may be required on one step, so the cap is looser than
 	// the pin cap; past a few per step the entries can't all be satisfiable
 	maxRequiredNotes = 4 * maxLength
+
+	// there are only 12 pitch classes, so more extra notes can't add anything
+	maxExtraNotes = 12
+
+	// the beam holds at most 500 finished paths, but a handful is all a
+	// caller can meaningfully compare
+	maxResultCount = 10
 )
 
 type Service struct {
@@ -49,19 +63,31 @@ func (s *Service) SmoothProgression(
 	ctx context.Context,
 	mode, key, startChord string,
 	length int,
+	randomness float64,
+	extraNotes []string,
 	rootWeight, slashWeight float64,
 	pinned, required []string,
+	maxNotes, resultCount int,
+	colorWeight float64,
+	colorDevices []string,
 ) ([]store.ProgressionStep, error) {
+	colorWeight = clampWeight(colorWeight)
 	return s.store.SmoothProgression(
 		ctx,
 		mode,
 		SanitizeKeyName(key),
 		startChord,
-		clampLength(length),
+		clampLength(length, colorWeight > 0),
+		clampRandomness(randomness),
+		ParseExtraNotes(extraNotes),
 		clampWeight(rootWeight),
 		clampWeight(slashWeight),
 		ParsePins(pinned),
 		ParseRequiredNotes(required),
+		clampMaxNotes(maxNotes),
+		clampResultCount(resultCount),
+		colorWeight,
+		ParseColorDevices(colorDevices),
 	)
 }
 
@@ -89,6 +115,30 @@ func ParsePins(pinned []string) []store.Pin {
 		pins = append(pins, store.Pin{Chord: chord, Position: step})
 	}
 	return pins
+}
+
+// ParseExtraNotes trims extra-note entries and drops blank ones, capped at
+// one per pitch class. Unknown note names are dropped by the SQL function.
+func ParseExtraNotes(extra []string) []string {
+	var notes []string
+	for _, entry := range extra[:min(len(extra), maxExtraNotes)] {
+		if note := strings.TrimSpace(entry); note != "" {
+			notes = append(notes, note)
+		}
+	}
+	return notes
+}
+
+// ParseColorDevices trims device-tag entries and drops blank ones, capped at
+// one per known tag. Unknown tags are dropped by the SQL function.
+func ParseColorDevices(devices []string) []string {
+	var tags []string
+	for _, entry := range devices[:min(len(devices), maxColorDevices)] {
+		if tag := strings.TrimSpace(entry); tag != "" {
+			tags = append(tags, tag)
+		}
+	}
+	return tags
 }
 
 // ParseRequiredNotes turns required-note entries into store.RequiredNotes.
@@ -125,12 +175,33 @@ func splitStepSuffix(entry string) (string, int) {
 	return strings.ReplaceAll(strings.TrimSpace(name), ",", ""), step
 }
 
-func clampLength(length int) int {
-	return min(max(length, minLength), maxLength)
+// with borrowed-root color on, the distinct-root rule can draw on all 12
+// pitch classes instead of the 7 scale degrees, so the cap loosens
+func clampLength(length int, colorOn bool) int {
+	limit := maxLength
+	if colorOn {
+		limit = maxColorLength
+	}
+	return min(max(length, minLength), limit)
 }
 
 // negative weights default to 0 (the knob off); anything above the cap is
 // pinned to it
 func clampWeight(w float64) float64 {
 	return min(max(w, 0), maxWeight)
+}
+
+// randomness is a probability-like dial: [0, 1]
+func clampRandomness(r float64) float64 {
+	return min(max(r, 0), 1)
+}
+
+// 0 means no cap; negative values mean the same
+func clampMaxNotes(n int) int {
+	return max(n, 0)
+}
+
+// at least the single best result, at most a comparable handful
+func clampResultCount(n int) int {
+	return min(max(n, 1), maxResultCount)
 }

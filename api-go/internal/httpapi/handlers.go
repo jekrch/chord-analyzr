@@ -22,8 +22,13 @@ type Service interface {
 		ctx context.Context,
 		mode, key, startChord string,
 		length int,
+		randomness float64,
+		extraNotes []string,
 		rootWeight, slashWeight float64,
 		pinned, required []string,
+		maxNotes, resultCount int,
+		colorWeight float64,
+		colorDevices []string,
 	) ([]store.ProgressionStep, error)
 }
 
@@ -93,9 +98,29 @@ func (h *handlers) getSmoothProgression(w http.ResponseWriter, r *http.Request) 
 		h.badRequest(w, err.Error())
 		return
 	}
+	randomness, err := floatParam(q, "randomness", 0)
+	if err != nil {
+		h.badRequest(w, err.Error())
+		return
+	}
+	maxNotes, err := intParam(q, "maxNotes", 0)
+	if err != nil {
+		h.badRequest(w, err.Error())
+		return
+	}
+	resultCount, err := intParam(q, "resultCount", 1)
+	if err != nil {
+		h.badRequest(w, err.Error())
+		return
+	}
+	colorWeight, err := floatParam(q, "colorWeight", 0)
+	if err != nil {
+		h.badRequest(w, err.Error())
+		return
+	}
 
-	// the pinned and required params may repeat and each value may itself be
-	// a comma-separated list (chord and note names never contain commas)
+	// the list params may repeat and each value may itself be a
+	// comma-separated list (chord and note names never contain commas)
 	var pinned []string
 	for _, raw := range q["pinned"] {
 		pinned = append(pinned, strings.Split(raw, ",")...)
@@ -104,9 +129,20 @@ func (h *handlers) getSmoothProgression(w http.ResponseWriter, r *http.Request) 
 	for _, raw := range q["required"] {
 		required = append(required, strings.Split(raw, ",")...)
 	}
+	var extraNotes []string
+	for _, raw := range q["extraNotes"] {
+		extraNotes = append(extraNotes, strings.Split(raw, ",")...)
+	}
+	var colorDevices []string
+	for _, raw := range q["colorDevices"] {
+		colorDevices = append(colorDevices, strings.Split(raw, ",")...)
+	}
 
 	steps, err := h.svc.SmoothProgression(
-		r.Context(), mode, key, startChord, length, rootWeight, slashWeight, pinned, required)
+		r.Context(), mode, key, startChord, length,
+		randomness, extraNotes, rootWeight, slashWeight,
+		pinned, required, maxNotes, resultCount,
+		colorWeight, colorDevices)
 	if err != nil {
 		h.serverError(w, r, err)
 		return

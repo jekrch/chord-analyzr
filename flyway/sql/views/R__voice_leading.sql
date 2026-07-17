@@ -110,6 +110,95 @@ AS $$
 $$;
 
 
+-- How much a borrowed-root chord's harmonic device costs in the search score
+-- (before p_color_weight scales it down). Familiar devices are cheap, raw
+-- chromaticism is dear. The tags come from fn_mode_key_color_chord_set below,
+-- except 'mediant', which is a property of a move rather than a chord.
+CREATE OR REPLACE FUNCTION fn_color_device_penalty(device text)
+RETURNS numeric
+LANGUAGE sql IMMUTABLE PARALLEL SAFE
+AS $$
+    SELECT CASE device
+        WHEN 'borrowed'           THEN 2   -- modal interchange: bVI, bVII, iv...
+        WHEN 'mediant'            THEN 3   -- chromatic-mediant move (per edge)
+        WHEN 'secondary_dominant' THEN 4
+        WHEN 'tritone_sub'        THEN 5
+        ELSE 7                             -- unclassified chromatic color
+    END;
+$$;
+
+
+-- Chords rooted OUTSIDE the scale -- the modal-interchange / chromatic color
+-- fn_smooth_progression adds to its graph when p_color_weight > 0. Only a
+-- curated list of chord qualities is admitted on borrowed roots (the kinds
+-- modal interchange actually uses), which keeps the graph growth small:
+-- ~7 qualities x 5 non-scale roots vs. the ~300 nodes the full chord
+-- vocabulary would add.
+--
+-- Each root gets one canonical spelling: the parallel Aeolian's, when that
+-- scale has the note (Ab/Bb/Eb in C major, the conventional borrowed-chord
+-- spellings), else natural, then flat, then sharp (Db, Gb in C major).
+--
+-- Each chord carries the device it represents, priced by
+-- fn_color_device_penalty:
+--   borrowed            all tones fit one of the seven parallel diatonic
+--                       modes of the same tonic (modal interchange)
+--   secondary_dominant  major/dom7 quality a P5 above a scale degree
+--   tritone_sub         dom7 a tritone from a scale degree's dominant
+--                       (equivalently: a semitone above the degree)
+--   chromatic           anything else that made the quality list
+-- The first matching tag wins, cheapest first. 'mediant' is per-move, so it
+-- is classified in fn_smooth_progression's edge build, not here.
+--
+-- mediant_quality marks the chords a chromatic-mediant move can land on
+-- (plain major or minor triads).
+CREATE OR REPLACE FUNCTION fn_mode_key_color_chord_set(p_mode text, p_key text)
+RETURNS TABLE(chord_name text, root_note integer, chord_notes integer[],
+              device text, mediant_quality boolean)
+LANGUAGE sql STABLE
+AS $$
+    WITH scale AS (
+        SELECT mn.mode_notes
+        FROM mode_notes_mv mn
+        WHERE mn.mode = p_mode AND mn.key_name = p_key
+    ),
+    borrowed_root AS (
+        SELECT DISTINCT ON (n.note) n.note, n.name
+        FROM scale s
+        JOIN note n ON NOT (n.note = ANY (s.mode_notes))
+                   AND n.note_type_id IN (1, 2, 3)   -- no double accidentals
+        LEFT JOIN mode_scale_note_letter_mv aeolian
+               ON  aeolian.mode = 'Aeolian' AND aeolian.key_name = p_key
+               AND aeolian.note = n.note   AND aeolian.note_name = n.name
+        ORDER BY n.note, (aeolian.note IS NULL),
+                 CASE n.note_type_id WHEN 1 THEN 0 WHEN 2 THEN 1 ELSE 2 END
+    )
+    SELECT cv.chord_name, cv.note, cv.chord_note_array,
+           CASE
+               WHEN EXISTS (
+                   SELECT 1 FROM mode_notes_mv pm
+                   WHERE pm.key_name = p_key
+                     AND pm.mode IN ('Ionian', 'Dorian', 'Phrygian', 'Lydian',
+                                     'Mixolydian', 'Aeolian', 'Locrian')
+                     AND cv.chord_note_array <@ pm.mode_notes)
+                   THEN 'borrowed'
+               WHEN cv.chord_type IN ('', '7')
+                    AND EXISTS (SELECT 1 FROM scale s, unnest(s.mode_notes) d
+                                WHERE (d + 6) % 12 + 1 = cv.note)
+                   THEN 'secondary_dominant'
+               WHEN cv.chord_type = '7'
+                    AND EXISTS (SELECT 1 FROM scale s, unnest(s.mode_notes) d
+                                WHERE d % 12 + 1 = cv.note)
+                   THEN 'tritone_sub'
+               ELSE 'chromatic'
+           END,
+           cv.chord_type IN ('', 'm')
+    FROM borrowed_root br
+    JOIN chord_view cv ON cv.note = br.note AND cv.note_name = br.name
+    WHERE cv.chord_type IN ('', 'm', '7', 'maj7', 'm7', 'sus4', 'add(9)');
+$$;
+
+
 -- The chords of every mode+key, for exploration and demos. (The API calls
 -- fn_smooth_progression, which builds its own graph from the function above.)
 CREATE OR REPLACE VIEW mode_key_chord_view AS
@@ -151,7 +240,8 @@ DROP FUNCTION IF EXISTS fn_chord_path(text, text, text, text, integer);
 -- scale degree. Requiring a fresh root at each step is what makes the result
 -- a progression -- without it the cheapest path just wiggles between voicings
 -- of one chord (Cmaj7 -> C -> Csus4). A mode has 7 degrees, so p_length > 7
--- returns nothing.
+-- returns nothing -- unless p_color_weight opens the non-scale roots, which
+-- lifts the ceiling to 12.
 --
 -- Finding the exact best fixed-length path is combinatorial, so this is a
 -- beam search: extend every kept path by one chord, score the results, keep
@@ -196,6 +286,29 @@ DROP FUNCTION IF EXISTS fn_chord_path(text, text, text, text, integer);
 --                  that require it. A requirement at step 1 or on a pinned
 --                  step is dropped (those chords are the caller's own), as
 --                  is an unknown note name.
+--   p_result_count how many progressions to return (default 1). Each result
+--                  is a complete progression under its own progression_id
+--                  (1 = best), a distinct chord sequence, ordered best-first
+--                  by the same score the search uses. The paths already sit
+--                  in the beam when the search ends, so extra results are
+--                  nearly free. Fewer than asked may exist.
+--   p_color_weight > 0 admits chords ROOTED outside the scale -- bVI, bVII,
+--                  the Neapolitan, chromatic mediants -- the borrowed-root
+--                  color p_extra_notes cannot reach (extras color the tones,
+--                  this colors the roots). Each such chord carries a device
+--                  tag priced by fn_color_device_penalty; the penalty is
+--                  divided by this weight, so higher = more willing to pay
+--                  for color (1 favors gentle modal interchange, 3 admits
+--                  raw chromaticism). At least one borrowed-root chord
+--                  appears in the result if any survived the search. With
+--                  more than 7 root pitch classes available, p_length may
+--                  exceed 7. Try 1-3.
+--   p_color_devices with p_color_weight > 0, restricts borrowed-root chords
+--                  to the listed devices: 'borrowed', 'mediant',
+--                  'secondary_dominant', 'tritone_sub', 'chromatic'.
+--                  ['mediant'] gives the film-score chromatic-mediant chain;
+--                  ['borrowed'] pure modal interchange. Empty (default) means
+--                  every device is allowed. Unknown tags are ignored.
 --
 -- The start chord and the pins are taken as given even when they use notes
 -- from outside the mode (secondary dominants, borrowed chords, ...). Only the
@@ -227,9 +340,12 @@ CREATE FUNCTION fn_smooth_progression(
     p_pinned_positions integer[] DEFAULT '{}',
     p_max_notes        integer   DEFAULT 0,
     p_required_notes     text[]    DEFAULT '{}',
-    p_required_positions integer[] DEFAULT '{}'
+    p_required_positions integer[] DEFAULT '{}',
+    p_result_count       integer   DEFAULT 1,
+    p_color_weight       numeric   DEFAULT 0,
+    p_color_devices      text[]    DEFAULT '{}'
 )
-RETURNS TABLE(step integer, chord text, vl_from_prev integer, total_cost integer)
+RETURNS TABLE(progression_id integer, step integer, chord text, vl_from_prev integer, total_cost integer)
 LANGUAGE plpgsql VOLATILE
 AS $$
 DECLARE
@@ -242,16 +358,23 @@ DECLARE
     --                                                 minus randomness waivers
     --   + root_penalty * p_root_weight                favors strong root motion
     --   + bass_motion * p_slash_weight                favors a smooth bass line
+    --   - color_count * c_color_note_bonus            pulls borrowed roots into the beam
+    --   + color_penalty / p_color_weight              ranks color by device; higher
+    --                                                 weight = cheaper color
     -- Only the winner changes with the score; reported costs never do.
     c_beam_width           CONSTANT integer := 500;
     c_max_jitter_per_step  CONSTANT numeric := 6;    -- at p_randomness = 1
     c_extra_note_bonus     CONSTANT numeric := 6;
     c_unplaced_pin_penalty CONSTANT numeric := 6;
     c_oversize_note_penalty CONSTANT numeric := 6;   -- per unwaived note past the cap
+    c_color_note_bonus     CONSTANT numeric := 6;    -- per borrowed-root chord
+    c_color_device_tags    CONSTANT text[]  :=
+        ARRAY['borrowed', 'mediant', 'secondary_dominant', 'tritone_sub', 'chromatic'];
 
     v_step                integer;
     v_extra_pitch_classes integer[];    -- p_extra_notes resolved via the note table
     v_required_pitch_classes integer[]; -- every required pitch class, any step
+    v_color_devices       text[];       -- p_color_devices, known tags only
     v_scale_pool          integer[];    -- scale notes + extras: what a free chord may use
     v_step_required       integer[];    -- pitch classes required at the current step
     v_step_pool           integer[];    -- v_scale_pool + this step's required notes
@@ -262,9 +385,6 @@ DECLARE
     v_requested_chords    text[];       -- start chord + pins, added to the graph as-is
     v_reserved_roots      integer[];    -- the pins' scale degrees
     v_open_steps_left     integer;
-    v_best_path           text[];
-    v_best_step_costs     integer[];
-    v_best_cost           integer;
 BEGIN
     -- resolve the extra note names to pitch classes; any spelling of a pitch
     -- works, unknown names drop out
@@ -272,6 +392,13 @@ BEGIN
     INTO v_extra_pitch_classes
     FROM unnest(p_extra_notes) AS extra_name
     JOIN note n ON n.name = btrim(extra_name);
+
+    -- device tags likewise: unknown tags drop out, empty means all allowed
+    SELECT COALESCE(array_agg(DISTINCT tag), '{}')
+    INTO v_color_devices
+    FROM (SELECT lower(btrim(entry)) AS tag
+          FROM unnest(p_color_devices) AS entry) t
+    WHERE tag = ANY (c_color_device_tags);
 
     -- sort the pins into fixed-step ones and floating ones. A position counts
     -- when it names a step in 2..p_length that isn't already taken (step 1
@@ -317,9 +444,28 @@ BEGIN
     CREATE TEMP TABLE _vl_chords ON COMMIT DROP AS
         SELECT c.chord_name, c.root_note, c.chord_notes,
                EXISTS (SELECT 1 FROM unnest(c.chord_notes) cn
-                       WHERE cn = ANY (v_extra_pitch_classes)) AS uses_extra_note
+                       WHERE cn = ANY (v_extra_pitch_classes)) AS uses_extra_note,
+               NULL::text AS device,               -- non-NULL = borrowed root
+               false      AS mediant_quality       -- maj/min triad on one
         FROM fn_mode_key_chord_set(p_mode, p_key,
                  v_extra_pitch_classes || v_required_pitch_classes) c;
+
+    -- with color on, widen the graph with borrowed-root chords. A node is
+    -- admitted when its own device is allowed, or -- since 'mediant' is a
+    -- property of a move, not a chord -- when it is a maj/min triad a
+    -- mediant move could land on. These chords never count as extra-note
+    -- borrowers: extras color the tones of scale-rooted chords, this is the
+    -- root-borrowing machinery, and each pull is priced once.
+    IF p_color_weight > 0 THEN
+        INSERT INTO _vl_chords (chord_name, root_note, chord_notes,
+                                uses_extra_note, device, mediant_quality)
+        SELECT c.chord_name, c.root_note, c.chord_notes,
+               false, c.device, c.mediant_quality
+        FROM fn_mode_key_color_chord_set(p_mode, p_key) c
+        WHERE v_color_devices = '{}'
+           OR c.device = ANY (v_color_devices)
+           OR (c.mediant_quality AND 'mediant' = ANY (v_color_devices));
+    END IF;
 
     -- what a freely chosen chord may be built from: scale notes plus extras.
     -- Chords borrowing a required note fall outside this pool, which is what
@@ -387,19 +533,31 @@ BEGIN
             SELECT a.chord_name AS a_chord, a.root_note AS a_root,
                    a.chord_notes AS a_notes,
                    a.uses_extra_note AS a_extra, a.oversize AS a_over,
+                   a.device AS a_device,
                    b.chord_name AS b_chord, b.root_note AS b_root,
                    b.chord_notes AS b_notes,
                    b.uses_extra_note AS b_extra, b.oversize AS b_over,
-                   fn_voice_leading_distance(a.chord_notes, b.chord_notes) AS vl_distance
+                   b.device AS b_device,
+                   fn_voice_leading_distance(a.chord_notes, b.chord_notes) AS vl_distance,
+                   -- a chromatic-mediant move: roots a major or minor third
+                   -- apart (either way -- the interval set is symmetric),
+                   -- sharing at least one tone, landing on a maj/min triad.
+                   -- Only the landing side's quality differs per direction.
+                   ((b.root_note - a.root_note + 12) % 12 IN (3, 4, 8, 9)
+                    AND a.chord_notes && b.chord_notes) AS mediant_move,
+                   a.mediant_quality AS a_triad, b.mediant_quality AS b_triad
             FROM sized a
             JOIN sized b ON a.chord_name < b.chord_name
         )
         SELECT a_chord AS from_chord, a_root AS from_root,
                b_chord AS to_chord,   b_root AS to_root,   b_notes AS to_notes,
-               b_extra AS to_uses_extra, b_over AS to_oversize, vl_distance
+               b_extra AS to_uses_extra, b_over AS to_oversize,
+               b_device AS to_device, (mediant_move AND b_triad) AS to_mediant,
+               vl_distance
         FROM pair
         UNION ALL
-        SELECT b_chord, b_root, a_chord, a_root, a_notes, a_extra, a_over, vl_distance
+        SELECT b_chord, b_root, a_chord, a_root, a_notes, a_extra, a_over,
+               a_device, (mediant_move AND a_triad), vl_distance
         FROM pair;
     CREATE INDEX ON _vl_moves (from_chord);
 
@@ -433,6 +591,8 @@ BEGIN
         cost             integer,    -- total voice-leading motion so far
         jitter           numeric,    -- accumulated randomness (0 unless requested)
         extra_note_count integer,    -- chords so far that borrow an extra note
+        color_count      integer,    -- borrowed-root chords so far
+        color_penalty    numeric,    -- summed device penalties of those chords
         oversize         integer,    -- unwaived notes past p_max_notes so far
         root_penalty     integer,    -- summed root-motion penalty
         bass             integer,    -- current bass pitch class
@@ -449,7 +609,7 @@ BEGIN
     -- argument picks up the chord's root, and makes an unknown start chord an
     -- empty beam and hence no result.
     INSERT INTO _vl_paths
-    SELECT chord_name, 0, 0, uses_extra_note::integer, 0, 0, root_note, 0,
+    SELECT chord_name, 0, 0, uses_extra_note::integer, 0, 0, 0, 0, root_note, 0,
            ARRAY[chord_name], ARRAY[0], ARRAY[root_note], ARRAY[root_note],
            array_remove(v_floating_pins, chord_name),  -- a pin equal to the start is already placed
            0
@@ -486,6 +646,8 @@ BEGIN
             SELECT x.*,
                    x.cost + x.jitter
                      - x.extra_note_count * c_extra_note_bonus
+                     - x.color_count * c_color_note_bonus
+                     + x.color_penalty / GREATEST(p_color_weight, 0.01)
                      + cardinality(x.unplaced_pins) * c_unplaced_pin_penalty
                      + x.oversize * c_oversize_note_penalty
                      + x.root_penalty * p_root_weight
@@ -495,6 +657,12 @@ BEGIN
                        p.cost + m.vl_distance                                  AS cost,
                        p.jitter + random() * p_randomness * c_max_jitter_per_step AS jitter,
                        p.extra_note_count + m.to_uses_extra::integer           AS extra_note_count,
+                       p.color_count + CASE WHEN m.to_device IS NOT NULL
+                                             AND NOT (m.to_chord = ANY (v_requested_chords))
+                                            THEN 1 ELSE 0 END                  AS color_count,
+                       p.color_penalty + CASE WHEN m.to_device IS NOT NULL
+                                               AND NOT (m.to_chord = ANY (v_requested_chords))
+                                              THEN color.penalty ELSE 0 END    AS color_penalty,
                        p.oversize + CASE WHEN m.to_oversize = 0 THEN 0
                                          WHEN random() < p_randomness THEN 0   -- cap waived
                                          ELSE m.to_oversize END                AS oversize,
@@ -509,6 +677,23 @@ BEGIN
                 FROM _vl_paths p
                 JOIN _vl_moves m    ON m.from_chord = p.last_chord
                 JOIN _vl_voicings v ON v.chord_name = m.to_chord
+                -- how a borrowed-root chord may be entered, and at what
+                -- price: by its own device tag when that device is allowed,
+                -- or as a mediant move when the move qualifies and 'mediant'
+                -- is allowed -- whichever is cheaper. NULL means no allowed
+                -- way in. Diatonic chords never price here.
+                CROSS JOIN LATERAL (
+                    SELECT LEAST(
+                        CASE WHEN m.to_device IS NOT NULL
+                                  AND (v_color_devices = '{}'
+                                       OR m.to_device = ANY (v_color_devices))
+                             THEN fn_color_device_penalty(m.to_device) END,
+                        CASE WHEN m.to_mediant
+                                  AND (v_color_devices = '{}'
+                                       OR 'mediant' = ANY (v_color_devices))
+                             THEN fn_color_device_penalty('mediant') END
+                    ) AS penalty
+                ) color
                 WHERE CASE
                     WHEN v_pinned_at_step[v_step] IS NOT NULL
                         THEN m.to_chord = v_pinned_at_step[v_step]
@@ -518,7 +703,13 @@ BEGIN
                               OR (    NOT (m.to_root   = ANY (p.used_roots))
                                   AND NOT (m.to_root   = ANY (v_reserved_roots))
                                   AND NOT (v.bass_note = ANY (p.used_basses))
-                                  AND m.to_notes <@ v_step_pool))
+                                  -- a scale-rooted chord must fit this step's
+                                  -- note pool; a borrowed-root chord needs an
+                                  -- allowed way in instead (its tones are
+                                  -- curated by the color quality whitelist)
+                                  AND CASE WHEN m.to_device IS NULL
+                                           THEN m.to_notes <@ v_step_pool
+                                           ELSE color.penalty IS NOT NULL END))
                     END
             ) x
             WHERE cardinality(x.unplaced_pins) <= v_open_steps_left
@@ -530,37 +721,44 @@ BEGIN
         EXIT WHEN NOT EXISTS (SELECT 1 FROM _vl_paths);
     END LOOP;
 
-    -- pick the best full-length path by the same score. Every pin must have
-    -- been placed (guaranteed by the in-loop pruning for any path that took a
-    -- step; checking it here also covers p_length = 1). When extra notes were
-    -- requested, ask for a path that borrows one; if none survived the beam,
-    -- fall back to the plain smoothest so a result is still returned.
-    SELECT p.path, p.step_costs, p.cost
-    INTO v_best_path, v_best_step_costs, v_best_cost
-    FROM _vl_paths p
-    WHERE array_length(p.path, 1) = p_length
-      AND cardinality(p.unplaced_pins) = 0
-      AND (cardinality(v_extra_pitch_classes) = 0 OR p.extra_note_count > 0)
-    ORDER BY p.score
-    LIMIT 1;
-
-    IF v_best_path IS NULL AND cardinality(v_extra_pitch_classes) > 0 THEN
-        SELECT p.path, p.step_costs, p.cost
-        INTO v_best_path, v_best_step_costs, v_best_cost
+    -- pick the best p_result_count full-length paths by the same score, each
+    -- a distinct chord sequence under its own progression_id, best first.
+    -- Every pin must have been placed (guaranteed by the in-loop pruning for
+    -- any path that took a step; checking it here also covers p_length = 1).
+    -- When extra notes or borrowed-root color were requested, paths that
+    -- carry each requested kind rank ahead of paths that miss it -- so the
+    -- top result carries the color whenever a colored path survived the
+    -- beam, and plain smoothest paths fill the remaining slots (which is
+    -- also the old single-result fallback). No qualifying path returns no
+    -- rows, as ever.
+    RETURN QUERY
+    WITH complete AS (
+        SELECT DISTINCT ON (p.path) p.path, p.step_costs, p.cost, p.score,
+               (cardinality(v_extra_pitch_classes) > 0
+                AND p.extra_note_count = 0)::integer
+             + (p_color_weight > 0 AND p.color_count = 0)::integer AS missed_pulls
         FROM _vl_paths p
         WHERE array_length(p.path, 1) = p_length
           AND cardinality(p.unplaced_pins) = 0
-        ORDER BY p.score
-        LIMIT 1;
-    END IF;
-
-    IF v_best_path IS NULL THEN
-        RETURN;
-    END IF;
-
-    RETURN QUERY
-    SELECT s.ord::integer, s.chord_name, v_best_step_costs[s.ord::integer], v_best_cost
-    FROM unnest(v_best_path) WITH ORDINALITY AS s(chord_name, ord)
-    ORDER BY s.ord;
+        ORDER BY p.path, p.score
+    ),
+    picked AS (
+        SELECT c.path, c.step_costs, c.cost, c.missed_pulls, c.score
+        FROM complete c
+        ORDER BY c.missed_pulls, c.score
+        LIMIT GREATEST(p_result_count, 1)
+    ),
+    -- numbered after the LIMIT, so equal-score ties can't leave gaps in the
+    -- progression ids
+    ranked AS (
+        SELECT k.path, k.step_costs, k.cost,
+               row_number() OVER (ORDER BY k.missed_pulls, k.score) AS pick
+        FROM picked k
+    )
+    SELECT r.pick::integer, s.ord::integer, s.chord_name,
+           r.step_costs[s.ord::integer], r.cost
+    FROM ranked r
+    CROSS JOIN LATERAL unnest(r.path) WITH ORDINALITY AS s(chord_name, ord)
+    ORDER BY r.pick, s.ord;
 END;
 $$;

@@ -1,0 +1,850 @@
+@import "tailwindcss";
+
+/* Palette lifted from the main app's default theme (frontend/src/themes.css,
+   the --mcb-* tokens) so the two apps read as one product line: warm blue-gray
+   chassis, near-black input screens, blue accent. */
+:root {
+  --pb-bg-app: #282c34;
+  --pb-bg-panel: #2a2f38;
+  --pb-bg-panel-top: #363c46;
+  --pb-bg-inset: #1a1e24;
+  --pb-bg-hover: #3d434f;
+  --pb-bg-active: #4a5262;
+
+  --pb-border: rgba(75, 85, 99, 0.3);
+  --pb-border-strong: rgb(75, 85, 99);
+
+  --pb-text-primary: rgb(226, 232, 240);
+  --pb-text-secondary: rgb(203, 213, 225);
+  --pb-text-tertiary: rgb(148, 163, 184);
+
+  --pb-accent: #3b82f6;
+  --pb-accent-dim: #2563eb;
+  --pb-accent-text: #60a5fa;
+  --pb-accent-glow: rgba(59, 130, 246, 0.35);
+  --pb-accent-contrast: #eff6ff;
+
+  --pb-danger: #f87171;
+  --pb-danger-glow: rgba(248, 113, 113, 0.4);
+
+  --pb-success: #34d399;
+  --pb-success-glow: rgba(52, 211, 153, 0.35);
+
+  --pb-amber: #fbbf24;
+  --pb-amber-glow: rgba(251, 191, 36, 0.4);
+
+  --pb-radius: 0.75rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--pb-bg-app);
+  color: var(--pb-text-primary);
+  font-family:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--pb-accent-glow);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--pb-bg-hover);
+  border-radius: 999px;
+  border: 2px solid var(--pb-bg-app);
+}
+
+:focus-visible {
+  outline: 2px solid var(--pb-accent);
+  outline-offset: 2px;
+}
+
+/* ---- Surfaces ---------------------------------------------------- */
+
+.pb-panel {
+  background: linear-gradient(180deg, var(--pb-bg-panel-top), var(--pb-bg-panel));
+  border: 1px solid var(--pb-border);
+  border-radius: var(--pb-radius);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.03) inset,
+    0 8px 20px -12px rgba(0, 0, 0, 0.6);
+}
+
+.pb-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.9rem;
+  border-bottom: 1px solid var(--pb-border);
+}
+
+.pb-panel-title {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--pb-text-tertiary);
+}
+
+.pb-inset {
+  background: var(--pb-bg-inset);
+  border: 1px solid var(--pb-border);
+  border-radius: 0.5rem;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+
+.pb-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pb-text-tertiary);
+}
+
+/* ---- Controls ------------------------------------------------------ */
+
+.pb-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--pb-border-strong);
+  background: var(--pb-bg-panel);
+  color: var(--pb-text-secondary);
+  transition:
+    color 0.12s ease,
+    border-color 0.12s ease,
+    background 0.12s ease,
+    box-shadow 0.12s ease,
+    transform 0.06s ease;
+  cursor: pointer;
+  user-select: none;
+}
+
+.pb-pill:hover {
+  color: var(--pb-text-primary);
+  background: var(--pb-bg-hover);
+  border-color: var(--pb-border-strong);
+}
+
+.pb-pill:active {
+  transform: translateY(1px);
+}
+
+.pb-pill--active {
+  color: var(--pb-accent-contrast);
+  background: var(--pb-accent);
+  border-color: var(--pb-accent);
+  box-shadow: 0 0 0 3px var(--pb-accent-glow);
+}
+
+.pb-pill--active:hover {
+  background: var(--pb-accent-dim);
+  color: var(--pb-accent-contrast);
+}
+
+.pb-pad {
+  border-radius: 0.6rem;
+  border: 1px solid var(--pb-border-strong);
+  background: linear-gradient(180deg, var(--pb-bg-panel-top), var(--pb-bg-panel));
+  color: var(--pb-text-primary);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 4px 10px -6px rgba(0, 0, 0, 0.6);
+  transition:
+    box-shadow 0.1s ease,
+    transform 0.06s ease,
+    border-color 0.1s ease;
+  cursor: pointer;
+}
+
+.pb-pad:hover {
+  border-color: var(--pb-border-strong);
+  box-shadow: 0 0 0 2px var(--pb-accent-glow), 0 4px 10px -6px rgba(0, 0, 0, 0.6);
+}
+
+.pb-pad:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+/* Powered-on pad: the step the playhead is on, or a live-triggered pad. */
+.pb-pad--lit {
+  border-color: var(--pb-accent);
+  box-shadow:
+    0 0 0 2px var(--pb-accent-glow),
+    0 0 12px var(--pb-accent-glow);
+}
+
+.pb-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--pb-border-strong);
+  background: var(--pb-bg-panel);
+  color: var(--pb-text-primary);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.pb-btn:hover:not(:disabled) {
+  background: var(--pb-bg-hover);
+}
+
+.pb-btn:active:not(:disabled) {
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.45);
+  transform: translateY(1px);
+}
+
+.pb-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pb-btn svg,
+.pb-pill svg,
+.pb-chip svg {
+  flex-shrink: 0;
+}
+
+.pb-btn--accent {
+  background: var(--pb-accent);
+  border-color: var(--pb-accent);
+  color: var(--pb-accent-contrast);
+  box-shadow: 0 0 0 3px var(--pb-accent-glow);
+}
+
+.pb-btn--accent:hover:not(:disabled) {
+  background: var(--pb-accent-dim);
+}
+
+/* Transport-style action: a full-width glowing pill, like the main app's
+   play/stop buttons. */
+.pb-btn--transport {
+  width: 100%;
+  border-radius: 999px;
+  padding: 0.55rem 1.2rem;
+  box-shadow:
+    0 0 0 3px var(--pb-accent-glow),
+    0 0 14px var(--pb-accent-glow);
+}
+
+.pb-btn--ghost {
+  background: transparent;
+  border-color: var(--pb-border);
+  color: var(--pb-text-secondary);
+}
+
+.pb-btn--danger {
+  color: var(--pb-danger);
+  border-color: var(--pb-border-strong);
+}
+
+.pb-btn--danger:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.1);
+  border-color: rgba(248, 113, 113, 0.4);
+}
+
+/* Transport semantics, after the main app: play glows green, stop red. */
+.pb-btn--play {
+  color: var(--pb-success);
+}
+
+.pb-btn--play:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--pb-success) 12%, transparent);
+  border-color: color-mix(in srgb, var(--pb-success) 45%, transparent);
+  box-shadow: 0 0 8px var(--pb-success-glow);
+}
+
+.pb-btn--stop {
+  color: var(--pb-danger);
+  border-color: color-mix(in srgb, var(--pb-danger) 45%, transparent);
+  box-shadow: 0 0 8px var(--pb-danger-glow);
+}
+
+.pb-btn--stop:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.pb-select {
+  appearance: none;
+  background: var(--pb-bg-inset);
+  border: 1px solid var(--pb-border-strong);
+  border-radius: 0.5rem;
+  color: var(--pb-text-primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.5rem 2rem 0.5rem 0.75rem;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+}
+
+/* Fader: recessed slot with an accent-filled track (the fill gradient is set
+   inline by the Fader component) and a rectangular fader cap with a vertical
+   grip line, after the main app's Slider. */
+.pb-fader {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+  outline: none;
+}
+
+.pb-fader::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 11px;
+  height: 20px;
+  border-radius: 3px;
+  background:
+    linear-gradient(90deg, transparent 45%, rgba(0, 0, 0, 0.55) 45%, rgba(0, 0, 0, 0.55) 55%, transparent 55%),
+    linear-gradient(180deg, var(--pb-bg-panel-top), var(--pb-bg-panel));
+  border: 1px solid var(--pb-border-strong);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08) inset, 0 2px 5px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+.pb-fader::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 0 2px var(--pb-accent-glow), 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+.pb-fader::-moz-range-thumb {
+  width: 11px;
+  height: 20px;
+  border-radius: 3px;
+  background:
+    linear-gradient(90deg, transparent 45%, rgba(0, 0, 0, 0.55) 45%, rgba(0, 0, 0, 0.55) 55%, transparent 55%),
+    linear-gradient(180deg, var(--pb-bg-panel-top), var(--pb-bg-panel));
+  border: 1px solid var(--pb-border-strong);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08) inset, 0 2px 5px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+.pb-fader::-moz-range-thumb:hover {
+  box-shadow: 0 0 0 2px var(--pb-accent-glow), 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+/* Rotary knob: a small dial for layer amounts. The track, accent fill arc and
+   pointer are SVG paths drawn by the Knob component; this styles them plus the
+   focusable wrapper. */
+.pb-knob {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 999px;
+  cursor: ns-resize;
+  touch-action: none;
+  user-select: none;
+}
+
+.pb-knob[aria-disabled='true'] {
+  cursor: default;
+}
+
+.pb-knob-track {
+  fill: none;
+  stroke: var(--pb-bg-inset);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.pb-knob-fill {
+  fill: none;
+  stroke: var(--pb-bg-active);
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: stroke 0.12s ease;
+}
+
+.pb-knob--active .pb-knob-fill {
+  stroke: var(--pb-accent);
+  filter: drop-shadow(0 0 3px var(--pb-accent-glow));
+}
+
+.pb-knob-pointer {
+  stroke: var(--pb-text-tertiary);
+  stroke-width: 2;
+  stroke-linecap: round;
+  transition: stroke 0.12s ease;
+}
+
+.pb-knob--active .pb-knob-pointer {
+  stroke: var(--pb-accent-text);
+}
+
+.pb-knob-text {
+  fill: var(--pb-accent-text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.pb-knob:focus-visible {
+  outline: 2px solid var(--pb-accent);
+  outline-offset: 3px;
+}
+
+/* Character-layer row: an LED toggle + descriptive name on the left, its
+   amount knob on the right. Lights up when the layer is loaded. */
+.pb-layer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem 0.4rem 0.6rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--pb-border);
+  background: var(--pb-bg-inset);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.35);
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease;
+}
+
+.pb-layer--active {
+  border-color: color-mix(in srgb, var(--pb-accent) 50%, var(--pb-border-strong));
+  background: color-mix(in srgb, var(--pb-accent) 8%, var(--pb-bg-inset));
+}
+
+.pb-layer-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.pb-layer-name {
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--pb-text-secondary);
+  min-width: 0;
+}
+
+.pb-layer--active .pb-layer-name {
+  color: var(--pb-text-primary);
+}
+
+/* "hand-tweaked off the layer value" dot, on a fader label. */
+.pb-mod-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-left: 0.35rem;
+  border-radius: 999px;
+  background: var(--pb-amber);
+  box-shadow: 0 0 4px var(--pb-amber-glow);
+  vertical-align: middle;
+}
+
+/* Small "clear the tweaks" button in a section header (and the layer rack). */
+.pb-section-reset {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--pb-text-tertiary);
+  padding: 0.35rem 0.7rem;
+  background: transparent;
+  cursor: pointer;
+  transition: color 0.12s ease;
+}
+
+.pb-section-reset:hover {
+  color: var(--pb-accent-text);
+}
+
+/* ---- Readouts, LEDs, chips, sections ------------------------------- */
+
+/* LCD-style value readout: mono text in a small recessed screen. */
+.pb-readout {
+  background: var(--pb-bg-inset);
+  border: 1px solid var(--pb-border);
+  border-radius: 0.3rem;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+  padding: 0.05rem 0.4rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.6875rem;
+  color: var(--pb-accent-text);
+  white-space: nowrap;
+}
+
+.pb-led {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  background: var(--pb-accent);
+  box-shadow: 0 0 5px var(--pb-accent-glow);
+}
+
+.pb-led--off {
+  background: var(--pb-bg-active);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.4);
+}
+
+.pb-led--busy {
+  background: var(--pb-amber);
+  box-shadow: 0 0 6px var(--pb-amber-glow);
+  animation: pb-led-pulse 0.9s ease-in-out infinite;
+}
+
+@keyframes pb-led-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* Switch-pill chip: a small toggle with its own LED, like the main app's
+   switch pills. */
+.pb-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.22rem 0.6rem;
+  border: 1px solid var(--pb-border-strong);
+  background: var(--pb-bg-panel);
+  color: var(--pb-text-secondary);
+  cursor: pointer;
+  user-select: none;
+  transition:
+    color 0.12s ease,
+    border-color 0.12s ease,
+    background 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.pb-chip:hover:not(:disabled) {
+  color: var(--pb-text-primary);
+  background: var(--pb-bg-hover);
+}
+
+.pb-chip:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pb-chip--active {
+  color: var(--pb-text-primary);
+  border-color: var(--pb-accent);
+  background: color-mix(in srgb, var(--pb-accent) 16%, var(--pb-bg-inset));
+  box-shadow: 0 0 6px var(--pb-accent-glow);
+}
+
+/* marker dot on a chip: "this note is in the current scale" */
+.pb-chip-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  background: var(--pb-amber);
+  box-shadow: 0 0 4px var(--pb-amber-glow);
+}
+
+/* Collapsible flavor-section header row. */
+.pb-section-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.6rem 0.9rem;
+  cursor: pointer;
+  background: transparent;
+  transition: background 0.12s ease;
+}
+
+.pb-section-toggle:hover {
+  background: color-mix(in srgb, var(--pb-bg-inset) 30%, transparent);
+}
+
+/* Segmented switch inside an inset slot. */
+.pb-seg {
+  border-radius: 0.35rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.28rem 0.6rem;
+  color: var(--pb-text-tertiary);
+  cursor: pointer;
+  transition:
+    color 0.12s ease,
+    background 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.pb-seg:hover {
+  color: var(--pb-text-primary);
+}
+
+.pb-seg--active {
+  color: var(--pb-accent-contrast);
+  background: var(--pb-accent);
+  box-shadow: 0 0 6px var(--pb-accent-glow);
+}
+
+/* ---- Keybed --------------------------------------------------------
+   Vintage synth keybed after the main app's react-piano restyle: flat
+   matte aged-ivory naturals with a faint grain, warm-charcoal sharps, a
+   dark key slot showing through the gaps, and a panel-overhang rail with
+   an accent-tinted felt hairline. Lit keys are the ones sounding. */
+
+.pb-keybed {
+  --pb-ivory: color-mix(in srgb, var(--pb-bg-app) 7%, #ece3cd);
+  --pb-ivory-deep: color-mix(in srgb, var(--pb-bg-app) 12%, #d3c9ae);
+  --pb-key-black: color-mix(in srgb, var(--pb-bg-inset) 40%, #17150f);
+  --pb-key-slot: color-mix(in srgb, var(--pb-bg-inset) 35%, #000);
+  /* Sounding-note lamp: violet-biased so playing keys read differently
+     from the accent-colored hover previews */
+  --pb-key-violet: color-mix(in srgb, #8b5cf6 72%, var(--pb-accent));
+  --pb-key-violet-deep: color-mix(in srgb, #6d28d9 72%, var(--pb-accent));
+  position: relative;
+  isolation: isolate;
+  background: var(--pb-key-slot); /* shows through the 1px key gaps */
+  border-radius: 2px 2px 4px 4px;
+}
+
+/* Panel overhang rail with an accent-tinted felt strip along its edge */
+.pb-keybed::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(180deg, var(--pb-key-slot), color-mix(in srgb, var(--pb-bg-inset) 70%, #000));
+  border-bottom: 1px solid color-mix(in srgb, var(--pb-accent) 40%, #14161a);
+  border-radius: 2px 2px 0 0;
+}
+
+/* Shadow the overhang casts onto the back of the keys */
+.pb-keybed::after {
+  content: '';
+  position: absolute;
+  top: 7px;
+  left: 0;
+  right: 0;
+  height: 14px;
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.4), transparent);
+}
+
+.pb-key {
+  cursor: pointer;
+  transition: background 0.08s ease, box-shadow 0.08s ease;
+}
+
+/* Naturals: flat aged ivory, matte grain, worn darker front lip */
+.pb-key--white {
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.016) 0 1px, transparent 1px 3px),
+    linear-gradient(
+      180deg,
+      var(--pb-ivory-deep) 0%,
+      var(--pb-ivory) 18%,
+      var(--pb-ivory) 88%,
+      color-mix(in srgb, #000 14%, var(--pb-ivory-deep)) 100%
+    );
+  border: none;
+  border-radius: 0 0 2px 2px;
+  box-shadow:
+    inset -1px 0 0 rgba(0, 0, 0, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+
+.pb-key--white:not(.pb-key--lit):hover {
+  background: linear-gradient(
+    180deg,
+    var(--pb-ivory) 0%,
+    color-mix(in srgb, #fff 22%, var(--pb-ivory)) 55%,
+    var(--pb-ivory) 100%
+  );
+}
+
+/* A few naturals yellowed deeper — deliberate, subtle wear */
+.pb-key--white:nth-child(11n + 4):not(.pb-key--lit) {
+  background:
+    radial-gradient(ellipse 80% 30% at 55% 82%, rgba(146, 116, 58, 0.1), transparent 70%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, #b89f6a 14%, var(--pb-ivory-deep)) 0%,
+      color-mix(in srgb, #b89f6a 10%, var(--pb-ivory)) 30%,
+      color-mix(in srgb, #b89f6a 12%, var(--pb-ivory)) 100%
+    );
+}
+
+.pb-key--white.pb-key--lit {
+  background: linear-gradient(180deg, var(--pb-accent) 0%, var(--pb-accent-dim) 100%);
+  box-shadow: 0 0 10px var(--pb-accent-glow);
+}
+
+/* Sharps: flat warm charcoal, like worn bakelite */
+.pb-key--black {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #000 30%, var(--pb-key-black)) 0%,
+    var(--pb-key-black) 20%,
+    color-mix(in srgb, #fff 5%, var(--pb-key-black)) 68%,
+    color-mix(in srgb, #000 25%, var(--pb-key-black)) 80%,
+    color-mix(in srgb, #000 40%, var(--pb-key-black)) 100%
+  );
+  border: none;
+  border-radius: 0 0 3px 3px;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.55);
+}
+
+.pb-key--black:not(.pb-key--lit):hover {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #000 20%, var(--pb-key-black)) 0%,
+    color-mix(in srgb, #fff 8%, var(--pb-key-black)) 68%,
+    color-mix(in srgb, #000 30%, var(--pb-key-black)) 100%
+  );
+}
+
+/* Lit sharps get a crest line + slot halo so they read clearly */
+.pb-key--black.pb-key--lit {
+  background: linear-gradient(180deg, var(--pb-accent-dim) 0%, color-mix(in srgb, #000 35%, var(--pb-accent-dim)) 100%);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 40%, var(--pb-accent)),
+    0 0 10px var(--pb-accent-glow);
+}
+
+/* Sounding keys: a violet lamp on an overlay, so it can flash on the
+   strike and fade out with the note instead of snapping off */
+.pb-key::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 320ms cubic-bezier(0.3, 0, 0.5, 1);
+}
+
+.pb-key--white::after {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--pb-key-violet) 78%, var(--pb-ivory)) 0%,
+    color-mix(in srgb, var(--pb-key-violet-deep) 88%, var(--pb-ivory-deep)) 100%
+  );
+  box-shadow: 0 0 10px color-mix(in srgb, var(--pb-key-violet) 55%, transparent);
+}
+
+.pb-key--black::after {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--pb-key-violet) 85%, var(--pb-key-black)) 0%,
+    color-mix(in srgb, var(--pb-key-violet-deep) 72%, var(--pb-key-black)) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 40%, var(--pb-key-violet)),
+    0 0 10px color-mix(in srgb, var(--pb-key-violet) 55%, transparent);
+}
+
+.pb-key--sounding::after {
+  opacity: 1;
+  transition: opacity 30ms linear;
+  animation: pb-key-strike 200ms ease-out;
+}
+
+/* Brief overbright flash at the attack, settling into a steady glow */
+@keyframes pb-key-strike {
+  from {
+    filter: brightness(1.25) saturate(1.1);
+  }
+  to {
+    filter: none;
+  }
+}
+
+/* Engraved octave label on the C keys */
+.pb-key-label {
+  position: absolute;
+  left: 50%;
+  bottom: 3px;
+  transform: translateX(-50%);
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  user-select: none;
+  z-index: 2; /* above the sounding-lamp overlay */
+}
+
+.pb-key--lit .pb-key-label,
+.pb-key--sounding .pb-key-label {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* Scale-membership dot; the root's dot is an amber LED */
+.pb-key-dot {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: 2; /* above the sounding-lamp overlay */
+}
+
+.pb-key--white .pb-key-dot {
+  bottom: 14px;
+  background: rgba(0, 0, 0, 0.26);
+}
+
+.pb-key--black .pb-key-dot {
+  bottom: 7px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.pb-key--white .pb-key-dot--root,
+.pb-key--black .pb-key-dot--root {
+  background: var(--pb-amber);
+  box-shadow: 0 0 5px var(--pb-amber-glow);
+}
+
+.pb-key--lit .pb-key-dot,
+.pb-key--sounding .pb-key-dot {
+  background: rgba(255, 255, 255, 0.55);
+}

@@ -24,27 +24,106 @@ $$;
 
 
 -- How purposeful a root move sounds, as a penalty: 0 is the strongest move,
--- 4 the weakest. Smooth voice leading alone tends to wander aimlessly;
--- blending this into the search score favors progressions that sound
--- intentional. Keyed on the ascending semitone interval between the roots.
-CREATE OR REPLACE FUNCTION fn_root_motion_penalty(from_root integer, to_root integer)
+-- 4 the weakest (each profile uses its own 0..4-ish range). Smooth voice
+-- leading alone tends to wander aimlessly; blending this into the search
+-- score favors progressions that sound intentional. Keyed on the ascending
+-- semitone interval between the roots.
+--
+-- p_profile selects the aesthetic: 'functional' (default) rewards
+-- descending-fifths harmony; 'mediant' rewards third-related root moves
+-- (chromatic-mediant chains); 'stepwise' rewards half/whole-step root
+-- motion (planing, modal drift); 'static' minimizes total root travel by
+-- reusing the circle-of-pitch-class distance directly (the distinct-root
+-- rule already forbids a literal static root, so this is the closest
+-- analogue: hovering near the last root rather than leaping). An unknown
+-- profile name falls through to 'functional', same as the ELSE branch.
+--
+-- The old 2-argument signature is dropped first: CREATE OR REPLACE cannot
+-- widen a signature by adding a defaulted parameter in place, since the
+-- 2-arg and 3-arg-with-default forms would then both match a 2-arg call and
+-- Postgres can't choose between them.
+DROP FUNCTION IF EXISTS fn_root_motion_penalty(integer, integer);
+CREATE OR REPLACE FUNCTION fn_root_motion_penalty(
+    from_root integer, to_root integer, p_profile text DEFAULT 'functional')
 RETURNS integer
 LANGUAGE sql IMMUTABLE PARALLEL SAFE
 AS $$
-    SELECT CASE (to_root - from_root + 12) % 12
-        WHEN 5  THEN 0      -- down a fifth: ii-V-I, the backbone
-        WHEN 2  THEN 1      -- up a whole step: IV-V and friends
-        WHEN 8  THEN 1      -- down a major third
-        WHEN 9  THEN 1      -- down a minor third
-        WHEN 1  THEN 2      -- the remaining small steps: plausible, weaker
-        WHEN 3  THEN 2
-        WHEN 10 THEN 2
-        WHEN 11 THEN 2
-        WHEN 4  THEN 3      -- up a major third: weak
-        WHEN 7  THEN 3      -- up a fifth: retrogression
-        WHEN 6  THEN 3      -- tritone
-        ELSE 4              -- same root (blocked anyway by the distinct-root rule)
+    SELECT CASE p_profile
+        WHEN 'mediant' THEN
+            CASE (to_root - from_root + 12) % 12
+                WHEN 3  THEN 0   -- thirds: the cheapest move in this profile
+                WHEN 4  THEN 0
+                WHEN 8  THEN 0
+                WHEN 9  THEN 0
+                WHEN 5  THEN 2   -- fifths: still fine, just not the point
+                WHEN 7  THEN 2
+                WHEN 1  THEN 3   -- steps: expensive here
+                WHEN 2  THEN 3
+                WHEN 10 THEN 3
+                WHEN 11 THEN 3
+                WHEN 6  THEN 3   -- tritone
+                ELSE 4
+            END
+        WHEN 'stepwise' THEN
+            CASE (to_root - from_root + 12) % 12
+                WHEN 1  THEN 0   -- semitone: the cheapest move (planing)
+                WHEN 11 THEN 0
+                WHEN 2  THEN 1   -- whole step
+                WHEN 10 THEN 1
+                WHEN 3  THEN 2   -- thirds: plausible, weaker
+                WHEN 9  THEN 2
+                WHEN 4  THEN 2
+                WHEN 8  THEN 2
+                WHEN 5  THEN 3   -- fifths and tritone: not the point here
+                WHEN 7  THEN 3
+                WHEN 6  THEN 3
+                ELSE 4
+            END
+        WHEN 'static' THEN fn_pitch_class_distance(from_root, to_root)
+        ELSE  -- 'functional' (default), and the fallback for an unknown name
+            CASE (to_root - from_root + 12) % 12
+                WHEN 5  THEN 0      -- down a fifth: ii-V-I, the backbone
+                WHEN 2  THEN 1      -- up a whole step: IV-V and friends
+                WHEN 8  THEN 1      -- down a major third
+                WHEN 9  THEN 1      -- down a minor third
+                WHEN 1  THEN 2      -- the remaining small steps: plausible, weaker
+                WHEN 3  THEN 2
+                WHEN 10 THEN 2
+                WHEN 11 THEN 2
+                WHEN 4  THEN 3      -- up a major third: weak
+                WHEN 7  THEN 3      -- up a fifth: retrogression
+                WHEN 6  THEN 3      -- tritone
+                ELSE 4              -- same root (blocked anyway by the distinct-root rule)
+            END
     END;
+$$;
+
+
+-- Signed position of a pitch class on the circle of fifths, relative to a
+-- tonic: 0 is the tonic itself, positive is sharp-side (G=+1, D=+2, ... up
+-- to F#=+6), negative is flat-side (F=-1, Bb=-2, ... down to Gb=-6). This is
+-- the "brightness" axis p_brightness steers by. Derived by inverting the
+-- semitone interval through fifths-space (multiplying by 7 is that inverse,
+-- mod 12, since 7*7 = 49 = 1 mod 12), then folding the unsigned 0..11
+-- result to a signed -6..+6 range.
+CREATE OR REPLACE FUNCTION fn_circle_of_fifths_position(p_note integer, p_tonic integer)
+RETURNS integer
+LANGUAGE sql IMMUTABLE PARALLEL SAFE
+AS $$
+    SELECT CASE WHEN f > 6 THEN f - 12 ELSE f END
+    FROM (SELECT (7 * ((p_note - p_tonic + 12) % 12)) % 12 AS f) t;
+$$;
+
+
+-- A chord's brightness: the mean circle-of-fifths position of its notes,
+-- relative to a tonic. Lydian-leaning chords (add9, #11, 6) skew positive;
+-- borrowed flat-side chords (bVI, iv) skew negative. Precomputed once per
+-- graph node in fn_smooth_progression (O(1) per chord), not per candidate.
+CREATE OR REPLACE FUNCTION fn_chord_brightness(p_chord_notes integer[], p_tonic integer)
+RETURNS numeric
+LANGUAGE sql IMMUTABLE PARALLEL SAFE
+AS $$
+    SELECT avg(fn_circle_of_fifths_position(n, p_tonic)) FROM unnest(p_chord_notes) AS n;
 $$;
 
 
@@ -241,7 +320,8 @@ DROP FUNCTION IF EXISTS fn_chord_path(text, text, text, text, integer);
 -- a progression -- without it the cheapest path just wiggles between voicings
 -- of one chord (Cmaj7 -> C -> Csus4). A mode has 7 degrees, so p_length > 7
 -- returns nothing -- unless p_color_weight opens the non-scale roots, which
--- lifts the ceiling to 12.
+-- lifts the ceiling to 12, or p_revisit_weight lets roots return, which
+-- removes it.
 --
 -- Finding the exact best fixed-length path is combinatorial, so this is a
 -- beam search: extend every kept path by one chord, score the results, keep
@@ -309,6 +389,72 @@ DROP FUNCTION IF EXISTS fn_chord_path(text, text, text, text, integer);
 --                  ['mediant'] gives the film-score chromatic-mediant chain;
 --                  ['borrowed'] pure modal interchange. Empty (default) means
 --                  every device is allowed. Unknown tags are ignored.
+--   p_ending       how the progression must end -- a hard constraint on the
+--                  last step or two, by root scale degree:
+--                    'authentic'  degree 5 (major/dom quality) then the tonic
+--                    'plagal'     degree 4 then the tonic
+--                    'half'       ends on degree 5, open and unresolved
+--                    'deceptive'  degree 5 then degree 6
+--                    'open'       ends anywhere but the tonic degree
+--                  A cadence step may return to an already-used root
+--                  (C ... G7 -> C), which free steps otherwise never do.
+--                  A pin on the step wins over the ending; an unknown name
+--                  is ignored; a cadence the scale cannot spell (a
+--                  pentatonic has no degree 6) returns nothing.
+--   p_loop_weight  > 0 favors progressions that cycle smoothly back to the
+--                  start chord: the wrap-around move (its voice-leading
+--                  distance, and root motion when p_root_weight is on) joins
+--                  the score at the final step, scaled by this weight. For
+--                  vamps, ostinati, and game loops. Composes with
+--                  p_ending = 'half' for the loop-with-lift. Try 1-3.
+--   p_brightness   -1..+1. Steers harmony along the circle-of-fifths
+--                  brightness axis: +1 pulls toward the sharp side (add9,
+--                  #11, 6 -- Lydian sparkle), -1 toward the flat side
+--                  (borrowed bVI/iv darkness). A soft preference, not a
+--                  filter -- the closest reachable chord to the requested
+--                  pole wins its slot. NULL (default) leaves brightness
+--                  alone. Composes with p_color_weight (dark + borrowed
+--                  roots ~ noir; bright + mediants ~ heroic).
+--   p_avoid_notes  note names a free chord may not contain (start chord and
+--                  pins are exempt -- the caller asked for those). A hard
+--                  filter: avoid the leading tone for modal purity, the 3rd
+--                  for suspended ambiguity, 4 and 7 for pentatonic shimmer.
+--                  Creativity by subtraction -- steering away from a cliche
+--                  is often more original than steering toward anything.
+--   p_motion_profile  which root-motion aesthetic p_root_weight favors:
+--                  'functional' (default) rewards descending fifths;
+--                  'mediant' rewards third-related root moves (the
+--                  chromatic-mediant chain -- pairs well with
+--                  p_color_devices = ['mediant']); 'stepwise' rewards
+--                  half/whole-step root motion (planing, modal drift);
+--                  'static' minimizes total root travel (hovering, ambient).
+--                  An unknown name falls back to 'functional'.
+--   p_bass_notes / p_bass_positions
+--                  notes that must sound in the bass, as parallel arrays:
+--                  position i (2..p_length, 1-based) means the chord at that
+--                  step is voiced over note i -- a slash chord when the note
+--                  isn't the root. For bass-line writing: a descending line
+--                  under the harmony, or one note at every step for a pedal
+--                  bass (a required bass may repeat an earlier bass note,
+--                  which free steps never do). The bass must be a chord
+--                  tone, so it doubles as a required note at its step;
+--                  out-of-scale basses are borrowed the same way. Slash
+--                  voicings for these steps exist even at p_slash_weight 0.
+--                  One bass per step (extra entries drop); entries at step 1
+--                  or on a pinned step drop, as do unknown note names.
+--   p_min_notes    > 0 loosely floors chord size, the mirror of p_max_notes:
+--                  each note short of the floor adds the same scoring
+--                  penalty, with the same p_randomness escape hatch. Leans
+--                  results richer (9ths, 13ths over bare triads). The start
+--                  chord and pins are never floored.
+--   p_revisit_weight > 0 relaxes the fresh-root rule into a priced
+--                  preference: a chord may return to an already-used root
+--                  (or bass) after at least one intervening chord, paying a
+--                  penalty divided by this weight -- higher = cheaper
+--                  returns. Never two same-root chords in a row, and pinned
+--                  degrees stay reserved. Opens the cyclic shapes the hard
+--                  rule forbids (I-V-vi-IV-I..., 12-bar forms) and removes
+--                  the length ceiling. Try 1-3.
 --
 -- The start chord and the pins are taken as given even when they use notes
 -- from outside the mode (secondary dominants, borrowed chords, ...). Only the
@@ -343,7 +489,16 @@ CREATE FUNCTION fn_smooth_progression(
     p_required_positions integer[] DEFAULT '{}',
     p_result_count       integer   DEFAULT 1,
     p_color_weight       numeric   DEFAULT 0,
-    p_color_devices      text[]    DEFAULT '{}'
+    p_color_devices      text[]    DEFAULT '{}',
+    p_ending             text      DEFAULT NULL,
+    p_loop_weight        numeric   DEFAULT 0,
+    p_brightness         numeric   DEFAULT NULL,
+    p_avoid_notes        text[]    DEFAULT '{}',
+    p_motion_profile     text      DEFAULT 'functional',
+    p_bass_notes         text[]    DEFAULT '{}',
+    p_bass_positions     integer[] DEFAULT '{}',
+    p_min_notes          integer   DEFAULT 0,
+    p_revisit_weight     numeric   DEFAULT 0
 )
 RETURNS TABLE(progression_id integer, step integer, chord text, vl_from_prev integer, total_cost integer)
 LANGUAGE plpgsql VOLATILE
@@ -354,30 +509,57 @@ DECLARE
     --   + jitter                                      randomness, if requested
     --   - extra_note_count * c_extra_note_bonus       pulls borrowed color into the beam
     --   + unplaced pins * c_unplaced_pin_penalty      pulls pins in early
-    --   + oversize * c_oversize_note_penalty          notes past p_max_notes,
+    --   + missized * c_missized_note_penalty          notes outside the
+    --                                                 p_min/p_max size band,
     --                                                 minus randomness waivers
-    --   + root_penalty * p_root_weight                favors strong root motion
+    --   + root_penalty * p_root_weight                favors strong root motion, by
+    --                                                 whichever profile p_motion_profile names
     --   + bass_motion * p_slash_weight                favors a smooth bass line
     --   - color_count * c_color_note_bonus            pulls borrowed roots into the beam
     --   + color_penalty / p_color_weight              ranks color by device; higher
     --                                                 weight = cheaper color
+    --   + loop_penalty                                the wrap-around move back to the
+    --                                                 start chord, * p_loop_weight
+    --   + brightness_dist * c_brightness_weight       distance from the requested
+    --                                                 circle-of-fifths brightness pole
+    --   + revisit_count * c_revisit_penalty           returns to a used root or bass;
+    --                     / p_revisit_weight          higher weight = cheaper returns
     -- Only the winner changes with the score; reported costs never do.
     c_beam_width           CONSTANT integer := 500;
     c_max_jitter_per_step  CONSTANT numeric := 6;    -- at p_randomness = 1
     c_extra_note_bonus     CONSTANT numeric := 6;
     c_unplaced_pin_penalty CONSTANT numeric := 6;
-    c_oversize_note_penalty CONSTANT numeric := 6;   -- per unwaived note past the cap
+    c_missized_note_penalty CONSTANT numeric := 6;   -- per unwaived note outside the size band
     c_color_note_bonus     CONSTANT numeric := 6;    -- per borrowed-root chord
     c_color_device_tags    CONSTANT text[]  :=
         ARRAY['borrowed', 'mediant', 'secondary_dominant', 'tritone_sub', 'chromatic'];
+    c_endings              CONSTANT text[]  :=
+        ARRAY['authentic', 'plagal', 'half', 'deceptive', 'open'];
+    c_motion_profiles      CONSTANT text[]  :=
+        ARRAY['functional', 'mediant', 'stepwise', 'static'];
+    c_brightness_scale     CONSTANT numeric := 6;    -- a single note's max distance from the tonic
+    c_brightness_weight    CONSTANT numeric := 2;    -- score weight per fifths-unit off target
+    c_revisit_penalty      CONSTANT numeric := 6;    -- per return to a used root/bass
 
     v_step                integer;
+    v_ending              text;         -- p_ending, known names only
+    v_degrees             integer[];    -- scale degree -> pitch class
+    v_final_root          integer;      -- ending: the final chord's root
+    v_penult_root         integer;      -- ending: the penultimate chord's root
+    v_final_avoid         integer;      -- ending 'open': root the final chord shuns
+    v_penult_major        boolean := false; -- 'authentic': penult is major/dom
+    v_cadence_root        integer;      -- the three above, resolved per step
+    v_cadence_avoid       integer;
+    v_cadence_major       boolean;
+    v_start_notes         integer[];    -- start chord's notes, for the wrap cost
+    v_start_root          integer;
     v_extra_pitch_classes integer[];    -- p_extra_notes resolved via the note table
     v_required_pitch_classes integer[]; -- every required pitch class, any step
     v_color_devices       text[];       -- p_color_devices, known tags only
     v_scale_pool          integer[];    -- scale notes + extras: what a free chord may use
     v_step_required       integer[];    -- pitch classes required at the current step
     v_step_pool           integer[];    -- v_scale_pool + this step's required notes
+    v_step_bass           integer;      -- pitch class required in the bass this step
     v_pin                 text;
     v_pin_position        integer;
     v_pinned_at_step      text[];       -- pinned chord per step; NULL = search chooses
@@ -385,6 +567,9 @@ DECLARE
     v_requested_chords    text[];       -- start chord + pins, added to the graph as-is
     v_reserved_roots      integer[];    -- the pins' scale degrees
     v_open_steps_left     integer;
+    v_avoid_pitch_classes integer[];    -- p_avoid_notes resolved via the note table
+    v_motion_profile      text;         -- p_motion_profile, normalized, unknown -> 'functional'
+    v_tonic_root          integer;      -- the key's tonic pitch class, for brightness
 BEGIN
     -- resolve the extra note names to pitch classes; any spelling of a pitch
     -- works, unknown names drop out
@@ -399,6 +584,65 @@ BEGIN
     FROM (SELECT lower(btrim(entry)) AS tag
           FROM unnest(p_color_devices) AS entry) t
     WHERE tag = ANY (c_color_device_tags);
+
+    -- the ending, resolved to hard root constraints on the last step or two.
+    -- Degrees come from the scale's own order (seq_note), so 'half' means
+    -- degree 5 of whatever mode this is. An unknown ending name is dropped;
+    -- a cadence naming a degree the scale does not have (a pentatonic has
+    -- no degree 6) cannot be satisfied and returns nothing.
+    v_ending := lower(btrim(p_ending));
+    IF NOT (v_ending = ANY (c_endings)) THEN
+        v_ending := NULL;
+    END IF;
+    IF v_ending IS NOT NULL THEN
+        SELECT array_agg(t.note ORDER BY t.seq_note) INTO v_degrees
+        FROM (SELECT DISTINCT nl.note, nl.seq_note
+              FROM mode_scale_note_letter_mv nl
+              WHERE nl.mode = p_mode AND nl.key_name = p_key) t;
+        v_final_root := CASE v_ending
+            WHEN 'authentic' THEN v_degrees[1]
+            WHEN 'plagal'    THEN v_degrees[1]
+            WHEN 'half'      THEN v_degrees[5]
+            WHEN 'deceptive' THEN v_degrees[6]
+        END;
+        v_penult_root := CASE v_ending
+            WHEN 'authentic' THEN v_degrees[5]
+            WHEN 'plagal'    THEN v_degrees[4]
+            WHEN 'deceptive' THEN v_degrees[5]
+        END;
+        v_final_avoid  := CASE WHEN v_ending = 'open' THEN v_degrees[1] END;
+        v_penult_major := v_ending = 'authentic';
+        IF (v_ending <> 'open' AND v_final_root IS NULL)
+           OR (v_ending = 'open' AND v_final_avoid IS NULL)
+           OR (v_ending IN ('authentic', 'plagal', 'deceptive')
+               AND v_penult_root IS NULL) THEN
+            RETURN;
+        END IF;
+    END IF;
+
+    -- notes a free chord may not contain; unknown names drop out, like extras
+    SELECT COALESCE(array_agg(DISTINCT n.note), '{}')
+    INTO v_avoid_pitch_classes
+    FROM unnest(p_avoid_notes) AS avoid_name
+    JOIN note n ON n.name = btrim(avoid_name);
+
+    -- the root-motion aesthetic; an unknown name falls back to 'functional'
+    -- (fn_root_motion_penalty's own ELSE branch would do the same, but
+    -- resolving it here keeps the "unknown name -> default" contract visible
+    -- in one place, like every other named-enum knob)
+    v_motion_profile := lower(btrim(p_motion_profile));
+    IF NOT (v_motion_profile = ANY (c_motion_profiles)) THEN
+        v_motion_profile := 'functional';
+    END IF;
+
+    -- the key's tonic pitch class, for brightness (degree 1 of the scale's
+    -- own order, same source as the ending's degrees above)
+    IF p_brightness IS NOT NULL THEN
+        SELECT nl.note INTO v_tonic_root
+        FROM mode_scale_note_letter_mv nl
+        WHERE nl.mode = p_mode AND nl.key_name = p_key AND nl.seq_note = 1
+        LIMIT 1;
+    END IF;
 
     -- sort the pins into fixed-step ones and floating ones. A position counts
     -- when it names a step in 2..p_length that isn't already taken (step 1
@@ -427,6 +671,26 @@ BEGIN
         FROM unnest(p_required_notes, p_required_positions) AS req(note_name, at_step)
         JOIN note n ON n.name = btrim(req.note_name)
         WHERE req.at_step BETWEEN 2 AND p_length;
+
+    -- bass requirements, resolved the same way: one per step (extra entries
+    -- drop), positions 2..p_length only. The name is kept for spelling the
+    -- slash voicing. A required bass is a chord tone, so it also joins the
+    -- required notes -- which is what widens the graph for an out-of-scale
+    -- bass and confines the borrowing to its step.
+    DROP TABLE IF EXISTS _vl_bass;
+    CREATE TEMP TABLE _vl_bass ON COMMIT DROP AS
+        SELECT DISTINCT ON (req.at_step)
+               req.at_step, n.note AS pitch_class, btrim(n.name) AS note_name
+        FROM unnest(p_bass_notes, p_bass_positions) AS req(note_name, at_step)
+        JOIN note n ON n.name = btrim(req.note_name)
+        WHERE req.at_step BETWEEN 2 AND p_length
+        ORDER BY req.at_step;
+
+    INSERT INTO _vl_required (at_step, pitch_class)
+    SELECT b.at_step, b.pitch_class
+    FROM _vl_bass b
+    WHERE NOT EXISTS (SELECT 1 FROM _vl_required r
+                      WHERE r.at_step = b.at_step AND r.pitch_class = b.pitch_class);
 
     SELECT COALESCE(array_agg(DISTINCT r.pitch_class), '{}')
     INTO v_required_pitch_classes
@@ -502,8 +766,9 @@ BEGIN
     END LOOP;
 
     -- a requirement on a pinned step gives way to the pin: both came from the
-    -- caller, but the pin names the exact chord.
+    -- caller, but the pin names the exact chord. Bass requirements likewise.
     DELETE FROM _vl_required WHERE v_pinned_at_step[at_step] IS NOT NULL;
+    DELETE FROM _vl_bass     WHERE v_pinned_at_step[at_step] IS NOT NULL;
 
     -- pins may revisit a scale degree, but their degrees are off-limits to
     -- the chords the search picks. Without this the search parks a near-copy
@@ -513,31 +778,68 @@ BEGIN
     FROM _vl_chords c
     WHERE c.chord_name = ANY (array_remove(v_pinned_at_step, NULL) || v_floating_pins);
 
+    -- the ending's degrees are reserved the same way: a free chord camping on
+    -- the cadence's root mid-path would make the cadence step a revisit (G6
+    -- at step 2, then the half cadence's G at the end). The cadence steps
+    -- themselves admit these roots through their own exemption below. With
+    -- revisits on, returns are the requested feature, so only the pins keep
+    -- their reservation: the pinned step waives the adjacency guard, so its
+    -- root must stay clear or a near-copy parks right next to the pin.
+    IF COALESCE(p_revisit_weight, 0) <= 0 THEN
+        IF v_final_root IS NOT NULL THEN
+            v_reserved_roots := v_reserved_roots || v_final_root;
+        END IF;
+        IF v_penult_root IS NOT NULL THEN
+            v_reserved_roots := v_reserved_roots || v_penult_root;
+        END IF;
+    END IF;
+
+    -- with a loop weight on, each chord's wrap-around move back to the start
+    -- chord is priced once per node here (in the sized CTE below) and charged
+    -- at the final step -- never per candidate row
+    IF p_loop_weight > 0 THEN
+        SELECT c.chord_notes, c.root_note INTO v_start_notes, v_start_root
+        FROM _vl_chords c
+        WHERE c.chord_name = p_start_chord;
+    END IF;
+
     -- every pair of different chords with its distance, in both directions
     -- (the metric is symmetric, so each pair is computed once). Distance-0
     -- moves -- same notes under another name, C6 / Am7 -- are kept so that a
     -- pinned chord is reachable from anywhere, but a free step must move.
-    -- Each chord also carries its note count past p_max_notes (oversize);
-    -- the caller's own chords are never counted as oversized.
+    -- Each chord also carries its note count outside the p_min/p_max size
+    -- band (missized); the caller's own chords are never counted.
     DROP TABLE IF EXISTS _vl_moves;
     CREATE TEMP TABLE _vl_moves ON COMMIT DROP AS
         WITH sized AS (
             SELECT c.*,
-                   CASE WHEN p_max_notes > 0
-                             AND NOT (c.chord_name = ANY (v_requested_chords))
-                        THEN GREATEST(cardinality(c.chord_notes) - p_max_notes, 0)
-                        ELSE 0 END AS oversize
+                   CASE WHEN NOT (c.chord_name = ANY (v_requested_chords))
+                        THEN CASE WHEN p_max_notes > 0
+                                  THEN GREATEST(cardinality(c.chord_notes) - p_max_notes, 0)
+                                  ELSE 0 END
+                           + CASE WHEN p_min_notes > 0
+                                  THEN GREATEST(p_min_notes - cardinality(c.chord_notes), 0)
+                                  ELSE 0 END
+                        ELSE 0 END AS missized,
+                   CASE WHEN v_start_notes IS NOT NULL
+                        THEN fn_voice_leading_distance(c.chord_notes, v_start_notes)
+                             + fn_root_motion_penalty(c.root_note, v_start_root, v_motion_profile)
+                               * p_root_weight
+                        ELSE 0 END AS wrap_cost,
+                   CASE WHEN v_tonic_root IS NOT NULL
+                        THEN fn_chord_brightness(c.chord_notes, v_tonic_root)
+                        ELSE 0 END AS brightness
             FROM _vl_chords c
         ),
         pair AS (
             SELECT a.chord_name AS a_chord, a.root_note AS a_root,
                    a.chord_notes AS a_notes,
-                   a.uses_extra_note AS a_extra, a.oversize AS a_over,
-                   a.device AS a_device,
+                   a.uses_extra_note AS a_extra, a.missized AS a_miss,
+                   a.device AS a_device, a.wrap_cost AS a_wrap, a.brightness AS a_bright,
                    b.chord_name AS b_chord, b.root_note AS b_root,
                    b.chord_notes AS b_notes,
-                   b.uses_extra_note AS b_extra, b.oversize AS b_over,
-                   b.device AS b_device,
+                   b.uses_extra_note AS b_extra, b.missized AS b_miss,
+                   b.device AS b_device, b.wrap_cost AS b_wrap, b.brightness AS b_bright,
                    fn_voice_leading_distance(a.chord_notes, b.chord_notes) AS vl_distance,
                    -- a chromatic-mediant move: roots a major or minor third
                    -- apart (either way -- the interval set is symmetric),
@@ -551,13 +853,13 @@ BEGIN
         )
         SELECT a_chord AS from_chord, a_root AS from_root,
                b_chord AS to_chord,   b_root AS to_root,   b_notes AS to_notes,
-               b_extra AS to_uses_extra, b_over AS to_oversize,
+               b_extra AS to_uses_extra, b_miss AS to_missized,
                b_device AS to_device, (mediant_move AND b_triad) AS to_mediant,
-               vl_distance
+               b_wrap AS to_wrap, b_bright AS to_brightness, vl_distance
         FROM pair
         UNION ALL
-        SELECT b_chord, b_root, a_chord, a_root, a_notes, a_extra, a_over,
-               a_device, (mediant_move AND a_triad), vl_distance
+        SELECT b_chord, b_root, a_chord, a_root, a_notes, a_extra, a_miss,
+               a_device, (mediant_move AND a_triad), a_wrap, a_bright, vl_distance
         FROM pair;
     CREATE INDEX ON _vl_moves (from_chord);
 
@@ -567,6 +869,10 @@ BEGIN
     -- voicing changes which note is lowest, never the note set -- so voicings
     -- multiply the beam, not the O(n^2) distance pass. The spelling join
     -- names the bass the way the scale does and skips non-scale basses.
+    -- Required-bass tones get voicings of their own, spelled the way the
+    -- caller wrote them, so a bass requirement works at p_slash_weight 0 and
+    -- on out-of-scale basses; the third branch skips tones the slash branch
+    -- already voiced.
     DROP TABLE IF EXISTS _vl_voicings;
     CREATE TEMP TABLE _vl_voicings ON COMMIT DROP AS
         SELECT chord_name, root_note AS bass_note, chord_name AS voiced_name
@@ -581,7 +887,17 @@ BEGIN
             ON  spelling.mode_id  = mn.mode_id
             AND spelling.key_name = mn.key_name
             AND spelling.note     = tone
-        WHERE p_slash_weight > 0 AND tone <> c.root_note;
+        WHERE p_slash_weight > 0 AND tone <> c.root_note
+        UNION ALL
+        SELECT c.chord_name, b.pitch_class, c.chord_name || '/' || b.note_name
+        FROM _vl_chords c
+        JOIN (SELECT DISTINCT pitch_class, note_name FROM _vl_bass) b
+            ON b.pitch_class = ANY (c.chord_notes)
+        WHERE b.pitch_class <> c.root_note
+          AND NOT (p_slash_weight > 0 AND EXISTS (
+                  SELECT 1 FROM mode_notes_mv mn
+                  WHERE mn.mode = p_mode AND mn.key_name = p_key
+                    AND b.pitch_class = ANY (mn.mode_notes)));
     CREATE INDEX ON _vl_voicings (chord_name);
 
     -- the beam: one row per partial progression kept so far
@@ -593,14 +909,17 @@ BEGIN
         extra_note_count integer,    -- chords so far that borrow an extra note
         color_count      integer,    -- borrowed-root chords so far
         color_penalty    numeric,    -- summed device penalties of those chords
-        oversize         integer,    -- unwaived notes past p_max_notes so far
+        loop_penalty     numeric,    -- weighted wrap-around cost (final step only)
+        brightness_dist  numeric,    -- summed distance from the requested brightness pole
+        missized         integer,    -- unwaived notes outside the size band so far
+        revisit_count    integer,    -- priced returns to a used root or bass
         root_penalty     integer,    -- summed root-motion penalty
         bass             integer,    -- current bass pitch class
         bass_motion      integer,    -- summed semitone motion of the bass line
         path             text[],     -- voiced chord names, in order
         step_costs       integer[],
-        used_roots       integer[],  -- one chord per scale degree
-        used_basses      integer[],  -- one chord per bass note (no pedal points)
+        used_roots       integer[],  -- roots so far; fresh each step unless revisits are on
+        used_basses      integer[],  -- basses so far; fresh likewise (no free pedal points)
         unplaced_pins    text[],     -- floating pins not yet in this path
         score            numeric     -- see the formula in DECLARE; lower wins
     ) ON COMMIT DROP;
@@ -609,7 +928,7 @@ BEGIN
     -- argument picks up the chord's root, and makes an unknown start chord an
     -- empty beam and hence no result.
     INSERT INTO _vl_paths
-    SELECT chord_name, 0, 0, uses_extra_note::integer, 0, 0, 0, 0, root_note, 0,
+    SELECT chord_name, 0, 0, uses_extra_note::integer, 0, 0, 0, 0, 0, 0, 0, root_note, 0,
            ARRAY[chord_name], ARRAY[0], ARRAY[root_note], ARRAY[root_note],
            array_remove(v_floating_pins, chord_name),  -- a pin equal to the start is already placed
            0
@@ -631,6 +950,20 @@ BEGIN
         FROM _vl_required r WHERE r.at_step = v_step;
         v_step_pool := v_scale_pool || v_step_required;
 
+        -- the bass this step must sound, if any (NULL when no row matches)
+        SELECT b.pitch_class INTO v_step_bass
+        FROM _vl_bass b WHERE b.at_step = v_step;
+
+        -- the ending's demands on this step: a root the chord must sit on, a
+        -- root it must avoid, a major/dom quality it must carry. A pinned
+        -- step skips them (pins always win, via the CASE below); step 1 is
+        -- the start chord's, so at p_length = 2 the penultimate demand never
+        -- applies.
+        v_cadence_root  := CASE WHEN v_step = p_length     THEN v_final_root
+                                WHEN v_step = p_length - 1 THEN v_penult_root END;
+        v_cadence_avoid := CASE WHEN v_step = p_length     THEN v_final_avoid END;
+        v_cadence_major := v_step = p_length - 1 AND v_penult_major;
+
         -- extend every kept path by one chord, score, keep the best. On a
         -- pinned step the only candidate is the pinned chord, and the
         -- distinct-root/distinct-bass rules are waived: the caller chose it.
@@ -639,6 +972,9 @@ BEGIN
         -- bass -- unless it places a floating pin, which may land anywhere
         -- (but still owes the required notes). The pool check keeps chords
         -- borrowing a required note out of the steps that didn't ask for it.
+        -- A required bass fixes the voicing at its step and waives the
+        -- fresh-bass rule there (the caller asked -- pedal lines included);
+        -- everywhere else, non-root voicings need p_slash_weight on.
         -- random() runs in the inner query so the jitter and cap waivers
         -- stored on the row are the ones its score was built from.
         DROP TABLE IF EXISTS _vl_next_paths;
@@ -648,8 +984,12 @@ BEGIN
                      - x.extra_note_count * c_extra_note_bonus
                      - x.color_count * c_color_note_bonus
                      + x.color_penalty / GREATEST(p_color_weight, 0.01)
+                     + x.loop_penalty
+                     + x.brightness_dist * c_brightness_weight
                      + cardinality(x.unplaced_pins) * c_unplaced_pin_penalty
-                     + x.oversize * c_oversize_note_penalty
+                     + x.missized * c_missized_note_penalty
+                     + x.revisit_count * c_revisit_penalty
+                       / GREATEST(p_revisit_weight, 0.01)
                      + x.root_penalty * p_root_weight
                      + x.bass_motion * p_slash_weight AS score
             FROM (
@@ -663,10 +1003,27 @@ BEGIN
                        p.color_penalty + CASE WHEN m.to_device IS NOT NULL
                                                AND NOT (m.to_chord = ANY (v_requested_chords))
                                               THEN color.penalty ELSE 0 END    AS color_penalty,
-                       p.oversize + CASE WHEN m.to_oversize = 0 THEN 0
-                                         WHEN random() < p_randomness THEN 0   -- cap waived
-                                         ELSE m.to_oversize END                AS oversize,
-                       p.root_penalty + fn_root_motion_penalty(m.from_root, m.to_root) AS root_penalty,
+                       p.loop_penalty + CASE WHEN v_step = p_length
+                                             THEN m.to_wrap * p_loop_weight
+                                             ELSE 0 END                        AS loop_penalty,
+                       p.brightness_dist + CASE WHEN p_brightness IS NOT NULL
+                                                 THEN abs(m.to_brightness - p_brightness * c_brightness_scale)
+                                                 ELSE 0 END                    AS brightness_dist,
+                       p.missized + CASE WHEN m.to_missized = 0 THEN 0
+                                         WHEN random() < p_randomness THEN 0   -- band waived
+                                         ELSE m.to_missized END                AS missized,
+                       -- a return to a used root or bass is priced only on a
+                       -- truly free step: pinned steps, cadence-named steps,
+                       -- floating-pin landings, and a required bass are the
+                       -- caller's own asks
+                       p.revisit_count + CASE WHEN v_pinned_at_step[v_step] IS NULL
+                                               AND v_cadence_root IS NULL
+                                               AND NOT (m.to_chord = ANY (p.unplaced_pins))
+                                               AND (   m.to_root = ANY (p.used_roots)
+                                                    OR (v_step_bass IS NULL
+                                                        AND v.bass_note = ANY (p.used_basses)))
+                                              THEN 1 ELSE 0 END                AS revisit_count,
+                       p.root_penalty + fn_root_motion_penalty(m.from_root, m.to_root, v_motion_profile) AS root_penalty,
                        v.bass_note                                             AS bass,
                        p.bass_motion + fn_pitch_class_distance(p.bass, v.bass_note) AS bass_motion,
                        p.path        || v.voiced_name                          AS path,
@@ -694,22 +1051,51 @@ BEGIN
                              THEN fn_color_device_penalty('mediant') END
                     ) AS penalty
                 ) color
-                WHERE CASE
+                WHERE (v_step_bass IS NULL OR v.bass_note = v_step_bass)
+                  AND (p_slash_weight > 0 OR v_step_bass IS NOT NULL
+                       OR v.bass_note = m.to_root)
+                  AND CASE
                     WHEN v_pinned_at_step[v_step] IS NOT NULL
                         THEN m.to_chord = v_pinned_at_step[v_step]
                     ELSE m.vl_distance > 0
                          AND v_step_required <@ m.to_notes
+                         -- the ending's demands on this step, when one is named
+                         AND (v_cadence_root  IS NULL OR m.to_root =  v_cadence_root)
+                         AND (v_cadence_avoid IS NULL OR m.to_root <> v_cadence_avoid)
+                         AND (NOT v_cadence_major
+                              OR ((m.to_root + 3) % 12 + 1 = ANY (m.to_notes)
+                                  AND NOT ((m.to_root + 2) % 12 + 1 = ANY (m.to_notes))))
                          AND (   m.to_chord = ANY (p.unplaced_pins)
-                              OR (    NOT (m.to_root   = ANY (p.used_roots))
-                                  AND NOT (m.to_root   = ANY (v_reserved_roots))
-                                  AND NOT (v.bass_note = ANY (p.used_basses))
+                              -- notes p_avoid_notes bans, the note pool
+                              -- membership (scale-rooted) / device pricing
+                              -- (color-rooted), and the revisit guard --
+                              -- none of these apply to a chord the caller
+                              -- requested (start chord / pins), only to what
+                              -- the search fills in itself
+                              OR (    NOT (m.to_notes && v_avoid_pitch_classes)
                                   -- a scale-rooted chord must fit this step's
                                   -- note pool; a borrowed-root chord needs an
                                   -- allowed way in instead (its tones are
                                   -- curated by the color quality whitelist)
                                   AND CASE WHEN m.to_device IS NULL
                                            THEN m.to_notes <@ v_step_pool
-                                           ELSE color.penalty IS NOT NULL END))
+                                           ELSE color.penalty IS NOT NULL END
+                                  -- a step whose root the ending names may
+                                  -- revisit a used root (C ... G7 -> C) --
+                                  -- the caller asked -- but never straight
+                                  -- from that same root (the wiggle guard).
+                                  -- p_revisit_weight opens priced returns on
+                                  -- any free step under the same guard;
+                                  -- pinned degrees stay reserved
+                                  AND (   (v_cadence_root IS NOT NULL
+                                           AND m.to_root <> m.from_root)
+                                       OR (p_revisit_weight > 0
+                                           AND m.to_root <> m.from_root
+                                           AND NOT (m.to_root = ANY (v_reserved_roots)))
+                                       OR (    NOT (m.to_root   = ANY (p.used_roots))
+                                           AND NOT (m.to_root   = ANY (v_reserved_roots))
+                                           AND (v_step_bass IS NOT NULL
+                                                OR NOT (v.bass_note = ANY (p.used_basses)))))))
                     END
             ) x
             WHERE cardinality(x.unplaced_pins) <= v_open_steps_left

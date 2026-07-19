@@ -26,10 +26,16 @@ type Service interface {
 		randomness float64,
 		extraNotes []string,
 		rootWeight, slashWeight float64,
-		pinned, required []string,
-		maxNotes, resultCount int,
+		pinned, required, bass []string,
+		minNotes, maxNotes, resultCount int,
 		colorWeight float64,
 		colorDevices []string,
+		ending string,
+		loopWeight float64,
+		brightness float64,
+		avoidNotes []string,
+		motionProfile string,
+		revisitWeight float64,
 	) ([]store.ProgressionStep, error)
 }
 
@@ -71,9 +77,22 @@ func New(svc Service, version string) *mcp.Server {
 			"smooth bass line with inversions, extra_notes for chromatic color on scale-" +
 			"rooted chords, color_weight for chords rooted outside the scale (bVI, bVII, " +
 			"Neapolitan, chromatic mediants -- the modal-interchange sound of film scores), " +
-			"max_notes for leaner chords, randomness for variety. Set result_count to get " +
-			"several alternative progressions to compare. Each result includes a " +
-			"modal.chordbuildr.com URL that opens the progression ready to play.",
+			"max_notes for leaner chords, randomness for variety. brightness steers harmony " +
+			"along the circle-of-fifths sharp/flat axis (Lydian sparkle vs. borrowed-chord " +
+			"darkness); motion_profile swaps which root moves root_weight rewards (fifths, " +
+			"thirds, steps, or minimal travel); avoid_notes bans notes from every free chord " +
+			"(creativity by subtraction -- avoid the leading tone for modal purity, avoid " +
+			"4 and 7 for pentatonic shimmer); pedal_note requires a drone note under every " +
+			"chord; bass_notes writes a bass line under the harmony (descending-bass " +
+			"cliches, pedal bass); min_notes leans results richer (9ths and 13ths over " +
+			"bare triads); revisit_weight lets roots return after an intervening chord, " +
+			"opening cyclic shapes like I-V-vi-IV-I and 12-bar forms that the default " +
+			"fresh-root rule forbids. ending declares how the progression must close (a resolved " +
+			"authentic/plagal cadence, an unresolved half or open ending, a deceptive " +
+			"swerve); loop_weight makes it cycle smoothly back to the start chord for vamps " +
+			"and game loops. Set result_count to get several alternative progressions to " +
+			"compare. Each result includes a modal.chordbuildr.com URL that opens the " +
+			"progression ready to play.",
 	}, toolProgression(svc))
 
 	return server
@@ -162,19 +181,28 @@ type progressionInput struct {
 	Key        string `json:"key" jsonschema:"tonic key, e.g. C, F#, Bb"`
 	Mode       string `json:"mode" jsonschema:"mode name as returned by list_modes, e.g. Ionian"`
 	StartChord string `json:"start_chord" jsonschema:"chord the progression starts on, e.g. Cmaj7; must be diatonic to the key and mode (see list_chords)"`
-	Length     int    `json:"length,omitempty" jsonschema:"number of chords in the progression, 2-8 (default 4); up to 12 with color_weight > 0, which opens roots beyond the 7 scale degrees"`
+	Length     int    `json:"length,omitempty" jsonschema:"number of chords in the progression, 2-8 (default 4); up to 12 with color_weight > 0 (opens roots beyond the 7 scale degrees) or revisit_weight > 0 (lets roots return)"`
 	// the knobs below shape which progression wins the search; the reported
 	// voice-leading costs are always the true motion
-	RootWeight   float64  `json:"root_weight,omitempty" jsonschema:"0-10; higher makes the harmony sound more purposeful and cadential: favors strong functional root motion (above all descending fifths, as in ii-V-I) over smooth but aimless drifting; try 1-3"`
-	SlashWeight  float64  `json:"slash_weight,omitempty" jsonschema:"0-10; above 0 allows inverted slash-chord voicings (Cmaj7/E) and favors a smooth, singable bass line under the progression; try 1-3"`
-	Randomness   float64  `json:"randomness,omitempty" jsonschema:"0-1; adds variety: each call picks a different near-smoothest progression instead of always the same one; 0 (default) is deterministic"`
-	ExtraNotes   []string `json:"extra_notes,omitempty" jsonschema:"non-scale notes chords may borrow, e.g. ['F#'] in C Ionian; adds chromatic color (secondary-dominant and borrowed-chord flavor) -- at least one chord will use one when possible"`
-	MaxNotes     int      `json:"max_notes,omitempty" jsonschema:"soft cap on chord size, try 3-5: leans the result toward punchier, less dense chords (an oversized chord still appears when nothing leaner comes close); 0 (default) is no cap"`
-	ColorWeight  float64  `json:"color_weight,omitempty" jsonschema:"0-10; above 0 lets the progression borrow chords ROOTED outside the scale -- bVI, bVII, the Neapolitan, chromatic mediants -- the bold modal-interchange color of cinematic and heroic harmony (extra_notes colors the tones of scale-rooted chords; this colors the roots); higher = more willing to pay for color: 1 favors gentle borrowed chords, 3 admits raw chromaticism; at least one borrowed-root chord appears when possible; also lifts the max length to 12; 0 (default) keeps every root in the scale"`
-	ColorDevices []string `json:"color_devices,omitempty" jsonschema:"with color_weight > 0, restrict borrowed-root chords to specific harmonic devices: 'borrowed' (modal interchange from the parallel modes -- bVI, bVII, iv), 'mediant' (chromatic-mediant triad moves, the film-score chain), 'secondary_dominant', 'tritone_sub', 'chromatic' (anything else); empty (default) allows all; e.g. ['mediant'] for the heroic Silvestri/Williams sound, ['borrowed'] for pure modal interchange"`
-	Pinned       []string `json:"pinned,omitempty" jsonschema:"chords the progression must contain; each entry is 'Chord' (placed wherever it fits best) or 'Chord@step' for a fixed 1-based step, e.g. G7@3"`
-	Required     []string `json:"required_notes,omitempty" jsonschema:"notes the chord at a step must contain, as 'Note@step' with a 1-based step, e.g. Bb@3; useful for harmonizing a melody"`
-	ResultCount  int      `json:"result_count,omitempty" jsonschema:"1-10 (default 1): how many alternative progressions to return, best first, each a distinct chord sequence; ask for several to compare and pick"`
+	RootWeight    float64  `json:"root_weight,omitempty" jsonschema:"0-10; higher makes the harmony sound more purposeful and cadential: favors strong functional root motion (above all descending fifths, as in ii-V-I) over smooth but aimless drifting; try 1-3"`
+	SlashWeight   float64  `json:"slash_weight,omitempty" jsonschema:"0-10; above 0 allows inverted slash-chord voicings (Cmaj7/E) and favors a smooth, singable bass line under the progression; try 1-3"`
+	Randomness    float64  `json:"randomness,omitempty" jsonschema:"0-1; adds variety: each call picks a different near-smoothest progression instead of always the same one; 0 (default) is deterministic"`
+	ExtraNotes    []string `json:"extra_notes,omitempty" jsonschema:"non-scale notes chords may borrow, e.g. ['F#'] in C Ionian; adds chromatic color (secondary-dominant and borrowed-chord flavor) -- at least one chord will use one when possible"`
+	MaxNotes      int      `json:"max_notes,omitempty" jsonschema:"soft cap on chord size, try 3-5: leans the result toward punchier, less dense chords (an oversized chord still appears when nothing leaner comes close); 0 (default) is no cap"`
+	MinNotes      int      `json:"min_notes,omitempty" jsonschema:"soft floor on chord size, try 4-5: leans the result toward richer, more extended chords (9ths, 13ths) and away from bare triads (a leaner chord still appears when nothing richer comes close); the mirror of max_notes; 0 (default) is no floor"`
+	ColorWeight   float64  `json:"color_weight,omitempty" jsonschema:"0-10; above 0 lets the progression borrow chords ROOTED outside the scale -- bVI, bVII, the Neapolitan, chromatic mediants -- the bold modal-interchange color of cinematic and heroic harmony (extra_notes colors the tones of scale-rooted chords; this colors the roots); higher = more willing to pay for color: 1 favors gentle borrowed chords, 3 admits raw chromaticism; at least one borrowed-root chord appears when possible; also lifts the max length to 12; 0 (default) keeps every root in the scale"`
+	ColorDevices  []string `json:"color_devices,omitempty" jsonschema:"with color_weight > 0, restrict borrowed-root chords to specific harmonic devices: 'borrowed' (modal interchange from the parallel modes -- bVI, bVII, iv), 'mediant' (chromatic-mediant triad moves, the film-score chain), 'secondary_dominant', 'tritone_sub', 'chromatic' (anything else); empty (default) allows all; e.g. ['mediant'] for the heroic Silvestri/Williams sound, ['borrowed'] for pure modal interchange"`
+	Ending        string   `json:"ending,omitempty" jsonschema:"how the progression must end, as a named cadence on the last step or two: 'authentic' (V then tonic -- the classic full-stop resolution), 'plagal' (IV then tonic -- the softer amen close), 'half' (ends on the dominant: open, unresolved, wants to continue), 'deceptive' (V then vi -- sets up resolution, then swerves), 'open' (ends on anything but the tonic -- unresolved, floating); a hard requirement, not a preference: an ending the key cannot satisfy returns no result; a pinned chord on the final step wins over the ending; empty (default) leaves the ending free"`
+	LoopWeight    float64  `json:"loop_weight,omitempty" jsonschema:"0-10; above 0 favors progressions that cycle smoothly back to the start chord, so the last-to-first move sounds as good as the rest -- for vamps, ostinati, game/idle loops, and turnarounds; composes with ending='half' for a loop with a lift at the end; try 1-3; 0 (default) ignores the wrap-around"`
+	Pinned        []string `json:"pinned,omitempty" jsonschema:"chords the progression must contain; each entry is 'Chord' (placed wherever it fits best) or 'Chord@step' for a fixed 1-based step, e.g. G7@3"`
+	Required      []string `json:"required_notes,omitempty" jsonschema:"notes the chord at a step must contain, as 'Note@step' with a 1-based step, e.g. Bb@3; useful for harmonizing a melody"`
+	BassNotes     []string `json:"bass_notes,omitempty" jsonschema:"notes that must sound in the BASS at given steps, as 'Note@step' with a 1-based step, e.g. ['E@2','A@3'] -- the chord at that step is voiced over the note (a slash chord when it isn't the root); for descending-bass lines ('Corcovado', 'Something') or a repeated note at every step for a pedal bass; one bass per step"`
+	ResultCount   int      `json:"result_count,omitempty" jsonschema:"1-10 (default 1): how many alternative progressions to return, best first, each a distinct chord sequence; ask for several to compare and pick"`
+	Brightness    float64  `json:"brightness,omitempty" jsonschema:"-1 to +1; steers harmony along the circle-of-fifths brightness axis: +1 pulls toward sharp-side sparkle (add9, #11, 6 -- Lydian), -1 toward flat-side darkness (borrowed bVI/iv); a soft preference, not a filter; composes with color_weight (bright + mediants ~ heroic, dark + borrowed roots ~ noir); 0 (default) leaves brightness alone"`
+	AvoidNotes    []string `json:"avoid_notes,omitempty" jsonschema:"notes no free chord may contain (the start chord and any pinned chords are exempt -- those are taken as given), e.g. avoid the leading tone for modal purity, avoid the 3rd for suspended ambiguity, avoid 4 and 7 for pentatonic shimmer; creativity by subtraction"`
+	MotionProfile string   `json:"motion_profile,omitempty" jsonschema:"which root-motion aesthetic root_weight rewards: 'functional' (default) favors descending fifths (ii-V-I); 'mediant' favors third-related root moves (the chromatic-mediant chain -- pair with color_devices=['mediant'] for the Silvestri/Williams sound); 'stepwise' favors half/whole-step root motion (planing, modal drift); 'static' minimizes total root travel (hovering, ambient)"`
+	RevisitWeight float64  `json:"revisit_weight,omitempty" jsonschema:"0-10; above 0 lets the progression return to an already-used root after at least one intervening chord (never two same-root chords in a row), paying a small score penalty per return -- higher = cheaper returns; unlocks the cyclic, returning shapes the default fresh-root rule forbids (I-V-vi-IV-I, 12-bar forms, mid-progression returns home) and lifts the max length to 12; try 1-3; 0 (default) keeps every root distinct"`
+	PedalNote     string   `json:"pedal_note,omitempty" jsonschema:"a note every chord in the progression must contain, e.g. 'C' for a tonic pedal/drone; expands to a required note at every step after the first -- drone-based, folk/modal, and film-scoring textures"`
 }
 
 type progressionOutput struct {
@@ -214,11 +242,21 @@ func toolProgression(svc Service) mcp.ToolHandlerFor[progressionInput, progressi
 		if resultCount == 0 {
 			resultCount = 1
 		}
+		// pedal_note is pure sugar: "every chord contains X" is a required
+		// note at every step but the first, which the search already
+		// supports -- no new SQL knob needed for it.
+		required := in.Required
+		if pedal := strings.TrimSpace(in.PedalNote); pedal != "" {
+			for step := 2; step <= length; step++ {
+				required = append(required, fmt.Sprintf("%s@%d", pedal, step))
+			}
+		}
 		steps, err := svc.SmoothProgression(
 			ctx, in.Mode, in.Key, in.StartChord, length,
 			in.Randomness, in.ExtraNotes, in.RootWeight, in.SlashWeight,
-			in.Pinned, in.Required, in.MaxNotes, resultCount,
-			in.ColorWeight, in.ColorDevices)
+			in.Pinned, required, in.BassNotes, in.MinNotes, in.MaxNotes, resultCount,
+			in.ColorWeight, in.ColorDevices, in.Ending, in.LoopWeight,
+			in.Brightness, in.AvoidNotes, in.MotionProfile, in.RevisitWeight)
 		if err != nil {
 			return nil, progressionOutput{}, err
 		}

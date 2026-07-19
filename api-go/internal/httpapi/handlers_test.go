@@ -23,10 +23,17 @@ type fakeService struct {
 	randomness              float64
 	extraNotes              []string
 	rootWeight, slashWeight float64
-	pinned, required        []string
+	pinned, required, bass  []string
+	minNotes                int
 	maxNotes, resultCount   int
 	colorWeight             float64
 	colorDevices            []string
+	ending                  string
+	loopWeight              float64
+	brightness              float64
+	avoidNotes              []string
+	motionProfile           string
+	revisitWeight           float64
 }
 
 func (f *fakeService) SmoothProgression(
@@ -36,10 +43,16 @@ func (f *fakeService) SmoothProgression(
 	randomness float64,
 	extraNotes []string,
 	rootWeight, slashWeight float64,
-	pinned, required []string,
-	maxNotes, resultCount int,
+	pinned, required, bass []string,
+	minNotes, maxNotes, resultCount int,
 	colorWeight float64,
 	colorDevices []string,
+	ending string,
+	loopWeight float64,
+	brightness float64,
+	avoidNotes []string,
+	motionProfile string,
+	revisitWeight float64,
 ) ([]store.ProgressionStep, error) {
 	f.mode, f.key, f.startChord = mode, key, startChord
 	f.length = length
@@ -48,9 +61,17 @@ func (f *fakeService) SmoothProgression(
 	f.rootWeight, f.slashWeight = rootWeight, slashWeight
 	f.pinned = pinned
 	f.required = required
+	f.bass = bass
+	f.minNotes = minNotes
 	f.maxNotes, f.resultCount = maxNotes, resultCount
 	f.colorWeight = colorWeight
 	f.colorDevices = colorDevices
+	f.ending = ending
+	f.loopWeight = loopWeight
+	f.brightness = brightness
+	f.avoidNotes = avoidNotes
+	f.motionProfile = motionProfile
+	f.revisitWeight = revisitWeight
 	return f.steps, nil
 }
 
@@ -151,6 +172,40 @@ func TestPassesColorKnobsThrough(t *testing.T) {
 	}
 }
 
+func TestPassesEndingAndLoopWeightThrough(t *testing.T) {
+	svc := &fakeService{}
+
+	rec := serve(t, svc, "/api/progressions?key=C&mode=Ionian&startChord=Cmaj7"+
+		"&ending=half&loopWeight=2")
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", rec.Code)
+	}
+	if svc.ending != "half" || svc.loopWeight != 2.0 {
+		t.Errorf("got ending=%q loopWeight=%v, want half 2", svc.ending, svc.loopWeight)
+	}
+}
+
+func TestPassesBrightnessAvoidNotesAndMotionProfileThrough(t *testing.T) {
+	svc := &fakeService{}
+
+	rec := serve(t, svc, "/api/progressions?key=C&mode=Ionian&startChord=Cmaj7"+
+		"&brightness=0.5&avoidNotes=B,F&motionProfile=mediant")
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", rec.Code)
+	}
+	if svc.brightness != 0.5 {
+		t.Errorf("brightness = %v, want 0.5", svc.brightness)
+	}
+	if want := []string{"B", "F"}; !reflect.DeepEqual(svc.avoidNotes, want) {
+		t.Errorf("avoidNotes = %v, want %v", svc.avoidNotes, want)
+	}
+	if svc.motionProfile != "mediant" {
+		t.Errorf("motionProfile = %q, want mediant", svc.motionProfile)
+	}
+}
+
 func TestPassesPinnedChordsThrough(t *testing.T) {
 	svc := &fakeService{}
 
@@ -178,6 +233,24 @@ func TestPassesRequiredNotesThrough(t *testing.T) {
 	}
 	if want := []string{"A@3", "Eb@4"}; !reflect.DeepEqual(svc.required, want) {
 		t.Errorf("required = %v, want %v", svc.required, want)
+	}
+}
+
+func TestPassesBassNotesAndMinNotesThrough(t *testing.T) {
+	svc := &fakeService{}
+
+	// bass notes bind like required notes: repeatable param, comma-separated
+	// entries, '@step' inside each entry
+	rec := serve(t, svc, "/api/progressions?key=C&mode=Ionian&startChord=Cmaj7&bassNotes=C@2,B@3&minNotes=4")
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200", rec.Code)
+	}
+	if want := []string{"C@2", "B@3"}; !reflect.DeepEqual(svc.bass, want) {
+		t.Errorf("bass = %v, want %v", svc.bass, want)
+	}
+	if svc.minNotes != 4 {
+		t.Errorf("minNotes = %d, want 4", svc.minNotes)
 	}
 }
 

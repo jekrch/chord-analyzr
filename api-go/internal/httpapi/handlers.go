@@ -25,10 +25,16 @@ type Service interface {
 		randomness float64,
 		extraNotes []string,
 		rootWeight, slashWeight float64,
-		pinned, required []string,
-		maxNotes, resultCount int,
+		pinned, required, bass []string,
+		minNotes, maxNotes, resultCount int,
 		colorWeight float64,
 		colorDevices []string,
+		ending string,
+		loopWeight float64,
+		brightness float64,
+		avoidNotes []string,
+		motionProfile string,
+		revisitWeight float64,
 	) ([]store.ProgressionStep, error)
 }
 
@@ -103,6 +109,11 @@ func (h *handlers) getSmoothProgression(w http.ResponseWriter, r *http.Request) 
 		h.badRequest(w, err.Error())
 		return
 	}
+	minNotes, err := intParam(q, "minNotes", 0)
+	if err != nil {
+		h.badRequest(w, err.Error())
+		return
+	}
 	maxNotes, err := intParam(q, "maxNotes", 0)
 	if err != nil {
 		h.badRequest(w, err.Error())
@@ -118,6 +129,23 @@ func (h *handlers) getSmoothProgression(w http.ResponseWriter, r *http.Request) 
 		h.badRequest(w, err.Error())
 		return
 	}
+	loopWeight, err := floatParam(q, "loopWeight", 0)
+	if err != nil {
+		h.badRequest(w, err.Error())
+		return
+	}
+	brightness, err := floatParam(q, "brightness", 0)
+	if err != nil {
+		h.badRequest(w, err.Error())
+		return
+	}
+	revisitWeight, err := floatParam(q, "revisitWeight", 0)
+	if err != nil {
+		h.badRequest(w, err.Error())
+		return
+	}
+	ending := q.Get("ending")
+	motionProfile := q.Get("motionProfile")
 
 	// the list params may repeat and each value may itself be a
 	// comma-separated list (chord and note names never contain commas)
@@ -129,6 +157,10 @@ func (h *handlers) getSmoothProgression(w http.ResponseWriter, r *http.Request) 
 	for _, raw := range q["required"] {
 		required = append(required, strings.Split(raw, ",")...)
 	}
+	var bassNotes []string
+	for _, raw := range q["bassNotes"] {
+		bassNotes = append(bassNotes, strings.Split(raw, ",")...)
+	}
 	var extraNotes []string
 	for _, raw := range q["extraNotes"] {
 		extraNotes = append(extraNotes, strings.Split(raw, ",")...)
@@ -137,12 +169,17 @@ func (h *handlers) getSmoothProgression(w http.ResponseWriter, r *http.Request) 
 	for _, raw := range q["colorDevices"] {
 		colorDevices = append(colorDevices, strings.Split(raw, ",")...)
 	}
+	var avoidNotes []string
+	for _, raw := range q["avoidNotes"] {
+		avoidNotes = append(avoidNotes, strings.Split(raw, ",")...)
+	}
 
 	steps, err := h.svc.SmoothProgression(
 		r.Context(), mode, key, startChord, length,
 		randomness, extraNotes, rootWeight, slashWeight,
-		pinned, required, maxNotes, resultCount,
-		colorWeight, colorDevices)
+		pinned, required, bassNotes, minNotes, maxNotes, resultCount,
+		colorWeight, colorDevices, ending, loopWeight,
+		brightness, avoidNotes, motionProfile, revisitWeight)
 	if err != nil {
 		h.serverError(w, r, err)
 		return

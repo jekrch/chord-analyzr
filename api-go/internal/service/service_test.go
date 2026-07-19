@@ -19,9 +19,17 @@ type fakeStore struct {
 	rootWeight, slashWeight float64
 	pins                    []store.Pin
 	required                []store.RequiredNote
+	bass                    []store.BassNote
+	minNotes                int
 	maxNotes, resultCount   int
 	colorWeight             float64
 	colorDevices            []string
+	ending                  string
+	loopWeight              float64
+	brightness              float64
+	avoidNotes              []string
+	motionProfile           string
+	revisitWeight           float64
 }
 
 func (f *fakeStore) SmoothProgression(
@@ -33,9 +41,16 @@ func (f *fakeStore) SmoothProgression(
 	rootWeight, slashWeight float64,
 	pins []store.Pin,
 	required []store.RequiredNote,
-	maxNotes, resultCount int,
+	bass []store.BassNote,
+	minNotes, maxNotes, resultCount int,
 	colorWeight float64,
 	colorDevices []string,
+	ending string,
+	loopWeight float64,
+	brightness float64,
+	avoidNotes []string,
+	motionProfile string,
+	revisitWeight float64,
 ) ([]store.ProgressionStep, error) {
 	f.mode, f.key, f.startChord = mode, key, startChord
 	f.length = length
@@ -44,9 +59,17 @@ func (f *fakeStore) SmoothProgression(
 	f.rootWeight, f.slashWeight = rootWeight, slashWeight
 	f.pins = pins
 	f.required = required
+	f.bass = bass
+	f.minNotes = minNotes
 	f.maxNotes, f.resultCount = maxNotes, resultCount
 	f.colorWeight = colorWeight
 	f.colorDevices = colorDevices
+	f.ending = ending
+	f.loopWeight = loopWeight
+	f.brightness = brightness
+	f.avoidNotes = avoidNotes
+	f.motionProfile = motionProfile
+	f.revisitWeight = revisitWeight
 	return nil, nil
 }
 
@@ -55,7 +78,7 @@ func callProgression(t *testing.T, length int, rootWeight, slashWeight float64, 
 	fs := &fakeStore{}
 	_, err := New(fs).SmoothProgression(
 		context.Background(), "Ionian", key, "Cmaj7", length,
-		0, nil, rootWeight, slashWeight, pinned, nil, 0, 1, 0, nil)
+		0, nil, rootWeight, slashWeight, pinned, nil, nil, 0, 0, 1, 0, nil, "", 0, 0, nil, "", 0)
 	if err != nil {
 		t.Fatalf("SmoothProgression returned error: %v", err)
 	}
@@ -201,10 +224,89 @@ func TestParseRequiredNotes(t *testing.T) {
 	}
 }
 
+func TestParseBassNotes(t *testing.T) {
+	tests := []struct {
+		name string
+		bass []string
+		want []store.BassNote
+	}{
+		{
+			// same "@step" syntax as pins and required notes
+			name: "splits entries into notes and positions",
+			bass: []string{"C@2", "B@3", "A@4"},
+			want: []store.BassNote{
+				{Note: "C", Position: 2}, {Note: "B", Position: 3}, {Note: "A", Position: 4},
+			},
+		},
+		{
+			// a step-less or negative-step entry parses to position 0, which
+			// the SQL function drops
+			name: "step-less and negative-step entries float to zero",
+			bass: []string{"C", "G@-2"},
+			want: []store.BassNote{{Note: "C"}, {Note: "G"}},
+		},
+		{
+			name: "trims entries and skips blank ones",
+			bass: []string{" Eb @ 3 ", "  "},
+			want: []store.BassNote{{Note: "Eb", Position: 3}},
+		},
+		{
+			name: "nil input yields no requirements",
+			bass: nil,
+			want: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ParseBassNotes(tt.bass); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ParseBassNotes(%q) = %v, want %v", tt.bass, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestParseBassNotesCapsEntries(t *testing.T) {
+	many := make([]string, 20)
+	for i := range many {
+		many[i] = "C@2"
+	}
+	if got := ParseBassNotes(many); len(got) != 12 {
+		t.Errorf("len = %d, want 12", len(got))
+	}
+}
+
+func TestPassesBassNotesAndMinNotesThrough(t *testing.T) {
+	fs := &fakeStore{}
+	_, err := New(fs).SmoothProgression(
+		context.Background(), "Ionian", "C", "Cmaj7", 4,
+		0, nil, 0, 0, nil, nil, []string{"C@2"}, 4, 0, 1, 0, nil, "", 0, 0, nil, "", 0)
+	if err != nil {
+		t.Fatalf("SmoothProgression returned error: %v", err)
+	}
+	if want := []store.BassNote{{Note: "C", Position: 2}}; !reflect.DeepEqual(fs.bass, want) {
+		t.Errorf("bass = %v, want %v", fs.bass, want)
+	}
+	if fs.minNotes != 4 {
+		t.Errorf("minNotes = %d, want 4", fs.minNotes)
+	}
+
+	// a negative floor clamps to 0 (no floor), like maxNotes
+	fs = &fakeStore{}
+	_, err = New(fs).SmoothProgression(
+		context.Background(), "Ionian", "C", "Cmaj7", 4,
+		0, nil, 0, 0, nil, nil, nil, -3, 0, 1, 0, nil, "", 0, 0, nil, "", 0)
+	if err != nil {
+		t.Fatalf("SmoothProgression returned error: %v", err)
+	}
+	if fs.minNotes != 0 {
+		t.Errorf("minNotes = %d, want 0 (clamped)", fs.minNotes)
+	}
+}
+
 func TestPassesRequiredNotesThrough(t *testing.T) {
 	fs := &fakeStore{}
 	_, err := New(fs).SmoothProgression(
-		context.Background(), "Ionian", "C", "Cmaj7", 4, 0, nil, 0, 0, nil, []string{"A@3"}, 0, 1, 0, nil)
+		context.Background(), "Ionian", "C", "Cmaj7", 4, 0, nil, 0, 0, nil, []string{"A@3"}, nil, 0, 0, 1, 0, nil, "", 0, 0, nil, "", 0)
 	if err != nil {
 		t.Fatalf("SmoothProgression returned error: %v", err)
 	}
@@ -221,7 +323,7 @@ func TestClampsCreativeKnobs(t *testing.T) {
 		fs := &fakeStore{}
 		_, err := New(fs).SmoothProgression(
 			context.Background(), "Ionian", "C", "Cmaj7", 4,
-			randomness, extra, 0, 0, nil, nil, maxNotes, resultCount, 0, nil)
+			randomness, extra, 0, 0, nil, nil, nil, 0, maxNotes, resultCount, 0, nil, "", 0, 0, nil, "", 0)
 		if err != nil {
 			t.Fatalf("SmoothProgression returned error: %v", err)
 		}
@@ -251,7 +353,7 @@ func TestColorKnobs(t *testing.T) {
 		fs := &fakeStore{}
 		_, err := New(fs).SmoothProgression(
 			context.Background(), "Ionian", "C", "Cmaj7", length,
-			0, nil, 0, 0, nil, nil, 0, 1, colorWeight, devices)
+			0, nil, 0, 0, nil, nil, nil, 0, 0, 1, colorWeight, devices, "", 0, 0, nil, "", 0)
 		if err != nil {
 			t.Fatalf("SmoothProgression returned error: %v", err)
 		}
@@ -279,6 +381,139 @@ func TestColorKnobs(t *testing.T) {
 	// a negative weight clamps to 0, so it must not lift the cap
 	if fs := call(100, -2, nil); fs.length != 8 {
 		t.Errorf("length = %d, want 8 with a negative color weight", fs.length)
+	}
+}
+
+// revisit weight clamps like the other weights and lifts the length cap to
+// 12, the same way color does
+func TestRevisitWeightKnob(t *testing.T) {
+	call := func(length int, revisitWeight float64) *fakeStore {
+		t.Helper()
+		fs := &fakeStore{}
+		_, err := New(fs).SmoothProgression(
+			context.Background(), "Ionian", "C", "Cmaj7", length,
+			0, nil, 0, 0, nil, nil, nil, 0, 0, 1, 0, nil, "", 0, 0, nil, "", revisitWeight)
+		if err != nil {
+			t.Fatalf("SmoothProgression returned error: %v", err)
+		}
+		return fs
+	}
+
+	if fs := call(4, 50); fs.revisitWeight != 10 {
+		t.Errorf("revisitWeight = %v, want 10 (clamped)", fs.revisitWeight)
+	}
+	if fs := call(100, 2); fs.length != 12 {
+		t.Errorf("length = %d, want 12 with revisit on", fs.length)
+	}
+	// a negative weight clamps to 0, so it must not lift the cap
+	if fs := call(100, -2); fs.length != 8 || fs.revisitWeight != 0 {
+		t.Errorf("got length=%d revisitWeight=%v, want 8 0", fs.length, fs.revisitWeight)
+	}
+}
+
+// ending normalizes to the known lowercase cadence names; loop weight clamps
+// like the other weights
+func TestEndingAndLoopKnobs(t *testing.T) {
+	call := func(ending string, loopWeight float64) *fakeStore {
+		t.Helper()
+		fs := &fakeStore{}
+		_, err := New(fs).SmoothProgression(
+			context.Background(), "Ionian", "C", "Cmaj7", 4,
+			0, nil, 0, 0, nil, nil, nil, 0, 0, 1, 0, nil, ending, loopWeight, 0, nil, "", 0)
+		if err != nil {
+			t.Fatalf("SmoothProgression returned error: %v", err)
+		}
+		return fs
+	}
+
+	if fs := call(" Authentic ", 50); fs.ending != "authentic" || fs.loopWeight != 10 {
+		t.Errorf("got ending=%q loopWeight=%v, want authentic 10", fs.ending, fs.loopWeight)
+	}
+	if fs := call("zzz", -2); fs.ending != "" || fs.loopWeight != 0 {
+		t.Errorf("got ending=%q loopWeight=%v, want empty 0", fs.ending, fs.loopWeight)
+	}
+}
+
+func TestParseEnding(t *testing.T) {
+	tests := []struct{ in, want string }{
+		{"authentic", "authentic"},
+		{"HALF", "half"},
+		{" deceptive ", "deceptive"},
+		{"plagal", "plagal"},
+		{"open", "open"},
+		{"cadence", ""},
+		{"", ""},
+	}
+	for _, tt := range tests {
+		if got := ParseEnding(tt.in); got != tt.want {
+			t.Errorf("ParseEnding(%q) = %q, want %q", tt.in, got, tt.want)
+		}
+	}
+}
+
+// brightness clamps to [-1,1] (unlike the other weights, negative values are
+// meaningful); avoid notes are trimmed and blanks dropped; motion profile
+// normalizes to a known lowercase name
+func TestBrightnessAvoidNotesAndMotionProfileKnobs(t *testing.T) {
+	call := func(brightness float64, avoid []string, motion string) *fakeStore {
+		t.Helper()
+		fs := &fakeStore{}
+		_, err := New(fs).SmoothProgression(
+			context.Background(), "Ionian", "C", "Cmaj7", 4,
+			0, nil, 0, 0, nil, nil, nil, 0, 0, 1, 0, nil, "", 0, brightness, avoid, motion, 0)
+		if err != nil {
+			t.Fatalf("SmoothProgression returned error: %v", err)
+		}
+		return fs
+	}
+
+	if fs := call(50, nil, ""); fs.brightness != 1 {
+		t.Errorf("brightness = %v, want 1 (clamped)", fs.brightness)
+	}
+	if fs := call(-50, nil, ""); fs.brightness != -1 {
+		t.Errorf("brightness = %v, want -1 (clamped)", fs.brightness)
+	}
+	if fs := call(-0.5, nil, ""); fs.brightness != -0.5 {
+		t.Errorf("brightness = %v, want -0.5 (negative values pass through)", fs.brightness)
+	}
+	if fs := call(0, []string{" B ", "  ", "F"}, ""); !reflect.DeepEqual(
+		fs.avoidNotes, []string{"B", "F"}) {
+		t.Errorf("avoidNotes = %v, want [B F]", fs.avoidNotes)
+	}
+	if fs := call(0, nil, " Mediant "); fs.motionProfile != "mediant" {
+		t.Errorf("motionProfile = %q, want mediant", fs.motionProfile)
+	}
+	if fs := call(0, nil, "zzz"); fs.motionProfile != "functional" {
+		t.Errorf("motionProfile = %q, want functional (fallback)", fs.motionProfile)
+	}
+}
+
+func TestParseAvoidNotesCapsEntries(t *testing.T) {
+	many := make([]string, 20)
+	for i := range many {
+		many[i] = "B"
+	}
+	if got := ParseAvoidNotes(many); len(got) != 12 {
+		t.Errorf("len = %d, want 12", len(got))
+	}
+	if got := ParseAvoidNotes(nil); got != nil {
+		t.Errorf("ParseAvoidNotes(nil) = %v, want nil", got)
+	}
+}
+
+func TestParseMotionProfile(t *testing.T) {
+	tests := []struct{ in, want string }{
+		{"functional", "functional"},
+		{"MEDIANT", "mediant"},
+		{" stepwise ", "stepwise"},
+		{"static", "static"},
+		{"zzz", "functional"},
+		{"", "functional"},
+	}
+	for _, tt := range tests {
+		if got := ParseMotionProfile(tt.in); got != tt.want {
+			t.Errorf("ParseMotionProfile(%q) = %q, want %q", tt.in, got, tt.want)
+		}
 	}
 }
 

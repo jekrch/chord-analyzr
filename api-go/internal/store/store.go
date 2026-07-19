@@ -65,6 +65,15 @@ type RequiredNote struct {
 	Position int
 }
 
+// BassNote is a note that must sound in the bass at a given step: the chord
+// there is voiced over it (a slash chord when it isn't the root). Position
+// is the 1-based step; the SQL function drops entries at step 1 (the start
+// chord) or out of range.
+type BassNote struct {
+	Note     string
+	Position int
+}
+
 type Store interface {
 	Modes(ctx context.Context) ([]Mode, error)
 	ScaleNotes(ctx context.Context, mode, key string) ([]ScaleNote, error)
@@ -78,8 +87,19 @@ type Store interface {
 		rootWeight, slashWeight float64,
 		pins []Pin,
 		required []RequiredNote,
-		maxNotes, resultCount int,
+		bass []BassNote,
+		minNotes, maxNotes, resultCount int,
 		colorWeight float64,
 		colorDevices []string,
+		ending string,
+		loopWeight float64,
+		// brightness is -1..+1; 0 means "off", like every other weight knob
+		// here, even though the SQL function's own NULL sentinel can
+		// distinguish "off" from "explicitly targeting neutral brightness" --
+		// a distinction not worth a pointer type at this layer.
+		brightness float64,
+		avoidNotes []string,
+		motionProfile string,
+		revisitWeight float64,
 	) ([]ProgressionStep, error)
 }

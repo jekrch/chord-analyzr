@@ -16,8 +16,9 @@ const (
 	maxLength = 8
 	minLength = 2
 
-	// with color on, borrowed roots open the 5 non-scale pitch classes, so
-	// progressions past the 7 scale degrees become satisfiable
+	// with color on, borrowed roots open the 5 non-scale pitch classes, and
+	// with revisit weight on, roots may return -- either way progressions
+	// past the 7 scale degrees become satisfiable
 	maxColorLength = 12
 
 	// there are only 5 device tags, so more entries can't add anything
@@ -31,13 +32,23 @@ const (
 	// the pin cap; past a few per step the entries can't all be satisfiable
 	maxRequiredNotes = 4 * maxLength
 
+	// one bass per step, and steps top out at the color length cap
+	maxBassNotes = maxColorLength
+
 	// there are only 12 pitch classes, so more extra notes can't add anything
 	maxExtraNotes = 12
 
 	// the beam holds at most 500 finished paths, but a handful is all a
 	// caller can meaningfully compare
 	maxResultCount = 10
+
+	// same reasoning as maxExtraNotes: 12 pitch classes, no more to avoid
+	maxAvoidNotes = 12
 )
+
+// motionProfiles are the root-motion aesthetics fn_root_motion_penalty
+// knows; an unknown name falls back to the first entry, 'functional'.
+var motionProfiles = []string{"functional", "mediant", "stepwise", "static"}
 
 type Service struct {
 	store store.Store
@@ -66,28 +77,43 @@ func (s *Service) SmoothProgression(
 	randomness float64,
 	extraNotes []string,
 	rootWeight, slashWeight float64,
-	pinned, required []string,
-	maxNotes, resultCount int,
+	pinned, required, bass []string,
+	minNotes, maxNotes, resultCount int,
 	colorWeight float64,
 	colorDevices []string,
+	ending string,
+	loopWeight float64,
+	brightness float64,
+	avoidNotes []string,
+	motionProfile string,
+	revisitWeight float64,
 ) ([]store.ProgressionStep, error) {
 	colorWeight = clampWeight(colorWeight)
+	revisitWeight = clampWeight(revisitWeight)
 	return s.store.SmoothProgression(
 		ctx,
 		mode,
 		SanitizeKeyName(key),
 		startChord,
-		clampLength(length, colorWeight > 0),
+		clampLength(length, colorWeight > 0 || revisitWeight > 0),
 		clampRandomness(randomness),
 		ParseExtraNotes(extraNotes),
 		clampWeight(rootWeight),
 		clampWeight(slashWeight),
 		ParsePins(pinned),
 		ParseRequiredNotes(required),
-		clampMaxNotes(maxNotes),
+		ParseBassNotes(bass),
+		clampNotesBound(minNotes),
+		clampNotesBound(maxNotes),
 		clampResultCount(resultCount),
 		colorWeight,
 		ParseColorDevices(colorDevices),
+		ParseEnding(ending),
+		clampWeight(loopWeight),
+		clampBrightness(brightness),
+		ParseAvoidNotes(avoidNotes),
+		ParseMotionProfile(motionProfile),
+		revisitWeight,
 	)
 }
 
@@ -129,6 +155,44 @@ func ParseExtraNotes(extra []string) []string {
 	return notes
 }
 
+// ParseEnding normalizes an ending (cadence) name to the lowercase form the
+// SQL function knows. An unknown name is dropped -- the SQL function would
+// drop it too, but normalizing here keeps the contract visible in one place.
+func ParseEnding(ending string) string {
+	e := strings.ToLower(strings.TrimSpace(ending))
+	switch e {
+	case "authentic", "plagal", "half", "deceptive", "open":
+		return e
+	}
+	return ""
+}
+
+// ParseAvoidNotes trims avoid-note entries and drops blank ones, capped at
+// one per pitch class. Unknown note names are dropped by the SQL function.
+func ParseAvoidNotes(avoid []string) []string {
+	var notes []string
+	for _, entry := range avoid[:min(len(avoid), maxAvoidNotes)] {
+		if note := strings.TrimSpace(entry); note != "" {
+			notes = append(notes, note)
+		}
+	}
+	return notes
+}
+
+// ParseMotionProfile normalizes a root-motion profile name to the lowercase
+// form the SQL function knows. Unlike ParseEnding, an unknown name resolves
+// to 'functional' rather than empty: the SQL parameter isn't nullable, and
+// 'functional' is its own default.
+func ParseMotionProfile(profile string) string {
+	p := strings.ToLower(strings.TrimSpace(profile))
+	for _, known := range motionProfiles {
+		if p == known {
+			return p
+		}
+	}
+	return motionProfiles[0]
+}
+
 // ParseColorDevices trims device-tag entries and drops blank ones, capped at
 // one per known tag. Unknown tags are dropped by the SQL function.
 func ParseColorDevices(devices []string) []string {
@@ -158,6 +222,23 @@ func ParseRequiredNotes(required []string) []store.RequiredNote {
 	return notes
 }
 
+// ParseBassNotes turns bass-note entries into store.BassNotes. Each entry is
+// "Note@step" ('C@2'): the chord at that 1-based step must sound the note in
+// the bass. Entries without a step parse to position 0, which the SQL
+// function drops, as it does unresolvable note names and extra entries on a
+// step that already has one.
+func ParseBassNotes(bass []string) []store.BassNote {
+	var notes []store.BassNote
+	for _, entry := range bass[:min(len(bass), maxBassNotes)] {
+		note, step := splitStepSuffix(entry)
+		if note == "" {
+			continue
+		}
+		notes = append(notes, store.BassNote{Note: note, Position: step})
+	}
+	return notes
+}
+
 // splitStepSuffix splits a "Name@step" entry into its name and 1-based step.
 // Without a numeric '@' suffix the whole entry is the name, at step 0; a
 // negative step also floats to 0. Names are trimmed and lose any commas
@@ -177,9 +258,9 @@ func splitStepSuffix(entry string) (string, int) {
 
 // with borrowed-root color on, the distinct-root rule can draw on all 12
 // pitch classes instead of the 7 scale degrees, so the cap loosens
-func clampLength(length int, colorOn bool) int {
+func clampLength(length int, rootsExtended bool) int {
 	limit := maxLength
-	if colorOn {
+	if rootsExtended {
 		limit = maxColorLength
 	}
 	return min(max(length, minLength), limit)
@@ -196,8 +277,15 @@ func clampRandomness(r float64) float64 {
 	return min(max(r, 0), 1)
 }
 
-// 0 means no cap; negative values mean the same
-func clampMaxNotes(n int) int {
+// brightness is a signed pole: [-1, 1]; 0 means off, like every other
+// creative weight in this API
+func clampBrightness(b float64) float64 {
+	return min(max(b, -1), 1)
+}
+
+// 0 means no bound; negative values mean the same. Shared by the min-notes
+// floor and the max-notes cap.
+func clampNotesBound(n int) int {
 	return max(n, 0)
 }
 

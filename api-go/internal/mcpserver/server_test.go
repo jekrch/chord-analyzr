@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"reflect"
 	"testing"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -24,9 +25,17 @@ type fakeService struct {
 	gotRandomness               float64
 	gotExtraNotes               []string
 	gotPinned, gotRequired      []string
+	gotBassNotes                []string
+	gotMinNotes                 int
 	gotMaxNotes, gotResultCount int
 	gotColorWeight              float64
 	gotColorDevices             []string
+	gotEnding                   string
+	gotLoopWeight               float64
+	gotBrightness               float64
+	gotAvoidNotes               []string
+	gotMotionProfile            string
+	gotRevisitWeight            float64
 }
 
 func (f *fakeService) Modes(context.Context) ([]store.Mode, error) {
@@ -50,19 +59,33 @@ func (f *fakeService) SmoothProgression(
 	randomness float64,
 	extraNotes []string,
 	_, _ float64,
-	pinned, required []string,
-	maxNotes, resultCount int,
+	pinned, required, bass []string,
+	minNotes, maxNotes, resultCount int,
 	colorWeight float64,
 	colorDevices []string,
+	ending string,
+	loopWeight float64,
+	brightness float64,
+	avoidNotes []string,
+	motionProfile string,
+	revisitWeight float64,
 ) ([]store.ProgressionStep, error) {
 	f.gotMode, f.gotKey, f.gotStart = mode, key, startChord
 	f.gotLength = length
 	f.gotRandomness = randomness
 	f.gotExtraNotes = extraNotes
 	f.gotPinned, f.gotRequired = pinned, required
+	f.gotBassNotes = bass
+	f.gotMinNotes = minNotes
 	f.gotMaxNotes, f.gotResultCount = maxNotes, resultCount
 	f.gotColorWeight = colorWeight
 	f.gotColorDevices = colorDevices
+	f.gotEnding = ending
+	f.gotLoopWeight = loopWeight
+	f.gotBrightness = brightness
+	f.gotAvoidNotes = avoidNotes
+	f.gotMotionProfile = motionProfile
+	f.gotRevisitWeight = revisitWeight
 	return f.steps, f.err
 }
 
@@ -257,6 +280,78 @@ func TestGenerateProgressionPassesColorKnobs(t *testing.T) {
 	}
 	if len(svc.gotColorDevices) != 1 || svc.gotColorDevices[0] != "mediant" {
 		t.Errorf("color devices = %v, want [mediant]", svc.gotColorDevices)
+	}
+}
+
+func TestGenerateProgressionPassesEndingAndLoopWeight(t *testing.T) {
+	svc := &fakeService{}
+	session := connect(t, svc)
+
+	var out progressionOutput
+	call(t, session, "generate_progression", map[string]any{
+		"key": "C", "mode": "Ionian", "start_chord": "Cmaj7",
+		"ending": "half", "loop_weight": 2.0,
+	}, &out)
+
+	if svc.gotEnding != "half" || svc.gotLoopWeight != 2.0 {
+		t.Errorf("got ending=%q loopWeight=%v, want half 2", svc.gotEnding, svc.gotLoopWeight)
+	}
+}
+
+func TestGenerateProgressionPassesBrightnessAvoidNotesAndMotionProfile(t *testing.T) {
+	svc := &fakeService{}
+	session := connect(t, svc)
+
+	var out progressionOutput
+	call(t, session, "generate_progression", map[string]any{
+		"key": "C", "mode": "Ionian", "start_chord": "Cmaj7",
+		"brightness": 0.5, "avoid_notes": []string{"B"}, "motion_profile": "mediant",
+	}, &out)
+
+	if svc.gotBrightness != 0.5 {
+		t.Errorf("brightness = %v, want 0.5", svc.gotBrightness)
+	}
+	if len(svc.gotAvoidNotes) != 1 || svc.gotAvoidNotes[0] != "B" {
+		t.Errorf("avoid notes = %v, want [B]", svc.gotAvoidNotes)
+	}
+	if svc.gotMotionProfile != "mediant" {
+		t.Errorf("motion profile = %q, want mediant", svc.gotMotionProfile)
+	}
+}
+
+func TestGenerateProgressionPassesBassNotesAndMinNotes(t *testing.T) {
+	svc := &fakeService{}
+	session := connect(t, svc)
+
+	var out progressionOutput
+	call(t, session, "generate_progression", map[string]any{
+		"key": "C", "mode": "Ionian", "start_chord": "Cmaj7",
+		"bass_notes": []string{"E@2", "A@3"}, "min_notes": 4,
+	}, &out)
+
+	if want := []string{"E@2", "A@3"}; !reflect.DeepEqual(svc.gotBassNotes, want) {
+		t.Errorf("bass notes = %v, want %v", svc.gotBassNotes, want)
+	}
+	if svc.gotMinNotes != 4 {
+		t.Errorf("min notes = %d, want 4", svc.gotMinNotes)
+	}
+}
+
+// pedal_note is MCP-layer sugar: it expands to a required note at every step
+// but the first, alongside any required notes the caller already gave.
+func TestGenerateProgressionPedalNoteExpandsToRequiredNotes(t *testing.T) {
+	svc := &fakeService{}
+	session := connect(t, svc)
+
+	var out progressionOutput
+	call(t, session, "generate_progression", map[string]any{
+		"key": "C", "mode": "Ionian", "start_chord": "Cmaj7", "length": 4,
+		"pedal_note": "C", "required_notes": []string{"E@2"},
+	}, &out)
+
+	want := []string{"E@2", "C@2", "C@3", "C@4"}
+	if !reflect.DeepEqual(svc.gotRequired, want) {
+		t.Errorf("required = %v, want %v", svc.gotRequired, want)
 	}
 }
 

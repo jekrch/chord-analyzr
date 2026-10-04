@@ -86,7 +86,9 @@ const ChordProgressionModal: React.FC<ChordProgressionModalProps> = ({
 
     // Infer key/mode (debounced) whenever the parsed chords change
     useEffect(() => {
-        if (!isOpen || !autoDetect || !validTokens.length) {
+        // keep the last suggestion while the modal fades out
+        if (!isOpen) return;
+        if (!autoDetect || !validTokens.length) {
             setSuggestion(null);
             setInferring(false);
             return;
@@ -191,8 +193,6 @@ const ChordProgressionModal: React.FC<ChordProgressionModalProps> = ({
         }
     }, [validTokens, isApplying, targetKey, targetMode, currentKey, currentMode, onClose]);
 
-    if (!isOpen) return null;
-
     return (
         <Modal
             isOpen={isOpen}
@@ -230,7 +230,7 @@ const ChordProgressionModal: React.FC<ChordProgressionModalProps> = ({
                                     return (
                                         <span
                                             key={`${index}-${token.token}`}
-                                            className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded font-mono bg-[var(--mcb-danger-secondary)]/20 border border-[var(--mcb-danger-border)] text-[var(--mcb-danger-text)] line-through"
+                                            className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-sm font-mono bg-[var(--mcb-danger-secondary)]/20 border border-[var(--mcb-danger-border)] text-[var(--mcb-danger-text)] line-through"
                                             title="Couldn't read this chord — it will be skipped"
                                         >
                                             {token.token}
@@ -246,7 +246,7 @@ const ChordProgressionModal: React.FC<ChordProgressionModalProps> = ({
                                         <button
                                             key={`${index}-${token.token}`}
                                             onClick={() => handlePreview(token)}
-                                            className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded font-mono bg-[var(--mcb-accent-primary)]/10 border border-[var(--mcb-accent-primary)]/40 text-[var(--mcb-accent-text-primary)] hover:bg-[var(--mcb-accent-primary)]/20 hover:border-[var(--mcb-accent-primary)]/60 transition-colors"
+                                            className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-sm font-mono bg-[var(--mcb-accent-primary)]/10 border border-[var(--mcb-accent-primary)]/40 text-[var(--mcb-accent-text-primary)] hover:bg-[var(--mcb-accent-primary)]/20 hover:border-[var(--mcb-accent-primary)]/60 transition-colors"
                                             title="Preview chord"
                                         >
                                             {name}
@@ -266,7 +266,7 @@ const ChordProgressionModal: React.FC<ChordProgressionModalProps> = ({
                                             setMenuAnchorRect(e.currentTarget.getBoundingClientRect());
                                             setOpenDropdownIndex(index);
                                         }}
-                                        className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded font-mono bg-[var(--mcb-warning-primary)] border border-[var(--mcb-warning-border)] text-[var(--mcb-warning-text)] hover:text-[var(--mcb-warning-text-alt)] transition-colors"
+                                        className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-sm font-mono bg-[var(--mcb-warning-primary)] border border-[var(--mcb-warning-border)] text-[var(--mcb-warning-text)] hover:text-[var(--mcb-warning-text-alt)] transition-colors"
                                         title={`"${token.token}" not found — using nearest match. Click to see other matches.`}
                                     >
                                         <ExclamationTriangleIcon className="w-3 h-3" />
@@ -318,7 +318,7 @@ const ChordProgressionModal: React.FC<ChordProgressionModalProps> = ({
                                                             e.stopPropagation();
                                                             handlePreview(token, candidate.chordType);
                                                         }}
-                                                        className="p-0.5 rounded text-mcb-tertiary hover:text-[var(--mcb-accent-text-primary)] transition-colors flex-shrink-0"
+                                                        className="p-0.5 rounded-sm text-mcb-tertiary hover:text-[var(--mcb-accent-text-primary)] transition-colors flex-shrink-0"
                                                         title="Preview"
                                                     >
                                                         <PlayIcon className="w-3.5 h-3.5" />
@@ -327,7 +327,7 @@ const ChordProgressionModal: React.FC<ChordProgressionModalProps> = ({
                                                 <span className="text-xs font-mono truncate">
                                                     {token.root}{candidate.chordType}{token.slash ? `/${token.slash}` : ''}
                                                 </span>
-                                                <span className="ml-auto text-[0.625rem] text-mcb-tertiary flex-shrink-0">
+                                                <span className="ml-auto text-[0.6875rem] text-mcb-tertiary flex-shrink-0">
                                                     {Math.round(candidate.score * 100)}%
                                                 </span>
                                             </div>
@@ -357,14 +357,14 @@ const ChordProgressionModal: React.FC<ChordProgressionModalProps> = ({
                     </div>
                     <button
                         onClick={() => setAutoDetect(!autoDetect)}
-                        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[var(--mcb-accent-primary)] focus:ring-offset-2 focus:ring-offset-[var(--mcb-bg-primary)] ${autoDetect ? 'bg-[var(--mcb-accent-secondary)]' : 'bg-[var(--mcb-border-secondary)]'}`}
+                        className="mcb-toggle"
                         role="switch"
                         aria-checked={autoDetect}
                         aria-label="Auto-detect key and mode from the entered chords"
                     >
                         <span
                             aria-hidden="true"
-                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${autoDetect ? 'translate-x-5' : 'translate-x-0'}`}
+                            className="mcb-toggle-thumb"
                         />
                     </button>
                 </div>

@@ -1,11 +1,13 @@
 
 import React, { useState, useMemo, useEffect, useLayoutEffect, useCallback, useRef, memo } from 'react';
-import { PlayCircleIcon, PlusCircleIcon, MagnifyingGlassIcon, ChevronDownIcon, ChevronUpIcon, MusicalNoteIcon, QueueListIcon } from '@heroicons/react/20/solid';
+import { PlayCircleIcon, PlusCircleIcon, MagnifyingGlassIcon, ChevronDownIcon, MusicalNoteIcon, QueueListIcon } from '@heroicons/react/20/solid';
 import { ModeScaleChordDto } from '../api';
 import { useMusicStore } from '../stores/musicStore';
 import { useUIStore } from '../stores/uiStore';
 import ChordFinderModal from './ChordFinder';
 import ChordProgressionModal from './ChordProgressionModal';
+import ChordStaff from './ChordStaff';
+import Collapse from './Collapse';
 import { createPortal } from 'react-dom';
 
 interface ChordTableProps {
@@ -60,7 +62,7 @@ const ChordCard = memo<{
           <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
             <PlayCircleIcon className={`h-5 w-5 sm:h-6 sm:w-6 transition-colors flex-shrink-0 ${isPlaying ? 'text-[var(--mcb-accent-text-primary)]' : 'text-[var(--mcb-text-tertiary)] group-hover:text-[var(--mcb-accent-text-secondary)]'
               }`} />
-            <h3 className={`text-base sm:text-lg font-bold transition-colors truncate ${isPlaying ? 'text-[var(--mcb-accent-text-light)]' : 'text-white group-hover:text-[var(--mcb-accent-text-light)]'
+            <h3 className={`text-base font-semibold transition-colors truncate ${isPlaying ? 'text-[var(--mcb-accent-text-light)]' : 'text-white group-hover:text-[var(--mcb-accent-text-light)]'
               }`}>
               {chord.chordName}
             </h3>
@@ -68,7 +70,7 @@ const ChordCard = memo<{
           <div className="flex items-center space-x-1 flex-shrink-0 ml-2">
             <button
               onClick={handleAddClick}
-              className={`h-7 w-7 flex items-center justify-center rounded-full border transition-colors ${isAdding
+              className={`h-7 w-7 flex items-center justify-center rounded-md border transition-colors ${isAdding
                 ? 'border-[color-mix(in_srgb,var(--mcb-success-primary)_60%,transparent)] bg-[color-mix(in_srgb,var(--mcb-success-primary)_24%,var(--mcb-bg-input))] text-[var(--mcb-success-text)]'
                 : 'border-mcb-subtle text-mcb-tertiary hover:text-[var(--mcb-success-text)] hover:border-[color-mix(in_srgb,var(--mcb-success-primary)_50%,transparent)] hover:bg-[color-mix(in_srgb,var(--mcb-success-primary)_14%,var(--mcb-bg-input))]'
                 }`}
@@ -78,32 +80,33 @@ const ChordCard = memo<{
             </button>
             <button
               onClick={handleToggleClick}
-              className="h-7 w-7 flex items-center justify-center rounded-full border border-mcb-subtle text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-colors"
+              className="h-7 w-7 flex items-center justify-center rounded-md border border-mcb-subtle text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-colors"
               title={isExpanded ? "Hide notes" : "Show notes"}
             >
-              {isExpanded ? (
-                <ChevronUpIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              ) : (
-                <ChevronDownIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              )}
+              <ChevronDownIcon className={`mcb-chevron h-3.5 w-3.5 sm:h-4 sm:w-4 ${isExpanded ? 'is-open' : ''}`} />
             </button>
           </div>
         </div>
       </div>
 
       {/* Expandable notes section */}
-      {isExpanded && (
+      <Collapse open={isExpanded} lazy>
         <div className="px-3 pb-3 pt-0 sm:px-4 sm:pb-4">
-          <div className="mcb-inset p-2 sm:p-3">
-            <div className="mcb-label mb-1">
-              Notes
+          <div className="mcb-inset px-2 py-1.5 sm:px-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+            <div className="text-left">
+              <div className="mcb-label mb-1">
+                Notes
+              </div>
+              <div className="text-xs text-mcb-primary font-mono">
+                {chord.chordNoteNames}
+              </div>
             </div>
-            <div className="text-xs text-mcb-primary font-mono">
-              {chord.chordNoteNames}
-            </div>
+            {chord.chordNoteNames && (
+              <ChordStaff notes={chord.chordNoteNames} className="min-w-0 text-mcb-secondary" />
+            )}
           </div>
         </div>
-      )}
+      </Collapse>
     </div>
   );
 });
@@ -478,14 +481,14 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setIsChordFinderOpen(true)}
-                  className="flex items-center gap-1.5 px-2.5 py-1 flex-shrink-0 whitespace-nowrap rounded-full bg-[var(--mcb-accent-primary)]/10 hover:bg-[var(--mcb-accent-primary)]/20 border border-[var(--mcb-accent-primary)]/20 hover:border-[var(--mcb-accent-primary)]/50 transition-all group"
+                  className="flex items-center gap-1.5 px-2.5 py-1 flex-shrink-0 whitespace-nowrap rounded-md bg-[var(--mcb-accent-primary)]/10 hover:bg-[var(--mcb-accent-primary)]/20 border border-[var(--mcb-accent-primary)]/20 hover:border-[var(--mcb-accent-primary)]/50 transition-all group"
                 >
                   <MusicalNoteIcon className="w-3.5 h-3.5 flex-shrink-0 text-[var(--mcb-accent-primary)]" />
                   <span className="text-xs font-medium text-[var(--mcb-accent-text-primary)]">Find by Notes</span>
                 </button>
                 <button
                   onClick={() => setIsProgressionOpen(true)}
-                  className="flex items-center gap-1.5 px-2.5 py-1 flex-shrink-0 whitespace-nowrap rounded-full bg-[var(--mcb-accent-primary)]/10 hover:bg-[var(--mcb-accent-primary)]/20 border border-[var(--mcb-accent-primary)]/20 hover:border-[var(--mcb-accent-primary)]/50 transition-all group"
+                  className="flex items-center gap-1.5 px-2.5 py-1 flex-shrink-0 whitespace-nowrap rounded-md bg-[var(--mcb-accent-primary)]/10 hover:bg-[var(--mcb-accent-primary)]/20 border border-[var(--mcb-accent-primary)]/20 hover:border-[var(--mcb-accent-primary)]/50 transition-all group"
                 >
                   <QueueListIcon className="w-3.5 h-3.5 flex-shrink-0 text-[var(--mcb-accent-primary)]" />
                   <span className="text-xs font-medium text-[var(--mcb-accent-text-primary)]">Enter Progression</span>
@@ -514,16 +517,14 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
                 <button
                   onClick={handleToggleAllChords}
                   disabled={currentLoading}
-                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[var(--mcb-accent-primary)] focus:ring-offset-2 focus:ring-offset-[var(--mcb-bg-primary)] ${showAllChords ? 'bg-[var(--mcb-accent-secondary)]' : 'bg-[var(--mcb-border-secondary)]'
-                    } ${currentLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className="mcb-toggle"
                   role="switch"
                   aria-checked={showAllChords}
                   aria-label="Toggle between current mode chords and all distinct chords"
                 >
                   <span
                     aria-hidden="true"
-                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${showAllChords ? 'translate-x-5' : 'translate-x-0'
-                      }`}
+                    className="mcb-toggle-thumb"
                   />
                 </button>
               </div>
@@ -576,7 +577,7 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
                 >
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">All Notes</span>
-                    <span className="text-xs text-[var(--mcb-text-tertiary)] bg-[var(--mcb-border-primary)] px-2 py-1 rounded">
+                    <span className="text-xs text-[var(--mcb-text-tertiary)] bg-[var(--mcb-border-primary)] px-2 py-1 rounded-sm">
                       {validChords.length}
                     </span>
                   </div>
@@ -593,7 +594,7 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
                   >
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium">{note}</span>
-                      <span className="text-xs text-[var(--mcb-text-tertiary)] bg-[var(--mcb-border-primary)] px-2 py-1 rounded">
+                      <span className="text-xs text-[var(--mcb-text-tertiary)] bg-[var(--mcb-border-primary)] px-2 py-1 rounded-sm">
                         {chordCounts[note] || 0}
                       </span>
                     </div>
@@ -682,7 +683,7 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
 
       </div>
       <div className="!z-50">
-        {isChordFinderOpen && createPortal(
+        {createPortal(
           <ChordFinderModal
             isOpen={isChordFinderOpen}
             onClose={() => setIsChordFinderOpen(false)}
@@ -693,7 +694,7 @@ const ChordTableComponent: React.FC<ChordTableProps> = ({
           />,
           document.body
         )}
-        {isProgressionOpen && createPortal(
+        {createPortal(
           <ChordProgressionModal
             isOpen={isProgressionOpen}
             onClose={() => setIsProgressionOpen(false)}

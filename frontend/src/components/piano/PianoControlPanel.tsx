@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { PlayCircleIcon, PauseIcon, ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
+import { PlayIcon, StopIcon, ChevronDownIcon, MinusIcon, PlusIcon } from '@heroicons/react/20/solid';
 import Logo from '../Logo';
 import Dropdown from '../Dropdown';
 import { Button } from '../Button';
@@ -10,6 +10,7 @@ import { normalizeNoteName } from '../../util/NoteUtil';
 import { useMusicStore } from '../../stores/musicStore';
 import { AVAILABLE_KEYS } from '../../hooks/useIntegratedAppLogic';
 import Slider from '../Slider';
+import Collapse from '../Collapse';
 import { useChordTranspose } from '../../hooks/useChordTranspose';
 
 interface EqSettings {
@@ -66,20 +67,22 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
         voice: 'w-[14rem]'
     };
 
+    // Quiet key at rest; lit danger (like an armed switch) only while the scale plays
     const playButton = (
         <Button
             onClick={onToggleScalePlayback}
-            variant="play-stop"
+            variant="icon"
             size="icon"
-            className="!w-8 !h-8 flex items-center justify-center"
-            active={isPlayingScale}
+            className={`!w-8 !h-8 ${isPlayingScale
+                ? '!bg-[color-mix(in_srgb,var(--mcb-danger-primary)_18%,var(--mcb-bg-input))] !border-[color-mix(in_srgb,var(--mcb-danger-primary)_55%,transparent)] !text-[var(--mcb-danger-text)]'
+                : ''}`}
             title={isPlayingScale ? 'Stop scale' : `Play ${currentKey} ${mode} scale`}
             disabled={!scaleNotes || scaleNotes.length === 0}
         >
             {isPlayingScale ? (
-                <PauseIcon className="w-5 h-5" />
+                <StopIcon className="w-3.5 h-3.5 shrink-0" />
             ) : (
-                <PlayCircleIcon className="w-5 h-5" />
+                <PlayIcon className="w-3.5 h-3.5 shrink-0" />
             )}
         </Button>
     );
@@ -87,10 +90,10 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
     const transposeSwitch = (
         <button
             onClick={onToggleTranspose}
-            className={`mcb-switch h-10 ${transposeEnabled ? 'mcb-switch--on' : ''}`}
+            className={`mcb-switch mcb-switch--pill h-7 w-28 ${transposeEnabled ? 'mcb-switch--on' : ''}`}
             title="When enabled, changing key or mode will transpose all added chords"
         >
-            <div className={`mcb-led ${transposeEnabled ? '' : 'mcb-led--off'}`} />
+            <span className={`mcb-led ${transposeEnabled ? '' : 'mcb-led--off'}`} />
             <span>Transpose</span>
         </button>
     );
@@ -102,7 +105,7 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
 
     if (isDesktop) {
         return (
-            <div className="flex flex-col bg-mcb-secondary/30 border border-mcb-secondary rounded-lg px-6 py-4">
+            <div className="flex flex-col bg-[color-mix(in_srgb,var(--mcb-bg-input)_30%,transparent)] border border-mcb-subtle rounded-md px-6 py-4">
                 {/* First Row - All Dropdowns Aligned */}
                 <div className="flex items-center">
                     {/* Key Control Group */}
@@ -170,13 +173,13 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
         );
     }
 
-    // Mobile layout
+    // Mobile layout: one column on phones, Key | Mode+Voice side by side from sm up
     return (
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-10">
             {/* Key Control Group */}
             <div className="flex items-start gap-3">
                 <span className={`${labelClass} mt-2`}>Key:</span>
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 sm:gap-4">
                     <div className="flex items-center gap-2">
                         <Dropdown
                             value={currentKey}
@@ -193,34 +196,36 @@ const ControlGroup: React.FC<ControlGroupProps> = ({
                 </div>
             </div>
 
-            {/* Mode Control Group */}
-            <div className="flex items-center gap-3">
-                <span className={labelClass}>Mode:</span>
-                {modes && (
-                    <Dropdown
-                        value={mode}
-                        className={commonDropdownClasses.mode}
-                        buttonClassName='px-3 py-1.5 text-left font-medium text-xs h-10 flex items-center'
-                        menuClassName={`min-w-[${commonDropdownClasses.mode}]`}
-                        onChange={onModeChange}
-                        showSearch={true}
-                        options={modes}
-                    />
-                )}
-            </div>
+            <div className="flex flex-col gap-4">
+                {/* Mode Control Group */}
+                <div className="flex items-center gap-3">
+                    <span className={labelClass}>Mode:</span>
+                    {modes && (
+                        <Dropdown
+                            value={mode}
+                            className={commonDropdownClasses.mode}
+                            buttonClassName='px-3 py-1.5 text-left font-medium text-xs h-10 flex items-center'
+                            menuClassName={`min-w-[${commonDropdownClasses.mode}]`}
+                            onChange={onModeChange}
+                            showSearch={true}
+                            options={modes}
+                        />
+                    )}
+                </div>
 
-            {/* Voice Control Group */}
-            <div className="flex items-center gap-3">
-                <span className={labelClass}>Voice:</span>
-                <Dropdown
-                    value={pianoSettings.instrumentName.replaceAll('_', ' ')}
-                    className={commonDropdownClasses.voice}
-                    buttonClassName='px-3 py-1.5 text-left font-medium text-xs h-10 flex items-center'
-                    menuClassName='min-w-[11rem]'
-                    onChange={onInstrumentChange}
-                    showSearch={true}
-                    options={availableInstruments.map((name) => name.replaceAll('_', ' '))}
-                />
+                {/* Voice Control Group */}
+                <div className="flex items-center gap-3">
+                    <span className={labelClass}>Voice:</span>
+                    <Dropdown
+                        value={pianoSettings.instrumentName.replaceAll('_', ' ')}
+                        className={commonDropdownClasses.voice}
+                        buttonClassName='px-3 py-1.5 text-left font-medium text-xs h-10 flex items-center'
+                        menuClassName='min-w-[11rem]'
+                        onChange={onInstrumentChange}
+                        showSearch={true}
+                        options={availableInstruments.map((name) => name.replaceAll('_', ' '))}
+                    />
+                </div>
             </div>
         </div>
     );
@@ -492,13 +497,9 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                     <h2 className="mcb-panel-title">Controls</h2>
                     <button
                         onClick={() => setSettingsOpen(!settingsOpen)}
-                        className="h-7 flex items-center space-x-1.5 px-3 text-[0.6875rem] uppercase tracking-wider text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover border border-mcb-subtle rounded-full transition-all duration-200"
+                        className="h-7 flex items-center space-x-1.5 px-3 text-[0.6875rem] uppercase tracking-wider text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover border border-mcb-subtle rounded-md transition-all duration-200"
                     >
-                        {settingsOpen ? (
-                            <ChevronUpIcon className="w-3 h-3" />
-                        ) : (
-                            <ChevronDownIcon className="w-3 h-3" />
-                        )}
+                        <ChevronDownIcon className={`mcb-chevron w-3 h-3 ${settingsOpen ? 'is-open' : ''}`} />
                         <span>Settings</span>
                     </button>
                 </div>
@@ -562,7 +563,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                 </div>
 
                 {/* Expandable Piano Settings */}
-                <div className={`transition-all duration-300 ease-in-out overflow-hidden ${settingsOpen ? ' opacity-100' : 'max-h-0 opacity-0'}`}>
+                <Collapse open={settingsOpen}>
                     <div className="border-t border-mcb-subtle">
                         <div className="mcb-panel-header">
                             <h3 className="mcb-panel-title">
@@ -596,20 +597,22 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                                 <div className="flex items-center justify-between mcb-inset p-1.5">
                                                     <button
                                                         onClick={() => setOctaveOffset(Math.max(-3, pianoSettings.octaveOffset - 1))}
-                                                        className="w-6 h-6 flex items-center justify-center rounded-full border border-mcb-subtle text-mcb-secondary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                        className="w-6 h-6 shrink-0 flex items-center justify-center p-0 rounded-md border border-mcb-subtle text-mcb-secondary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                                         disabled={pianoSettings.octaveOffset <= -3}
+                                                        aria-label="Octave down"
                                                     >
-                                                        −
+                                                        <MinusIcon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                                                     </button>
                                                     <span className="font-mono text-xs text-mcb-primary px-2">
                                                         {pianoSettings.octaveOffset === 0 ? 'Normal' : `${pianoSettings.octaveOffset > 0 ? '+' : ''}${pianoSettings.octaveOffset} octave${Math.abs(pianoSettings.octaveOffset) > 1 ? 's' : ''}`}
                                                     </span>
                                                     <button
                                                         onClick={() => setOctaveOffset(Math.min(3, pianoSettings.octaveOffset + 1))}
-                                                        className="w-6 h-6 flex items-center justify-center rounded-full border border-mcb-subtle text-mcb-secondary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                                        className="w-6 h-6 shrink-0 flex items-center justify-center p-0 rounded-md border border-mcb-subtle text-mcb-secondary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                                                         disabled={pianoSettings.octaveOffset >= 3}
+                                                        aria-label="Octave up"
                                                     >
-                                                        +
+                                                        <PlusIcon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                                                     </button>
                                                 </div>
                                             </div>
@@ -632,7 +635,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                                                         checked={pianoSettings.cutOffPreviousNotes}
                                                         onChange={(e) => setCutOffPreviousNotes(e.target.checked)}
                                                     />
-                                                    <span className="ml-2 text-xs text-mcb-secondary uppercase tracking-wide">Cut off previous notes</span>
+                                                    <span className="ml-2 text-[0.6875rem] text-mcb-secondary uppercase tracking-wide">Cut off previous notes</span>
                                                 </label>
                                             </div>
                                         </div>
@@ -817,7 +820,7 @@ const PianoControlPanel: React.FC<PianoControlPanelProps> = ({
                             </div>
                         </div>
                     </div>
-                </div>
+                </Collapse>
             </div>
         </div>
     );

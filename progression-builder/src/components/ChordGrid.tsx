@@ -62,8 +62,12 @@ export default function ChordGrid({ chords, scaleNotes, loading, error, onAdd, o
         )}
         {!error &&
           !loading &&
-          groups.map((group) => (
-            <div key={group.root} className="flex flex-col gap-1.5">
+          groups.map((group, i) => (
+            <div
+              key={group.root}
+              className="pb-settle flex flex-col gap-1.5"
+              style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
+            >
               <div className="flex items-center gap-2">
                 {group.numeral && <span className="pb-readout">{group.numeral}</span>}
                 <span className="font-mono text-xs font-semibold text-[var(--pb-text-secondary)]">{group.root}</span>
@@ -79,7 +83,7 @@ export default function ChordGrid({ chords, scaleNotes, loading, error, onAdd, o
                       onMouseLeave={() => onPreview(null)}
                       onFocus={() => onPreview(chord)}
                       onBlur={() => onPreview(null)}
-                      title={chord.chordNoteNames ? `${chord.chordNoteNames} — click to play` : 'Click to play'}
+                      title={chord.chordNoteNames ?? undefined}
                       className="cursor-pointer px-2.5 py-2 font-mono text-sm font-semibold text-[var(--pb-text-primary)]"
                     >
                       {chord.chordName}
@@ -97,9 +101,6 @@ export default function ChordGrid({ chords, scaleNotes, loading, error, onAdd, o
               </div>
             </div>
           ))}
-        {!error && !loading && groups.length > 0 && (
-          <p className="text-[11px] text-[var(--pb-text-tertiary)]">Click a chord to hear it · + adds it to the progression</p>
-        )}
       </div>
     </div>
   );

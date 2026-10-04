@@ -26,11 +26,11 @@ const HeaderNav: React.FC = () => {
 
     return (
         <>
-            <div className="bg-mcb-elevated border-b border-mcb-subtle shadow-[0_1px_0_rgba(0,0,0,0.3)]">
+            <div className="mcb-header">
                 <div className="relative">
-                    <div className="flex items-center justify-between px-4 py-2">
+                    <div className="flex h-12 items-center justify-between px-4">
                         {/* Left side - App Name with Geometric Logo */}
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-3 select-none">
                             <Logo size={30}/>
 
                             {/* App Name */}
@@ -50,9 +50,10 @@ const HeaderNav: React.FC = () => {
                         <div className="flex items-center space-x-3">
 
                             {/* Key/Mode Display - Hidden on small screens */}
-                            <div className="hidden sm:flex items-center mcb-inset px-3 py-1 space-x-2 font-mono text-xs text-mcb-secondary">
-                                <span className="mcb-label !text-[0.5625rem]">key</span>
-                                <span className="text-[var(--mcb-accent-text-primary)]">{key}</span>
+                            <div className="hidden sm:flex h-7 items-center mcb-inset px-2.5 space-x-2 font-mono text-xs text-mcb-secondary whitespace-nowrap">
+                                <span className="mcb-led" />
+                                <span className="mcb-label">key</span>
+                                <span className="min-w-[2ch] text-[var(--mcb-accent-text-primary)]">{key}</span>
                                 <div className="w-px h-3 bg-[var(--mcb-border-primary)]"></div>
                                 <span className="text-mcb-secondary">{mode}</span>
                             </div>

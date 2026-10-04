@@ -1,68 +1,69 @@
-/* Base Theme Variables - Matches Current Blue/Gray Theme */
+/* Default theme: steel-blue panels with a blue "lit" accent. Status colors
+   are LED-like (yellow-leaning green, orange-leaning red). */
 :root,
 [data-theme="default"] {
   /* Background Colors */
-  --mcb-bg-app: #282c34;           /* Main app background - currently bg-[#282c34] */
-  --mcb-bg-primary: #2a2f38;       /* Primary container background - currently bg-[#2a2f38] */
-  --mcb-bg-secondary: #3d434f;     /* Secondary container/card background - currently bg-[#3d434f] */
-  --mcb-bg-tertiary: #444b59;      /* Header/elevated panel background - currently bg-[#444b59] */
-  --mcb-bg-elevated: #363c46;      /* Alternative elevated background - currently bg-[#363c46] */
-  --mcb-bg-hover: #4a5262;         /* Hover state background - currently bg-[#4a5262] */
-  --mcb-bg-active: #525a6b;        /* Active/pressed state background - currently bg-[#525a6b] */
-  --mcb-bg-input: #1a1e24;         /* Input field background - currently bg-[#1a1e24] */
-  
+  --mcb-bg-app: #1f2531;           /* chassis */
+  --mcb-bg-primary: #242b38;       /* panel face */
+  --mcb-bg-secondary: #343d4e;     /* raised parts (pads, cards) */
+  --mcb-bg-tertiary: #3b4557;      /* headers / elevated */
+  --mcb-bg-elevated: #2c3443;
+  --mcb-bg-hover: #424d61;
+  --mcb-bg-active: #4b576d;
+  --mcb-bg-input: #161b24;         /* recessed screens */
+
   /* Border Colors */
-  --mcb-border-primary: rgb(75 85 99);    /* Primary border - currently border-gray-600 */
-  --mcb-border-secondary: rgb(107 114 128); /* Secondary border - currently border-gray-500 */
-  --mcb-border-subtle: rgba(75, 85, 99, 0.3); /* Subtle borders - currently border-gray-600/30 */
-  --mcb-border-hover: rgb(107 114 128);   /* Hover border - currently border-gray-500 */
-  
+  --mcb-border-primary: rgb(70 83 104);
+  --mcb-border-secondary: rgb(99 113 136);
+  --mcb-border-subtle: rgba(70, 83, 104, 0.35);
+  --mcb-border-hover: rgb(99 113 136);
+
   /* Text Colors */
-  --mcb-text-primary: rgb(226 232 240);   /* Primary text - currently text-slate-200 */
-  --mcb-text-secondary: rgb(203 213 225); /* Secondary text - currently text-slate-300 */
-  --mcb-text-tertiary: rgb(148 163 184);  /* Tertiary/muted text - currently text-slate-400 */
-  --mcb-text-disabled: rgb(100 116 139);  /* Disabled text - currently text-slate-500 */
-  --mcb-text-subtle: rgb(71 85 105);      /* Very subtle text - currently text-slate-600 */
-  
-  /* Accent Colors - Blue */
-  --mcb-accent-primary: #3b82f6;          /* Primary accent - currently bg-blue-500 */
-  --mcb-accent-secondary: #2563eb;        /* Secondary accent - currently bg-blue-600 */
-  --mcb-accent-tertiary: #1d4ed8;         /* Darker accent - currently bg-blue-700 */
-  --mcb-accent-light: #60a5fa;            /* Light accent - currently bg-blue-400 */
-  --mcb-accent-subtle: #1e40af;           /* Subtle accent - currently bg-blue-800 */
-  
+  --mcb-text-primary: rgb(228 234 243);
+  --mcb-text-secondary: rgb(200 210 224);
+  --mcb-text-tertiary: rgb(144 158 180);
+  --mcb-text-disabled: rgb(102 116 140);
+  --mcb-text-subtle: rgb(70 82 104);
+
+  /* Accent Colors */
+  --mcb-accent-primary: #3f80e6;
+  --mcb-accent-secondary: #2f6acc;
+  --mcb-accent-tertiary: #2556a8;
+  --mcb-accent-light: #6ea2ef;
+  --mcb-accent-subtle: #1f4585;
+
   /* Accent Text Colors */
-  --mcb-accent-text-primary: #60a5fa;     /* Primary accent text - currently text-blue-400 */
-  --mcb-accent-text-secondary: #93c5fd;   /* Secondary accent text - currently text-blue-300 */
-  --mcb-accent-text-light: #dbeafe;       /* Light accent text - currently text-blue-200 */
-  
-  /* Success Colors - Green */
-  --mcb-success-primary: #16a34a;         /* Primary success - currently bg-green-600 */
-  --mcb-success-secondary: #15803d;       /* Secondary success - currently bg-green-700 */
-  --mcb-success-hover: #16a34a;           /* Success hover - currently hover:bg-green-600 */
-  --mcb-success-text: #bbf7d0;            /* Success text - currently text-green-100 */
-  
-  /* Danger Colors - Red */
-  --mcb-danger-primary: #dc2626;          /* Primary danger - currently bg-red-600 */
-  --mcb-danger-secondary: #b91c1c;        /* Secondary danger - currently bg-red-700 */
-  --mcb-danger-hover: #dc2626;            /* Danger hover - currently hover:bg-red-600 */
-  --mcb-danger-text: #fecaca;             /* Danger text - currently text-red-400 */
-  --mcb-danger-border: #b91c1c;           /* Danger border - currently border-red-500 */
-  
-  /* Warning Colors - Amber */
-  --mcb-warning-primary: rgba(245, 158, 11, 0.1);  /* Warning background - currently bg-amber-500/10 */
-  --mcb-warning-border: rgba(245, 158, 11, 0.3);   /* Warning border - currently border-amber-500/30 */
-  --mcb-warning-text: #fcd34d;                     /* Warning text - currently text-amber-300 */
-  --mcb-warning-text-alt: #fde68a;                 /* Alt warning text - currently text-amber-200 */
-  
-  /* Special States */
-  --mcb-purple-bg: rgba(147, 51, 234, 0.3);   /* Purple background - currently bg-purple-900/30 */
-  --mcb-purple-border: rgba(126, 34, 206, 0.5); /* Purple border - currently border-purple-700/50 */
-  --mcb-purple-text: #e9d5ff;                  /* Purple text - currently text-purple-300 */
-  
-  --mcb-cyan-bg: rgba(6, 182, 212, 0.3);      /* Cyan background - currently bg-cyan-900/30 */
-  --mcb-cyan-border: rgba(14, 116, 144, 0.5); /* Cyan border - currently border-cyan-700/50 */
-  --mcb-cyan-text: #a5f3fc;                   /* Cyan text - currently text-cyan-300 */
+  --mcb-accent-text-primary: #6ea2ef;
+  --mcb-accent-text-secondary: #9fc1f5;
+  --mcb-accent-text-light: #dae7fb;
+
+  /* Success Colors: green LED */
+  --mcb-success-primary: #2f9450;
+  --mcb-success-secondary: #267a42;
+  --mcb-success-hover: #2f9450;
+  --mcb-success-text: #c6e8cf;
+
+  /* Danger Colors: red LED */
+  --mcb-danger-primary: #c8412e;
+  --mcb-danger-secondary: #a33424;
+  --mcb-danger-hover: #c8412e;
+  --mcb-danger-text: #f2c3b9;
+  --mcb-danger-border: #a33424;
+
+  /* Warning Colors: amber LED */
+  --mcb-warning-primary: rgba(226, 158, 52, 0.1);
+  --mcb-warning-border: rgba(226, 158, 52, 0.3);
+  --mcb-warning-text: #eec26a;
+  --mcb-warning-text-alt: #f3d898;
+
+  /* Chord-context badges: muted so they don't compete with the accent */
+  --mcb-purple-bg: rgba(146, 108, 168, 0.22);
+  --mcb-purple-border: rgba(146, 108, 168, 0.5);
+  --mcb-purple-text: #dac8e6;
+
+  --mcb-cyan-bg: rgba(72, 156, 146, 0.22);
+  --mcb-cyan-border: rgba(72, 156, 146, 0.5);
+  --mcb-cyan-text: #b4e0d9;
 }
 
 /* Green Forest Theme */
@@ -300,23 +301,39 @@
    so all themes (default/forest/neon/sunset) pick this up for free.
    =================================================================== */
 :root {
-  --mcb-radius-panel: 0.875rem;
-  --mcb-radius-control: 0.5rem;
+  --mcb-radius-panel: 6px;
+  --mcb-radius-inset: 4px;
+  --mcb-radius-control: 4px;
 }
 
 /* Raised card: the main module chassis */
 .mcb-panel {
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--mcb-bg-secondary) 45%, var(--mcb-bg-primary)),
+    color-mix(in srgb, var(--mcb-bg-secondary) 18%, var(--mcb-bg-primary)),
     var(--mcb-bg-primary)
   );
   border: 1px solid color-mix(in srgb, var(--mcb-border-primary) 55%, transparent);
   border-radius: var(--mcb-radius-panel);
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--mcb-text-primary) 7%, transparent),
-    0 12px 32px -16px rgba(0, 0, 0, 0.55),
-    0 2px 6px rgba(0, 0, 0, 0.25);
+    inset 0 1px 0 color-mix(in srgb, var(--mcb-text-primary) 6%, transparent),
+    0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+/* Top bar: a slim full-bleed chassis strip with a lit top edge and a hard
+   shadow line underneath. */
+.mcb-header {
+  position: relative;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--mcb-text-primary) 3%, var(--mcb-bg-elevated)),
+    var(--mcb-bg-elevated)
+  );
+  border-bottom: 1px solid var(--mcb-border-primary);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--mcb-text-primary) 5%, transparent),
+    0 1px 0 rgba(0, 0, 0, 0.35),
+    0 4px 12px rgba(0, 0, 0, 0.18);
 }
 
 /* Continuation section: reads as the bottom of the panel above it (no top
@@ -329,8 +346,7 @@
   border-top-right-radius: 0;
   background: var(--mcb-bg-primary);
   box-shadow:
-    0 12px 32px -16px rgba(0, 0, 0, 0.55),
-    0 2px 6px -2px rgba(0, 0, 0, 0.25);
+    0 1px 2px rgba(0, 0, 0, 0.35);
   transition:
     box-shadow 0.3s ease,
     border-color 0.3s ease,
@@ -354,7 +370,7 @@
   box-shadow:
     inset 0 2px 8px rgba(0, 0, 0, 0.4),
     0 1px 0 color-mix(in srgb, var(--mcb-text-primary) 5%, transparent),
-    0 6px 16px -8px rgba(0, 0, 0, 0.45);
+    0 3px 6px -3px rgba(0, 0, 0, 0.45);
 }
 
 /* Elevated state for a sticky panel once it detaches and floats over scrolling content */
@@ -362,8 +378,7 @@
   border-color: color-mix(in srgb, var(--mcb-border-primary) 75%, transparent);
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, var(--mcb-text-primary) 7%, transparent),
-    0 18px 44px -14px rgba(0, 0, 0, 0.7),
-    0 4px 12px rgba(0, 0, 0, 0.35);
+    0 6px 14px -6px rgba(0, 0, 0, 0.6);
 }
 
 /* Slim panel header row */
@@ -380,7 +395,7 @@
 .mcb-inset {
   background: color-mix(in srgb, var(--mcb-bg-input) 88%, var(--mcb-bg-primary));
   border: 1px solid rgba(0, 0, 0, 0.35);
-  border-radius: 0.625rem;
+  border-radius: var(--mcb-radius-inset);
   box-shadow:
     inset 0 2px 8px rgba(0, 0, 0, 0.4),
     0 1px 0 color-mix(in srgb, var(--mcb-text-primary) 5%, transparent);
@@ -390,7 +405,7 @@
 .mcb-label {
   font-size: 0.625rem;
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--mcb-text-tertiary);
 }
@@ -398,8 +413,8 @@
 /* Section title inside panel headers */
 .mcb-panel-title {
   font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
+  font-weight: 600;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--mcb-text-tertiary);
 }
@@ -410,7 +425,7 @@
   height: 0.4rem;
   border-radius: 9999px;
   background: var(--mcb-accent-primary);
-  box-shadow: 0 0 6px 1px color-mix(in srgb, var(--mcb-accent-primary) 70%, transparent);
+  box-shadow: 0 0 3px color-mix(in srgb, var(--mcb-accent-primary) 60%, transparent);
 }
 .mcb-led--off {
   background: var(--mcb-text-disabled);
@@ -418,11 +433,11 @@
 }
 .mcb-led--success {
   background: var(--mcb-success-primary);
-  box-shadow: 0 0 6px 1px color-mix(in srgb, var(--mcb-success-primary) 70%, transparent);
+  box-shadow: 0 0 3px color-mix(in srgb, var(--mcb-success-primary) 60%, transparent);
 }
 .mcb-led--danger {
   background: var(--mcb-danger-primary);
-  box-shadow: 0 0 6px 1px color-mix(in srgb, var(--mcb-danger-primary) 70%, transparent);
+  box-shadow: 0 0 3px color-mix(in srgb, var(--mcb-danger-primary) 60%, transparent);
 }
 
 /* Pill toggle (hardware switch look) */
@@ -431,10 +446,10 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.375rem 0.875rem;
-  border-radius: 9999px;
+  border-radius: var(--mcb-radius-control);
   font-size: 0.625rem;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   border: 1px solid color-mix(in srgb, var(--mcb-border-primary) 60%, transparent);
   background: color-mix(in srgb, var(--mcb-bg-input) 60%, transparent);
@@ -449,13 +464,49 @@
   background: color-mix(in srgb, var(--mcb-accent-primary) 16%, var(--mcb-bg-input));
   border-color: color-mix(in srgb, var(--mcb-accent-primary) 55%, transparent);
   color: var(--mcb-accent-text-secondary);
-  box-shadow: 0 0 12px -2px color-mix(in srgb, var(--mcb-accent-primary) 45%, transparent);
+  box-shadow: 0 0 5px -2px color-mix(in srgb, var(--mcb-accent-primary) 40%, transparent);
 }
 .mcb-switch--danger {
   background: color-mix(in srgb, var(--mcb-danger-primary) 18%, var(--mcb-bg-input));
   border-color: color-mix(in srgb, var(--mcb-danger-primary) 55%, transparent);
   color: var(--mcb-danger-text);
-  box-shadow: 0 0 12px -2px color-mix(in srgb, var(--mcb-danger-primary) 45%, transparent);
+  box-shadow: 0 0 5px -2px color-mix(in srgb, var(--mcb-danger-primary) 40%, transparent);
+}
+.mcb-switch--success {
+  background: color-mix(in srgb, var(--mcb-success-primary) 18%, var(--mcb-bg-input));
+  border-color: color-mix(in srgb, var(--mcb-success-primary) 55%, transparent);
+  color: var(--mcb-text-primary);
+  box-shadow: 0 0 5px -2px color-mix(in srgb, var(--mcb-success-primary) 40%, transparent);
+}
+/* Transport key (sequencer play/stop): a switch that stays green-tinted even
+   when stopped so it stands out from the plain toggles around it. */
+.mcb-transport {
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0 0.625rem;
+  color: var(--mcb-text-secondary);
+  background: color-mix(in srgb, var(--mcb-success-primary) 10%, var(--mcb-bg-input));
+  border-color: color-mix(in srgb, var(--mcb-success-primary) 45%, var(--mcb-border-primary));
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--mcb-text-primary) 6%, transparent),
+    0 1px 2px rgba(0, 0, 0, 0.3);
+}
+.mcb-transport:hover {
+  color: var(--mcb-text-primary);
+  background: color-mix(in srgb, var(--mcb-success-primary) 16%, var(--mcb-bg-input));
+  border-color: color-mix(in srgb, var(--mcb-success-primary) 65%, transparent);
+}
+.mcb-transport svg {
+  color: var(--mcb-success-primary);
+}
+.mcb-transport.mcb-switch--success {
+  color: var(--mcb-text-primary);
+  background: color-mix(in srgb, var(--mcb-success-primary) 26%, var(--mcb-bg-input));
+  border-color: color-mix(in srgb, var(--mcb-success-primary) 75%, transparent);
+  box-shadow: 0 0 8px -2px color-mix(in srgb, var(--mcb-success-primary) 55%, transparent);
+}
+.mcb-transport.mcb-switch--success svg {
+  color: var(--mcb-success-text);
 }
 /* Fixed-width switch pill: the led+label group is centered as a unit and the
    LED can never be crushed by flex shrink. Side padding is minimal since the
@@ -467,6 +518,57 @@
 }
 .mcb-switch--pill .mcb-led {
   flex-shrink: 0;
+}
+
+/* On/off slide toggle: a recessed slot with a raised cap (same cap as the
+   slider's fader). On tints the slot and slides the cap right. Put
+   role="switch" + aria-checked on the button; the cap reads aria-checked. */
+.mcb-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 2.625rem;
+  height: 1.375rem;
+  padding: 2px;
+  border-radius: var(--mcb-radius-panel);
+  border: 1px solid var(--mcb-border-secondary);
+  background: color-mix(in srgb, var(--mcb-border-primary) 55%, var(--mcb-bg-input));
+  box-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.35),
+    0 1px 0 color-mix(in srgb, var(--mcb-text-primary) 6%, transparent);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.mcb-toggle[aria-checked='true'] {
+  background: color-mix(in srgb, var(--mcb-accent-primary) 30%, var(--mcb-bg-input));
+  border-color: color-mix(in srgb, var(--mcb-accent-primary) 70%, var(--mcb-border-secondary));
+}
+.mcb-toggle:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--mcb-accent-primary) 60%, transparent);
+  outline-offset: 2px;
+}
+.mcb-toggle:disabled {
+  opacity: 0.5;
+}
+.mcb-toggle-thumb {
+  width: 1.125rem;
+  height: 100%;
+  border-radius: var(--mcb-radius-control);
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--mcb-text-primary) 16%, var(--mcb-bg-tertiary)),
+    var(--mcb-bg-secondary) 45%,
+    color-mix(in srgb, black 20%, var(--mcb-bg-secondary))
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.4),
+    0 1px 3px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.mcb-toggle[aria-checked='true'] .mcb-toggle-thumb {
+  transform: translateX(1.125rem);
 }
 
 /* Performance pad (chord buttons): raised like .mcb-panel but tighter,
@@ -481,7 +583,7 @@
   border-radius: var(--mcb-radius-control);
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, var(--mcb-text-primary) 8%, transparent),
-    0 2px 6px rgba(0, 0, 0, 0.35);
+    0 1px 2px rgba(0, 0, 0, 0.4);
   transition: all 0.15s ease;
 }
 .mcb-pad:hover {
@@ -504,7 +606,7 @@
   border-color: color-mix(in srgb, var(--mcb-accent-primary) 70%, transparent);
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, var(--mcb-text-primary) 10%, transparent),
-    0 0 14px -2px color-mix(in srgb, var(--mcb-accent-primary) 55%, transparent);
+    0 0 6px -2px color-mix(in srgb, var(--mcb-accent-primary) 45%, transparent);
 }
 .mcb-pad--lit:hover {
   border-color: var(--mcb-accent-primary);
@@ -523,7 +625,7 @@
   border-color: color-mix(in srgb, var(--mcb-danger-primary) 60%, transparent);
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, var(--mcb-text-primary) 8%, transparent),
-    0 0 12px -3px color-mix(in srgb, var(--mcb-danger-primary) 50%, transparent);
+    0 0 5px -2px color-mix(in srgb, var(--mcb-danger-primary) 40%, transparent);
 }
 .mcb-pad--danger:hover {
   border-color: var(--mcb-danger-border);
@@ -536,177 +638,189 @@
   border-color: var(--mcb-accent-primary);
 }
 /* ============================================
+   COLLAPSIBLE SECTIONS
+   ============================================ */
+
+/* Height animates via grid rows (0fr -> 1fr) so content can stay auto-sized.
+   Opens with the app's soft ease-out; closes a little quicker. */
+.mcb-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.16s ease;
+}
+.mcb-collapse.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transition:
+    grid-template-rows 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.24s ease 0.04s;
+}
+.mcb-collapse-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+.mcb-collapse-inner > * {
+  transform: translateY(-4px);
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.mcb-collapse.is-open .mcb-collapse-inner > * {
+  transform: none;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Disclosure chevron: one icon that turns instead of swapping */
+.mcb-chevron {
+  flex-shrink: 0;
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.mcb-chevron.is-open {
+  transform: rotate(180deg);
+}
+.mcb-chevron--side.is-open {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mcb-collapse,
+  .mcb-collapse.is-open,
+  .mcb-collapse-inner > *,
+  .mcb-collapse.is-open .mcb-collapse-inner > *,
+  .mcb-chevron {
+    transition: none;
+  }
+}
+/* ============================================
    FULL-PAGE SLIDE-OVER MENU
    ============================================ */
 
 .mcb-fullmenu-backdrop {
   position: fixed;
   inset: 0;
-  background: color-mix(in srgb, var(--mcb-bg-app) 45%, rgba(0, 0, 0, 0.55));
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.5);
   opacity: 0;
-  transition: opacity 0.45s ease;
+  transition: opacity 0.24s ease;
 }
 .mcb-fullmenu-backdrop.is-open {
   opacity: 1;
 }
 .mcb-fullmenu-backdrop.is-closing {
   opacity: 0;
-  transition-duration: 0.3s;
+  transition-duration: 0.18s;
 }
 
+/* Side drawer: solid panel, hairline edge, quick decisive slide */
 .mcb-fullmenu {
   position: fixed;
   inset: 0 0 0 auto;
-  width: min(92vw, 26rem);
+  width: min(88vw, 20rem);
   display: flex;
   flex-direction: column;
-  background:
-    radial-gradient(
-      120% 90% at 88% -10%,
-      color-mix(in srgb, var(--mcb-accent-primary) 8%, transparent),
-      transparent 55%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--mcb-bg-elevated) 70%, var(--mcb-bg-app)),
-      var(--mcb-bg-app) 60%
-    );
-  box-shadow: -24px 0 60px rgba(0, 0, 0, 0.5);
+  background: var(--mcb-bg-primary);
+  border-left: 1px solid color-mix(in srgb, var(--mcb-border-primary) 70%, transparent);
+  box-shadow: -8px 0 24px -12px rgba(0, 0, 0, 0.6);
   transform: translateX(100%);
-  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.24s cubic-bezier(0.32, 0.72, 0, 1);
   will-change: transform;
-}
-.mcb-fullmenu::before {
-  /* engraved hairline + accent glow on the leading edge */
-  content: '';
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 1px;
-  background: linear-gradient(
-    180deg,
-    transparent,
-    color-mix(in srgb, var(--mcb-accent-primary) 55%, transparent) 30%,
-    color-mix(in srgb, var(--mcb-accent-primary) 55%, transparent) 70%,
-    transparent
-  );
-  opacity: 0.6;
 }
 .mcb-fullmenu.is-open {
   transform: translateX(0);
 }
 .mcb-fullmenu.is-closing {
   transform: translateX(100%);
-  transition: transform 0.32s cubic-bezier(0.55, 0, 0.85, 0.4);
+  transition: transform 0.18s cubic-bezier(0.4, 0, 1, 1);
 }
 
-/* staggered reveal of menu content */
-.mcb-fullmenu-item {
-  opacity: 0;
-  transform: translateY(26px);
-  transition:
-    opacity 0.45s ease,
-    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-  transition-delay: var(--stagger, 0ms);
-}
-.mcb-fullmenu.is-open .mcb-fullmenu-item {
-  opacity: 1;
-  transform: none;
-}
-.mcb-fullmenu.is-closing .mcb-fullmenu-item {
-  opacity: 0;
-  transform: none;
-  transition: opacity 0.15s ease;
-  transition-delay: 0ms;
+/* Section heading inside the drawer */
+.mcb-fullmenu-section {
+  padding: 0 0.625rem;
+  margin-bottom: 0.375rem;
 }
 
-/* primary destination links */
+/* Nav row: icon + label, filled on hover, accent-filled with a rail when current */
 .mcb-fullmenu-link {
   position: relative;
   display: flex;
   align-items: center;
+  gap: 0.625rem;
   width: 100%;
-  padding: 0.625rem 0 0.625rem 0.9375rem;
+  height: 2.25rem;
+  padding: 0 0.625rem;
+  border-radius: var(--mcb-radius-control);
+  font-size: 0.875rem;
+  font-weight: 500;
   text-align: left;
+  color: var(--mcb-text-secondary);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.mcb-fullmenu-link svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
   color: var(--mcb-text-tertiary);
-  transition: color 0.2s ease, padding-left 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: color 0.15s ease;
 }
-/* left rail marker: muted stub on hover, lit accent when current */
-.mcb-fullmenu-link::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  width: 2px;
-  height: 0;
-  border-radius: 2px;
-  background: var(--mcb-accent-primary);
-  transform: translateY(-50%);
-  opacity: 0;
-  transition:
-    height 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.2s ease,
-    box-shadow 0.2s ease;
-}
-.mcb-fullmenu-link .mcb-fullmenu-word {
-  position: relative;
-  font-size: clamp(1rem, 2.4vw, 1.1875rem);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  line-height: 1.2;
+.mcb-fullmenu-link > span,
+.mcb-fullmenu-link > svg {
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), color 0.15s ease;
 }
 .mcb-fullmenu-link:hover {
+  background: var(--mcb-bg-hover);
   color: var(--mcb-text-primary);
-  padding-left: 1.125rem;
 }
-.mcb-fullmenu-link:hover::before {
-  height: 44%;
-  opacity: 0.45;
+.mcb-fullmenu-link:hover > span,
+.mcb-fullmenu-link:hover > svg {
+  transform: translateX(2px);
+}
+.mcb-fullmenu-link:hover svg {
+  color: var(--mcb-text-secondary);
+}
+.mcb-fullmenu-link:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--mcb-accent-primary) 60%, transparent);
+  outline-offset: -2px;
 }
 .mcb-fullmenu-link.is-current {
+  background: color-mix(in srgb, var(--mcb-accent-primary) 14%, transparent);
+  color: var(--mcb-accent-text-primary);
+}
+.mcb-fullmenu-link.is-current svg {
   color: var(--mcb-accent-text-primary);
 }
 .mcb-fullmenu-link.is-current::before {
-  height: 72%;
-  opacity: 1;
-  box-shadow: 0 0 10px color-mix(in srgb, var(--mcb-accent-primary) 55%, transparent);
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--mcb-accent-primary);
 }
 
-/* secondary utility links */
-.mcb-fullmenu-sublink {
-  display: flex;
+/* Small key-cap hint (e.g. Esc) */
+.mcb-kbd {
+  display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.625rem 0;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--mcb-text-tertiary);
-  transition: color 0.2s ease, padding-left 0.25s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.mcb-fullmenu-sublink:hover {
-  color: var(--mcb-text-primary);
-  padding-left: 0.125rem;
-}
-.mcb-fullmenu-sublink:hover svg {
-  color: var(--mcb-accent-text-primary);
+  height: 1.125rem;
+  padding: 0 0.3125rem;
+  border-radius: 2px;
+  border: 1px solid color-mix(in srgb, var(--mcb-border-primary) 80%, transparent);
+  border-bottom-width: 2px;
+  background: var(--mcb-bg-input);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.625rem;
+  color: var(--mcb-text-secondary);
 }
 
-/* faint watermark logo drifting in the background */
+/* faint static watermark logo in the drawer's lower corner */
 .mcb-fullmenu-watermark {
   position: absolute;
-  right: -6rem;
-  bottom: -6rem;
-  opacity: 0.05;
+  right: -5rem;
+  bottom: -5rem;
+  opacity: 0.03;
   pointer-events: none;
-  transform: translateX(40px);
-  transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.8s ease;
-}
-.mcb-fullmenu.is-open .mcb-fullmenu-watermark {
-  transform: translateX(0);
-}
-.mcb-fullmenu.is-closing .mcb-fullmenu-watermark {
-  opacity: 0;
 }
 
 /* hamburger trigger that morphs into an X */
@@ -794,20 +908,147 @@
   transition-duration: 0.16s;
 }
 
+/* ---- Load-in motion ------------------------------------------------
+   App holds `.mcb-intro` on its root briefly after page load and after each
+   main <-> songs switch. While it's there, a view's sections rise into
+   place one after another as they're shown, the chord bar slides up from
+   the bottom edge, and the keyboard's scale LEDs power on left to right.
+   Showing a view (mount, or display: none -> flex) is what starts these
+   animations. The header drop only plays on page load (`.mcb-intro--load`).
+   Fill mode is `backwards`, so nothing keeps a transform once settled (a
+   leftover transform would break the sticky and fixed elements inside these
+   sections). */
+
+.mcb-intro--load .mcb-header {
+  animation: mcb-drop 520ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.mcb-intro--load .mcb-header .mcb-led {
+  animation: mcb-led-on 700ms ease-out 450ms backwards;
+}
+
+.mcb-intro .mcb-intro-stage > * {
+  animation: mcb-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+.mcb-intro .mcb-intro-stage > :nth-child(1) { animation-delay: 80ms; }
+.mcb-intro .mcb-intro-stage > :nth-child(2) { animation-delay: 140ms; }
+.mcb-intro .mcb-intro-stage > :nth-child(3) { animation-delay: 200ms; }
+.mcb-intro .mcb-intro-stage > :nth-child(4) { animation-delay: 270ms; }
+.mcb-intro .mcb-intro-stage > :nth-child(5) { animation-delay: 340ms; }
+.mcb-intro .mcb-intro-stage > :nth-child(6) { animation-delay: 400ms; }
+.mcb-intro .mcb-intro-stage > :nth-child(n + 7) { animation-delay: 460ms; }
+
+/* Help & Guide: a topic's blocks (and the topic list) rise in one after
+   another when shown, like the main view's sections on load. Snappier than
+   the page intro since it replays on every topic change. */
+.mcb-help-stage > * {
+  animation: mcb-rise 560ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+.mcb-help-stage > :nth-child(1) { animation-delay: 40ms; }
+.mcb-help-stage > :nth-child(2) { animation-delay: 85ms; }
+.mcb-help-stage > :nth-child(3) { animation-delay: 130ms; }
+.mcb-help-stage > :nth-child(4) { animation-delay: 175ms; }
+.mcb-help-stage > :nth-child(5) { animation-delay: 220ms; }
+.mcb-help-stage > :nth-child(6) { animation-delay: 260ms; }
+.mcb-help-stage > :nth-child(n + 7) { animation-delay: 300ms; }
+
+/* The chord bar is position: fixed, so it animates itself, never its wrapper */
+.mcb-intro .mcb-intro-dock > * {
+  animation: mcb-dock 640ms cubic-bezier(0.16, 1, 0.3, 1) 320ms backwards;
+}
+
+/* A chord added to the sequence: its pad rises in and its edge briefly
+   lights, then settles to the normal pad look. The bar itself docks up when
+   the first chord arrives. */
+.mcb-pad-arrive {
+  animation: mcb-pad-arrive 720ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.mcb-chordbar-arrive {
+  animation: mcb-dock 360ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+/* Scale LEDs on the keybed; --mcb-key-i is the key's offset from the
+   lowest key, set inline */
+.mcb-intro .ReactPiano__Key .mcb-led {
+  animation: mcb-led-on 600ms ease-out backwards;
+  animation-delay: calc(650ms + var(--mcb-key-i, 0) * 14ms);
+}
+
+@keyframes mcb-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes mcb-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+
+@keyframes mcb-dock {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
+/* No end keyframe: glow and border ease back into the pad's own styles */
+@keyframes mcb-pad-arrive {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+  35% {
+    opacity: 1;
+    transform: none;
+    border-color: color-mix(in srgb, var(--mcb-accent-primary) 70%, transparent);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--mcb-text-primary) 10%, transparent),
+      0 0 8px -2px color-mix(in srgb, var(--mcb-accent-primary) 55%, transparent);
+  }
+}
+
+@keyframes mcb-led-on {
+  from {
+    opacity: 0;
+    box-shadow: none;
+  }
+  45% {
+    opacity: 1;
+    box-shadow: 0 0 6px var(--mcb-accent-primary);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mcb-intro--load .mcb-header,
+  .mcb-intro--load .mcb-header .mcb-led,
+  .mcb-intro .mcb-intro-stage > *,
+  .mcb-intro .mcb-intro-dock > *,
+  .mcb-intro .ReactPiano__Key .mcb-led,
+  .mcb-pad-arrive,
+  .mcb-chordbar-arrive,
+  .mcb-help-stage > * {
+    animation: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .mcb-fullmenu,
   .mcb-fullmenu-backdrop,
-  .mcb-fullmenu-item,
-  .mcb-fullmenu-watermark,
   .mcb-fullmenu-link,
-  .mcb-fullmenu-sublink,
+  .mcb-fullmenu-link > span,
+  .mcb-fullmenu-link > svg,
   .mcb-burger span,
   .mcb-sheet-overlay,
   .mcb-sheet-overlay-content,
   .mcb-sheet-overlay-controls {
     transition: none;
   }
-  .mcb-fullmenu-item,
+  .mcb-fullmenu-link:hover > span,
+  .mcb-fullmenu-link:hover > svg,
   .mcb-sheet-overlay-content,
   .mcb-sheet-overlay-controls {
     transform: none;

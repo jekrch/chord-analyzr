@@ -3,6 +3,7 @@ import { usePatternStore } from '../stores/patternStore';
 import { usePlaybackStore } from '../stores/playbackStore';
 import classNames from 'classnames';
 import { AddedChord } from '../stores/types';
+import Collapse from './Collapse';
 
 type SequenceStatusViewProps = {
     className?: string;
@@ -64,40 +65,37 @@ const SequenceStatusView: React.FC<SequenceStatusViewProps> = ({ className = "" 
     const patternLength = currentPattern.length > 0 ? currentPattern.length : 1;
     //const displayStep = (currentStep % patternLength) + 1;
 
-    // If the sequencer isn't playing, the component renders nothing
-    if (!isPlaying) {
-        return null;
-    }
-    //console.log('Rendering status')
-
+    // Slides open while playing; stays mounted through the close animation
     return (
-        <div className={classNames("w-full px-2 mx-auto items-center", className)}>
-            <div
-                className="mcb-inset px-4 py-2 w-full max-w-7xl mx-auto"
-                style={{ borderColor: 'color-mix(in srgb, var(--mcb-success-primary) 40%, transparent)' }}
-            >
-                <div className="text-xs text-[var(--mcb-success-text)] flex items-center justify-center space-x-4">
-                    <div className="flex items-center">
-                        <div className="mcb-led mcb-led--success animate-pulse mr-2"></div>
-                        <span className="mcb-label !text-[var(--mcb-success-text)]">Sequencer Active</span>
-                    </div>
-                    <div className="text-xs opacity-80 font-mono">
-                        {patternString} |
-                        {` ${bpm}`} BPM |
-                        {/* Step {displayStep}/{patternLength} */}
-
-                        {temporaryChord && (
-                            <span className="ml-2 text-[var(--mcb-warning-text)]">{temporaryChord.name}</span>
-                        )}
-
-                        {!temporaryChord && activeChord && (
-                             <span className="ml-2 text-[var(--mcb-purple-text)]">{activeChord.name}</span>
-                        )}
-
+        <Collapse open={isPlaying} lazy className="w-full">
+            <div className={classNames("w-full px-2 mx-auto items-center", className)}>
+                <div
+                    className="mcb-inset px-4 py-2 w-full max-w-7xl mx-auto"
+                    style={{ borderColor: 'color-mix(in srgb, var(--mcb-success-primary) 40%, transparent)' }}
+                >
+                    <div className="text-xs text-[var(--mcb-success-text)] flex items-center justify-center space-x-4">
+                        <div className="flex items-center">
+                            <div className="mcb-led mcb-led--success animate-pulse mr-2"></div>
+                            <span className="mcb-label !text-[var(--mcb-success-text)]">Sequencer Active</span>
+                        </div>
+                        <div className="text-xs opacity-80 font-mono">
+                            {patternString} |
+                            {` ${bpm}`} BPM |
+                            {/* Step {displayStep}/{patternLength} */}
+    
+                            {temporaryChord && (
+                                <span className="ml-2 text-[var(--mcb-warning-text)]">{temporaryChord.name}</span>
+                            )}
+    
+                            {!temporaryChord && activeChord && (
+                                 <span className="ml-2 text-[var(--mcb-purple-text)]">{activeChord.name}</span>
+                            )}
+    
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </Collapse>
     );
 };
 

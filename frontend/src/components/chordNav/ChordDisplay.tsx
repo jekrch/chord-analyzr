@@ -30,6 +30,8 @@ interface ChordDisplayProps {
     addedChords: any[];
     activeChordIndex: number | null;
     highlightedChordIndex: number | null;
+    /** Just-appended chord index -> stagger slot */
+    arrivingChords: Map<number, number>;
     sensors: any;
     onChordClick: (chordNoteNames: string, chordIndex?: number, chordName?: string) => void;
     onEditChord: (index: number) => void;
@@ -49,6 +51,7 @@ export const ChordDisplay = forwardRef<HTMLDivElement, ChordDisplayProps>(({
     addedChords,
     activeChordIndex,
     highlightedChordIndex,
+    arrivingChords,
     sensors,
     onChordClick,
     onEditChord,
@@ -62,6 +65,7 @@ export const ChordDisplay = forwardRef<HTMLDivElement, ChordDisplayProps>(({
     const renderChordButton = (chord: any, index: number, isDragging: boolean = false, onEdit?: (index: number) => void) => {
         const isActive = index === activeChordIndex;
         const isHighlighted = index === highlightedChordIndex;
+        const arriveSlot = arrivingChords.get(index);
 
         const handleButtonClick = (e: React.MouseEvent) => {
             //console.log('Button clicked!', { isEditMode, hasOnEdit: !!onEdit, index });
@@ -111,10 +115,11 @@ export const ChordDisplay = forwardRef<HTMLDivElement, ChordDisplayProps>(({
                 variant={isDeleteMode ? "danger" : isEditMode ? "secondary" : "primary"}
                 active={isActive && !isDeleteMode && !isEditMode}
                 aria-label={`Pattern: ${chord.pattern.join('-')}`}
-                className={`relative w-full h-full mobile-drag-item ${sizeConfig.container}`}
+                className={`relative w-full h-full mobile-drag-item ${sizeConfig.container} ${arriveSlot !== undefined ? 'mcb-pad-arrive' : ''}`}
                 style={{
                     // Let the drag system handle touch actions naturally in edit mode
                     touchAction: isEditMode ? undefined : 'auto',
+                    animationDelay: arriveSlot ? `${Math.min(arriveSlot, 10) * 40}ms` : undefined,
                 }}
                 chord={chord}
                 index={index}

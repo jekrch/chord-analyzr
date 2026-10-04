@@ -128,7 +128,7 @@ const Slider: React.FC<SliderProps> = ({
     return (
       <div className={className}>
         <div className="flex justify-between items-center mb-1">
-          <span className={`text-xs text-mcb-tertiary uppercase tracking-wide ${labelClassName}`}>
+          <span className={`text-[0.6875rem] text-mcb-tertiary uppercase tracking-wide ${labelClassName}`}>
             {label}
           </span>
           <div className="flex items-center gap-2">
@@ -138,7 +138,7 @@ const Slider: React.FC<SliderProps> = ({
             {showBypass && (
               <button
                 onClick={handleBypassToggle}
-                className={`w-5 h-5 rounded flex items-center justify-center transition-all ${
+                className={`w-5 h-5 rounded-sm flex items-center justify-center transition-all ${
                   enabled 
                     ? 'bg-[color-mix(in_srgb,var(--mcb-success-primary)_20%,transparent)] text-[var(--mcb-success-text)] hover:bg-[color-mix(in_srgb,var(--mcb-success-primary)_30%,transparent)]' 
                     : 'bg-[var(--mcb-text-subtle)]/50 text-mcb-disabled hover:bg-[var(--mcb-text-subtle)]/70'
@@ -163,7 +163,7 @@ const Slider: React.FC<SliderProps> = ({
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           style={trackStyle}
-          className={`w-full h-1.5 rounded-full appearance-none cursor-pointer slider-thumb transition-opacity ${
+          className={`w-full h-1.5 rounded-[1px] appearance-none cursor-pointer slider-thumb transition-opacity ${
             enabled ? 'opacity-100' : 'opacity-40'
           }`}
         />
@@ -182,7 +182,7 @@ const Slider: React.FC<SliderProps> = ({
   return (
     <div className={className}>
       <div className="flex justify-between items-center mb-2">
-        <label className={`block text-xs font-medium text-mcb-primary uppercase tracking-wide ${labelClassName}`}>
+        <label className={`block text-[0.6875rem] font-medium text-mcb-secondary uppercase tracking-wide ${labelClassName}`}>
           {label}
           <span className={`text-xs ml-2 normal-case font-mono transition-colors ${enabled ? 'text-mcb-tertiary' : 'text-mcb-subtle'}`}>
             ({getDisplayValue()})
@@ -191,7 +191,7 @@ const Slider: React.FC<SliderProps> = ({
         {showBypass && (
           <button
             onClick={handleBypassToggle}
-            className={`w-5 h-5 rounded flex items-center justify-center transition-all flex-shrink-0 ${
+            className={`w-5 h-5 rounded-sm flex items-center justify-center transition-all flex-shrink-0 ${
               enabled 
                 ? 'bg-[color-mix(in_srgb,var(--mcb-success-primary)_20%,transparent)] text-[var(--mcb-success-text)] hover:bg-[color-mix(in_srgb,var(--mcb-success-primary)_30%,transparent)]' 
                 : 'bg-[var(--mcb-text-subtle)]/50 text-mcb-disabled hover:bg-[var(--mcb-text-subtle)]/70'
@@ -216,7 +216,7 @@ const Slider: React.FC<SliderProps> = ({
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           style={trackStyle}
-          className={`slider-mobile w-full h-1.5 rounded-full appearance-none cursor-pointer slider-thumb transition-opacity ${
+          className={`slider-mobile w-full h-1.5 rounded-[1px] appearance-none cursor-pointer slider-thumb transition-opacity ${
             enabled ? 'opacity-100' : 'opacity-40'
           }`}
         />

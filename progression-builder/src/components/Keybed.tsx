@@ -22,13 +22,13 @@ const BLACKS: { note: string; pc: number; afterWhite: number }[] = [
 
 const OCTAVES = [3, 4, 5];
 const WHITE_W = 100 / (OCTAVES.length * WHITES.length);
-const BLACK_W = WHITE_W * 0.62;
+const BLACK_W = WHITE_W * 0.65;
 
 interface KeybedProps {
   selectedKey: string;
   // click: parent sets the root and auditions the note
   onKeyPress: (note: string, midi: number) => void;
-  // MIDI notes currently sounding — violet, and fade out with the note
+  // MIDI notes currently sounding — teal, and fade out with the note
   litNotes: number[];
   // MIDI notes lit silently by a hover preview — accent-colored
   previewNotes: number[];
@@ -60,7 +60,7 @@ export default function Keybed({ selectedKey, onKeyPress, litNotes, previewNotes
                 key={midi}
                 type="button"
                 onClick={() => onKeyPress(note, midi)}
-                title={`${note}${oct}`}
+                title={`${note}${oct} (set as root)`}
                 aria-pressed={pc === rootPc}
                 className={`pb-key pb-key--white relative min-w-0 flex-1 ${keyState(midi)}`}
               >
@@ -80,10 +80,10 @@ export default function Keybed({ selectedKey, onKeyPress, litNotes, previewNotes
               key={midi}
               type="button"
               onClick={() => onKeyPress(note, midi)}
-              title={`${note}${oct}`}
+              title={`${note}${oct} (set as root)`}
               aria-pressed={pc === rootPc}
               style={{ left: `${left}%`, width: `${BLACK_W}%` }}
-              className={`pb-key pb-key--black absolute top-0 z-[2] h-[62%] ${keyState(midi)}`}
+              className={`pb-key pb-key--black absolute top-0 z-[2] h-[66%] ${keyState(midi)}`}
             >
               {dot(pc)}
             </button>

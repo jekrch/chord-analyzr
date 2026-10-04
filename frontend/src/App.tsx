@@ -91,6 +91,24 @@ function App() {
     const lastHeaderScrollsState = useRef(false);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+    // Entrance motion (.mcb-intro in themes.css): the full sequence on page
+    // load, and the incoming view's sections again on each main <-> songs
+    // switch. The class is only held briefly so unrelated remounts (key
+    // changes, the mobile header swap) don't animate.
+    const [entering, setEntering] = useState<'load' | 'route' | null>('load');
+    const [lastRoute, setLastRoute] = useState(route);
+    // Set during render, not in an effect, so the incoming view's first
+    // frame already has the class and doesn't flash in settled
+    if (route !== lastRoute) {
+        setLastRoute(route);
+        if (entering === null) setEntering('route');
+    }
+    useEffect(() => {
+        if (entering === null) return;
+        const timer = window.setTimeout(() => setEntering(null), 2000);
+        return () => window.clearTimeout(timer);
+    }, [entering, route]);
+
     // viewport check with scroll restoration; the header scrolls with content
     // (instead of staying pinned) when the viewport is short or mobile-width
     const checkHeight = useCallback(() => {
@@ -195,7 +213,7 @@ function App() {
     }, []);
 
     return (
-        <div className="select-none text-center bg-mcb-app min-h-screen h-screen w-screen overflow-hidden flex flex-col">
+        <div className={`select-none text-center bg-mcb-app min-h-screen h-screen w-screen overflow-hidden flex flex-col ${entering ? 'mcb-intro' : ''} ${entering === 'load' ? 'mcb-intro--load' : ''}`}>
             {/* Invisible component that runs all effects without causing App re-renders */}
             <EffectsManager />
             
@@ -227,14 +245,14 @@ function App() {
                     </div>
                 )}
 
-                <div className={`${onSongsPage ? 'hidden' : 'flex'} flex-col items-center justify-start text-[calc(10px+2vmin)] text-white px-3 pt-3 pb-32 ${isLiveMode ? 'pointer-events-none opacity-30' : ''}`}>
+                <div className={`mcb-intro-stage ${onSongsPage ? 'hidden' : 'flex'} flex-col items-center justify-start text-[calc(10px+2vmin)] text-white px-3 pt-3 pb-32 ${isLiveMode ? 'pointer-events-none opacity-30' : ''}`}>
                     <PinnablePianoSection />
 
                     <PianoControlPanel/>
 
                     <PatternSystem/>
 
-                    <SequenceStatusView className="mt-3" />
+                    <SequenceStatusView className="pt-3" />
 
                     <div className="w-full max-w-7xl mb-20 mt-3">
                         <ChordTable
@@ -248,7 +266,7 @@ function App() {
             </div>
 
             {/* ChordNavigation - always fixed at bottom */}
-            <div className={onSongsPage ? 'hidden' : 'flex-shrink-0'}>
+            <div className={`mcb-intro-dock ${onSongsPage ? 'hidden' : 'flex-shrink-0'}`}>
                 <ChordNavigation/>
             </div>
         </div>

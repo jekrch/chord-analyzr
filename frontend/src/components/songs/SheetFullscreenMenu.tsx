@@ -28,7 +28,7 @@ interface SheetFullscreenMenuProps {
     onExitFullscreen: () => void;
 }
 
-const CLOSE_DURATION_MS = 340;
+const CLOSE_DURATION_MS = 200;
 
 /**
  * A right-side flyover for the full-screen sheet: switch between songs in the
@@ -130,14 +130,11 @@ const SheetFullscreenMenu: React.FC<SheetFullscreenMenuProps> = ({
                 style={{ width: 'min(92vw, 22rem)' }}
             >
                 {/* Top bar */}
-                <div
-                    className="mcb-fullmenu-item flex items-center justify-between px-5 py-4 border-b border-mcb-subtle"
-                    style={{ '--stagger': '40ms' } as React.CSSProperties}
-                >
+                <div className="flex items-center justify-between px-5 py-4 border-b border-mcb-subtle">
                     <span className="mcb-label">Sheet options</span>
                     <button
                         onClick={onClose}
-                        className="w-8 h-8 flex items-center justify-center rounded-full border border-mcb-subtle text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] hover:border-mcb-primary transition-all duration-200"
+                        className="w-8 h-8 -mr-1.5 flex items-center justify-center rounded-md text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-colors"
                         title="Close (Esc)"
                         aria-label="Close sheet options"
                     >
@@ -147,11 +144,8 @@ const SheetFullscreenMenu: React.FC<SheetFullscreenMenuProps> = ({
 
                 <div className="flex-1 min-h-0 overflow-y-auto px-5 py-5 space-y-6">
                     {/* Song picker */}
-                    <div
-                        className="mcb-fullmenu-item"
-                        style={{ '--stagger': '110ms' } as React.CSSProperties}
-                    >
-                        <div className="mcb-label !text-[0.625rem] mb-2">Song</div>
+                    <div>
+                        <div className="mcb-label mb-2">Song</div>
                         <div className="mcb-inset rounded-md overflow-hidden max-h-56 overflow-y-auto divide-y divide-[var(--mcb-border-subtle)]">
                             {songs.length === 0 && (
                                 <p className="px-3 py-3 text-xs text-mcb-tertiary">No songs yet.</p>
@@ -171,7 +165,7 @@ const SheetFullscreenMenu: React.FC<SheetFullscreenMenuProps> = ({
                                         <span className="text-xs font-medium truncate w-full">
                                             {s.title || 'Untitled'}
                                         </span>
-                                        <span className="text-[0.625rem] text-mcb-tertiary">
+                                        <span className="text-[0.6875rem] text-mcb-tertiary">
                                             {new Date(s.updatedAt).toLocaleDateString()}
                                         </span>
                                     </span>
@@ -187,15 +181,12 @@ const SheetFullscreenMenu: React.FC<SheetFullscreenMenuProps> = ({
                     </div>
 
                     {/* On-screen reading layout (also drives print / image) */}
-                    <div
-                        className="mcb-fullmenu-item"
-                        style={{ '--stagger': '160ms' } as React.CSSProperties}
-                    >
+                    <div>
                         <div className="flex items-center justify-between mb-2 gap-2">
-                            <span className="mcb-label !text-[0.625rem] flex items-center gap-1.5">
+                            <span className="mcb-label flex items-center gap-1.5">
                                 Layout
                                 {hasView && (
-                                    <span className="normal-case tracking-normal text-[0.5625rem] font-medium text-[var(--mcb-accent-text-primary)]">
+                                    <span className="normal-case tracking-normal text-[0.625rem] font-medium text-[var(--mcb-accent-text-primary)]">
                                         · this song
                                     </span>
                                 )}
@@ -226,7 +217,7 @@ const SheetFullscreenMenu: React.FC<SheetFullscreenMenuProps> = ({
                             showOrientation={false}
                             showColumnWidth
                         />
-                        <p className="mt-3 text-[0.625rem] text-mcb-tertiary leading-relaxed">
+                        <p className="mt-3 text-[0.6875rem] text-mcb-tertiary leading-relaxed">
                             {hasView
                                 ? 'This song opens with its own saved layout — changes here stay with it.'
                                 : 'Adjusting the shared default. Save it to this song to keep this layout whenever you open it.'}
@@ -235,10 +226,7 @@ const SheetFullscreenMenu: React.FC<SheetFullscreenMenuProps> = ({
                 </div>
 
                 {/* Actions */}
-                <div
-                    className="mcb-fullmenu-item px-5 py-4 border-t border-mcb-subtle space-y-2"
-                    style={{ '--stagger': '210ms' } as React.CSSProperties}
-                >
+                <div className="px-5 py-4 border-t border-mcb-subtle space-y-2">
                     <div className="flex items-center gap-1.5">
                         <button onClick={handlePrint} className={`${actionClass} flex-1 justify-center`} title="Print / save as PDF">
                             <PrinterIcon className="w-3.5 h-3.5 shrink-0" />

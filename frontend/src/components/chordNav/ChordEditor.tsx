@@ -6,6 +6,7 @@ import 'react-piano/dist/styles.css';
 import classNames from 'classnames';
 import { Button } from '../Button';
 import { useChordEditor, AddedChord } from '../../hooks/useChordEditor';
+import { EXIT_TRANSITION_MS } from '../../hooks/useExitTransition';
 import { getMidiNotes } from '../../util/ChordUtil'; // Import the proper octave calculation function
 import { ModeScaleChordDto } from '../../api';
 
@@ -215,15 +216,24 @@ const ChordEditor: React.FC<ChordEditorProps> = ({
         handleEditChord(editingChordIndex, initialChord);
     }, [editingChordIndex, initialChord]);
 
-    const handleSave = () => {
-        handleSaveEdit();
-        onClose();
+    // Play the exit animation first; save/cancel clear the editing state,
+    // which unmounts the editor
+    const [isClosing, setIsClosing] = React.useState(false);
+    const closeTimer = React.useRef<number | undefined>(undefined);
+    React.useEffect(() => () => window.clearTimeout(closeTimer.current), []);
+
+    const closeAfterExit = (finish: () => void) => {
+        if (isClosing) return;
+        setIsClosing(true);
+        closeTimer.current = window.setTimeout(() => {
+            finish();
+            onClose();
+        }, EXIT_TRANSITION_MS);
     };
 
-    const handleCancel = () => {
-        handleCancelEdit();
-        onClose();
-    };
+    const handleSave = () => closeAfterExit(handleSaveEdit);
+
+    const handleCancel = () => closeAfterExit(handleCancelEdit);
 
     const handlePreviousChord = () => {
         if (editingChordIndex > 0 && onNavigateToChord) {
@@ -265,7 +275,7 @@ const ChordEditor: React.FC<ChordEditorProps> = ({
     const hasNext = editingChordIndex < totalChords - 1;
 
     return (
-        <div className="fixed inset-0 bg-mcb-input bg-opacity-95 backdrop-blur-sm z-100 flex flex-col">
+        <div className={`fixed inset-0 bg-mcb-input z-100 flex flex-col ${isClosing ? 'screen-out pointer-events-none' : 'screen-in'}`}>
             {/* Header - Fixed */}
             <div className="flex-shrink-0 max-w-4xl mx-auto px-4 py-4 w-full">
                 {/* Top Row - Title and Save/Cancel buttons */}
@@ -361,7 +371,7 @@ const ChordEditor: React.FC<ChordEditorProps> = ({
                         {slashNote.trim() && !slashNoteError && (
                             <button
                                 onClick={removeSlashNote}
-                                className="p-2 text-[var(--mcb-danger-text)] hover:bg-[color-mix(in_srgb,var(--mcb-danger-primary)_12%,transparent)] rounded transition-colors"
+                                className="p-2 text-[var(--mcb-danger-text)] hover:bg-[color-mix(in_srgb,var(--mcb-danger-primary)_12%,transparent)] rounded-sm transition-colors"
                                 title="Remove slash note"
                             >
                                 <XCircleIcon className="w-4 h-4" />
@@ -379,7 +389,7 @@ const ChordEditor: React.FC<ChordEditorProps> = ({
                         </p>
                     )}
                     {notes.length > 0 && isManualSlashNote(notes[0]) && !slashNoteError && (
-                        <div className="mt-2 p-2 bg-[var(--mcb-warning-primary)] border border-[var(--mcb-warning-border)] rounded text-xs text-[var(--mcb-warning-text)]">
+                        <div className="mt-2 p-2 bg-[var(--mcb-warning-primary)] border border-[var(--mcb-warning-border)] rounded-sm text-xs text-[var(--mcb-warning-text)]">
                             <div className="flex items-center space-x-2">
                                 <LockClosedIcon className="w-3 h-3" />
                                 <span>Slash note locked in first position</span>
@@ -473,12 +483,12 @@ const ChordEditor: React.FC<ChordEditorProps> = ({
                                                                     <span className="text-mcb-primary font-mono text-lg font-semibold">{note}</span>
                                                                     <div className="flex items-center space-x-2">
                                                                         {isSlash && (
-                                                                            <span className="px-2 py-1 text-xs bg-[var(--mcb-warning-primary)] text-[var(--mcb-warning-text)] rounded border border-[var(--mcb-warning-border)] font-medium">
+                                                                            <span className="px-2 py-1 text-xs bg-[var(--mcb-warning-primary)] text-[var(--mcb-warning-text)] rounded-sm border border-[var(--mcb-warning-border)] font-medium">
                                                                                 SLASH
                                                                             </span>
                                                                         )}
                                                                         {isLocked && (
-                                                                            <span className="px-2 py-1 text-xs bg-[var(--mcb-warning-primary)] text-[var(--mcb-warning-text-alt)] rounded border border-[var(--mcb-warning-border)] font-medium flex items-center space-x-1">
+                                                                            <span className="px-2 py-1 text-xs bg-[var(--mcb-warning-primary)] text-[var(--mcb-warning-text-alt)] rounded-sm border border-[var(--mcb-warning-border)] font-medium flex items-center space-x-1">
                                                                                 <LockClosedIcon className="w-3 h-3" />
                                                                                 <span>LOCKED</span>
                                                                             </span>
@@ -497,7 +507,7 @@ const ChordEditor: React.FC<ChordEditorProps> = ({
                                                                         moveNoteUp(index);
                                                                     }}
                                                                     disabled={index === 0 || isLocked || (index === 1 && isManualSlashNote(notes[0]))}
-                                                                    className="p-1 text-mcb-secondary hover:text-mcb-primary hover:bg-mcb-hover rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                                                    className="p-1 text-mcb-secondary hover:text-mcb-primary hover:bg-mcb-hover rounded-sm transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                                                                     title={isLocked ? "Cannot move locked slash note" : (index === 1 && isManualSlashNote(notes[0])) ? "Cannot move past locked slash note" : "Move up"}
                                                                 >
                                                                     <ChevronUpIcon className="w-4 h-4" />
@@ -508,7 +518,7 @@ const ChordEditor: React.FC<ChordEditorProps> = ({
                                                                         moveNoteDown(index);
                                                                     }}
                                                                     disabled={index === notes.length - 1 || isLocked}
-                                                                    className="p-1 text-mcb-secondary hover:text-mcb-primary hover:bg-mcb-hover rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                                                    className="p-1 text-mcb-secondary hover:text-mcb-primary hover:bg-mcb-hover rounded-sm transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                                                                     title={isLocked ? "Cannot move locked slash note" : "Move down"}
                                                                 >
                                                                     <ChevronDownIcon className="w-4 h-4" />

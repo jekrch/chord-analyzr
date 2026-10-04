@@ -1,7 +1,7 @@
 import React from 'react';
-import { ArrowsPointingOutIcon, ArrowsPointingInIcon, PlayIcon, PauseIcon, PlayCircleIcon } from '@heroicons/react/20/solid';
+import { ArrowsPointingOutIcon, ArrowsPointingInIcon } from '@heroicons/react/20/solid';
 import classNames from 'classnames';
-import { Button } from '../Button';
+import { TransportButton } from '../TransportButton';
 
 interface ControlBarProps {
     isLiveMode: boolean;
@@ -36,39 +36,7 @@ export const ControlBar: React.FC<ControlBarProps> = ({
         <div className={`${isLiveMode ? 'flex-shrink-0' : ''} max-w-7xl mx-auto px-4 ${isLiveMode ? 'pt-2 z-10' : 'pt-2'} w-full`}>
             <div className={`flex items-center justify-between ${isLiveMode ? (isCompactHeight ? 'mb-1' : 'mb-2') : 'mb-2'}`}>
                 <div className="flex items-center space-x-4">
-                    {!isLiveMode && (
-                        <Button 
-                            onClick={onTogglePlayback} 
-                            variant="icon" 
-                            size="icon" 
-                            active={globalPatternState.isPlaying} 
-                            title={globalPatternState.isPlaying ? "Stop" : "Play"}
-                        >
-                            {globalPatternState.isPlaying ? 
-                                <PauseIcon className="w-4 h-4" /> : 
-                                <PlayIcon className="w-4 h-4" />
-                            }
-                        </Button>
-                    )}
-                    {isLiveMode && (
-                        <Button 
-                            onClick={onTogglePlayback} 
-                            variant="play-stop" 
-                            size="sm" 
-                            active={globalPatternState.isPlaying} 
-                            className="shadow-lg"
-                        >
-                            {globalPatternState.isPlaying ? (
-                                <>
-                                    <PauseIcon className="w-4 h-4" /> Stop
-                                </>
-                            ) : (
-                                <>
-                                    <PlayCircleIcon className="w-4 h-4" /> Play
-                                </>
-                            )}
-                        </Button>
-                    )}
+                    <TransportButton isPlaying={globalPatternState.isPlaying} onClick={onTogglePlayback} />
                 </div>
                 
                 <div className="text-center sm:w-full sm:text-left sm:mx-4">
@@ -96,7 +64,7 @@ export const ControlBar: React.FC<ControlBarProps> = ({
                     )}
                     <button
                         onClick={onToggleLiveMode}
-                        className="w-[9em] h-7 flex items-center justify-center gap-1.5 px-2 rounded-full border border-mcb-subtle text-[0.6875rem] uppercase tracking-wider text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover transition-all duration-200"
+                        className="w-[9em] h-7 flex items-center justify-center gap-1.5 px-2 rounded-md border border-mcb-subtle text-[0.6875rem] uppercase tracking-wider text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover transition-all duration-200"
                     >
                         {isLiveMode ? (
                             <>
@@ -118,7 +86,7 @@ export const ControlBar: React.FC<ControlBarProps> = ({
                                     if (isLiveMode) onToggleLiveMode();
                                     onClearAll();
                                 }}
-                                className="w-[5em] h-7 flex items-center justify-center px-3 rounded-full border border-mcb-subtle text-[0.6875rem] uppercase tracking-wider text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover transition-all duration-200"
+                                className="w-[5em] h-7 flex items-center justify-center px-3 rounded-md border border-mcb-subtle text-[0.6875rem] uppercase tracking-wider text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover transition-all duration-200"
                             >
                                 Clear
                             </button>
@@ -141,7 +109,7 @@ export const ControlBar: React.FC<ControlBarProps> = ({
                 <div className="mb-2 text-xs text-center text-mcb-tertiary">
                     Use 1-{Math.min(addedChords.length, 9)} or click chords
                     <span className="mx-2">•</span>
-                    <span className="inline-block w-2.5 h-2.5 mr-1.5 bg-[var(--mcb-accent-primary)] rounded-full align-middle"></span>
+                    <span className="inline-block w-2.5 h-2.5 mr-1.5 bg-[var(--mcb-accent-primary)] rounded-[1px] align-middle"></span>
                     Active Chord
                     {isEditMode && (
                         <>

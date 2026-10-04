@@ -87,6 +87,7 @@ const PianoControl: React.FC<PianoProps> = ({
   // the audio clock, so react-piano's playNote must not re-trigger them.
   const sequencerNotesRef = useRef<Set<number>>(new Set());
   const chordSustainTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const wasPlayingRef = useRef(isPlaying);
 
   // Container ref for measuring width
   const containerRef = useRef<HTMLDivElement>(null);
@@ -188,6 +189,15 @@ const PianoControl: React.FC<PianoProps> = ({
       chordSustainTimeoutRef.current = null;
     }
 
+    // Stopping the sequencer leaves the last step's notes in activeNotes.
+    // Stop should only silence playback, never play that chord.
+    const justStopped = wasPlayingRef.current && !isPlaying;
+    wasPlayingRef.current = isPlaying;
+    if (justStopped) {
+      setActivePianoNotes([]);
+      return;
+    }
+
     if (!isPlaying && activeNotes.length > 0) {
       // Play all notes as a chord
       const chordMidiNotes = activeNotes.map(({ note, octave = 4 }) =>
@@ -275,10 +285,12 @@ const PianoControl: React.FC<PianoProps> = ({
     const noteNameWithoutOctave = MidiNumbers.getAttributes(midiNumber).note.slice(0, -1);
     const isScaleNote = normalizedScaleNotes.includes(normalizeNoteName(noteNameWithoutOctave)!);
     if (isScaleNote) {
-      return <div className="mx-auto mb-2 mcb-led" />;
+      // --mcb-key-i staggers the load-in power-on sweep (themes.css)
+      const style = { '--mcb-key-i': midiNumber - firstNote } as React.CSSProperties;
+      return <div className="mx-auto mb-2 mcb-led" style={style} />;
     }
     return null;
-  }, [normalizedScaleNotes]);
+  }, [normalizedScaleNotes, firstNote]);
 
   // Memoize SoundfontProvider props to prevent unnecessary re-renders
   const soundfontProps = useMemo(() => ({

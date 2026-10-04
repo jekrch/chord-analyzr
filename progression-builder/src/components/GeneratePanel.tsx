@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowRight, ExternalLink, Play, Sparkles, Square } from 'lucide-react';
+import { ArrowRight, ExternalLink, Play, Square } from 'lucide-react';
 import type { ModeScaleChord, ProgressionStep } from '../api/types';
 import type { GenerateOptions } from '../hooks/useProgressionBuilder';
 import { Chip, Fader, Knob, NoteChips, Section, Segmented } from './controls';
@@ -62,7 +62,7 @@ const LAYERS: Layer[] = [
     id: 'mediants',
     name: 'Chromatic mediants',
     tooltip:
-      'Admits third-related chords from outside the scale and leans root motion toward thirds — the cinematic film-score chain (the old "Heroic"). Raises Color, adds the Mediant device, steers Root motion to Thirds.',
+      'Admits third-related chords from outside the scale and leans root motion toward thirds. Raises Color, adds the Mediant device, sets Root motion to Thirds.',
     suggestedMode: 'Lydian',
     contribute: (_ctx, a) => ({
       colorWeight: 2.5 * a,
@@ -74,7 +74,7 @@ const LAYERS: Layer[] = [
   {
     id: 'bright',
     name: 'Bright lean',
-    tooltip: 'Pulls chord choice to the sharp side of the circle of fifths — Lydian sparkle and lift. Raises Brightness.',
+    tooltip: 'Favors chords on the sharp side of the circle of fifths. Raises Brightness.',
     suggestedMode: 'Lydian',
     contribute: (_ctx, a) => ({ brightness: 0.9 * a }),
   },
@@ -82,7 +82,7 @@ const LAYERS: Layer[] = [
     id: 'dark',
     name: 'Dark lean',
     tooltip:
-      'Pulls chord choice to the flat side of the circle of fifths — shadowed, the old "Noir" mood. Lowers Brightness.',
+      'Favors chords on the flat side of the circle of fifths. Lowers Brightness.',
     suggestedMode: 'Aeolian',
     contribute: (_ctx, a) => ({ brightness: -0.9 * a }),
   },
@@ -90,7 +90,7 @@ const LAYERS: Layer[] = [
     id: 'borrowed',
     name: 'Borrowed chords',
     tooltip:
-      'Modal interchange from the parallel modes — bVI, bVII, iv and tritone subs borrowed into the key. Raises Color, adds the Borrowed and Tritone-sub devices.',
+      'Modal interchange from the parallel modes (bVI, bVII, iv) plus tritone subs. Raises Color, adds the Borrowed and Tritone-sub devices.',
     contribute: (_ctx, a) => ({
       colorWeight: 2.5 * a,
       colorDevices: ['borrowed', 'tritone_sub'],
@@ -100,7 +100,7 @@ const LAYERS: Layer[] = [
     id: 'secondary',
     name: 'Secondary dominants',
     tooltip:
-      'Inserts dominants of scale degrees for extra cadential pull — the gospel/jazz turnaround sound. Raises Color and Drive, adds the Sec.-dom device.',
+      'Inserts dominants of scale degrees for stronger cadential pull. Raises Color and Drive, adds the Sec.-dom device.',
     contribute: (_ctx, a) => ({
       colorWeight: 2.5 * a,
       colorDevices: ['secondary_dominant'],
@@ -118,7 +118,7 @@ const LAYERS: Layer[] = [
     id: 'loop',
     name: 'Loop pull',
     tooltip:
-      'Scores the wrap-around move back to the start so the progression cycles cleanly — vamps, ostinati, game loops. Raises Loop pull, opens the ending, caps chord size.',
+      'Scores the move from the last chord back to the first so the progression repeats smoothly. Raises Loop pull, opens the ending, caps chord size.',
     contribute: (_ctx, a) => ({
       loopWeight: 3 * a,
       ending: 'open',
@@ -129,7 +129,7 @@ const LAYERS: Layer[] = [
     id: 'drone',
     name: 'Drone & drift',
     tooltip:
-      'Stepwise root motion over a sustained tonic pedal, leading tone avoided — hovering and ambient. Sets Root motion to Steps, adds a pedal note and an avoided leading tone.',
+      'Stepwise root motion over a tonic pedal, avoiding the leading tone. Sets Root motion to Steps, adds a pedal note and an avoided leading tone.',
     contribute: (ctx) => ({
       motionProfile: 'stepwise',
       pedalNote: ctx.tonic,
@@ -204,34 +204,34 @@ const SECTION_KEYS: Record<string, (keyof Knobs)[]> = {
 };
 
 const MOTION_OPTIONS = [
-  { value: 'functional' as const, label: 'Fifths', title: 'Purposeful, cadential pull — the ii–V–I sound' },
-  { value: 'mediant' as const, label: 'Thirds', title: 'Third-related root moves — cinematic mediant chains' },
-  { value: 'stepwise' as const, label: 'Steps', title: 'Half/whole-step root motion — planing, modal drift' },
-  { value: 'static' as const, label: 'Static', title: 'Minimal root travel — hovering, ambient' },
+  { value: 'functional' as const, label: 'Fifths', title: 'Roots move by fifths, as in ii–V–I' },
+  { value: 'mediant' as const, label: 'Thirds', title: 'Roots move by thirds (mediant relations)' },
+  { value: 'stepwise' as const, label: 'Steps', title: 'Roots move by half or whole steps' },
+  { value: 'static' as const, label: 'Static', title: 'Roots move as little as possible' },
 ];
 
 const ENDING_OPTIONS = [
   { value: '', label: 'Free', title: 'No constraint on how it ends' },
-  { value: 'authentic', label: 'Authentic', title: 'V then tonic — the classic full-stop resolution' },
-  { value: 'plagal', label: 'Plagal', title: 'IV then tonic — the softer amen close' },
-  { value: 'half', label: 'Half', title: 'Ends on the dominant — open, wants to continue' },
-  { value: 'deceptive', label: 'Deceptive', title: 'Sets up resolution, then swerves to vi' },
-  { value: 'open', label: 'Open', title: 'Ends anywhere but the tonic — floating' },
+  { value: 'authentic', label: 'Authentic', title: 'Ends V to I' },
+  { value: 'plagal', label: 'Plagal', title: 'Ends IV to I' },
+  { value: 'half', label: 'Half', title: 'Ends on V' },
+  { value: 'deceptive', label: 'Deceptive', title: 'Ends V to vi' },
+  { value: 'open', label: 'Open', title: 'Ends on any chord except I' },
 ];
 
 const MAX_NOTES_OPTIONS = [
   { value: '0', label: 'Off', title: 'No cap on chord size' },
-  { value: '3', label: '3', title: 'Lean triads where possible' },
-  { value: '4', label: '4', title: 'Punchier four-note chords' },
-  { value: '5', label: '5', title: 'Allow five-note color' },
+  { value: '3', label: '3', title: 'Prefer triads' },
+  { value: '4', label: '4', title: 'Up to four notes' },
+  { value: '5', label: '5', title: 'Up to five notes' },
 ];
 
 const COLOR_DEVICES = [
-  { value: 'borrowed', label: 'Borrowed', title: 'Modal interchange from the parallel modes — bVI, bVII, iv' },
-  { value: 'mediant', label: 'Mediant', title: 'Chromatic-mediant triad moves — the film-score chain' },
-  { value: 'secondary_dominant', label: 'Sec. dom', title: 'Dominants of scale degrees — gospel/jazz pull' },
-  { value: 'tritone_sub', label: 'Tritone sub', title: 'Dominant a tritone away — slinky chromatic bass' },
-  { value: 'chromatic', label: 'Chromatic', title: 'Anything else outside the scale — raw color' },
+  { value: 'borrowed', label: 'Borrowed', title: 'Modal interchange from the parallel modes (bVI, bVII, iv)' },
+  { value: 'mediant', label: 'Mediant', title: 'Chromatic-mediant triads' },
+  { value: 'secondary_dominant', label: 'Sec. dom', title: 'Dominants of scale degrees (V/x)' },
+  { value: 'tritone_sub', label: 'Tritone sub', title: 'Dominant a tritone away from the expected one' },
+  { value: 'chromatic', label: 'Chromatic', title: 'Any other chord outside the scale' },
 ];
 
 // Newly-loaded layer starts at a moderate amount; the user dials from there.
@@ -460,7 +460,7 @@ export default function GeneratePanel({
       {/* Character layers */}
       <div className="flex flex-col gap-2 p-3.5">
         <div className="flex items-center justify-between">
-          <span className="pb-label" title="Stackable character layers — load as many as you like and dial each to taste">
+          <span className="pb-label" title="Layers stack. Each knob sets how strongly that layer applies.">
             Character layers
           </span>
           {hasState && (
@@ -496,15 +496,15 @@ export default function GeneratePanel({
         </div>
         {activeLayers.length === 0 && (
           <p className="text-[11px] text-[var(--pb-text-tertiary)]">
-            No layers — pure voice leading, the engine at rest. Stack layers and turn each knob to taste.
+            No layers active. Results follow voice-leading cost only.
           </p>
         )}
         {suggestedMode && (
           <div className="pb-inset flex items-center gap-2 px-3 py-1.5 text-[11px] text-[var(--pb-text-secondary)]">
             <span className="min-w-0 flex-1 truncate">
-              {suggestedMode.layerName} sings in {suggestedMode.name}
+              Suggested mode for {suggestedMode.layerName}: {suggestedMode.name}
             </span>
-            <button type="button" className="pb-btn !px-2 !py-0.5 text-[10px]" onClick={() => onModeChange(suggestedMode.name)}>
+            <button type="button" className="pb-btn !px-2 !py-0.5 text-[11px]" onClick={() => onModeChange(suggestedMode.name)}>
               <ArrowRight size={11} /> Switch mode
             </button>
           </div>
@@ -567,7 +567,7 @@ export default function GeneratePanel({
         <div className="flex flex-col gap-1.5">
           <span className="pb-label">
             Root motion
-            {isOverridden('motionProfile') && <span className="pb-mod-dot" title="Hand-tweaked off the layer value" />}
+            {isOverridden('motionProfile') && <span className="pb-mod-mark" title="Hand-tweaked off the layer value" />}
           </span>
           <Segmented options={MOTION_OPTIONS} value={knobs.motionProfile} onChange={(v) => setOverride({ motionProfile: v })} />
         </div>
@@ -612,7 +612,7 @@ export default function GeneratePanel({
             step={0.5}
             modified={isOverridden('colorWeight')}
             onChange={(v) => setOverride({ colorWeight: v })}
-            title="Above 0 admits chords rooted outside the scale — bVI, bVII, mediants; 1 is gentle, 3 is bold"
+            title="Above 0 admits chords rooted outside the scale (bVI, bVII, mediants). 1 is mild, 3 is strong."
           />
           <Fader
             label="Brightness"
@@ -629,8 +629,8 @@ export default function GeneratePanel({
         <div className="flex flex-col gap-1.5">
           <span className="pb-label" title="Which harmonic devices borrowed chords may use; none selected = all allowed">
             Devices{' '}
-            {isOverridden('colorDevices') && <span className="pb-mod-dot" title="Hand-tweaked off the layer value" />}
-            {knobs.colorWeight === 0 && <span className="normal-case tracking-normal">(picking one turns color on)</span>}
+            {isOverridden('colorDevices') && <span className="pb-mod-mark" title="Hand-tweaked off the layer value" />}
+            {knobs.colorWeight === 0 && <span className="normal-case tracking-normal">(selecting one turns Color on)</span>}
           </span>
           <div className="flex flex-wrap gap-1">
             {COLOR_DEVICES.map((device) => (
@@ -645,9 +645,9 @@ export default function GeneratePanel({
           </div>
         </div>
         <div className="flex flex-col gap-1.5">
-          <span className="pb-label" title="Non-scale tones that scale-rooted chords may borrow — secondary-dominant and borrowed-chord flavor">
+          <span className="pb-label" title="Non-scale tones that chords rooted in the scale may include">
             Extra notes
-            {isOverridden('extraNotes') && <span className="pb-mod-dot" title="Hand-tweaked off the layer value" />}
+            {isOverridden('extraNotes') && <span className="pb-mod-mark" title="Hand-tweaked off the layer value" />}
           </span>
           <NoteChips
             selected={knobs.extraNotes}
@@ -668,9 +668,9 @@ export default function GeneratePanel({
       >
         <div className="flex flex-wrap items-end gap-4">
           <div className="flex flex-col gap-1.5">
-            <span className="pb-label" title="Soft cap on chord size — leaner, punchier chords">
+            <span className="pb-label" title="Soft cap on chord size">
               Max notes
-              {isOverridden('maxNotes') && <span className="pb-mod-dot" title="Hand-tweaked off the layer value" />}
+              {isOverridden('maxNotes') && <span className="pb-mod-mark" title="Hand-tweaked off the layer value" />}
             </span>
             <Segmented
               options={MAX_NOTES_OPTIONS}
@@ -679,9 +679,9 @@ export default function GeneratePanel({
             />
           </div>
           <label className="flex flex-col gap-1.5">
-            <span className="pb-label" title="A note every chord must contain — a drone under the whole progression">
+            <span className="pb-label" title="A note every chord must contain">
               Pedal note
-              {isOverridden('pedalNote') && <span className="pb-mod-dot" title="Hand-tweaked off the layer value" />}
+              {isOverridden('pedalNote') && <span className="pb-mod-mark" title="Hand-tweaked off the layer value" />}
             </span>
             <select value={knobs.pedalNote} onChange={(e) => setOverride({ pedalNote: e.target.value })} className="pb-select">
               <option value="">None</option>
@@ -697,10 +697,10 @@ export default function GeneratePanel({
         <div className="flex flex-col gap-1.5">
           <span
             className="pb-label"
-            title="Notes no free chord may contain — avoid the leading tone for modal purity, the 3rd for suspended ambiguity, 4 and 7 for pentatonic shimmer"
+            title="Notes that no unpinned chord may contain"
           >
             Avoid notes
-            {isOverridden('avoidNotes') && <span className="pb-mod-dot" title="Hand-tweaked off the layer value" />}
+            {isOverridden('avoidNotes') && <span className="pb-mod-mark" title="Hand-tweaked off the layer value" />}
           </span>
           <NoteChips
             selected={knobs.avoidNotes}
@@ -721,7 +721,7 @@ export default function GeneratePanel({
         <div className="flex flex-col gap-1.5">
           <span className="pb-label">
             Cadence
-            {isOverridden('ending') && <span className="pb-mod-dot" title="Hand-tweaked off the layer value" />}
+            {isOverridden('ending') && <span className="pb-mod-mark" title="Hand-tweaked off the layer value" />}
           </span>
           <Segmented options={ENDING_OPTIONS} value={knobs.ending} onChange={(v) => setOverride({ ending: v })} />
         </div>
@@ -733,7 +733,7 @@ export default function GeneratePanel({
           step={0.5}
           modified={isOverridden('loopWeight')}
           onChange={(v) => setOverride({ loopWeight: v })}
-          title="Above 0 favors progressions that cycle smoothly back to the start — vamps, ostinati, game loops"
+          title="Above 0 favors progressions that lead smoothly back to the first chord"
         />
       </Section>
 
@@ -770,74 +770,78 @@ export default function GeneratePanel({
       {/* Generate + results */}
       <div className="flex flex-col gap-3 border-t border-[var(--pb-border)] p-3.5">
         <button type="button" disabled={!canGenerate} onClick={handleGenerate} className="pb-btn pb-btn--accent pb-btn--transport">
-          <Sparkles size={14} /> {generating ? 'Searching…' : 'Generate'}
+          {generating ? 'Searching…' : 'Generate'}
         </button>
 
         {generateError && <p className="text-xs text-[var(--pb-danger)]">{generateError}</p>}
 
         {results.length > 0 && (
-          <div className="flex flex-col gap-2">
+          <div className="pb-inset flex flex-col divide-y divide-[var(--pb-border)]">
             {results.map((steps, i) => {
               const link = resultLink(steps);
               const isPlayingThis = playing?.source === `result-${i}`;
               return (
-                <div key={i} className="pb-inset flex flex-col gap-1.5 px-3 py-2">
+                <div key={i} className="flex flex-col gap-1.5 px-2.5 py-2">
                   <div className="flex items-center gap-2">
-                    <span className="pb-label text-[var(--pb-text-tertiary)]">#{i + 1}</span>
-                    <span className="pb-readout" title="Total voice-leading cost — lower is smoother">
+                    <span className="pb-label min-w-5 text-[var(--pb-text-tertiary)] tabular-nums">#{i + 1}</span>
+                    <span className="pb-readout tabular-nums" title="Total voice-leading cost (lower is smoother)">
                       cost {steps[steps.length - 1]?.totalCost ?? 0}
                     </span>
                     <span className="flex-1" />
                     {isPlayingThis ? (
-                      <button type="button" onClick={onStop} className="pb-btn pb-btn--stop !px-2 !py-0.5 text-[10px]" title="Stop">
+                      <button type="button" onClick={onStop} className="pb-btn pb-btn--stop !px-2 !py-0.5 text-[11px]" title="Stop">
                         <Square size={11} /> Stop
                       </button>
                     ) : (
                       <button
                         type="button"
                         onClick={() => onPlayResult(steps, i)}
-                        className="pb-btn pb-btn--play !px-2 !py-0.5 text-[10px]"
+                        className="pb-btn pb-btn--play !px-2 !py-0.5 text-[11px]"
                         title="Play this progression"
                       >
                         <Play size={11} /> Play
                       </button>
                     )}
                     {link && (
-                      <a href={link} target="_blank" rel="noreferrer" className="pb-btn !px-2 !py-0.5 text-[10px]" title="Open in modal chord buildr">
+                      <a href={link} target="_blank" rel="noreferrer" className="pb-btn !px-2 !py-0.5 text-[11px]" title="Open in modal chord buildr">
                         <ExternalLink size={11} /> Open
                       </a>
                     )}
-                    <button type="button" onClick={() => onUseResult(steps)} className="pb-btn !px-2 !py-0.5 text-[10px]" title="Replace the progression with this result">
+                    <button type="button" onClick={() => onUseResult(steps)} className="pb-btn !px-2 !py-0.5 text-[11px]" title="Replace the progression with this result">
                       Use
                     </button>
                   </div>
-                  <div className="flex flex-wrap items-center gap-x-1 gap-y-1.5 font-mono text-xs">
-                    {steps.map((s, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => onPlayChord(s.chord)}
-                        onMouseEnter={() => previewChordNotes(s.chord)}
-                        onMouseLeave={() => onPreview(null)}
-                        title={`${notesForChord(s.chord) ?? s.chord} — click to play`}
-                        className="flex cursor-pointer items-center gap-1"
-                      >
-                        {idx > 0 && (
-                          <span className="text-[9px] text-[var(--pb-text-tertiary)]" title="Voice-leading distance from the previous chord">
-                            {s.vlFromPrev}
-                          </span>
-                        )}
-                        <span
-                          className={`rounded px-1.5 py-0.5 transition-colors ${
-                            isPlayingThis && playing?.step === idx
+                  {/* Same fixed-width column template in every result, so step N
+                      sits in the same column across all results. */}
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(5.5rem,1fr))] gap-1 font-mono text-xs">
+                    {steps.map((s, idx) => {
+                      const lit = isPlayingThis && playing?.step === idx;
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => onPlayChord(s.chord)}
+                          onMouseEnter={() => previewChordNotes(s.chord)}
+                          onMouseLeave={() => onPreview(null)}
+                          title={`${s.chord}: ${notesForChord(s.chord) ?? ''}`}
+                          className={`flex min-w-0 cursor-pointer items-baseline justify-between gap-1 rounded-sm px-1.5 py-0.5 transition-colors ${
+                            lit
                               ? 'bg-[var(--pb-accent)] text-[var(--pb-accent-contrast)]'
                               : 'bg-[var(--pb-bg-hover)] hover:text-[var(--pb-accent-text)]'
                           }`}
                         >
-                          {s.chord}
-                        </span>
-                      </button>
-                    ))}
+                          <span className="truncate">{s.chord}</span>
+                          {idx > 0 && (
+                            <span
+                              className={`text-[10px] tabular-nums ${lit ? '' : 'text-[var(--pb-text-tertiary)]'}`}
+                              title="Voice-leading distance from the previous chord"
+                            >
+                              {s.vlFromPrev}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               );

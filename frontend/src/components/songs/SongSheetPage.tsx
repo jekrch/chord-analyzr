@@ -112,7 +112,7 @@ const SongSheetPage: React.FC = () => {
 
     return (
         <div className="flex flex-col items-center px-3 pt-3 pb-24 text-sm text-left">
-            <div className="w-full max-w-7xl flex flex-col sm:flex-row gap-3 items-start">
+            <div className="mcb-intro-stage w-full max-w-7xl flex flex-col sm:flex-row gap-3 items-start">
                 <SongLibraryPanel />
 
                 <div className="flex-1 min-w-0 w-full flex flex-col gap-2.5">
@@ -167,7 +167,7 @@ const SongSheetPage: React.FC = () => {
                     <div className="mcb-sheet-overlay-controls fixed top-4 right-4 z-10 flex items-center gap-2">
                         <button
                             onClick={() => setMenuOpen(true)}
-                            className="w-9 h-9 flex items-center justify-center rounded-full border border-mcb-subtle bg-mcb-app text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] hover:border-mcb-primary transition-all duration-200"
+                            className="w-9 h-9 flex items-center justify-center rounded-md border border-mcb-subtle bg-mcb-app text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] hover:border-mcb-primary transition-all duration-200"
                             title="Songs & sheet options"
                             aria-label="Open sheet options"
                             aria-expanded={menuOpen}
@@ -176,7 +176,7 @@ const SongSheetPage: React.FC = () => {
                         </button>
                         <button
                             onClick={() => setSheetFullscreen(false)}
-                            className="w-9 h-9 flex items-center justify-center rounded-full border border-mcb-subtle bg-mcb-app text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] hover:border-mcb-primary transition-all duration-200"
+                            className="w-9 h-9 flex items-center justify-center rounded-md border border-mcb-subtle bg-mcb-app text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] hover:border-mcb-primary transition-all duration-200"
                             title="Exit full screen (Esc)"
                             aria-label="Exit full screen"
                         >

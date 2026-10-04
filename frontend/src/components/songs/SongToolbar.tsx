@@ -176,7 +176,7 @@ const SongToolbar: React.FC<SongToolbarProps> = ({ song, parsed }) => {
             >
                 <PlayIcon className="w-3.5 h-3.5" />
                 Step
-                <span className="font-mono text-[0.625rem] text-mcb-tertiary">
+                <span className="font-mono text-[0.6875rem] text-mcb-tertiary">
                     {stepIndex === null ? 0 : stepIndex + 1}/{totalChords}
                 </span>
             </Button>
@@ -222,7 +222,7 @@ const SongToolbar: React.FC<SongToolbarProps> = ({ song, parsed }) => {
                     menuClassName="min-w-[7.5rem]"
                 />
                 {!hasExplicitKey && (
-                    <span className="mcb-label !text-[0.5625rem] text-mcb-tertiary select-none">
+                    <span className="mcb-label text-mcb-tertiary select-none">
                         auto
                     </span>
                 )}

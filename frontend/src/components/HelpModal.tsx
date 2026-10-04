@@ -1,5 +1,19 @@
-import React, { useState } from 'react';
-import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/20/solid';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+    AdjustmentsHorizontalIcon,
+    ArrowDownTrayIcon,
+    BoltIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon,
+    CommandLineIcon,
+    DocumentTextIcon,
+    MagnifyingGlassIcon,
+    PencilSquareIcon,
+    PlayIcon,
+    QueueListIcon,
+    SpeakerWaveIcon,
+    WrenchScrewdriverIcon,
+} from '@heroicons/react/20/solid';
 import Modal from './Modal';
 
 interface HelpModalProps {
@@ -7,522 +21,540 @@ interface HelpModalProps {
     onClose: () => void;
 }
 
-const HelpSection: React.FC<{ 
-    title: string; 
-    children: React.ReactNode; 
-    defaultOpen?: boolean;
-}> = ({ title, children, defaultOpen = false }) => {
-    const [isOpen, setIsOpen] = useState(defaultOpen);
+type SectionId =
+    | 'start' | 'shortcuts' | 'audio' | 'sequencer' | 'midi' | 'explorer'
+    | 'editing' | 'live' | 'songs' | 'interface' | 'troubleshooting';
 
-    return (
-        <div className="mcb-inset overflow-hidden mb-4">
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="w-full flex items-center justify-between px-4 py-2.5 text-left border-b border-mcb-subtle hover:bg-[var(--mcb-bg-hover)] transition-colors"
-            >
-                <h4 className="mcb-panel-title">
-                    {title}
-                </h4>
-                {isOpen ? (
-                    <ChevronDownIcon className="w-4 h-4 text-mcb-secondary flex-shrink-0" />
-                ) : (
-                    <ChevronRightIcon className="w-4 h-4 text-mcb-secondary flex-shrink-0" />
-                )}
-            </button>
-            {isOpen && (
-                <div className="p-4 text-mcb-secondary">
-                    {children}
-                </div>
-            )}
-        </div>
-    );
-};
+// A group is a small labelled block: optional intro text, then either
+// term/description rows or a plain list of tips.
+interface Group {
+    heading?: string;
+    intro?: React.ReactNode;
+    items?: [string, React.ReactNode][];
+    tips?: React.ReactNode[];
+}
+
+interface Section {
+    id: SectionId;
+    title: string;
+    icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+    summary: string;
+    groups?: Group[];
+}
+
+const Kbd: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    <kbd className="mcb-kbd">{children}</kbd>
+);
+
+const STEPS: { title: string; text: string; target?: SectionId }[] = [
+    { title: 'Choose a key & mode', text: 'Pick a key and mode in the Controls panel, like C Ionian or D# Lydian.' },
+    { title: 'Explore chords', text: 'Browse the Chord Explorer for chords that fit your key and mode.', target: 'explorer' },
+    { title: 'Build a sequence', text: 'Press + on a chord to add it to your sequence.', target: 'explorer' },
+    { title: 'Shape a pattern', text: 'Use the Sequencer to set which chord tones play on each step.', target: 'sequencer' },
+    { title: 'Play & perform', text: 'Press Play to hear it, or open Live Mode to play chords by hand.', target: 'live' },
+];
+
+const SHORTCUTS: { heading: string; rows: [string, React.ReactNode][] }[] = [
+    {
+        heading: 'Playback',
+        rows: [
+            ['Play / pause the sequencer', <Kbd>Space</Kbd>],
+            ['Play a chord from the sequence', <><Kbd>1</Kbd><span className="text-mcb-tertiary text-xs">–</span><Kbd>9</Kbd></>],
+            ['Play the 10th chord', <Kbd>0</Kbd>],
+        ],
+    },
+    {
+        heading: 'Views',
+        rows: [
+            ['Show / hide the sequencer', <Kbd>P</Kbd>],
+            ['Toggle Live Mode', <Kbd>L</Kbd>],
+        ],
+    },
+];
+
+const SECTIONS: Section[] = [
+    {
+        id: 'start',
+        title: 'Quick Start',
+        icon: BoltIcon,
+        summary: 'From an empty session to a playing progression in five steps.',
+    },
+    {
+        id: 'shortcuts',
+        title: 'Keyboard Shortcuts',
+        icon: CommandLineIcon,
+        summary: 'Shortcuts are ignored while you are typing in a text field.',
+    },
+    {
+        id: 'audio',
+        title: 'Piano & Audio',
+        icon: SpeakerWaveIcon,
+        summary: 'The keybed, instrument voices, and sound shaping.',
+        groups: [
+            {
+                heading: 'Piano',
+                intro: 'Click keys to play single notes. The keybed marks scale notes and lights up the tones of the current chord.',
+            },
+            {
+                heading: 'Audio settings',
+                intro: 'Open the settings in the Controls panel for:',
+                items: [
+                    ['Voice', 'Choose from several instrument sounds'],
+                    ['Volume & octave', 'Overall level and pitch range'],
+                    ['Effects', 'Reverb, chorus, and delay'],
+                    ['Equalizer', 'Bass, mid, and treble'],
+                    ['Note duration', 'How long notes ring out'],
+                ],
+            },
+        ],
+    },
+    {
+        id: 'sequencer',
+        title: 'Pattern Sequencer',
+        icon: QueueListIcon,
+        summary: 'Patterns decide which chord tones play on each step.',
+        groups: [
+            {
+                heading: 'Step values',
+                items: [
+                    ['—', <>A rest. Written as <code className="font-mono text-mcb-primary">x</code> in custom patterns.</>],
+                    ['1, 2, 3…', 'Play the 1st, 2nd, 3rd… note of the chord'],
+                    ['1↑, 2↑…', <>The same note an octave up. Written as <code className="font-mono text-mcb-primary">+</code> in custom patterns.</>],
+                ],
+            },
+            {
+                heading: 'Pattern controls',
+                items: [
+                    ['Steps', 'Use + / − to set the length, from 1 to 16 steps'],
+                    ['Presets', 'Pick a ready-made pattern, grouped by style and note count'],
+                    ['Custom', <>Type a pattern such as <code className="font-mono text-mcb-primary">1,x,3,2+</code> and press Apply</>],
+                    ['Playhead', 'The step that is playing lights up'],
+                ],
+            },
+            {
+                heading: 'Timing',
+                items: [
+                    ['BPM', 'Tempo from 60 to 200'],
+                    ['Subdivision', '32nd, 16th, 8th, quarter, or half notes'],
+                    ['Swing', 'Delays every other step, 0–50%'],
+                ],
+            },
+            {
+                heading: 'Per-chord patterns',
+                intro: 'Each chord in your sequence can have its own pattern.',
+                items: [
+                    ['Global pattern', 'Used when no chord is selected (cyan "Global Pattern" label)'],
+                    ['Chord pattern', 'Select a chord in the sequence to edit its own pattern (purple chord-name label)'],
+                    ['Playback', "The sequencer switches to each chord's pattern as it plays"],
+                ],
+            },
+            {
+                heading: 'Presets',
+                items: [
+                    ['Note filter', 'Turn on "Hide patterns with fewer notes" to show only patterns that use every chord tone'],
+                    ['Categories', 'Arpeggios, rhythmic, bass lines, and more'],
+                    ['Preview', 'Each preset shows its notation before you apply it'],
+                ],
+            },
+        ],
+    },
+    {
+        id: 'midi',
+        title: 'MIDI Recording',
+        icon: ArrowDownTrayIcon,
+        summary: 'Record what the sequencer plays and download it as a standard .mid file.',
+        groups: [
+            {
+                heading: 'Recording',
+                items: [
+                    ['Arm', 'Turn the MIDI Recording switch on in the Sequencer'],
+                    ['Record', 'Recording starts when you press Play; the LED pulses red while it runs'],
+                    ['Stop', 'Recording ends when you stop or pause playback'],
+                    ['Save', 'A Save button appears afterwards. Click it to download the file'],
+                ],
+            },
+            {
+                heading: "What's captured",
+                items: [
+                    ['Notes', 'Every note the sequencer plays, with exact timing'],
+                    ['Tempo', 'Your BPM is written into the file'],
+                    ['Length', 'Note lengths follow your note-duration setting'],
+                    ['Patterns', 'The full sequence, including per-chord patterns'],
+                ],
+            },
+            {
+                heading: 'Tips',
+                tips: [
+                    'Set BPM and timing before you press Play.',
+                    'Let the sequence play through at least once for a complete take.',
+                    'Each take is saved as a new, timestamped file. Drop it into any DAW to change instruments or edit notes.',
+                    'The Save button stays available until you start a new recording.',
+                ],
+            },
+        ],
+    },
+    {
+        id: 'explorer',
+        title: 'Chord Explorer',
+        icon: MagnifyingGlassIcon,
+        summary: 'Every chord that fits the selected key and mode, and the sequence you build from them.',
+        groups: [
+            {
+                heading: 'Finding chords',
+                items: [
+                    ['Filter', 'Narrow the list by root note'],
+                    ['Search', 'Find chords by name or by the notes they contain'],
+                    ['Preview', 'Click any chord to hear it'],
+                    ['Notes', 'Click ↓ to see the notes in a chord'],
+                ],
+            },
+            {
+                heading: 'Building a sequence',
+                intro: <>Press <span className="font-semibold text-[var(--mcb-success-text)]">+</span> on a chord to add it. The sequence sits at the bottom of the screen, where you can:</>,
+                tips: [
+                    'Click a chord to play it.',
+                    <>Press <Kbd>1</Kbd>–<Kbd>9</Kbd> to jump between chords.</>,
+                    'Turn on Delete mode to remove chords, or clear them all to start over.',
+                    'Click the gear icon to enter Edit mode.',
+                ],
+            },
+        ],
+    },
+    {
+        id: 'editing',
+        title: 'Chord Editing',
+        icon: PencilSquareIcon,
+        summary: 'Change voicings and bass notes for chords already in your sequence.',
+        groups: [
+            {
+                heading: 'Edit mode',
+                intro: 'Click the gear icon next to your sequence, then click a chord to open the editor. From there you can reorder notes, add a slash bass note, and preview before saving.',
+            },
+            {
+                heading: 'Slash chords',
+                items: [
+                    ['Bass note', 'Enter a note name (E, Gb, C…) to make a chord like C/E'],
+                    ['Voicing', 'The bass note moves to the lowest position'],
+                    ['Name', 'The chord name updates to slash notation'],
+                    ['Remove', 'Clear the field to go back to the original chord'],
+                ],
+            },
+            {
+                heading: 'Reordering notes',
+                items: [
+                    ['Drag', 'Drag notes to reorder them'],
+                    ['Arrows', 'Or move a note with the up / down buttons'],
+                    ['Auto-detect', 'Moving a new note to the bottom updates the slash note'],
+                    ['Highlight', 'Slash notes are shown in amber'],
+                ],
+            },
+            {
+                heading: 'Editor controls',
+                items: [
+                    ['Preview', 'Play button. Hear your changes before saving'],
+                    ['Save', 'Green check. Keep your edits'],
+                    ['Cancel', 'Discard changes and close the editor'],
+                ],
+            },
+        ],
+    },
+    {
+        id: 'live',
+        title: 'Live Mode',
+        icon: PlayIcon,
+        summary: 'Your sequence as large, touch-friendly pads for performing and practising.',
+        groups: [
+            {
+                heading: 'Using Live Mode',
+                tips: [
+                    <>Click <span className="font-medium text-mcb-primary">Expand</span> in the chord bar, or press <Kbd>L</Kbd>.</>,
+                    <>Tap a pad or press <Kbd>1</Kbd>–<Kbd>9</Kbd> to play a chord.</>,
+                    'The sequencer keeps playing your patterns, and the active chord stays lit.',
+                ],
+            },
+            {
+                heading: 'Good for',
+                items: [
+                    ['Performance', 'Large pads that are easy to hit'],
+                    ['Practice', 'Quick chord changes with clear feedback'],
+                    ['Writing', 'Try progressions out in real time'],
+                ],
+            },
+        ],
+    },
+    {
+        id: 'songs',
+        title: 'Song Sheets',
+        icon: DocumentTextIcon,
+        summary: 'Turn lyrics and chords into a chart you can play and print. Open from the app menu → Song Sheets.',
+        groups: [
+            {
+                heading: 'Adding a song',
+                items: [
+                    ['Paste', 'Paste chords-over-lyrics or ChordPro text. Chords and section headers are detected automatically'],
+                    ['Placement', 'Chords sit above the exact character they were placed on, so spacing is kept'],
+                    ['Key & mode', 'Set them yourself or let the app detect them. Picking a new key asks whether to transpose or only relabel; chords are respelled with sharps or flats to match'],
+                ],
+            },
+            {
+                heading: 'Editing',
+                items: [
+                    ['Add / edit', 'Click a spot on a line to add a chord, or click a chord to change it'],
+                    ['Move', 'Drag a chord along its line'],
+                    ['Transpose', 'Shift the whole song by semitones'],
+                    ['Undo', 'Step back through recent edits'],
+                ],
+            },
+            {
+                heading: 'Playback',
+                items: [
+                    ['Click to hear', 'Plays the chord with the current voice and effects'],
+                    ['Step through', 'Move chord by chord, using the app\'s patterns'],
+                    ['Sheet view', 'A clean full-screen view for performing'],
+                ],
+            },
+            {
+                heading: 'Export & library',
+                items: [
+                    ['Formats', 'Plain text, PNG image, or PDF (through the print dialog)'],
+                    ['Layout', 'Orientation, margins, columns, line spacing, and font sizes'],
+                    ['Library', 'Songs are saved in your browser. Export them to a JSON file or sync with Google Drive'],
+                ],
+            },
+        ],
+    },
+    {
+        id: 'interface',
+        title: 'Interface Tips',
+        icon: AdjustmentsHorizontalIcon,
+        summary: 'Getting around the panels.',
+        groups: [
+            {
+                heading: 'Navigation',
+                items: [
+                    ['Sequencer', <>Click its header, or press <Kbd>P</Kbd>, to show or hide the pattern editor</>],
+                    ['Settings', 'Most panels have their own expandable settings'],
+                    ['Status', 'The top bar shows the current key, mode, and playback state'],
+                ],
+            },
+            {
+                heading: 'Visual feedback',
+                items: [
+                    ['Keybed', 'Scale notes are marked; the current chord\'s keys light up'],
+                    ['Step', 'The playing step lights up in the sequencer'],
+                ],
+            },
+            {
+                heading: 'Small screens',
+                intro: 'On phones some controls are simplified and sized for touch.',
+            },
+        ],
+    },
+    {
+        id: 'troubleshooting',
+        title: 'Troubleshooting',
+        icon: WrenchScrewdriverIcon,
+        summary: 'Fixes for common audio and performance problems.',
+        groups: [
+            {
+                heading: 'Audio',
+                items: [
+                    ['No sound', "Check your device volume and make sure it isn't muted"],
+                    ['iOS', 'Tap any button first to start audio'],
+                    ['Distortion', 'Lower the volume in the piano settings'],
+                ],
+            },
+            {
+                heading: 'Performance',
+                items: [
+                    ['Lag or glitches', 'Close other browser tabs that are playing audio'],
+                    ['Phones', 'Lower reverb and other effects'],
+                ],
+            },
+        ],
+    },
+];
+
+const GroupBlock: React.FC<{ group: Group }> = ({ group }) => (
+    <section>
+        {group.heading && <h5 className="mcb-label mb-2">{group.heading}</h5>}
+        {group.intro && (
+            <p className="text-sm leading-relaxed text-mcb-secondary mb-2.5 last:mb-0">{group.intro}</p>
+        )}
+        {group.items && (
+            <dl className="mcb-inset divide-y divide-[var(--mcb-border-subtle)] mb-2.5 last:mb-0">
+                {group.items.map(([term, desc]) => (
+                    <div key={term} className="px-3 py-2 text-sm sm:flex sm:gap-4">
+                        <dt className="sm:w-32 sm:shrink-0 font-medium text-mcb-primary">{term}</dt>
+                        <dd className="text-mcb-secondary">{desc}</dd>
+                    </div>
+                ))}
+            </dl>
+        )}
+        {group.tips && (
+            <ul className="mcb-inset divide-y divide-[var(--mcb-border-subtle)]">
+                {group.tips.map((tip, i) => (
+                    <li key={i} className="flex items-start gap-2.5 px-3 py-2 text-sm text-mcb-secondary">
+                        <span aria-hidden="true" className="w-1.5 h-1.5 mt-[0.45rem] shrink-0 rounded-[1px] bg-[var(--mcb-accent-text-primary)]" />
+                        <span>{tip}</span>
+                    </li>
+                ))}
+            </ul>
+        )}
+    </section>
+);
+
+const QuickStart: React.FC<{ onGo: (id: SectionId) => void }> = ({ onGo }) => (
+    <ol className="mcb-inset divide-y divide-[var(--mcb-border-subtle)]">
+        {STEPS.map((step, i) => {
+            const target = SECTIONS.find(s => s.id === step.target);
+            return (
+                <li key={step.title} className="flex items-start gap-3 px-3 py-3">
+                    <span className="w-6 h-6 shrink-0 flex items-center justify-center rounded-sm border border-mcb-subtle bg-[color-mix(in_srgb,var(--mcb-accent-primary)_14%,transparent)] font-mono text-xs text-[var(--mcb-accent-text-primary)]">
+                        {i + 1}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-mcb-primary">{step.title}</div>
+                        <div className="text-sm text-mcb-secondary">{step.text}</div>
+                    </div>
+                    {target && (
+                        <button
+                            onClick={() => onGo(target.id)}
+                            className="hidden sm:inline-flex items-center gap-1 h-6 px-2 shrink-0 rounded-md text-[0.6875rem] text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-colors"
+                        >
+                            <span>{target.title}</span>
+                            <ChevronRightIcon className="w-3.5 h-3.5 shrink-0" />
+                        </button>
+                    )}
+                </li>
+            );
+        })}
+    </ol>
+);
+
+const Shortcuts: React.FC = () => (
+    <div className="space-y-5">
+        {SHORTCUTS.map(group => (
+            <section key={group.heading}>
+                <h5 className="mcb-label mb-2">{group.heading}</h5>
+                <ul className="mcb-inset divide-y divide-[var(--mcb-border-subtle)]">
+                    {group.rows.map(([label, keys]) => (
+                        <li key={label} className="flex items-center justify-between gap-4 px-3 py-2 text-sm text-mcb-secondary">
+                            <span>{label}</span>
+                            <span className="flex items-center gap-1 shrink-0">{keys}</span>
+                        </li>
+                    ))}
+                </ul>
+            </section>
+        ))}
+    </div>
+);
 
 const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
+    const [activeId, setActiveId] = useState<SectionId>('start');
+    // Phones only: show the topic list instead of a topic
+    const [showIndex, setShowIndex] = useState(true);
+    const contentRef = useRef<HTMLDivElement>(null);
+
+    const index = SECTIONS.findIndex(s => s.id === activeId);
+    const section = SECTIONS[index];
+    const prev = SECTIONS[index - 1];
+    const next = SECTIONS[index + 1];
+
+    // Start each section at the top
+    useEffect(() => {
+        contentRef.current?.scrollTo({ top: 0 });
+    }, [activeId]);
+
+    const open = (id: SectionId) => {
+        setActiveId(id);
+        setShowIndex(false);
+    };
+
+    const stepButton = 'inline-flex items-center gap-1 h-7 px-2 rounded-md text-xs text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-colors';
+
     return (
         <Modal
             isOpen={isOpen}
             onClose={onClose}
             title="Help & Guide"
-            className="max-w-4xl max-h-[85vh]"
+            className="max-w-4xl h-[min(85vh,46rem)]"
             fixedHeader={true}
         >
-            <div className="p-6 space-y-4">
-                
-                <HelpSection 
-                    title="Quick Start" 
-                    defaultOpen={true}
+            <div className="h-full flex text-left">
+                {/* Topic list: a sidebar from md up; on phones a full-width
+                    list that opens one topic at a time */}
+                <nav
+                    aria-label="Help topics"
+                    className={`${showIndex ? 'flex' : 'hidden'} md:flex flex-col flex-1 md:flex-none md:w-52 min-h-0 md:border-r border-mcb-subtle bg-[color-mix(in_srgb,var(--mcb-bg-input)_30%,transparent)]`}
                 >
-                    <div className="space-y-4">
-                        <div className="flex items-start space-x-4 p-3 rounded-lg transition-colors">
-                            <div className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--mcb-accent-secondary)] text-white text-sm font-bold flex-shrink-0">
-                                1
-                            </div>
-                            <div className="text-left">
-                                <div className="text-sm font-semibold text-white mb-1">Choose a Key & Mode</div>
-                                <div className="text-sm text-mcb-secondary">Use the Controls section to select your musical key and mode (like C Ionian, D# Lydian, etc.)</div>
-                            </div>
-                        </div>
-                        <div className="flex items-start space-x-4 p-3 rounded-lg transition-colors">
-                            <div className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--mcb-accent-secondary)] text-white text-sm font-bold flex-shrink-0">
-                                2
-                            </div>
-                            <div className="text-left">
-                                <div className="text-sm font-semibold text-white mb-1">Explore Chords</div>
-                                <div className="text-sm text-mcb-secondary">Browse the Chord Explorer below to discover chords that fit your chosen key/mode</div>
-                            </div>
-                        </div>
-                        <div className="flex items-start space-x-4 p-3 rounded-lg transition-colors">
-                            <div className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--mcb-accent-secondary)] text-white text-sm font-bold flex-shrink-0">
-                                3
-                            </div>
-                            <div className="text-left">
-                                <div className="text-sm font-semibold text-white mb-1">Build Sequences</div>
-                                <div className="text-sm text-mcb-secondary">Click the + button on chords to add them to your sequence</div>
-                            </div>
-                        </div>
-                        <div className="flex items-start space-x-4 p-3 rounded-lg transition-colors">
-                            <div className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--mcb-accent-secondary)] text-white text-sm font-bold flex-shrink-0">
-                                4
-                            </div>
-                            <div className="text-left">
-                                <div className="text-sm font-semibold text-white mb-1">Create Patterns</div>
-                                <div className="text-sm text-mcb-secondary">Use the Sequencer to create rhythmic patterns for your chords</div>
-                            </div>
-                        </div>
-                        <div className="flex items-start space-x-4 p-3 rounded-lg transition-colors">
-                            <div className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--mcb-accent-secondary)] text-white text-sm font-bold flex-shrink-0">
-                                5
-                            </div>
-                            <div className="text-left">
-                                <div className="text-sm font-semibold text-white mb-1">Play & Perform</div>
-                                <div className="text-sm text-mcb-secondary">Hit Play to hear your creation, or use Live Mode for real-time performance</div>
-                            </div>
+                    <div className="mcb-help-stage flex-1 min-h-0 overflow-y-auto flex flex-col gap-0.5 p-2">
+                        {SECTIONS.map(s => {
+                            const Icon = s.icon;
+                            const isCurrent = s.id === activeId;
+                            return (
+                                <button
+                                    key={s.id}
+                                    onClick={() => open(s.id)}
+                                    aria-current={isCurrent ? 'true' : undefined}
+                                    className={`mcb-fullmenu-link max-md:!h-11 ${isCurrent ? 'is-current' : ''}`}
+                                >
+                                    <Icon />
+                                    <span className="flex-1">{s.title}</span>
+                                    <ChevronRightIcon className="md:hidden" />
+                                </button>
+                            );
+                        })}
+                    </div>
+                    <a
+                        href="https://github.com/jekrch/chord-analyzr"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 px-4 py-3 border-t border-mcb-subtle text-[0.6875rem] text-mcb-tertiary hover:text-[var(--mcb-text-primary)] transition-colors"
+                    >
+                        More docs on GitHub ↗
+                    </a>
+                </nav>
+
+                {/* Current topic: back link (phones) and prev / next stay pinned;
+                    only the topic itself scrolls */}
+                <div className={`${showIndex ? 'hidden' : 'flex'} md:flex flex-col flex-1 min-w-0 min-h-0`}>
+                    <div className="md:hidden shrink-0 px-3 py-2 border-b border-mcb-subtle bg-[color-mix(in_srgb,var(--mcb-bg-input)_30%,transparent)]">
+                        <button onClick={() => setShowIndex(true)} className={stepButton}>
+                            <ChevronLeftIcon className="w-4 h-4 shrink-0" />
+                            <span>All topics</span>
+                        </button>
+                    </div>
+
+                    <div ref={contentRef} className="flex-1 min-h-0 overflow-y-auto">
+                        {/* Keyed so each topic's blocks rise in again when it's opened */}
+                        <div key={activeId} className="mcb-help-stage p-5 md:p-6 space-y-5">
+                            <header>
+                                <h4 className="text-base font-semibold text-mcb-primary">{section.title}</h4>
+                                <p className="mt-1 text-sm text-mcb-tertiary">{section.summary}</p>
+                            </header>
+
+                            {section.id === 'start' && <QuickStart onGo={open} />}
+                            {section.id === 'shortcuts' && <Shortcuts />}
+                            {section.groups?.map((g, i) => <GroupBlock key={g.heading ?? i} group={g} />)}
                         </div>
                     </div>
-                </HelpSection>
 
-                <HelpSection title="Keyboard Shortcuts">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div className="space-y-3">
-                            <h5 className="text-white font-semibold text-sm border-b border-mcb-subtle pb-2 text-left">Playback Control</h5>
-                            <div className="flex items-center justify-between p-2 rounded-md">
-                                <span className="text-sm text-left">Play/Pause sequencer</span>
-                                <kbd className="px-2 py-1 bg-[var(--mcb-bg-elevated)] rounded text-xs font-mono">Space</kbd>
-                            </div>
-                        </div>
-                        <div className="space-y-3">
-                            <h5 className="text-white font-semibold text-sm border-b border-mcb-subtle pb-2 text-left">Navigation</h5>
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between p-2 rounded-md">
-                                    <span className="text-sm text-left">Expand chord buttons</span>
-                                    <kbd className="px-2 py-1 bg-[var(--mcb-bg-elevated)] rounded text-xs font-mono">L</kbd>
-                                </div>
-                                <div className="flex items-center justify-between p-2 rounded-md">
-                                    <span className="text-sm text-left">Select chord from sequence</span>
-                                    <kbd className="px-2 py-1 bg-[var(--mcb-bg-elevated)] rounded text-xs font-mono">1-9</kbd>
-                                </div>
-                            </div>
-                        </div>
+                    {/* Read-through: previous / next topic */}
+                    <div className="shrink-0 flex items-center justify-between gap-2 px-3 md:px-4 py-2 border-t border-mcb-subtle bg-[color-mix(in_srgb,var(--mcb-bg-input)_30%,transparent)]">
+                        {prev ? (
+                            <button onClick={() => open(prev.id)} className={stepButton}>
+                                <ChevronLeftIcon className="w-4 h-4 shrink-0" />
+                                <span>{prev.title}</span>
+                            </button>
+                        ) : <span />}
+                        {next && (
+                            <button onClick={() => open(next.id)} className={stepButton}>
+                                <span>{next.title}</span>
+                                <ChevronRightIcon className="w-4 h-4 shrink-0" />
+                            </button>
+                        )}
                     </div>
-                </HelpSection>
-
-                <HelpSection title="Piano & Audio Controls">
-                    <div className="space-y-6">
-                        <div className="p-4 rounded-lg">
-                            <h5 className="text-white font-semibold mb-3 text-sm text-left">Piano Interaction</h5>
-                            <p className="text-sm text-left">Click piano keys to play individual notes. The piano highlights scale notes and chord tones based on your current selection.</p>
-                        </div>
-                        <div className="p-4 rounded-lg">
-                            <h5 className="text-white font-semibold mb-3 text-sm text-left">Audio Settings</h5>
-                            <p className="text-sm mb-3 text-left">Access comprehensive audio controls through the Settings panel in the Controls section:</p>
-                            <div className="space-y-2">
-                                <div className="flex items-start space-x-2 text-sm">
-                                    <div className="w-2 h-2 rounded-full bg-[var(--mcb-accent-text-primary)] mt-2 flex-shrink-0"></div>
-                                    <div className="text-left">
-                                        <strong className="text-white">Voice:</strong> <span className="text-mcb-secondary">Choose from multiple instrument sounds</span>
-                                    </div>
-                                </div>
-                                <div className="flex items-start space-x-2 text-sm">
-                                    <div className="w-2 h-2 rounded-full bg-[var(--mcb-accent-text-primary)] mt-2 flex-shrink-0"></div>
-                                    <div className="text-left">
-                                        <strong className="text-white">Volume & Octave:</strong> <span className="text-mcb-secondary">Adjust overall volume and pitch range</span>
-                                    </div>
-                                </div>
-                                <div className="flex items-start space-x-2 text-sm">
-                                    <div className="w-2 h-2 rounded-full bg-[var(--mcb-accent-text-primary)] mt-2 flex-shrink-0"></div>
-                                    <div className="text-left">
-                                        <strong className="text-white">Effects:</strong> <span className="text-mcb-secondary">Add reverb, chorus, and delay</span>
-                                    </div>
-                                </div>
-                                <div className="flex items-start space-x-2 text-sm">
-                                    <div className="w-2 h-2 rounded-full bg-[var(--mcb-accent-text-primary)] mt-2 flex-shrink-0"></div>
-                                    <div className="text-left">
-                                        <strong className="text-white">Equalizer:</strong> <span className="text-mcb-secondary">Shape the sound with bass, mid, and treble controls</span>
-                                    </div>
-                                </div>
-                                <div className="flex items-start space-x-2 text-sm">
-                                    <div className="w-2 h-2 rounded-full bg-[var(--mcb-accent-text-primary)] mt-2 flex-shrink-0"></div>
-                                    <div className="text-left">
-                                        <strong className="text-white">Note Duration:</strong> <span className="text-mcb-secondary">Control how long notes ring out</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </HelpSection>
-
-                <HelpSection title="Pattern Sequencer">
-                    <div className="space-y-4">
-                        <div className="p-4 rounded-lg">
-                            <h5 className="text-white font-semibold mb-3 text-sm text-left">Understanding Patterns</h5>
-                            <p className="text-sm mb-3 text-left">Patterns control which chord tones play at different time steps. Each step can be:</p>
-                            <div className="space-y-2">
-                                <div className="flex items-center space-x-3 p-2 rounded-md bg-mcb-primary">
-                                    <code className="px-2 py-1 bg-[var(--mcb-bg-elevated)] rounded text-xs font-mono text-white min-w-[4rem] text-center">—</code>
-                                    <span className="text-sm text-mcb-secondary text-left">Rest/silence (represented as 'x' in custom patterns)</span>
-                                </div>
-                                <div className="flex items-center space-x-3 p-2 rounded-md bg-mcb-primary">
-                                    <code className="px-2 py-1 bg-[var(--mcb-bg-elevated)] rounded text-xs font-mono text-white min-w-[4rem] text-center">1, 2, 3...</code>
-                                    <span className="text-sm text-mcb-secondary text-left">Play the 1st, 2nd, 3rd... note of the chord</span>
-                                </div>
-                                <div className="flex items-center space-x-3 p-2 rounded-md bg-mcb-primary">
-                                    <code className="px-2 py-1 bg-[var(--mcb-bg-elevated)] rounded text-xs font-mono text-white min-w-[4rem] text-center">1↑, 2↑...</code>
-                                    <span className="text-sm text-mcb-secondary text-left">Play the note one octave higher ('+' in custom patterns)</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                            <div className="p-4 rounded-lg">
-                                <h5 className="text-white font-semibold mb-3 text-sm text-left">Pattern Controls</h5>
-                                <div className="space-y-2 text-sm text-left">
-                                    <div><strong className="text-white">Add/Remove Steps:</strong> Use the +/- buttons to change pattern length (1-16 steps)</div>
-                                    <div><strong className="text-white">Pattern Presets:</strong> Choose from pre-built patterns organized by category and note count</div>
-                                    <div><strong className="text-white">Custom Patterns:</strong> Enter your own pattern using notation like "1,x,3,2+" and click Apply</div>
-                                    <div><strong className="text-white">Visual Feedback:</strong> Blue indicator shows the currently playing step</div>
-                                </div>
-                            </div>
-                            <div className="p-4 rounded-lg">
-                                <h5 className="text-white font-semibold mb-3 text-sm text-left">Timing Controls</h5>
-                                <div className="space-y-2 text-sm text-left">
-                                    <div><strong className="text-white">BPM:</strong> Set tempo from 60-200 beats per minute</div>
-                                    <div><strong className="text-white">Subdivision:</strong> Choose note duration (32nd, 16th, 8th, quarter, half notes)</div>
-                                    <div><strong className="text-white">Swing:</strong> Add groove by delaying alternate notes (0-50%)</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="p-4 rounded-lg">
-                            <h5 className="text-white font-semibold mb-3 text-sm text-left">Chord-Specific Patterns</h5>
-                            <p className="text-sm mb-3 text-left">Each chord in your sequence can have its own unique pattern:</p>
-                            <div className="space-y-2 text-sm text-left">
-                                <div><strong className="text-white">Global Pattern:</strong> The default pattern that plays when no chord is selected (shown with cyan "Global Pattern" label)</div>
-                                <div><strong className="text-white">Chord Pattern:</strong> Select a chord from your sequence to edit its specific pattern (shown with purple chord name label)</div>
-                                <div><strong className="text-white">Automatic Switching:</strong> The sequencer automatically uses each chord's pattern during playback</div>
-                                <div><strong className="text-white">Visual Indicators:</strong> Pattern editor shows which chord you're currently editing</div>
-                            </div>
-                        </div>
-
-                        <div className="p-4 rounded-lg">
-                            <h5 className="text-white font-semibold mb-3 text-sm text-left">Pattern Presets</h5>
-                            <p className="text-sm mb-3 text-left">Browse categorized pattern presets to quickly create common rhythmic patterns:</p>
-                            <div className="space-y-2 text-sm text-left">
-                                <div><strong className="text-white">Filter by Note Count:</strong> Enable "Hide patterns with fewer notes" to show only patterns that use all available chord notes</div>
-                                <div><strong className="text-white">Categories:</strong> Patterns are organized by style (Arpeggios, Rhythmic, Bass Lines, etc.)</div>
-                                <div><strong className="text-white">Visual Preview:</strong> Each preset shows its pattern notation before applying</div>
-                            </div>
-                        </div>
-                    </div>
-                </HelpSection>
-
-                <HelpSection title="MIDI Recording & Export">
-                    <div className="space-y-4">
-                        <div className="p-4 rounded-lg">
-                            <h5 className="text-white font-semibold mb-3 text-sm text-left">Automatic MIDI Recording</h5>
-                            <p className="text-sm mb-3 text-left">The app automatically records your sequencer performances as standard MIDI files that you can export and use in any DAW or music software.</p>
-                            <div className="space-y-2">
-                                <div className="flex items-start space-x-3 p-2 rounded-md bg-mcb-primary">
-                                    <div className="w-2 h-2 rounded-full bg-[var(--mcb-accent-text-primary)] mt-2 flex-shrink-0"></div>
-                                    <div className="text-sm text-left">
-                                        <strong className="text-white">Start Recording:</strong> <span className="text-mcb-secondary">Recording begins automatically when you press Play on the sequencer</span>
-                                    </div>
-                                </div>
-                                <div className="flex items-start space-x-3 p-2 rounded-md bg-mcb-primary">
-                                    <div className="w-2 h-2 rounded-full bg-[var(--mcb-accent-text-primary)] mt-2 flex-shrink-0"></div>
-                                    <div className="text-sm text-left">
-                                        <strong className="text-white">Recording Indicator:</strong> <span className="text-mcb-secondary">A red pulsing indicator appears showing "Recording MIDI" during playback</span>
-                                    </div>
-                                </div>
-                                <div className="flex items-start space-x-3 p-2 rounded-md bg-mcb-primary">
-                                    <div className="w-2 h-2 rounded-full bg-[var(--mcb-accent-text-primary)] mt-2 flex-shrink-0"></div>
-                                    <div className="text-sm text-left">
-                                        <strong className="text-white">Stop Recording:</strong> <span className="text-mcb-secondary">Recording stops when you press Stop or Pause on the sequencer</span>
-                                    </div>
-                                </div>
-                                <div className="flex items-start space-x-3 p-2 rounded-md bg-mcb-primary">
-                                    <div className="w-2 h-2 rounded-full bg-[var(--mcb-accent-text-primary)] mt-2 flex-shrink-0"></div>
-                                    <div className="text-sm text-left">
-                                        <strong className="text-white">Save MIDI:</strong> <span className="text-mcb-secondary">After stopping, a green "Save MIDI" button appears - click to download your recording</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                            <div className="p-4 rounded-lg">
-                                <h5 className="text-white font-semibold mb-3 text-sm text-left">What Gets Recorded</h5>
-                                <div className="space-y-2 text-sm text-left">
-                                    <div><strong className="text-white">Note Events:</strong> All notes played by the sequencer with accurate timing</div>
-                                    <div><strong className="text-white">Tempo:</strong> Your BPM setting is preserved in the MIDI file</div>
-                                    <div><strong className="text-white">Duration:</strong> Note lengths based on your note duration setting</div>
-                                    <div><strong className="text-white">Patterns:</strong> Records the full sequence including chord-specific patterns</div>
-                                </div>
-                            </div>
-                            <div className="p-4 rounded-lg">
-                                <h5 className="text-white font-semibold mb-3 text-sm text-left">Using MIDI Files</h5>
-                                <div className="space-y-2 text-sm text-left">
-                                    <div><strong className="text-white">Import to DAW:</strong> Drag the .mid file into any music production software</div>
-                                    <div><strong className="text-white">Change Instruments:</strong> Assign any virtual instrument or sound</div>
-                                    <div><strong className="text-white">Further Editing:</strong> Edit timing, velocities, and notes in your DAW</div>
-                                    <div><strong className="text-white">Timestamped Files:</strong> Each export is automatically named with a timestamp</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="p-4 rounded-lg">
-                            <h5 className="text-white font-semibold mb-3 text-sm text-left">Tips for MIDI Recording</h5>
-                            <div className="space-y-2 text-sm text-left">
-                                <div>Set your desired BPM and timing before starting playback</div>
-                                <div>Let the sequence play through completely for the best recording</div>
-                                <div>Multiple recordings can be made - each creates a new file</div>
-                                <div>The "Save MIDI" button remains available until you start a new recording</div>
-                            </div>
-                        </div>
-                    </div>
-                </HelpSection>
-
-                <HelpSection title="Chord Explorer & Sequences">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div className="p-4 rounded-lg">
-                            <h5 className="text-white font-semibold mb-3 text-sm text-left">Finding Chords</h5>
-                            <p className="text-sm mb-3 text-left">The Chord Explorer shows all chords that fit your selected key and mode. You can:</p>
-                            <div className="space-y-2 text-sm text-left">
-                                <div><strong className="text-white">Filter by root note</strong> to find specific chord types</div>
-                                <div><strong className="text-white">Search</strong> for chord names or note combinations</div>
-                                <div><strong className="text-white">Click to preview</strong> any chord</div>
-                                <div><strong className="text-white">Click ↓</strong> to see the individual notes in a chord</div>
-                            </div>
-                        </div>
-                        <div className="p-4 rounded-lg">
-                            <h5 className="text-white font-semibold mb-3 text-sm text-left">Building Sequences</h5>
-                            <p className="text-sm mb-3 text-left">Add chords to your sequence using the <span className="text-[var(--mcb-success-text)] font-bold">+</span> button. Your chord sequence appears at the bottom where you can:</p>
-                            <div className="space-y-2 text-sm text-left">
-                                <div>Click any chord to play it immediately</div>
-                                <div>Use numbers 1-9 to jump between chords</div>
-                                <div>Toggle Delete mode to remove unwanted chords</div>
-                                <div>Clear all chords to start fresh</div>
-                                <div><strong className="text-[var(--mcb-accent-text-primary)]">Click the gear icon</strong> to enter Edit mode and modify chords</div>
-                            </div>
-                        </div>
-                    </div>
-                </HelpSection>
-
-                <HelpSection title="Chord Editing">
-                    <div className="space-y-4">
-                        <div className="p-4 rounded-lg">
-                            <h5 className="text-white font-semibold mb-3 text-sm text-left">Edit Mode</h5>
-                            <p className="text-sm mb-3 text-left">Click the <span className="text-[var(--mcb-accent-text-primary)] font-bold">gear icon</span> next to your chord sequence to enter Edit Mode. In this mode, you can:</p>
-                            <div className="space-y-2 text-sm text-left">
-                                <div><strong className="text-white">Click any chord</strong> to open the chord editor</div>
-                                <div><strong className="text-white">Modify chord voicings</strong> by reordering notes</div>
-                                <div><strong className="text-white">Add slash chords</strong> to change the bass note</div>
-                                <div><strong className="text-white">Preview changes</strong> before saving them</div>
-                            </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                            <div className="p-4 rounded-lg">
-                                <h5 className="text-white font-semibold mb-3 text-sm text-left">Slash Chords</h5>
-                                <p className="text-sm mb-3 text-left">Create slash chords (like C/E) by specifying a bass note:</p>
-                                <div className="space-y-2 text-sm text-left">
-                                    <div><strong className="text-white">Bass Note Field:</strong> Enter a note name (e.g., E, Gb, C)</div>
-                                    <div><strong className="text-white">Automatic Voicing:</strong> The bass note moves to the lowest position</div>
-                                    <div><strong className="text-white">Chord Name:</strong> Updates to show the slash notation (C/E)</div>
-                                    <div><strong className="text-white">Remove Bass:</strong> Clear the field to return to original chord</div>
-                                </div>
-                            </div>
-                            <div className="p-4 rounded-lg">
-                                <h5 className="text-white font-semibold mb-3 text-sm text-left">Note Reordering</h5>
-                                <p className="text-sm mb-3 text-left">Change the order of chord notes for different voicings:</p>
-                                <div className="space-y-2 text-sm text-left">
-                                    <div><strong className="text-white">Drag & Drop:</strong> Drag notes to reorder them</div>
-                                    <div><strong className="text-white">Arrow Buttons:</strong> Use up/down arrows to move notes</div>
-                                    <div><strong className="text-white">Auto-Detection:</strong> Slash note updates automatically when you change the bass</div>
-                                    <div><strong className="text-white">Visual Feedback:</strong> Slash notes are highlighted in amber</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="p-4 rounded-lg">
-                            <h5 className="text-white font-semibold mb-3 text-sm text-left">Editor Controls</h5>
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                <div className="space-y-2 text-sm text-left">
-                                    <div><strong className="text-white">Preview:</strong> Click the play button to hear your changes</div>
-                                    <div><strong className="text-white">Save:</strong> Green checkmark to confirm edits</div>
-                                    <div><strong className="text-white">Cancel:</strong> Discard changes and close editor</div>
-                                </div>
-                                <div className="space-y-2 text-sm text-left">
-                                    <div><strong className="text-white">Original Notes:</strong> Editor preserves original chord voicing</div>
-                                    <div><strong className="text-white">Real-time Updates:</strong> Changes reflect immediately in the editor</div>
-                                    <div><strong className="text-white">Full-screen:</strong> Editor takes over the entire interface for focused editing</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </HelpSection>
-
-                <HelpSection title="Live Mode">
-                    <div className="space-y-4">
-                        <div className="p-4 rounded-lg">
-                            <h5 className="text-white font-semibold mb-3 text-sm text-left">Performance Mode</h5>
-                            <p className="text-sm mb-3 text-left">Live Mode expands your chord sequence into a full-screen performance interface perfect for:</p>
-                            <div className="space-y-2">
-                                <div className="flex items-start space-x-3 p-2 rounded-md bg-mcb-primary">
-                                    <div className="w-2 h-2 rounded-full bg-[var(--mcb-accent-text-primary)] mt-2 flex-shrink-0"></div>
-                                    <div className="text-sm text-left">
-                                        <strong className="text-white">Live performance:</strong> <span className="text-mcb-secondary">Large, touch-friendly chord buttons</span>
-                                    </div>
-                                </div>
-                                <div className="flex items-start space-x-3 p-2 rounded-md bg-mcb-primary">
-                                    <div className="w-2 h-2 rounded-full bg-[var(--mcb-accent-text-primary)] mt-2 flex-shrink-0"></div>
-                                    <div className="text-sm text-left">
-                                        <strong className="text-white">Practice sessions:</strong> <span className="text-mcb-secondary">Easy chord switching with visual feedback</span>
-                                    </div>
-                                </div>
-                                <div className="flex items-start space-x-3 p-2 rounded-md bg-mcb-primary">
-                                    <div className="w-2 h-2 rounded-full bg-[var(--mcb-accent-text-primary)] mt-2 flex-shrink-0"></div>
-                                    <div className="text-sm text-left">
-                                        <strong className="text-white">Composition:</strong> <span className="text-mcb-secondary">Hear chord progressions in real-time</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="p-4 rounded-lg">
-                            <h5 className="text-white font-semibold mb-3 text-sm text-left">Using Live Mode</h5>
-                            <div className="space-y-2 text-sm text-left">
-                                <div>Click "Expand" in the chord sequence to enter Live Mode</div>
-                                <div>Use keyboard numbers 1-9 or click/tap chord buttons</div>
-                                <div>The sequencer continues playing your patterns</div>
-                                <div>Active chord is highlighted in blue</div>
-                            </div>
-                        </div>
-                    </div>
-                </HelpSection>
-
-                <HelpSection title="Song Sheets">
-                    <div className="space-y-4">
-                        <div className="p-4 rounded-lg">
-                            <h5 className="text-white font-semibold mb-3 text-sm text-left">What Song Sheets Are</h5>
-                            <p className="text-sm mb-3 text-left">Song Sheets turn free-form lyrics and chords into a structured, playable, printable chart. Open them from the app menu &rarr; <strong className="text-white">Song Sheets</strong>. Songs are saved in your browser and can be exported to a file or synced to Google Drive.</p>
-                        </div>
-
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                            <div className="p-4 rounded-lg">
-                                <h5 className="text-white font-semibold mb-3 text-sm text-left">Adding a Song</h5>
-                                <div className="space-y-2 text-sm text-left">
-                                    <div><strong className="text-white">Paste Lyrics & Chords:</strong> Paste chords-over-lyrics or ChordPro text and the parser detects chords and section headers automatically</div>
-                                    <div><strong className="text-white">Free-form Placement:</strong> Chords align to the exact character above each lyric, so spacing is preserved</div>
-                                    <div><strong className="text-white">Set Key/Mode:</strong> Pin a song's key and mode, or let the app auto-detect it. Picking a new key asks whether to transpose the chords into it or just set the key — either way the chords are respelled (sharps vs flats) to match</div>
-                                </div>
-                            </div>
-                            <div className="p-4 rounded-lg">
-                                <h5 className="text-white font-semibold mb-3 text-sm text-left">Editing</h5>
-                                <div className="space-y-2 text-sm text-left">
-                                    <div><strong className="text-white">Add/Edit Chords:</strong> Click a spot on a line to add a chord, or click an existing chord to change it</div>
-                                    <div><strong className="text-white">Drag to Reposition:</strong> Drag a chord along the line to move it</div>
-                                    <div><strong className="text-white">Transpose:</strong> Shift the whole song up or down by semitones</div>
-                                    <div><strong className="text-white">Undo:</strong> Step back through your recent edits</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                            <div className="p-4 rounded-lg">
-                                <h5 className="text-white font-semibold mb-3 text-sm text-left">Playback</h5>
-                                <div className="space-y-2 text-sm text-left">
-                                    <div><strong className="text-white">Click to Hear:</strong> Click any chord to play it through the app's audio engine</div>
-                                    <div><strong className="text-white">Step Through:</strong> Move chord by chord using the same voices, effects, and patterns as the rest of the app</div>
-                                    <div><strong className="text-white">Sheet View:</strong> Switch to a clean, full-screen view for performance</div>
-                                </div>
-                            </div>
-                            <div className="p-4 rounded-lg">
-                                <h5 className="text-white font-semibold mb-3 text-sm text-left">Exporting & Printing</h5>
-                                <div className="space-y-2 text-sm text-left">
-                                    <div><strong className="text-white">Formats:</strong> Export to plain text, a PNG image, or a PDF (via the browser print dialog)</div>
-                                    <div><strong className="text-white">Layout Options:</strong> Tune page orientation, margins, columns, line spacing, and font sizes</div>
-                                    <div><strong className="text-white">Library:</strong> Save songs to a JSON file or sync them to Google Drive</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </HelpSection>
-
-                <HelpSection title="Interface Tips">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        <div className="space-y-4">
-                            <div className="p-4 rounded-lg">
-                                <h5 className="text-white font-semibold mb-3 text-sm text-left">Navigation</h5>
-                                <div className="space-y-2 text-sm text-left">
-                                    <div><strong className="text-white">Sequencer Header:</strong> Click to show/hide the pattern editor</div>
-                                    <div><strong className="text-white">Settings Panels:</strong> Most sections have expandable settings</div>
-                                    <div><strong className="text-white">Status Indicators:</strong> Top bar shows current key, mode, and playback status</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="space-y-4">
-                            <div className="p-4 rounded-lg">
-                                <h5 className="text-white font-semibold mb-3 text-sm text-left">Visual Feedback</h5>
-                                <div className="space-y-2 text-sm text-left">
-                                    <div><strong className="text-white">Piano Keys:</strong> Scale notes are highlighted in blue</div>
-                                    <div><strong className="text-white">Chord Tones:</strong> Active chord notes show in brighter colors</div>
-                                    <div><strong className="text-white">Step Indicator:</strong> Shows current position in the pattern</div>
-                                    <div><strong className="text-white">Animations:</strong> Visual feedback for chord changes and playback</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="p-4 rounded-lg mt-4">
-                        <h5 className="text-white font-semibold mb-3 text-sm text-left">Responsive Design</h5>
-                        <p className="text-sm text-left">The interface adapts to different screen sizes. On mobile devices, some controls are simplified and touch-optimized for better usability.</p>
-                    </div>
-                </HelpSection>
-
-                <HelpSection title="Troubleshooting">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        <div className="p-4 rounded-lg">
-                            <h5 className="text-white font-semibold mb-3 text-sm text-left">Audio Issues</h5>
-                            <div className="space-y-2 text-sm text-left">
-                                <div><strong className="text-white">No sound:</strong> Check device volume and ensure audio isn't muted</div>
-                                <div><strong className="text-white">iOS devices:</strong> Tap any button first to initialize audio</div>
-                                <div><strong className="text-white">Distorted audio:</strong> Lower the volume setting in piano controls</div>
-                            </div>
-                        </div>
-                        <div className="p-4 rounded-lg">
-                            <h5 className="text-white font-semibold mb-3 text-sm text-left">Performance</h5>
-                            <div className="space-y-2 text-sm text-left">
-                                <div><strong className="text-white">Lag or glitches:</strong> Close other browser tabs using audio</div>
-                                <div><strong className="text-white">Mobile performance:</strong> Use lower reverb/effect settings for better performance</div>
-                            </div>
-                        </div>
-                    </div>
-                </HelpSection>
-
-                {/* Footer */}
-                <div className="mt-8 pt-6 border-t border-mcb-subtle">
-                    <p className="text-xs text-mcb-tertiary text-left">
-                        Need more help? Check the GitHub repository for detailed documentation and examples.
-                    </p>
                 </div>
             </div>
         </Modal>

@@ -152,6 +152,17 @@ const SongLibraryPanel: React.FC = () => {
 
     const deleteTargetSong = songs.find(s => s.id === deleteTarget);
 
+    // What the dialogs last showed, so their text holds steady while they
+    // fade out (the target is cleared, or the library changes, on confirm)
+    const [deleteLabel, setDeleteLabel] = useState('this song');
+    const nextDeleteLabel = deleteTargetSong?.title || 'this song';
+    if (deleteTargetSong && nextDeleteLabel !== deleteLabel) setDeleteLabel(nextDeleteLabel);
+
+    const [importSummary, setImportSummary] = useState({ source: pendingImport, incoming: 0, existing: 0 });
+    if (pendingImport && importSummary.source !== pendingImport) {
+        setImportSummary({ source: pendingImport, incoming: pendingImport.file.songs.length, existing: songs.length });
+    }
+
     return (
         <div className="mcb-panel !rounded-lg overflow-hidden flex flex-col sm:w-56 flex-shrink-0 self-start w-full">
             <div className="mcb-panel-header !py-1.5 flex items-center justify-between">
@@ -185,7 +196,7 @@ const SongLibraryPanel: React.FC = () => {
                     >
                         <div className="flex-1 min-w-0">
                             <div className="text-xs font-medium truncate">{song.title || 'Untitled'}</div>
-                            <div className="text-[0.625rem] text-mcb-tertiary">
+                            <div className="text-[0.6875rem] text-mcb-tertiary">
                                 {new Date(song.updatedAt).toLocaleDateString()}
                             </div>
                         </div>
@@ -194,7 +205,7 @@ const SongLibraryPanel: React.FC = () => {
                                 e.stopPropagation();
                                 setDeleteTarget(song.id);
                             }}
-                            className="p-1 rounded text-mcb-tertiary opacity-0 group-hover:opacity-100 focus:opacity-100 hover:text-[var(--mcb-danger-text)] transition-all flex-shrink-0"
+                            className="p-1 rounded-sm text-mcb-tertiary opacity-0 group-hover:opacity-100 focus:opacity-100 hover:text-[var(--mcb-danger-text)] transition-all flex-shrink-0"
                             title="Delete song"
                         >
                             <TrashIcon className="w-3.5 h-3.5" />
@@ -229,7 +240,7 @@ const SongLibraryPanel: React.FC = () => {
                             {driveConnected && (
                                 <button
                                     onClick={disconnectDrive}
-                                    className="text-[0.625rem] text-mcb-tertiary underline hover:text-mcb-secondary transition-colors"
+                                    className="text-[0.6875rem] text-mcb-tertiary underline hover:text-mcb-secondary transition-colors"
                                     title="Disconnect this app from your Google Drive"
                                 >
                                     Disconnect
@@ -261,15 +272,15 @@ const SongLibraryPanel: React.FC = () => {
                             </Button>
                         </div>
                         {driveError && (
-                            <p className="text-[0.625rem] text-[var(--mcb-danger-text)] text-left">{driveError}</p>
+                            <p className="text-[0.6875rem] text-[var(--mcb-danger-text)] text-left">{driveError}</p>
                         )}
                     </>
                 )}
                 {importError && (
-                    <p className="text-[0.625rem] text-[var(--mcb-danger-text)] text-left">{importError}</p>
+                    <p className="text-[0.6875rem] text-[var(--mcb-danger-text)] text-left">{importError}</p>
                 )}
                 {savedNotice && (
-                    <p className="text-[0.625rem] text-[var(--mcb-accent-text-primary)] text-left">{savedNotice}</p>
+                    <p className="text-[0.6875rem] text-[var(--mcb-accent-text-primary)] text-left">{savedNotice}</p>
                 )}
                 <input
                     ref={fileInputRef}
@@ -289,7 +300,7 @@ const SongLibraryPanel: React.FC = () => {
             >
                 <div className="p-4 space-y-4 text-left">
                     <p className="text-sm text-mcb-secondary">
-                        Delete <span className="text-mcb-primary font-medium">{deleteTargetSong?.title || 'this song'}</span>?
+                        Delete <span className="text-mcb-primary font-medium">{deleteLabel}</span>?
                         This can't be undone.
                     </p>
                     <div className="flex justify-end gap-2">
@@ -319,8 +330,8 @@ const SongLibraryPanel: React.FC = () => {
             >
                 <div className="p-4 space-y-4 text-left">
                     <p className="text-sm text-mcb-secondary">
-                        The file contains {pendingImport?.file.songs.length ?? 0} song{(pendingImport?.file.songs.length ?? 0) === 1 ? '' : 's'}.
-                        You already have {songs.length} — merge the file into your library, or replace it?
+                        The file contains {importSummary.incoming} song{importSummary.incoming === 1 ? '' : 's'}.
+                        You already have {importSummary.existing} — merge the file into your library, or replace it?
                     </p>
                     <p className="text-xs text-mcb-tertiary">
                         Merge keeps everything: new songs are added and conflicting copies are imported alongside yours.

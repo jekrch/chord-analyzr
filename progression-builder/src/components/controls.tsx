@@ -25,7 +25,7 @@ export function Fader({ label, value, min, max, step, onChange, format, title, m
       <span className="flex items-baseline justify-between gap-2">
         <span className="pb-label truncate">
           {label}
-          {modified && <span className="pb-mod-dot" title="Hand-tweaked off the layer value" />}
+          {modified && <span className="pb-mod-mark" title="Hand-tweaked off the layer value" />}
         </span>
         <span className="pb-readout">{format ? format(value) : value}</span>
       </span>
@@ -207,7 +207,7 @@ export function NoteChips({ selected, onChange, scalePitchClasses, scaleNotes = 
             marked={inScale}
             disabled={scaleNotes === 'exclude' && inScale}
             onToggle={() => toggle(note)}
-            title={inScale ? `${note} — in the current scale` : note}
+            title={inScale ? `${note} (in scale)` : note}
           />
         );
       })}
@@ -268,7 +268,7 @@ interface SegmentedProps<T extends string> {
 
 export function Segmented<T extends string>({ options, value, onChange }: SegmentedProps<T>) {
   return (
-    <div className="pb-inset flex flex-wrap gap-0.5 p-0.5">
+    <div className="pb-inset pb-seg-group flex flex-wrap gap-0.5 p-0.5">
       {options.map((opt) => (
         <button
           key={opt.value}

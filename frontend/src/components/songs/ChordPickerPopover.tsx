@@ -133,14 +133,14 @@ const ChordPickerPopover: React.FC<ChordPickerPopoverProps> = ({
                         className="w-full px-2 py-1.5 bg-mcb-input border border-[var(--mcb-border-subtle)] rounded-md text-white placeholder-[var(--mcb-text-tertiary)] focus:border-[var(--mcb-accent-primary)] focus:outline-none !text-xs font-mono"
                     />
                     {typedToken && !typedValid && (
-                        <p className="text-[0.625rem] text-[var(--mcb-danger-text)] mt-1">
+                        <p className="text-[0.6875rem] text-[var(--mcb-danger-text)] mt-1">
                             Couldn't read that as a chord
                         </p>
                     )}
                     {typedToken && typedValid && typedToken.matchType !== 'nearest' && (
                         <button
                             onClick={() => onSelect(resolvedChordName(typedToken))}
-                            className="mt-1.5 inline-flex items-center gap-1.5 px-2 py-1 text-xs rounded font-mono bg-[var(--mcb-accent-primary)]/10 border border-[var(--mcb-accent-primary)]/40 text-[var(--mcb-accent-text-primary)] hover:bg-[var(--mcb-accent-primary)]/20 transition-colors"
+                            className="mt-1.5 inline-flex items-center gap-1.5 px-2 py-1 text-xs rounded-sm font-mono bg-[var(--mcb-accent-primary)]/10 border border-[var(--mcb-accent-primary)]/40 text-[var(--mcb-accent-text-primary)] hover:bg-[var(--mcb-accent-primary)]/20 transition-colors"
                         >
                             <PlayIcon
                                 className="w-3 h-3 text-mcb-tertiary hover:text-[var(--mcb-accent-text-primary)]"
@@ -154,7 +154,7 @@ const ChordPickerPopover: React.FC<ChordPickerPopoverProps> = ({
                     )}
                     {typedToken && typedValid && typedToken.matchType === 'nearest' && (
                         <div className="mt-1.5">
-                            <div className="mcb-label !text-[0.5625rem] mb-1">Near matches</div>
+                            <div className="mcb-label mb-1">Near matches</div>
                             <div className="flex flex-wrap gap-1">
                                 {typedToken.candidates.slice(0, 4).map(candidate => {
                                     const name = `${typedToken.root}${candidate.chordType}${typedToken.slash ? `/${typedToken.slash}` : ''}`;
@@ -162,7 +162,7 @@ const ChordPickerPopover: React.FC<ChordPickerPopoverProps> = ({
                                         <button
                                             key={candidate.chordType}
                                             onClick={() => onSelect(name)}
-                                            className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded font-mono bg-[var(--mcb-warning-primary)] border border-[var(--mcb-warning-border)] text-[var(--mcb-warning-text)] hover:text-[var(--mcb-warning-text-alt)] transition-colors"
+                                            className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-sm font-mono bg-[var(--mcb-warning-primary)] border border-[var(--mcb-warning-border)] text-[var(--mcb-warning-text)] hover:text-[var(--mcb-warning-text-alt)] transition-colors"
                                         >
                                             <PlayIcon
                                                 className="w-3 h-3 opacity-60 hover:opacity-100"
@@ -183,14 +183,14 @@ const ChordPickerPopover: React.FC<ChordPickerPopoverProps> = ({
                 {/* Chords already in the user's progression */}
                 {ownChords.length > 0 && (
                     <div>
-                        <div className="mcb-label !text-[0.5625rem] mb-1">Your chords</div>
+                        <div className="mcb-label mb-1">Your chords</div>
                         <div className="flex flex-wrap gap-1">
                             {ownChords.map(chord => (
                                 <button
                                     key={chord.name}
                                     onClick={() => onSelect(chord.name)}
                                     className={classNames(
-                                        'inline-flex items-center gap-1 px-2 py-1 text-xs rounded font-mono transition-colors',
+                                        'inline-flex items-center gap-1 px-2 py-1 text-xs rounded-sm font-mono transition-colors',
                                         'bg-[var(--mcb-accent-primary)]/10 border border-[var(--mcb-accent-primary)]/40 text-[var(--mcb-accent-text-primary)] hover:bg-[var(--mcb-accent-primary)]/20 hover:border-[var(--mcb-accent-primary)]/60'
                                     )}
                                     title={chord.notes}

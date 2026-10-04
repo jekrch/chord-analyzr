@@ -198,7 +198,7 @@ const MidiRecorder: React.FC<MidiRecorderProps> = ({ className = '' }) => {
         <div className="mt-3">
           <button
             onClick={handleDownload}
-            className="flex items-center space-x-2 px-3 py-1.5 h-8 bg-[var(--mcb-success-primary)] hover:bg-[var(--mcb-success-secondary)] text-white rounded transition-colors text-xs font-medium uppercase tracking-wide"
+            className="flex items-center space-x-2 px-3 py-1.5 h-8 bg-[var(--mcb-success-primary)] hover:bg-[var(--mcb-success-secondary)] text-white rounded-sm transition-colors text-xs font-medium uppercase tracking-wide"
           >
             <ArrowDownTrayIcon className="w-4 h-4" />
             <span>Save</span>

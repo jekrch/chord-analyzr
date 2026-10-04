@@ -17,7 +17,7 @@ const PatternNotationHelpModal: React.FC<PatternNotationHelpModalProps> = ({ cla
       {/* Trigger Button */}
       <button
         onClick={openModal}
-        className={`inline-flex items-center justify-center w-5 h-5 rounded-full border border-mcb-subtle text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-colors ${className}`}
+        className={`inline-flex items-center justify-center w-5 h-5 rounded-md border border-mcb-subtle text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-colors ${className}`}
         title="Pattern notation help"
       >
         <QuestionMarkCircleIcon className="w-3 h-3" />
@@ -33,21 +33,21 @@ const PatternNotationHelpModal: React.FC<PatternNotationHelpModalProps> = ({ cla
         <div className="p-4 space-y-4">
           <div className="space-y-3">
             <div className="flex items-center space-x-3">
-              <code className="px-2 py-1 bg-[var(--mcb-bg-elevated)] text-mcb-primary rounded text-xs font-mono min-w-[2rem] text-center">
+              <code className="px-2 py-1 bg-[var(--mcb-bg-elevated)] text-mcb-primary rounded-sm text-xs font-mono min-w-[2rem] text-center">
                 x
               </code>
               <span className="text-xs text-mcb-secondary">Rest (silence)</span>
             </div>
             
             <div className="flex items-center space-x-3">
-              <code className="px-2 py-1 bg-[var(--mcb-bg-elevated)] text-mcb-primary rounded text-xs font-mono min-w-[2rem] text-center">
+              <code className="px-2 py-1 bg-[var(--mcb-bg-elevated)] text-mcb-primary rounded-sm text-xs font-mono min-w-[2rem] text-center">
                 1-8
               </code>
               <span className="text-xs text-mcb-secondary">Note index (1st, 2nd, 3rd note, etc.)</span>
             </div>
             
             <div className="flex items-center space-x-3">
-              <code className="px-2 py-1 bg-[var(--mcb-bg-elevated)] text-mcb-primary rounded text-xs font-mono min-w-[2rem] text-center">
+              <code className="px-2 py-1 bg-[var(--mcb-bg-elevated)] text-mcb-primary rounded-sm text-xs font-mono min-w-[2rem] text-center">
                 1+
               </code>
               <span className="text-xs text-mcb-secondary">Note with octave up</span>
@@ -75,7 +75,7 @@ const PatternNotationHelpModal: React.FC<PatternNotationHelpModalProps> = ({ cla
         <div className="flex justify-end p-4 border-t border-mcb-subtle">
           <button
             onClick={closeModal}
-            className="px-4 py-2 bg-[var(--mcb-accent-secondary)] hover:bg-[var(--mcb-accent-primary)] text-white text-xs font-medium rounded transition-colors uppercase tracking-wide"
+            className="px-4 py-2 bg-[var(--mcb-accent-secondary)] hover:bg-[var(--mcb-accent-primary)] text-white text-xs font-medium rounded-sm transition-colors uppercase tracking-wide"
           >
             Got it
           </button>

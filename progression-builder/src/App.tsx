@@ -3,7 +3,7 @@ import InstrumentPanel from './components/InstrumentPanel';
 import ChordGrid from './components/ChordGrid';
 import ProgressionRail from './components/ProgressionRail';
 import GeneratePanel from './components/GeneratePanel';
-import LinkPanel from './components/LinkPanel';
+import Header from './components/Header';
 import { useProgressionBuilder } from './hooks/useProgressionBuilder';
 import { useAudio } from './audio/useAudio';
 import { noteRingMs } from './audio/synth';
@@ -222,25 +222,28 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[var(--pb-bg-app)]">
+      <Header musicKey={key} mode={mode} />
       <main className="mx-auto flex max-w-6xl flex-col gap-4 p-4 sm:p-6">
-        <InstrumentPanel
-          musicKey={key}
-          onKeyChange={setKey}
-          mode={mode}
-          onModeChange={setMode}
-          modes={modes}
-          modesError={modesError}
-          scalePitchClasses={scalePitchClasses}
-          litNotes={soundingNotes}
-          previewNotes={previewLit}
-          onPlayKey={playKey}
-          volume={volume}
-          onVolumeChange={setVolume}
-          muted={muted}
-          onMutedChange={setMuted}
-        />
+        <div className="pb-rise [--pb-rise-delay:80ms]">
+          <InstrumentPanel
+            musicKey={key}
+            onKeyChange={setKey}
+            mode={mode}
+            onModeChange={setMode}
+            modes={modes}
+            modesError={modesError}
+            scalePitchClasses={scalePitchClasses}
+            litNotes={soundingNotes}
+            previewNotes={previewLit}
+            onPlayKey={playKey}
+            volume={volume}
+            onVolumeChange={setVolume}
+            muted={muted}
+            onMutedChange={setMuted}
+          />
+        </div>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
-          <div className="lg:col-span-3">
+          <div className="pb-rise [--pb-rise-delay:160ms] lg:col-span-3">
             <ChordGrid
               chords={chords}
               scaleNotes={scaleNotes}
@@ -253,49 +256,52 @@ export default function App() {
           </div>
 
           <div className="flex flex-col gap-4 lg:col-span-2">
-            <ProgressionRail
-              progression={progression}
-              chords={chords}
-              link={buildrLink}
-              onRemove={removeChord}
-              onMove={moveChord}
-              onShift={handleShift}
-              onClear={handleClear}
-              swap={swap}
-              onOpenSwap={openSwap}
-              onCloseSwap={closeSwap}
-              onReplace={handleReplace}
-              onPreview={previewNotes}
-              onPlayStep={triggerStep}
-              onPlayAll={() => playSequence(progression.map((c) => c.notes), 'rail')}
-              onStop={stopPlayback}
-              isPlaying={playing?.source === 'rail'}
-              activeStep={playing?.source === 'rail' ? playing.step : flashStep}
-            />
-            <GeneratePanel
-              chords={chords}
-              scaleNotes={scaleNotes}
-              musicKey={key}
-              mode={mode}
-              modeNames={modeNames}
-              onModeChange={setMode}
-              generating={generating}
-              generateError={generateError}
-              results={results}
-              preferredStartChord={lastChordName}
-              onGenerate={generate}
-              onUseResult={handleUseResult}
-              onPreview={previewNotes}
-              onPlayChord={(name) => playChordNotes(notesForChord(name))}
-              onPlayResult={(steps, i) =>
-                playSequence(steps.map((s) => notesForChord(s.chord)), `result-${i}`)
-              }
-              onStop={stopPlayback}
-              playing={playing}
-              notesForChord={notesForChord}
-              resultLink={resultLink}
-            />
-            <LinkPanel link={buildrLink} />
+            <div className="pb-rise [--pb-rise-delay:220ms]">
+              <ProgressionRail
+                progression={progression}
+                chords={chords}
+                link={buildrLink}
+                onRemove={removeChord}
+                onMove={moveChord}
+                onShift={handleShift}
+                onClear={handleClear}
+                swap={swap}
+                onOpenSwap={openSwap}
+                onCloseSwap={closeSwap}
+                onReplace={handleReplace}
+                onPreview={previewNotes}
+                onPlayStep={triggerStep}
+                onPlayAll={() => playSequence(progression.map((c) => c.notes), 'rail')}
+                onStop={stopPlayback}
+                isPlaying={playing?.source === 'rail'}
+                activeStep={playing?.source === 'rail' ? playing.step : flashStep}
+              />
+            </div>
+            <div className="pb-rise [--pb-rise-delay:280ms]">
+              <GeneratePanel
+                chords={chords}
+                scaleNotes={scaleNotes}
+                musicKey={key}
+                mode={mode}
+                modeNames={modeNames}
+                onModeChange={setMode}
+                generating={generating}
+                generateError={generateError}
+                results={results}
+                preferredStartChord={lastChordName}
+                onGenerate={generate}
+                onUseResult={handleUseResult}
+                onPreview={previewNotes}
+                onPlayChord={(name) => playChordNotes(notesForChord(name))}
+                onPlayResult={(steps, i) =>
+                  playSequence(steps.map((s) => notesForChord(s.chord)), `result-${i}`)
+                }
+                onStop={stopPlayback}
+                playing={playing}
+                notesForChord={notesForChord}
+                resultLink={resultLink}
+              />
+            </div>
           </div>
         </div>
       </main>

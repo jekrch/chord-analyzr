@@ -6,6 +6,7 @@ import { useUIStore } from '../../stores/uiStore';
 import ChordEditor from './ChordEditor';
 import { useChordNavigation } from '../../hooks/useChordNavigation';
 import { useMobileDrag } from '../../hooks/useMobileDrag';
+import { useArrivingChords } from '../../hooks/useArrivingChords';
 import { ControlBar } from './ControlBar';
 import { ChordDisplay } from './ChordDisplay';
 import { LiveModeFooter } from './LiveModeFooter';
@@ -63,6 +64,8 @@ const ChordNavigation: React.FC = () => {
         isLiveMode
     });
 
+    const arrivingChords = useArrivingChords(addedChords);
+
     // Early returns
     if (addedChords.length === 0) return null;
 
@@ -88,12 +91,16 @@ const ChordNavigation: React.FC = () => {
     // Collapsed: a chassis strip pinned to the bottom edge — flat app-background
     // fill with a hairline top edge, so the pads read as modules sitting on it.
     const baseClasses = isLiveMode
-        ? "fixed inset-0 bg-mcb-input bg-opacity-95 backdrop-blur-sm z-100 flex flex-col"
+        ? "fixed inset-0 bg-mcb-input z-100 flex flex-col"
         : "fixed bottom-0 left-0 right-0 bg-mcb-app border-t border-mcb-subtle shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.5)] z-100";
+
+    // Slide the bar up when the first chord is added (not in live mode,
+    // which covers the whole screen)
+    const isFirstArrival = !isLiveMode && arrivingChords.has(0);
 
     return (
         <div 
-            className={baseClasses}
+            className={`${baseClasses} ${isFirstArrival ? 'mcb-chordbar-arrive' : ''}`}
             style={isLiveMode ? {
                 touchAction: 'none',
                 overscrollBehavior: 'none'
@@ -127,6 +134,7 @@ const ChordNavigation: React.FC = () => {
                 addedChords={addedChords}
                 activeChordIndex={activeChordIndex}
                 highlightedChordIndex={highlightedChordIndex}
+                arrivingChords={arrivingChords}
                 sensors={sensors}
                 onChordClick={handleChordClick}
                 onEditChord={handleEditChord}

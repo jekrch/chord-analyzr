@@ -8,6 +8,7 @@ import {
   createKeySpeller,
   getMidiNote,
   clearMidiNoteCache,
+  spellChordForStaff,
 } from './NoteUtil';
 
 describe('normalizeNoteName', () => {
@@ -135,5 +136,73 @@ describe('getMidiNote', () => {
     const first = getMidiNote('G', 3);
     expect(getMidiNote('G', 3)).toBe(first);
     clearMidiNoteCache(); // does not throw
+  });
+});
+
+describe('spellChordForStaff', () => {
+  const C_MAJOR = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+  const F_MAJOR = ['F', 'G', 'A', 'Bb', 'C', 'D', 'E'];
+  const EB_MAJOR = ['Eb', 'F', 'G', 'Ab', 'Bb', 'C', 'D'];
+  const C_SHARP_MAJOR = ['C#', 'D#', 'E#', 'F#', 'G#', 'A#', 'B#'];
+
+  it('stacks a diatonic chord upward from the root', () => {
+    expect(spellChordForStaff(['A', 'C', 'E', 'G'], C_MAJOR, 'C')).toEqual([
+      { note: 'A', octave: 4 },
+      { note: 'C', octave: 5 },
+      { note: 'E', octave: 5 },
+      { note: 'G', octave: 5 },
+    ]);
+  });
+
+  it('respells sharp-normalized notes to the scale spelling', () => {
+    expect(spellChordForStaff(['A#', 'D', 'F'], F_MAJOR, 'F')).toEqual([
+      { note: 'Bb', octave: 4 },
+      { note: 'D', octave: 5 },
+      { note: 'F', octave: 5 },
+    ]);
+  });
+
+  it('spells chromatic notes without reusing a chord letter', () => {
+    // E major in C: the third is G#, not Ab, even if passed in as Ab
+    expect(spellChordForStaff(['E', 'Ab', 'B'], C_MAJOR, 'C').map(n => n.note))
+      .toEqual(['E', 'G#', 'B']);
+    // Ab minor in Eb keeps its Cb
+    expect(spellChordForStaff(['Ab', 'Cb', 'Eb'], EB_MAJOR, 'Eb').map(n => n.note))
+      .toEqual(['Ab', 'Cb', 'Eb']);
+  });
+
+  it('prefers flats for chromatic notes in flat keys', () => {
+    expect(spellChordForStaff(['C#', 'F', 'G#'], F_MAJOR, 'F').map(n => n.note))
+      .toEqual(['Db', 'F', 'Ab']);
+  });
+
+  it('spells chords as stacked thirds regardless of key preference', () => {
+    const G_MAJOR = ['G', 'A', 'B', 'C', 'D', 'E', 'F#'];
+    // Borrowed bVI in G stays Eb-G-Bb, not D#-G-A#
+    expect(spellChordForStaff(['Eb', 'G', 'Bb'], G_MAJOR, 'G').map(n => n.note))
+      .toEqual(['Eb', 'G', 'Bb']);
+    // C#dim7 in C: the seventh is Bb
+    expect(spellChordForStaff(['C#', 'E', 'G', 'A#'], C_MAJOR, 'C').map(n => n.note))
+      .toEqual(['C#', 'E', 'G', 'Bb']);
+  });
+
+  it('leaves non-tertian chords on their own spelling', () => {
+    // Bbsus4 in C: the fourth is Eb, not D#
+    expect(spellChordForStaff(['Bb', 'Eb', 'F'], C_MAJOR, 'C').map(n => n.note))
+      .toEqual(['Bb', 'Eb', 'F']);
+  });
+
+  it('keeps octaves letter-based across the B/C boundary', () => {
+    // G#-B#-D#: B#4 sits above G#4 and D# lands in octave 5
+    expect(spellChordForStaff(['G#', 'C', 'D#'], C_SHARP_MAJOR, 'C#')).toEqual([
+      { note: 'G#', octave: 4 },
+      { note: 'B#', octave: 4 },
+      { note: 'D#', octave: 5 },
+    ]);
+  });
+
+  it('ignores blank or malformed entries', () => {
+    expect(spellChordForStaff(['C', ' E', '', 'G'], C_MAJOR, 'C').map(n => n.note))
+      .toEqual(['C', 'E', 'G']);
   });
 });

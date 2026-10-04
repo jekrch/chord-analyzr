@@ -95,7 +95,7 @@ export const ChordButton: React.FC<ChordButtonProps> = ({
     {
       'transform': isHighlighted,
       'cursor-grab active:cursor-grabbing': isEditMode && !isMobile(),
-      'opacity-80 shadow-2xl scale-105': isDragging,
+      'opacity-80 shadow-lg scale-105': isDragging,
       'select-none': isEditMode,
     },
     className
@@ -124,7 +124,7 @@ export const ChordButton: React.FC<ChordButtonProps> = ({
         {/* Delete mode indicator */}
         {isDeleteMode && (
           <XCircleIcon
-            className={`absolute top-1 right-1 text-white bg-[var(--mcb-danger-primary)] rounded-full shadow-sm ${
+            className={`absolute top-1 right-1 text-white bg-[var(--mcb-danger-primary)] rounded-sm shadow-sm ${
               isLiveMode ? 'h-6 w-6' : 'h-4 w-4'
             }`} 
           />
@@ -134,7 +134,7 @@ export const ChordButton: React.FC<ChordButtonProps> = ({
         {isEditMode && (
           <>
           <CogIcon 
-            className={`absolute top-1 right-1 text-white bg-[var(--mcb-accent-primary)] rounded-full shadow-sm p-0.5 ${
+            className={`absolute top-1 right-1 text-white bg-[var(--mcb-accent-primary)] rounded-sm shadow-sm p-0.5 ${
               isLiveMode ? 'h-6 w-6' : 'h-4 w-4'
             }`} 
           />

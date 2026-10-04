@@ -26,9 +26,9 @@ const THEMES: Theme[] = [
         name: 'Default',
         description: 'Classic blue and gray theme',
         colors: {
-            primary: '#3b82f6',
-            secondary: '#3d434f',
-            accent: '#60a5fa',
+            primary: '#3f80e6',
+            secondary: '#343d4e',
+            accent: '#6ea2ef',
         },
     },
     {
@@ -63,8 +63,17 @@ const THEMES: Theme[] = [
     },
 ];
 
+type KeybedSkin = 'modern' | 'ivory';
+
+// Applied as data-keybed on <html>; the keybed styles live in App.css
+const KEYBED_SKINS: { id: KeybedSkin; name: string; description: string }[] = [
+    { id: 'modern', name: 'Modern', description: 'Clean white and glossy black keys, like a modern synth' },
+    { id: 'ivory', name: 'Ivory', description: 'Aged ivory and charcoal keys, like a vintage synth' },
+];
+
 const ThemeSettingsModal: React.FC<ThemeSettingsModalProps> = ({ isOpen, onClose }) => {
     const [currentTheme, setCurrentTheme] = useState<ThemeName>('default');
+    const [currentKeybed, setCurrentKeybed] = useState<KeybedSkin>('modern');
 
     // Load theme from localStorage on mount
     useEffect(() => {
@@ -73,7 +82,22 @@ const ThemeSettingsModal: React.FC<ThemeSettingsModalProps> = ({ isOpen, onClose
             setCurrentTheme(savedTheme);
             applyTheme(savedTheme);
         }
+        const savedKeybed = localStorage.getItem('mcb-keybed') as KeybedSkin;
+        if (savedKeybed && KEYBED_SKINS.some(skin => skin.id === savedKeybed)) {
+            setCurrentKeybed(savedKeybed);
+            applyKeybed(savedKeybed);
+        }
     }, []);
+
+    const applyKeybed = (skin: KeybedSkin) => {
+        document.documentElement.setAttribute('data-keybed', skin);
+        localStorage.setItem('mcb-keybed', skin);
+    };
+
+    const handleKeybedChange = (skin: KeybedSkin) => {
+        setCurrentKeybed(skin);
+        applyKeybed(skin);
+    };
 
     const applyTheme = (themeName: ThemeName) => {
         document.documentElement.setAttribute('data-theme', themeName);
@@ -119,7 +143,7 @@ const ThemeSettingsModal: React.FC<ThemeSettingsModalProps> = ({ isOpen, onClose
                                 {/* Selected Indicator */}
                                 {currentTheme === theme.id && (
                                     <div className="absolute top-2 right-2">
-                                        <div className="w-5 h-5 rounded-full bg-[var(--mcb-accent-primary)] flex items-center justify-center">
+                                        <div className="w-5 h-5 rounded-sm bg-[var(--mcb-accent-primary)] flex items-center justify-center">
                                             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                                             </svg>
@@ -137,12 +161,12 @@ const ThemeSettingsModal: React.FC<ThemeSettingsModalProps> = ({ isOpen, onClose
                                 <div className="flex items-center space-x-2 mt-3">
                                     <div className="flex-1 space-y-1">
                                         <div
-                                            className="h-5 rounded border  border-[var(--mcb-border-primary)]"
+                                            className="h-5 rounded-sm border  border-[var(--mcb-border-primary)]"
                                             style={{ backgroundColor: theme.colors.primary }}
                                             title="Accent Color"
                                         />
                                         <div
-                                            className="h-3 rounded border  border-[var(--mcb-border-primary)]"
+                                            className="h-3 rounded-sm border  border-[var(--mcb-border-primary)]"
                                             style={{ backgroundColor: theme.colors.secondary }}
                                             title="Background Color"
                                         />
@@ -151,6 +175,26 @@ const ThemeSettingsModal: React.FC<ThemeSettingsModalProps> = ({ isOpen, onClose
                                         Preview
                                     </div>
                                 </div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Keybed skin */}
+                <div className="space-y-3">
+                    <h3 className="mcb-panel-title block text-left">
+                        Keyboard
+                    </h3>
+                    <div className="flex flex-wrap gap-1.5">
+                        {KEYBED_SKINS.map((skin) => (
+                            <button
+                                key={skin.id}
+                                onClick={() => handleKeybedChange(skin.id)}
+                                className={`mcb-switch ${currentKeybed === skin.id ? 'mcb-switch--on' : ''}`}
+                                title={skin.description}
+                            >
+                                <div className={`mcb-led ${currentKeybed === skin.id ? '' : 'mcb-led--off'}`} />
+                                <span>{skin.name}</span>
                             </button>
                         ))}
                     </div>

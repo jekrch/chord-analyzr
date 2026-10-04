@@ -148,7 +148,7 @@ const SongSourceEditor: React.FC<SongSourceEditorProps> = ({ song }) => {
                     Click a chord to hear it. Switch to Sheet to place chords by clicking words.
                 </p>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
-                    <span className="mcb-label !text-[0.5625rem]">Chords</span>
+                    <span className="mcb-label">Chords</span>
                     <Button
                         onClick={() => updateSongSource(song.id, normalizeToChordPro(song.source))}
                         variant="secondary"

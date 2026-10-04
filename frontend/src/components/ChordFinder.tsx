@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { XMarkIcon, MusicalNoteIcon, SparklesIcon, PlayIcon, PlusCircleIcon } from '@heroicons/react/20/solid';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { XMarkIcon, MusicalNoteIcon, PlayIcon, PlusIcon } from '@heroicons/react/20/solid';
 import classNames from 'classnames';
 import { dynamicChordGenerator } from '../services/DynamicChordService';
 import { staticDataService } from '../services/StaticDataService';
 import { ModeScaleChordDto, ScaleNoteDto } from '../api';
-import { Button } from './Button';
 import { noteNameToNumber } from '../util/NoteUtil';
+import { useExitTransition } from '../hooks/useExitTransition';
 
 interface ChordFinderModalProps {
     isOpen: boolean;
@@ -31,149 +31,126 @@ const CHROMATIC_FLATS_DISPLAY = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G'
 const CHROMATIC_SHARPS_PLAY = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const CHROMATIC_FLATS_PLAY = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 
+const WHITE_KEY_PITCH_CLASSES = [0, 2, 4, 5, 7, 9, 11];
+const BLACK_KEY_CONFIG = [
+    { pc: 1, leftPercent: 9.5 },
+    { pc: 3, leftPercent: 23.5 },
+    { pc: 6, leftPercent: 52 },
+    { pc: 8, leftPercent: 66.5 },
+    { pc: 10, leftPercent: 81 },
+];
+
 interface MiniPianoProps {
     highlightedNotes: Set<number>;
+    rootNote?: number;
     className?: string;
 }
 
-const MiniPiano: React.FC<MiniPianoProps> = ({ highlightedNotes, className }) => {
-    const whiteKeyPitchClasses = [0, 2, 4, 5, 7, 9, 11];
-    const blackKeyConfig = [
-        { pc: 1, leftPercent: 11.5 },
-        { pc: 3, leftPercent: 25 },
-        { pc: 6, leftPercent: 53.5 },
-        { pc: 8, leftPercent: 67.5 },
-        { pc: 10, leftPercent: 81.5 },
-    ];
-
+const MiniPiano: React.FC<MiniPianoProps> = ({ highlightedNotes, rootNote, className }) => {
     const notesArray = Array.from(highlightedNotes);
     const maxNoteIndex = notesArray.length > 0 ? Math.max(...notesArray) : 11;
     const octaves = Math.max(1, Math.floor(maxNoteIndex / 12) + 1);
 
     const octaveWidthPercent = 100 / octaves;
-    const blackKeyWidth = octaveWidthPercent * 0.085;
-    const pianoWidth = octaves * 60;
+    const blackKeyWidth = octaveWidthPercent * 0.09;
+    const pianoWidth = octaves * 56;
+
+    const keyState = (noteIndex: number) => ({
+        'is-root': noteIndex === rootNote,
+        'is-on': highlightedNotes.has(noteIndex) && noteIndex !== rootNote,
+    });
 
     return (
-        <div className={classNames("relative h-8 flex-shrink-0", className)} style={{ width: `${pianoWidth}px` }}>
-            <div className="absolute inset-0 flex">
-                {Array.from({ length: octaves }).map((_, octaveIdx) => (
-                    <div key={octaveIdx} className="flex flex-1">
-                        {whiteKeyPitchClasses.map((pc) => {
-                            const noteIndex = octaveIdx * 12 + pc;
-                            return (
-                                <div
-                                    key={`${octaveIdx}-${pc}`}
-                                    className={classNames(
-                                        "flex-1 border-r last:border-r-0 border-gray-400 rounded-b-sm",
-                                        highlightedNotes.has(noteIndex)
-                                            ? "bg-[var(--mcb-accent-primary)]"
-                                            : "bg-gray-100"
-                                    )}
-                                />
-                            );
-                        })}
-                    </div>
-                ))}
-            </div>
-            {Array.from({ length: octaves }).map((_, octaveIdx) => (
-                <React.Fragment key={`black-${octaveIdx}`}>
-                    {blackKeyConfig.map(({ pc, leftPercent }) => {
+        <div
+            className={classNames("mcb-keys h-7 flex-shrink-0 rounded-sm p-px", className)}
+            style={{ width: `${pianoWidth}px` }}
+            aria-hidden="true"
+        >
+            <div className="relative h-full flex gap-px">
+                {Array.from({ length: octaves }).flatMap((_, octaveIdx) =>
+                    WHITE_KEY_PITCH_CLASSES.map((pc) => {
+                        const noteIndex = octaveIdx * 12 + pc;
+                        return <div key={noteIndex} className={classNames("mcb-keys__white flex-1", keyState(noteIndex))} />;
+                    })
+                )}
+                {Array.from({ length: octaves }).flatMap((_, octaveIdx) =>
+                    BLACK_KEY_CONFIG.map(({ pc, leftPercent }) => {
                         const noteIndex = octaveIdx * 12 + pc;
                         const leftPos = (octaveIdx * octaveWidthPercent) + (leftPercent * octaveWidthPercent / 100);
                         return (
                             <div
-                                key={`${octaveIdx}-${pc}`}
+                                key={noteIndex}
                                 style={{ left: `${leftPos}%`, width: `${blackKeyWidth}%` }}
-                                className={classNames(
-                                    "absolute top-0 h-[58%] rounded-b-sm",
-                                    highlightedNotes.has(noteIndex)
-                                        ? "bg-[var(--mcb-accent-tertiary)]"
-                                        : "bg-gray-800"
-                                )}
+                                className={classNames("mcb-keys__black", keyState(noteIndex))}
                             />
                         );
-                    })}
-                </React.Fragment>
-            ))}
+                    })
+                )}
+            </div>
         </div>
     );
 };
 
 interface TogglePianoProps {
     selectedNotes: Set<number>;
+    rootNote?: number;
     onToggleNote: (noteIndex: number) => void;
+    getNoteName: (noteIndex: number) => string;
     octaves?: number;
 }
 
-const TogglePiano: React.FC<TogglePianoProps> = ({ selectedNotes, onToggleNote, octaves = 3 }) => {
-    const whiteKeyPitchClasses = [0, 2, 4, 5, 7, 9, 11];
-
-    const blackKeyConfig = [
-        { pc: 1, leftPercent: 11.5 },
-        { pc: 3, leftPercent: 25 },
-        { pc: 6, leftPercent: 53.5 },
-        { pc: 8, leftPercent: 67.5 },
-        { pc: 10, leftPercent: 81.5 },
-    ];
-
+const TogglePiano: React.FC<TogglePianoProps> = ({ selectedNotes, rootNote, onToggleNote, getNoteName, octaves = 3 }) => {
     const octaveWidthPercent = 100 / octaves;
-    const blackKeyWidth = octaveWidthPercent * 0.1;
-    const minWidth = octaves * 280;
+    const blackKeyWidth = octaveWidthPercent * 0.09;
+    const minWidth = octaves * 7 * 32;
+
+    const keyState = (noteIndex: number) => ({
+        'is-root': noteIndex === rootNote,
+        'is-on': selectedNotes.has(noteIndex) && noteIndex !== rootNote,
+    });
 
     return (
-        <div className="overflow-x-auto">
-            <div className="relative h-36 sm:h-44 select-none" style={{ minWidth: `${minWidth}px` }}>
-                <div className="absolute inset-0 flex">
-                    {Array.from({ length: octaves }).map((_, octaveIdx) => (
-                        <div key={octaveIdx} className="flex flex-1 gap-[1px]">
-                            {whiteKeyPitchClasses.map((pc) => {
-                                const noteIndex = octaveIdx * 12 + pc;
-                                const isSelected = selectedNotes.has(noteIndex);
-                                return (
-                                    <button
-                                        key={noteIndex}
-                                        onClick={() => onToggleNote(noteIndex)}
-                                        className={classNames(
-                                            "flex-1 h-full rounded-b-md transition-all duration-100",
-                                            "border-x border-b focus:outline-none",
-                                            isSelected
-                                                ? "bg-gradient-to-b from-[var(--mcb-accent-primary)] to-[var(--mcb-accent-secondary)] border-[var(--mcb-accent-secondary)] shadow-md"
-                                                : "bg-gradient-to-b from-white to-gray-100 border-gray-300 hover:from-gray-50 hover:to-gray-200"
-                                        )}
-                                    />
-                                );
-                            })}
-                        </div>
-                    ))}
-                </div>
-
-                {Array.from({ length: octaves }).map((_, octaveIdx) => (
-                    <React.Fragment key={`black-${octaveIdx}`}>
-                        {blackKeyConfig.map(({ pc, leftPercent }) => {
+        // height tracks the visible width (cqw), so keys keep a natural shape
+        // and never take over short screens
+        <div className="overflow-x-auto" style={{ containerType: 'inline-size' }}>
+            <div
+                className="mcb-keys rounded-sm p-px"
+                style={{ minWidth: `${minWidth}px`, height: 'clamp(4.5rem, min(15cqw, 24vh), 8.5rem)' }}
+            >
+                <div className="relative h-full flex gap-px">
+                    {Array.from({ length: octaves }).flatMap((_, octaveIdx) =>
+                        WHITE_KEY_PITCH_CLASSES.map((pc) => {
                             const noteIndex = octaveIdx * 12 + pc;
-                            const isSelected = selectedNotes.has(noteIndex);
+                            return (
+                                <button
+                                    key={noteIndex}
+                                    onClick={() => onToggleNote(noteIndex)}
+                                    className={classNames("mcb-keys__white relative flex-1 focus:outline-none", keyState(noteIndex))}
+                                    aria-label={getNoteName(noteIndex)}
+                                    aria-pressed={selectedNotes.has(noteIndex)}
+                                >
+                                    {pc === 0 && <span className="mcb-keys__label">{getNoteName(noteIndex)}</span>}
+                                </button>
+                            );
+                        })
+                    )}
+                    {Array.from({ length: octaves }).flatMap((_, octaveIdx) =>
+                        BLACK_KEY_CONFIG.map(({ pc, leftPercent }) => {
+                            const noteIndex = octaveIdx * 12 + pc;
                             const leftPos = (octaveIdx * octaveWidthPercent) + (leftPercent * octaveWidthPercent / 100);
                             return (
                                 <button
                                     key={noteIndex}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onToggleNote(noteIndex);
-                                    }}
+                                    onClick={() => onToggleNote(noteIndex)}
                                     style={{ left: `${leftPos}%`, width: `${blackKeyWidth}%` }}
-                                    className={classNames(
-                                        "absolute top-0 h-[58%] rounded-b-md transition-all duration-100 z-10",
-                                        "border border-gray-900 focus:outline-none",
-                                        isSelected
-                                            ? "bg-gradient-to-b from-[var(--mcb-accent-tertiary)] to-[var(--mcb-accent-subtle)] shadow-md"
-                                            : "bg-gradient-to-b from-gray-700 to-gray-900 hover:from-gray-600 hover:to-gray-800"
-                                    )}
+                                    className={classNames("mcb-keys__black focus:outline-none", keyState(noteIndex))}
+                                    aria-label={getNoteName(noteIndex)}
+                                    aria-pressed={selectedNotes.has(noteIndex)}
                                 />
                             );
-                        })}
-                    </React.Fragment>
-                ))}
+                        })
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -295,11 +272,27 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
         }
     }, [isOpen, currentKey, currentMode]);
 
+    const { isRendered, isClosing } = useExitTransition(isOpen);
+
+    // Start each opening with a clean selection
+    const [wasOpen, setWasOpen] = useState(isOpen);
+    if (isOpen !== wasOpen) {
+        setWasOpen(isOpen);
+        if (isOpen) setSelectedNotes(new Set());
+    }
+
+    // Backdrop closes only when the press both starts and ends on it, so a
+    // drag that ends outside the panel doesn't dismiss it
+    const pressStartedOnBackdrop = useRef(false);
+
     useEffect(() => {
-        if (!isOpen) {
-            setSelectedNotes(new Set());
-        }
-    }, [isOpen]);
+        if (!isOpen) return;
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onClose();
+        };
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [isOpen, onClose]);
 
     const getChordPitchClasses = useCallback((chord: ModeScaleChordDto): Set<number> => {
         if (!chord.chordNoteNames) return new Set();
@@ -492,189 +485,195 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
         return new Set(indices);
     }, []);
 
-    if (!isOpen) return null;
+    if (!isRendered) return null;
+
+    const bassNote = sortedSelectedNotes[0];
+    const keyClass = "h-8 w-8 flex-shrink-0 inline-flex items-center justify-center rounded-md border transition-colors";
+
+    const renderMiniPiano = (match: ChordMatch, className?: string) => {
+        const notes = getChordNoteIndices(match.chord, match.slashPitchClass);
+        return (
+            <MiniPiano
+                highlightedNotes={notes}
+                rootNote={match.slashPitchClass !== undefined ? Math.min(...Array.from(notes)) : undefined}
+                className={className}
+            />
+        );
+    };
 
     return (
-        <div className="fixed inset-0 bg-mcb-input bg-opacity-95 backdrop-blur-sm !z-[1000] flex flex-col">
-            {/* Upper Section - Piano & Selection (max 50% height) */}
-            <div className="flex-shrink-0 max-h-[50vh] flex flex-col">
-                <div className="max-w-3xl mx-auto px-4 pt-4 pb-2 w-full flex-shrink-0">
-                    <div className="flex items-center justify-between mb-0">
-                        <div className="flex items-center space-x-2">
-                            <MusicalNoteIcon className="w-5 h-5 text-[var(--mcb-accent-primary)]" />
-                            <h2 className="text-base sm:text-lg font-bold text-white">Chord Finder</h2>
-                            <span className="text-xs text-mcb-tertiary">({currentKey} {currentMode})</span>
-                        </div>
-                        <Button onClick={onClose} variant="secondary" size="sm">
-                            <XMarkIcon className="w-5 h-5" />
-                        </Button>
+        <div
+            className={classNames(
+                "fixed inset-0 !z-[1000] flex justify-center bg-black/60 sm:p-4",
+                isClosing ? "backdrop-fade-out pointer-events-none" : "backdrop-fade-in"
+            )}
+            onPointerDown={(e) => { pressStartedOnBackdrop.current = e.target === e.currentTarget; }}
+            onClick={(e) => {
+                if (pressStartedOnBackdrop.current && e.target === e.currentTarget) onClose();
+                pressStartedOnBackdrop.current = false;
+            }}
+        >
+            <div className={classNames(
+                "mcb-panel overflow-hidden w-full max-w-3xl h-full flex flex-col max-sm:!rounded-none",
+                isClosing ? "animate-out" : "animate-in"
+            )}>
+                <div className="mcb-panel-header flex-shrink-0 gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                        <MusicalNoteIcon className="w-4 h-4 flex-shrink-0 text-[var(--mcb-accent-text-primary)]" />
+                        <h2 className="mcb-panel-title">Find by Notes</h2>
+                        <span className="mcb-inset px-1.5 py-0.5 font-mono text-[0.6875rem] text-mcb-secondary truncate">
+                            {currentKey} {currentMode}
+                        </span>
                     </div>
-
-                    <p className="text-xs text-mcb-tertiary mb-0">
-                        Click keys to select notes.
-                    </p>
+                    <button
+                        onClick={onClose}
+                        className="w-6 h-6 flex items-center justify-center rounded-md text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-colors"
+                        aria-label="Close"
+                    >
+                        <XMarkIcon className="w-4 h-4" />
+                    </button>
                 </div>
 
-                {/* Piano - scrollable if needed */}
-                <div className="max-w-3xl mx-auto px-4 w-full flex-1 min-h-0 overflow-y-auto">
-                    <div className="mcb-inset p-2 sm:p-3">
+                {/* Piano & selection (max half the height) */}
+                <div className="flex-shrink-0 flex flex-col p-3 sm:p-4 gap-2">
+                    <div className="mcb-inset p-1.5 sm:p-2">
                         <TogglePiano
                             selectedNotes={selectedNotes}
+                            rootNote={bassNote}
                             onToggleNote={toggleNote}
+                            getNoteName={getNoteDisplayName}
                             octaves={3}
                         />
                     </div>
-                </div>
 
-                {/* Selected Notes - always visible at bottom of upper section */}
-                <div className="max-w-3xl mx-auto px-4 py-2 w-full flex-shrink-0 bg-mcb-input">
-                    <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center justify-between gap-2 flex-shrink-0 min-h-8">
                         <div className="flex items-center flex-wrap gap-1.5 flex-1 min-w-0">
-                            <span className="text-xs text-mcb-secondary font-medium">Selected:</span>
+                            <span className="mcb-label mr-1">Notes</span>
                             {sortedSelectedNotes.length === 0 ? (
-                                <span className="text-xs text-mcb-tertiary italic">None</span>
+                                <span className="text-xs text-mcb-tertiary">Click keys to select notes</span>
                             ) : (
                                 sortedSelectedNotes.map((noteIdx, idx) => (
                                     <button
                                         key={noteIdx}
                                         onClick={() => toggleNote(noteIdx)}
                                         className={classNames(
-                                            "px-1.5 py-0.5 text-xs rounded font-mono transition-colors border",
+                                            "group inline-flex items-center gap-1 h-6 px-1.5 text-xs rounded-sm font-mono border transition-colors",
                                             idx === 0
-                                                ? "bg-[var(--mcb-warning-primary)] border-[var(--mcb-warning-border)] text-[var(--mcb-warning-text)] hover:text-[var(--mcb-warning-text-alt)]"
-                                                : "bg-[var(--mcb-accent-primary)] border-transparent text-white hover:bg-[var(--mcb-accent-secondary)]"
+                                                ? "bg-[var(--mcb-warning-primary)] border-[var(--mcb-warning-border)] text-[var(--mcb-warning-text)]"
+                                                : "bg-[color-mix(in_srgb,var(--mcb-accent-primary)_16%,var(--mcb-bg-input))] border-[color-mix(in_srgb,var(--mcb-accent-primary)_50%,transparent)] text-[var(--mcb-accent-text-secondary)]"
                                         )}
-                                        title={idx === 0 ? "Root note (click to remove)" : "Click to remove"}
+                                        title={idx === 0 ? "Bass note (click to remove)" : "Click to remove"}
                                     >
                                         {getNoteDisplayName(noteIdx)}
-                                        {idx === 0 && <span className="ml-0.5 opacity-75">♪</span>}
+                                        <XMarkIcon className="w-3 h-3 flex-shrink-0 opacity-50 group-hover:opacity-100" />
                                     </button>
                                 ))
                             )}
                         </div>
-                        <div className="flex items-center gap-1.5 flex-shrink-0">
-                            {sortedSelectedNotes.length > 0 && onPlayNotes && (
-                                <Button
-                                    onClick={() => onPlayNotes(selectedNotesString)}
-                                    variant="secondary"
-                                    size="sm"
-                                    className="bg-[var(--mcb-accent-secondary)] hover:bg-[var(--mcb-accent-tertiary)] text-white !px-2 !py-1"
-                                    title="Preview selected notes"
+                        {sortedSelectedNotes.length > 0 && (
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                                {onPlayNotes && (
+                                    <button
+                                        onClick={() => onPlayNotes(selectedNotesString)}
+                                        className={classNames(keyClass, "border-mcb-subtle text-mcb-secondary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)]")}
+                                        title="Preview selected notes"
+                                    >
+                                        <PlayIcon className="w-3.5 h-3.5" />
+                                    </button>
+                                )}
+                                <button
+                                    onClick={clearSelection}
+                                    className="h-8 px-3 rounded-md border border-mcb-subtle text-[0.625rem] uppercase tracking-wider text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-colors"
                                 >
-                                    <PlayIcon className="w-3.5 h-3.5" />
-                                </Button>
-                            )}
-                            {sortedSelectedNotes.length > 0 && (
-                                <Button onClick={clearSelection} variant="secondary" size="sm" className="!px-2 !py-1 text-xs">
                                     Clear
-                                </Button>
-                            )}
-                        </div>
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
-            </div>
 
-            {/* Results - fills remaining space */}
-            <div className="flex-1 max-w-3xl mx-auto px-4 w-full overflow-hidden flex flex-col min-h-0">
-                <div className="mcb-panel p-4 flex-1 flex flex-col min-h-0">
-                    <div className="flex items-center justify-between mb-3">
-                        <h3 className="mcb-panel-title">
-                            Matching Chords
-                            {matchingChords.length > 0 && (
-                                <span className="ml-2 text-mcb-tertiary">({matchingChords.length})</span>
-                            )}
-                        </h3>
-                        {isLoading && <span className="text-xs text-mcb-tertiary">Loading...</span>}
+                {/* Results */}
+                <div className="flex-1 min-h-0 flex flex-col border-t border-mcb-subtle">
+                    <div className="flex items-center justify-between px-3 sm:px-4 py-2 flex-shrink-0 bg-[color-mix(in_srgb,var(--mcb-bg-input)_30%,transparent)] border-b border-mcb-subtle">
+                        <h3 className="mcb-panel-title">Matching Chords</h3>
+                        {isLoading ? (
+                            <span className="text-xs text-mcb-tertiary">Loading…</span>
+                        ) : matchingChords.length > 0 && (
+                            <span className="font-mono text-xs text-mcb-tertiary">{matchingChords.length}</span>
+                        )}
                     </div>
 
-                    <div className="flex-1 overflow-y-auto space-y-2">
+                    <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-1.5">
                         {isLoading ? (
-                            <div className="text-center py-8 text-mcb-tertiary">
-                                Generating all chord combinations...
+                            <div className="text-center py-8 text-sm text-mcb-tertiary">
+                                Generating all chord combinations…
                             </div>
                         ) : sortedSelectedNotes.length === 0 ? (
-                            <div className="text-center py-8 text-mcb-tertiary text-md">
+                            <div className="text-center py-8 text-sm text-mcb-tertiary">
                                 Select notes on the piano to find matching chords
                             </div>
                         ) : matchingChords.length === 0 ? (
-                            <div className="text-center py-8 text-mcb-tertiary text-md">
+                            <div className="text-center py-8 text-sm text-mcb-tertiary">
                                 No matching chords found
                             </div>
                         ) : (
                             matchingChords.map((match, idx) => (
                                 <div
                                     key={`${match.chord.chordName}-${match.slashNote || ''}-${idx}`}
-                                    // 1. Add 'relative' here so the absolute button positions relative to this card
-                                    className={classNames(
-                                        "relative w-full text-left p-3 rounded border transition-all",
-                                        "hover:border-[var(--mcb-accent-primary)] hover:bg-[var(--mcb-bg-hover)]",
-                                        match.matchType === 'exact'
-                                            ? "bg-[var(--mcb-accent-primary)]/10 border-[var(--mcb-accent-primary)]/50"
-                                            : "bg-mcb-input border-mcb-primary"
-                                    )}
+                                    className="mcb-pad flex items-center gap-3 px-2.5 py-2"
                                 >
-                                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                                        {/* Left Side: Play Button & Mini Piano */}
-                                        <div className="flex items-center gap-2 flex-shrink-0">
-                                            {onPlayNotes && (
-                                                <button
-                                                    onClick={(e) => handlePlayChord(e, match)}
-                                                    className="p-1.5 rounded bg-[var(--mcb-accent-secondary)] hover:bg-[var(--mcb-accent-tertiary)] text-white transition-colors"
-                                                    title="Preview chord"
-                                                >
-                                                    <PlayIcon className="w-4 h-4" />
-                                                </button>
-                                            )}
-                                            <MiniPiano
-                                                highlightedNotes={getChordNoteIndices(match.chord, match.slashPitchClass)}
-                                            />
-                                        </div>
+                                    {onPlayNotes && (
+                                        <button
+                                            onClick={(e) => handlePlayChord(e, match)}
+                                            className={classNames(keyClass, "border-mcb-subtle text-mcb-secondary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)]")}
+                                            title="Preview chord"
+                                        >
+                                            <PlayIcon className="w-3.5 h-3.5" />
+                                        </button>
+                                    )}
+                                    {renderMiniPiano(match, "hidden sm:block")}
 
-
-                                        <div className="min-w-0 flex-1 pr-8 sm:pr-0">
-                                            <div className="flex items-center space-x-2 flex-wrap">
-                                                <span className="text-white font-semibold text-lg">
-                                                    {match.chord.chordName}
-                                                    {match.slashNote && (
-                                                        <span className="text-[var(--mcb-warning-text)]">/{match.slashNote}</span>
-                                                    )}
+                                    <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <span className="font-mono font-semibold text-base text-[var(--mcb-text-primary)]">
+                                                {match.chord.chordName}
+                                                {match.slashNote && (
+                                                    <span className="text-[var(--mcb-warning-text)]">/{match.slashNote}</span>
+                                                )}
+                                            </span>
+                                            {match.matchType === 'exact' && (
+                                                <span className="mcb-label px-1.5 py-0.5 rounded-sm border border-[color-mix(in_srgb,var(--mcb-accent-primary)_50%,transparent)] !text-[var(--mcb-accent-text-secondary)]">
+                                                    Root pos.
                                                 </span>
-                                                {match.matchType === 'exact' && (
-                                                    <span className="flex items-center space-x-1 px-2 py-0.5 text-xs bg-[var(--mcb-accent-primary)] text-white rounded">
-                                                        <SparklesIcon className="w-3 h-3" />
-                                                        <span>Root</span>
-                                                    </span>
-                                                )}
-                                                {match.matchType === 'with-slash' && (
-                                                    <span className="px-2 py-0.5 text-xs bg-[var(--mcb-warning-primary)] text-[var(--mcb-warning-text-alt)] rounded border border-[var(--mcb-warning-border)]">
-                                                        Slash
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <span className="text-xs text-mcb-tertiary font-mono truncate block">
+                                            )}
+                                            {match.matchType === 'with-slash' && (
+                                                <span className="mcb-label px-1.5 py-0.5 rounded-sm border border-[var(--mcb-warning-border)] !text-[var(--mcb-warning-text)]">
+                                                    Slash
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            {renderMiniPiano(match, "sm:hidden")}
+                                            <span className="text-xs text-mcb-tertiary font-mono truncate">
                                                 {match.chord.chordNoteNames}
                                             </span>
                                         </div>
-
-
-                                        <div className="absolute top-3 right-3 sm:static sm:ml-auto">
-                                            <button
-                                                onClick={(e) => handleSelectChord(e, match)}
-                                                className="p-1.5 rounded bg-[var(--mcb-success-primary)] hover:bg-[var(--mcb-success-secondary)] text-white transition-colors"
-                                                title="Add chord to progression"
-                                            >
-                                                <PlusCircleIcon className="w-4 h-4" />
-                                            </button>
-                                        </div>
                                     </div>
+
+                                    <button
+                                        onClick={(e) => handleSelectChord(e, match)}
+                                        className="h-8 px-2.5 flex-shrink-0 inline-flex items-center justify-center gap-1 rounded-md border text-[0.625rem] uppercase tracking-wider font-semibold transition-colors bg-[color-mix(in_srgb,var(--mcb-success-primary)_16%,var(--mcb-bg-input))] border-[color-mix(in_srgb,var(--mcb-success-primary)_55%,transparent)] text-[var(--mcb-success-text)] hover:bg-[color-mix(in_srgb,var(--mcb-success-primary)_28%,var(--mcb-bg-input))]"
+                                        title="Add chord to progression"
+                                    >
+                                        <PlusIcon className="w-3.5 h-3.5 flex-shrink-0" />
+                                        <span>Add</span>
+                                    </button>
                                 </div>
                             ))
                         )}
                     </div>
                 </div>
             </div>
-
-            <div className="flex-shrink-0 h-4"></div>
         </div>
     );
 };

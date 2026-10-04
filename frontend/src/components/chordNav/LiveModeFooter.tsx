@@ -29,7 +29,7 @@ export const LiveModeFooter: React.FC<LiveModeFooterProps> = ({
                 <div className="flex items-center space-x-2">
                     <button
                         onClick={onClearAll}
-                        className="w-[5em] h-7 flex items-center justify-center px-3 rounded-full border border-mcb-subtle text-[0.6875rem] uppercase tracking-wider text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover transition-all duration-200"
+                        className="w-[5em] h-7 flex items-center justify-center px-3 rounded-md border border-mcb-subtle text-[0.6875rem] uppercase tracking-wider text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover transition-all duration-200"
                     >
                         Clear
                     </button>

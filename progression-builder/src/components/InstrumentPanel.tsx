@@ -41,9 +41,6 @@ export default function InstrumentPanel({
     <div className="pb-panel overflow-hidden">
       <div className="pb-panel-header">
         <span className="pb-panel-title">Instrument</span>
-        <span className="pb-inset px-2.5 py-1 font-mono text-xs text-[var(--pb-accent-text)]">
-          {musicKey} {mode}
-        </span>
       </div>
       <div className="flex flex-col gap-3 p-4">
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
@@ -100,10 +97,6 @@ export default function InstrumentPanel({
             scalePitchClasses={scalePitchClasses}
           />
         </div>
-
-        <p className="text-[11px] text-[var(--pb-text-tertiary)]">
-          Click a key to set the root · dots mark the scale, amber is the root · keys light as chords play
-        </p>
       </div>
     </div>
   );

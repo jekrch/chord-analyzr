@@ -203,3 +203,90 @@ export function transposeNoteName(
 
     return ((midiNote % 12) + 12) % 12;
   }
+// Pitch of a spelled note in scientific notation, where the octave belongs to
+// the letter (so Cb4 sounds as B3 and B#4 as C5)
+const spelledPitch = (note: string, octave: number): number => {
+    const accidentals = note.slice(1);
+    return 12 * (octave + 1)
+        + LETTER_PITCH_CLASS[note.charAt(0).toUpperCase()]
+        + (accidentals.match(/#/g) || []).length
+        - (accidentals.match(/b/g) || []).length;
+};
+
+const LETTERS = 'CDEFGAB';
+
+// True when `upper` is a minor or major third above `lower` and written two
+// letters up (E -> G#, not E -> Ab)
+const isSpelledThird = (lower: string, upper: string): boolean => {
+    const letterSteps = (LETTERS.indexOf(upper.charAt(0)) - LETTERS.indexOf(lower.charAt(0)) + 7) % 7;
+    const semitones = (noteNameToNumber(upper) - noteNameToNumber(lower) + 12) % 12;
+    return letterSteps === 2 && (semitones === 3 || semitones === 4);
+};
+
+/**
+ * Spells a chord's notes for a staff in the given key and stacks them upward
+ * from the root, the same voicing playback uses.
+ *
+ * In-scale pitches take the scale's spelling so the key signature covers
+ * them. Out-of-scale pitches pick between the chord's own spelling and the
+ * sharp/flat names, favoring ones that form a written third with a neighbor
+ * and don't reuse a letter — so an E chord in C reads E G# B, not E Ab B.
+ *
+ * @param chordNotes - chord tones root first, e.g. ["E", "G#", "B"]
+ * @param scaleNoteNames - raw scale spellings, e.g. ["C", "D", "E", ...]
+ * @param keySignature - the key signature tonic, e.g. "C"
+ * @param rootOctave - octave of the root note
+ */
+export function spellChordForStaff(
+    chordNotes: string[],
+    scaleNoteNames: string[],
+    keySignature: string,
+    rootOctave = 4
+): { note: string; octave: number }[] {
+    const scaleSpelling = new Map<number, string>();
+    scaleNoteNames.forEach(name => {
+        const pitchClass = noteNameToNumber(name);
+        if (!scaleSpelling.has(pitchClass)) scaleSpelling.set(pitchClass, name);
+    });
+    const preferFlats = FLAT_KEY_SIGNATURES.has(keySignature);
+
+    const notes = chordNotes
+        .map(note => note.trim())
+        .filter(note => LETTER_PITCH_CLASS[note.charAt(0).toUpperCase()] !== undefined)
+        .map(note => note.charAt(0).toUpperCase() + note.slice(1));
+
+    const spelled = notes.map(note => scaleSpelling.get(noteNameToNumber(note)));
+    const usedLetters = new Set(spelled.filter(Boolean).map(note => note!.charAt(0)));
+
+    notes.forEach((note, index) => {
+        if (spelled[index]) return;
+        const pitchClass = noteNameToNumber(note);
+        const preferred = (preferFlats ? PITCH_NAMES_FLAT : PITCH_NAMES_SHARP)[pitchClass];
+        const other = (preferFlats ? PITCH_NAMES_SHARP : PITCH_NAMES_FLAT)[pitchClass];
+        const below = spelled[index - 1];
+        const above = spelled[index + 1];
+
+        const score = (candidate: string) =>
+            (usedLetters.has(candidate.charAt(0)) ? -10 : 0)
+            + (below && isSpelledThird(below, candidate) ? 2 : 0)
+            + (above && isSpelledThird(candidate, above) ? 2 : 0)
+            + (candidate === note ? 1 : 0)
+            + (candidate === preferred ? 0.5 : 0);
+
+        const choice = [note, preferred, other]
+            .reduce((best, candidate) => (score(candidate) > score(best) ? candidate : best));
+        spelled[index] = choice;
+        usedLetters.add(choice.charAt(0));
+    });
+
+    let previousPitch = -Infinity;
+    let octave = rootOctave;
+    return spelled.map((note, index) => {
+        if (index > 0) {
+            octave -= 1;
+            while (spelledPitch(note!, octave) <= previousPitch) octave += 1;
+        }
+        previousPitch = spelledPitch(note!, octave);
+        return { note: note!, octave };
+    });
+}

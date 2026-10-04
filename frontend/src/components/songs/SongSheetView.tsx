@@ -549,7 +549,7 @@ const SongSheetView: React.FC<SongSheetViewProps> = ({ song, parsed, source, onS
                     onPointerCancel={handleChordPointerCancel}
                     style={{ touchAction: 'none' }}
                     className={classNames(
-                        'font-mono text-xs leading-tight px-0.5 -mx-0.5 rounded transition-colors cursor-grab active:cursor-grabbing',
+                        'font-mono text-xs leading-tight px-0.5 -mx-0.5 rounded-sm transition-colors cursor-grab active:cursor-grabbing',
                         chord.annotation
                             ? 'font-medium italic text-mcb-tertiary hover:bg-[var(--mcb-bg-hover)]'
                             : chord.seqIndex === stepIndex
@@ -592,7 +592,7 @@ const SongSheetView: React.FC<SongSheetViewProps> = ({ song, parsed, source, onS
                 <div
                     onClick={e => handleLyricClick(e, line)}
                     data-lyric-line={lineIndex}
-                    className="sheet-lyric flex-1 min-w-0 whitespace-pre-wrap text-sm leading-tight text-mcb-primary cursor-text rounded transition-colors hover:bg-[var(--mcb-bg-hover)]/60"
+                    className="sheet-lyric flex-1 min-w-0 whitespace-pre-wrap text-sm leading-tight text-mcb-primary cursor-text rounded-sm transition-colors hover:bg-[var(--mcb-bg-hover)]/60"
                     title="Click to add a chord here"
                 >
                     {parts}
@@ -603,7 +603,7 @@ const SongSheetView: React.FC<SongSheetViewProps> = ({ song, parsed, source, onS
                         insert: { line, col: nextFreeColumn(line, line.lyricText.length), padBefore: true },
                         chord: null,
                     })}
-                    className="shrink-0 mb-[1px] w-4 h-4 flex items-center justify-center rounded text-mcb-tertiary opacity-0 hover:opacity-100 focus:opacity-100 hover:bg-[var(--mcb-bg-hover)] transition-all print-hidden"
+                    className="shrink-0 mb-[1px] w-4 h-4 flex items-center justify-center rounded-sm text-mcb-tertiary opacity-0 hover:opacity-100 focus:opacity-100 hover:bg-[var(--mcb-bg-hover)] transition-all print-hidden"
                     title="Add a chord at the end of this line"
                 >
                     <PlusIcon className="w-3 h-3" />
@@ -628,7 +628,7 @@ const SongSheetView: React.FC<SongSheetViewProps> = ({ song, parsed, source, onS
             {previewing && preview && (
                 <div className="flex items-baseline justify-between mb-1.5">
                     <span className="mcb-label">Print preview</span>
-                    <span className="text-[0.625rem] text-mcb-tertiary">
+                    <span className="text-[0.6875rem] text-mcb-tertiary">
                         {previewPageCount === 1 ? '1 page' : `~${previewPageCount} pages`}
                     </span>
                 </div>
@@ -726,7 +726,7 @@ const SongSheetView: React.FC<SongSheetViewProps> = ({ song, parsed, source, onS
                     {dragGhost && createPortal(
                         <div
                             className={classNames(
-                                'fixed z-[1200] pointer-events-none font-mono text-xs font-semibold px-1.5 py-0.5 rounded shadow-lg text-[var(--mcb-accent-text-primary)]',
+                                'fixed z-[1200] pointer-events-none font-mono text-xs font-semibold px-1.5 py-0.5 rounded-sm shadow-lg text-[var(--mcb-accent-text-primary)]',
                                 dragGhost.snapped ? 'bg-[var(--mcb-accent-primary)]' : 'bg-[var(--mcb-accent-primary)]/60'
                             )}
                             style={

@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Accidental, Beam, Formatter, Renderer, Stave, StaveNote, Voice } from 'vexflow';
-import { useMusicStore } from '../../stores/musicStore';
 import { usePatternStore } from '../../stores/patternStore';
 import { usePlaybackStore } from '../../stores/playbackStore';
-import { convertScaleToMajorKey } from '../../util/KeySignatureUtil';
+import { useStaffKey } from '../../hooks/useStaffKey';
 import { getMidiNotes } from '../../util/ChordUtil';
 import { createKeySpeller, getMidiNote } from '../../util/NoteUtil';
 import { parsePatternStep } from '../../services/SequencerScheduler';
@@ -42,7 +41,7 @@ interface NotationViewProps {
  * matching the sequencer subdivision and the sounding step lit in accent.
  */
 const NotationView: React.FC<NotationViewProps> = ({ className = '' }) => {
-    const scaleNotes = useMusicStore(state => state.scaleNotes);
+    const { scaleNoteNames, keySignature } = useStaffKey();
 
     const isPlaying = usePatternStore(state => state.globalPatternState.isPlaying);
     const subdivision = usePatternStore(state => state.globalPatternState.subdivision);
@@ -72,27 +71,15 @@ const NotationView: React.FC<NotationViewProps> = ({ className = '' }) => {
         return () => observer.disconnect();
     }, []);
 
-    // Major key sharing the current scale's accidentals, e.g. C Lydian -> G
-    const keySignature = useMemo(() => {
-        const names = scaleNotes
-            .map(scaleNote => scaleNote.noteName)
-            .filter(Boolean) as string[];
-        const majorKey = names.length ? convertScaleToMajorKey(names) : null;
-        return majorKey ? majorKey.split(' ')[0] : 'C';
-    }, [scaleNotes]);
-
     // Store notes are normalized to sharp spellings; respell them to match the
     // key signature so in-key notes don't get redundant accidentals drawn
     const spellKey = useMemo(() => {
-        const speller = createKeySpeller(
-            scaleNotes.map(scaleNote => scaleNote.noteName),
-            keySignature
-        );
+        const speller = createKeySpeller(scaleNoteNames, keySignature);
         return (note: string, octave: number) => {
             const spelled = speller(note, octave);
             return toVexKey(spelled.note, spelled.octave);
         };
-    }, [scaleNotes, keySignature]);
+    }, [scaleNoteNames, keySignature]);
 
     // Same chord/pattern resolution the scheduler uses at schedule time
     const steps: DisplayStep[] = useMemo(() => {

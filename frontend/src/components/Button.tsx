@@ -5,7 +5,7 @@ interface ButtonProps {
   children: React.ReactNode;
   onClick?: () => void;
   className?: string;
-  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'icon' | 'play-stop';
+  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'icon';
   size?: 'sm' | 'md' | 'lg' | 'icon';
   disabled?: boolean;
   active?: boolean;
@@ -88,14 +88,6 @@ export const Button: React.FC<ButtonProps> = ({
       }
       focus:ring-[var(--mcb-border-secondary)]/50
     `,
-    'play-stop': `
-      ${active
-        ? 'bg-[var(--mcb-danger-secondary)] hover:bg-[var(--mcb-danger-primary)] border-[var(--mcb-danger-primary)] text-white shadow-[0_0_14px_-2px_var(--mcb-danger-primary),inset_0_1px_0_rgba(255,255,255,0.15)]'
-        : 'bg-[var(--mcb-success-primary)] hover:bg-[var(--mcb-success-hover)] border-[var(--mcb-success-primary)] text-white shadow-[0_0_14px_-2px_var(--mcb-success-primary),inset_0_1px_0_rgba(255,255,255,0.15)]'
-      }
-      font-semibold uppercase tracking-widest text-xs w-[7em] px-4 py-2 !rounded-full
-      focus:ring-[var(--mcb-success-primary)]/50
-    `
   };
 
   return (

@@ -5,6 +5,8 @@ import {
     SwatchIcon,
     InformationCircleIcon,
     QuestionMarkCircleIcon,
+    MusicalNoteIcon,
+    DocumentTextIcon,
 } from '@heroicons/react/20/solid';
 import Logo from './Logo';
 import { useMusicStore } from '../stores/musicStore';
@@ -18,7 +20,7 @@ interface FullScreenMenuProps {
     onOpenHelp: () => void;
 }
 
-const CLOSE_DURATION_MS = 340;
+const CLOSE_DURATION_MS = 200;
 
 const FullScreenMenu: React.FC<FullScreenMenuProps> = ({
     isOpen,
@@ -78,8 +80,8 @@ const FullScreenMenu: React.FC<FullScreenMenuProps> = ({
     };
 
     const primaryLinks = [
-        { label: 'Chord Builder', target: 'main' as const },
-        { label: 'Song Sheets', target: 'songs' as const },
+        { label: 'Chord Builder', target: 'main' as const, Icon: MusicalNoteIcon },
+        { label: 'Song Sheets', target: 'songs' as const, Icon: DocumentTextIcon },
     ];
 
     const utilityLinks = [
@@ -94,18 +96,15 @@ const FullScreenMenu: React.FC<FullScreenMenuProps> = ({
 
             <div className={`mcb-fullmenu ${stateClass} overflow-hidden`}>
                 <div className="mcb-fullmenu-watermark">
-                    <Logo size={300} />
+                    <Logo size={260} />
                 </div>
 
                 {/* Top bar */}
-                <div
-                    className="mcb-fullmenu-item flex items-center justify-between px-6 py-4 border-b border-mcb-subtle"
-                    style={{ '--stagger': '60ms' } as React.CSSProperties}
-                >
-                    <div className="flex items-center space-x-3">
-                        <Logo size={30} />
+                <div className="flex items-center justify-between h-14 px-4 border-b border-mcb-subtle shrink-0">
+                    <div className="flex items-center space-x-2.5">
+                        <Logo size={24} />
                         <div className="flex items-baseline space-x-2">
-                            <span className="text-base font-bold text-[var(--mcb-accent-primary)] tracking-tight leading-none">
+                            <span className="text-sm font-bold text-[var(--mcb-accent-primary)] tracking-tight leading-none">
                                 modal
                             </span>
                             <div className="flex items-center space-x-1">
@@ -117,7 +116,7 @@ const FullScreenMenu: React.FC<FullScreenMenuProps> = ({
                     </div>
                     <button
                         onClick={onClose}
-                        className="w-9 h-9 flex items-center justify-center rounded-full border border-mcb-subtle text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] hover:border-mcb-primary transition-all duration-200"
+                        className="w-8 h-8 -mr-1.5 flex items-center justify-center rounded-md text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-colors"
                         title="Close menu"
                         aria-label="Close menu"
                     >
@@ -126,68 +125,48 @@ const FullScreenMenu: React.FC<FullScreenMenuProps> = ({
                 </div>
 
                 {/* Nav */}
-                <div className="relative flex-1 min-h-0 overflow-y-auto flex flex-col justify-start px-6 sm:px-8 py-10">
-                    <div className="w-full">
-                        <div
-                            className="mcb-fullmenu-item mcb-label !text-[0.625rem] mb-4"
-                            style={{ '--stagger': '120ms' } as React.CSSProperties}
-                        >
-                            navigate
-                        </div>
-
-                        <nav className="divide-y divide-[var(--mcb-border-subtle)]">
-                            {primaryLinks.map((link, i) => (
-                                <div
+                <div className="relative flex-1 min-h-0 overflow-y-auto px-2.5 py-5">
+                    <div className="mcb-label mcb-fullmenu-section">Navigate</div>
+                    <nav className="flex flex-col gap-0.5">
+                        {primaryLinks.map(link => {
+                            const current = route === link.target;
+                            return (
+                                <button
                                     key={link.target}
-                                    className="mcb-fullmenu-item"
-                                    style={{ '--stagger': `${170 + i * 70}ms` } as React.CSSProperties}
+                                    onClick={() => go(() => navigate(link.target))}
+                                    className={`mcb-fullmenu-link ${current ? 'is-current' : ''}`}
+                                    aria-current={current ? 'page' : undefined}
                                 >
-                                    <button
-                                        onClick={() => go(() => navigate(link.target))}
-                                        className={`mcb-fullmenu-link ${route === link.target ? 'is-current' : ''}`}
-                                    >
-                                        <span className="mcb-fullmenu-word">{link.label}</span>
-                                    </button>
-                                </div>
-                            ))}
-                        </nav>
+                                    <link.Icon />
+                                    <span>{link.label}</span>
+                                </button>
+                            );
+                        })}
+                    </nav>
 
-                        <div
-                            className="mcb-fullmenu-item mcb-label !text-[0.625rem] mt-12 mb-2"
-                            style={{ '--stagger': '340ms' } as React.CSSProperties}
-                        >
-                            settings &amp; info
-                        </div>
-
-                        <div className="flex flex-col">
-                            {utilityLinks.map((link, i) => (
-                                <div
-                                    key={link.label}
-                                    className="mcb-fullmenu-item"
-                                    style={{ '--stagger': `${390 + i * 50}ms` } as React.CSSProperties}
-                                >
-                                    <button onClick={() => go(link.action)} className="mcb-fullmenu-sublink">
-                                        <link.Icon className="w-4 h-4 flex-shrink-0 transition-colors duration-200" />
-                                        <span>{link.label}</span>
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
+                    <div className="mcb-label mcb-fullmenu-section mt-6">Settings &amp; info</div>
+                    <div className="flex flex-col gap-0.5">
+                        {utilityLinks.map(link => (
+                            <button key={link.label} onClick={() => go(link.action)} className="mcb-fullmenu-link">
+                                <link.Icon />
+                                <span>{link.label}</span>
+                            </button>
+                        ))}
                     </div>
                 </div>
 
                 {/* Footer readout */}
-                <div
-                    className="mcb-fullmenu-item flex items-center justify-between px-6 py-4 border-t border-mcb-subtle"
-                    style={{ '--stagger': '480ms' } as React.CSSProperties}
-                >
-                    <div className="flex items-center mcb-inset px-3 py-1 space-x-2 font-mono text-xs text-mcb-secondary">
-                        <span className="mcb-label !text-[0.5625rem]">key</span>
+                <div className="flex items-center justify-between px-4 py-3 border-t border-mcb-subtle shrink-0">
+                    <div className="flex items-center mcb-inset px-2.5 py-1 space-x-2 font-mono text-xs text-mcb-secondary">
+                        <span className="mcb-label">key</span>
                         <span className="text-[var(--mcb-accent-text-primary)]">{key}</span>
                         <div className="w-px h-3 bg-[var(--mcb-border-primary)]"></div>
                         <span className="text-mcb-secondary">{mode}</span>
                     </div>
-                    <span className="mcb-label !text-[0.5625rem]">esc to close</span>
+                    <span className="flex items-center gap-1.5 text-[0.6875rem] text-mcb-tertiary">
+                        <kbd className="mcb-kbd">Esc</kbd>
+                        close
+                    </span>
                 </div>
             </div>
         </div>,

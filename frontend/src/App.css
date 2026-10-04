@@ -84,7 +84,7 @@ body {
   appearance: none;
   background: var(--mcb-bg-input);
   cursor: pointer;
-  border-radius: 9999px;
+  border-radius: 1px;
   box-shadow:
     inset 0 1px 3px rgba(0, 0, 0, 0.5),
     inset 0 0 0 1px rgba(0, 0, 0, 0.35),
@@ -122,14 +122,14 @@ body {
     inset 0 1px 0 rgba(255, 255, 255, 0.22),
     inset 0 0 0 1px rgba(0, 0, 0, 0.4),
     0 2px 6px rgba(0, 0, 0, 0.5),
-    0 0 8px color-mix(in srgb, var(--mcb-accent-primary) 45%, transparent);
+    0 0 4px color-mix(in srgb, var(--mcb-accent-primary) 40%, transparent);
 }
 
 .slider-thumb:active::-webkit-slider-thumb {
   box-shadow:
     inset 0 1px 3px rgba(0, 0, 0, 0.45),
     inset 0 0 0 1px rgba(0, 0, 0, 0.4),
-    0 0 10px color-mix(in srgb, var(--mcb-accent-primary) 55%, transparent);
+    0 0 5px color-mix(in srgb, var(--mcb-accent-primary) 45%, transparent);
 }
 
 /* Larger cap + taller slot for touch */
@@ -174,14 +174,14 @@ body {
     inset 0 1px 0 rgba(255, 255, 255, 0.22),
     inset 0 0 0 1px rgba(0, 0, 0, 0.4),
     0 2px 6px rgba(0, 0, 0, 0.5),
-    0 0 8px color-mix(in srgb, var(--mcb-accent-primary) 45%, transparent);
+    0 0 4px color-mix(in srgb, var(--mcb-accent-primary) 40%, transparent);
 }
 
 .slider-thumb:active::-moz-range-thumb {
   box-shadow:
     inset 0 1px 3px rgba(0, 0, 0, 0.45),
     inset 0 0 0 1px rgba(0, 0, 0, 0.4),
-    0 0 10px color-mix(in srgb, var(--mcb-accent-primary) 55%, transparent);
+    0 0 5px color-mix(in srgb, var(--mcb-accent-primary) 45%, transparent);
 }
 
 @media (hover: none) and (pointer: coarse) {
@@ -433,23 +433,23 @@ body {
   }
 
   25% {
-    box-shadow: 0 0 0 8px color-mix(in srgb, var(--mcb-accent-primary) 50%, transparent), 
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--mcb-accent-primary) 50%, transparent), 
                 0 0 0 0 color-mix(in srgb, var(--mcb-accent-primary) 30%, transparent);
   }
 
   50% {
-    box-shadow: 0 0 0 16px color-mix(in srgb, var(--mcb-accent-primary) 30%, transparent), 
-                0 0 0 8px color-mix(in srgb, var(--mcb-accent-primary) 20%, transparent);
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--mcb-accent-primary) 30%, transparent), 
+                0 0 0 3px color-mix(in srgb, var(--mcb-accent-primary) 20%, transparent);
   }
 
   75% {
-    box-shadow: 0 0 0 24px color-mix(in srgb, var(--mcb-accent-primary) 10%, transparent), 
-                0 0 0 16px color-mix(in srgb, var(--mcb-accent-primary) 10%, transparent);
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--mcb-accent-primary) 10%, transparent), 
+                0 0 0 6px color-mix(in srgb, var(--mcb-accent-primary) 10%, transparent);
   }
 
   100% {
-    box-shadow: 0 0 0 32px color-mix(in srgb, var(--mcb-accent-primary) 0%, transparent), 
-                0 0 0 24px color-mix(in srgb, var(--mcb-accent-primary) 0%, transparent);
+    box-shadow: 0 0 0 11px color-mix(in srgb, var(--mcb-accent-primary) 0%, transparent), 
+                0 0 0 8px color-mix(in srgb, var(--mcb-accent-primary) 0%, transparent);
   }
 }
 
@@ -461,22 +461,22 @@ body {
   }
 
   25% {
-    box-shadow: 0 0 0 6px color-mix(in srgb, var(--mcb-success-primary) 60%, transparent);
-    transform: scale(1.01);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--mcb-success-primary) 60%, transparent);
+    transform: scale(1);
   }
 
   50% {
-    box-shadow: 0 0 0 12px color-mix(in srgb, var(--mcb-success-primary) 40%, transparent);
-    transform: scale(1.01);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--mcb-success-primary) 40%, transparent);
+    transform: scale(1);
   }
 
   75% {
-    box-shadow: 0 0 0 18px color-mix(in srgb, var(--mcb-success-primary) 20%, transparent);
-    transform: scale(1.01);
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--mcb-success-primary) 20%, transparent);
+    transform: scale(1);
   }
 
   100% {
-    box-shadow: 0 0 0 24px color-mix(in srgb, var(--mcb-success-primary) 0%, transparent);
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--mcb-success-primary) 0%, transparent);
     transform: scale(1);
   }
 }
@@ -523,6 +523,39 @@ body {
 
 .animate-out {
   animation: animate-out 0.2s ease-out forwards;
+}
+
+/* Full-screen views (chord editor): fade with a short rise, no scale */
+@keyframes screen-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes screen-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.screen-in {
+  animation: screen-in 0.2s ease-out;
+}
+
+.screen-out {
+  animation: screen-out 0.2s ease-in forwards;
 }
 
 @keyframes backdrop-fade-in {
@@ -753,6 +786,217 @@ body {
   border: none;
 }
 
+/* Chord finder keys (toggle piano + result thumbnails): same ivory/charcoal
+   as the keybed, flat faces. Selected keys light in accent, the bass
+   (lowest) note in amber to match its chip. */
+.mcb-keys {
+  --keybed-ivory: color-mix(in srgb, var(--mcb-bg-app) 7%, #ece3cd);
+  --keybed-black: color-mix(in srgb, var(--mcb-bg-input) 40%, #17150f);
+  --keybed-slot: color-mix(in srgb, var(--mcb-bg-input) 35%, #000);
+  --key-root: var(--mcb-warning-text);
+  position: relative;
+  background: var(--keybed-slot);
+  user-select: none;
+}
+.mcb-keys__white {
+  background: var(--keybed-ivory);
+  border-radius: 0 0 2px 2px;
+  box-shadow: inset 0 -3px 0 color-mix(in srgb, #000 12%, var(--keybed-ivory));
+  transition: background-color 0.1s ease;
+}
+.mcb-keys__black {
+  position: absolute;
+  top: 0;
+  height: 60%;
+  z-index: 1;
+  background: var(--keybed-black);
+  border-radius: 0 0 2px 2px;
+  box-shadow: inset 0 -3px 0 rgba(255, 255, 255, 0.06), 0 1px 2px rgba(0, 0, 0, 0.5);
+  transition: background-color 0.1s ease;
+}
+button.mcb-keys__white:hover:not(.is-on) {
+  background: color-mix(in srgb, #fff 25%, var(--keybed-ivory));
+}
+button.mcb-keys__black:hover:not(.is-on) {
+  background: color-mix(in srgb, #fff 12%, var(--keybed-black));
+}
+.mcb-keys__white.is-on {
+  background: color-mix(in srgb, var(--mcb-accent-primary) 80%, var(--keybed-ivory));
+  box-shadow: inset 0 -3px 0 color-mix(in srgb, #000 20%, var(--mcb-accent-primary));
+}
+.mcb-keys__black.is-on {
+  background: color-mix(in srgb, var(--mcb-accent-primary) 85%, var(--keybed-black));
+}
+.mcb-keys__white.is-root {
+  background: color-mix(in srgb, var(--key-root) 80%, var(--keybed-ivory));
+  box-shadow: inset 0 -3px 0 color-mix(in srgb, #000 20%, var(--key-root));
+}
+.mcb-keys__black.is-root {
+  background: color-mix(in srgb, var(--key-root) 85%, var(--keybed-black));
+}
+.mcb-keys__white:focus-visible,
+.mcb-keys__black:focus-visible {
+  outline: 2px solid var(--mcb-accent-primary);
+  outline-offset: -2px;
+}
+/* octave marker under each C */
+.mcb-keys__label {
+  position: absolute;
+  bottom: 0.4rem;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.625rem;
+  color: color-mix(in srgb, #000 45%, var(--keybed-ivory));
+  pointer-events: none;
+}
+.mcb-keys__white.is-on .mcb-keys__label,
+.mcb-keys__white.is-root .mcb-keys__label {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+/* ===================================================================
+   Keybed, "modern" skin (the default): a clean modern synth keybed.
+   Bright cool-white naturals with a rounded front lip, glossy black
+   sharps with a lit front slope, under the same dark rail as the ivory
+   skin. No wear. Pressed keys fill with accent. The ivory skin above
+   applies when Theme Settings sets data-keybed="ivory" on <html>.
+   =================================================================== */
+:root:not([data-keybed='ivory']) {
+  --modern-white: color-mix(in srgb, var(--mcb-bg-app) 4%, #f4f5f7);
+  --modern-white-shade: color-mix(in srgb, var(--mcb-bg-app) 10%, #d6d9de);
+  --modern-black: color-mix(in srgb, var(--mcb-bg-input) 25%, #0e0f11);
+  --modern-slot: color-mix(in srgb, var(--mcb-bg-input) 30%, #000);
+}
+
+:root:not([data-keybed='ivory']) .ReactPiano__Keyboard {
+  --keybed-slot: var(--modern-slot);
+}
+
+/* Naturals: shaded where they slide under the rail, a bright highlight
+   just above the rounded front lip */
+:root:not([data-keybed='ivory']) .ReactPiano__Key--natural {
+  background: linear-gradient(
+    180deg,
+    var(--modern-white-shade) 0%,
+    var(--modern-white) 10%,
+    var(--modern-white) 90%,
+    color-mix(in srgb, #fff 50%, var(--modern-white)) 93%,
+    var(--modern-white-shade) 100%
+  );
+  border: none;
+  border-radius: 0 0 3px 3px;
+  box-shadow:
+    inset -1px 0 0 rgba(0, 0, 0, 0.1),
+    inset 1px 0 0 rgba(255, 255, 255, 0.6);
+}
+
+:root:not([data-keybed='ivory']) .ReactPiano__Key--natural:not(.ReactPiano__Key--active):not(.ReactPiano__Key--disabled):hover {
+  background: linear-gradient(
+    180deg,
+    var(--modern-white-shade) 0%,
+    color-mix(in srgb, #000 5%, var(--modern-white)) 10%,
+    color-mix(in srgb, #000 5%, var(--modern-white)) 90%,
+    var(--modern-white) 93%,
+    var(--modern-white-shade) 100%
+  );
+}
+
+/* Sharps: glossy black top face, a lighter front slope with a highlight
+   edge where the two meet, thin side edges */
+:root:not([data-keybed='ivory']) .ReactPiano__Key--accidental {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.08) 0 1px,
+      transparent 1px calc(100% - 1px),
+      rgba(0, 0, 0, 0.5) calc(100% - 1px)
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, #000 40%, var(--modern-black)) 0%,
+      var(--modern-black) 12%,
+      color-mix(in srgb, #fff 7%, var(--modern-black)) 82%,
+      color-mix(in srgb, #fff 22%, var(--modern-black)) 85%,
+      color-mix(in srgb, #fff 11%, var(--modern-black)) 88%,
+      color-mix(in srgb, #fff 4%, var(--modern-black)) 100%
+    );
+  border: none;
+  border-radius: 0 0 2px 2px;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.5);
+}
+
+:root:not([data-keybed='ivory']) .ReactPiano__Key--accidental:not(.ReactPiano__Key--active):not(.ReactPiano__Key--disabled):hover {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.08) 0 1px,
+      transparent 1px calc(100% - 1px),
+      rgba(0, 0, 0, 0.5) calc(100% - 1px)
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, #000 30%, var(--modern-black)) 0%,
+      color-mix(in srgb, #fff 6%, var(--modern-black)) 12%,
+      color-mix(in srgb, #fff 12%, var(--modern-black)) 82%,
+      color-mix(in srgb, #fff 26%, var(--modern-black)) 85%,
+      color-mix(in srgb, #fff 15%, var(--modern-black)) 88%,
+      color-mix(in srgb, #fff 8%, var(--modern-black)) 100%
+    );
+}
+
+/* Pressed: accent fill keeping the key's shape, glow kept tight */
+:root:not([data-keybed='ivory']) .ReactPiano__Key--active.ReactPiano__Key--natural {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--mcb-accent-primary) 70%, var(--modern-white-shade)) 0%,
+    color-mix(in srgb, var(--mcb-accent-primary) 60%, var(--modern-white)) 10%,
+    color-mix(in srgb, var(--mcb-accent-primary) 60%, var(--modern-white)) 90%,
+    color-mix(in srgb, var(--mcb-accent-primary) 45%, #fff) 93%,
+    color-mix(in srgb, var(--mcb-accent-primary) 75%, var(--modern-white-shade)) 100%
+  );
+  border: none;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--mcb-accent-primary) 70%, transparent),
+    0 0 6px -1px color-mix(in srgb, var(--mcb-accent-primary) 50%, transparent);
+}
+
+:root:not([data-keybed='ivory']) .ReactPiano__Key--active.ReactPiano__Key--accidental {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--mcb-accent-primary) 55%, var(--modern-black)) 0%,
+    color-mix(in srgb, var(--mcb-accent-primary) 80%, var(--modern-black)) 82%,
+    color-mix(in srgb, var(--mcb-accent-primary) 60%, #fff) 85%,
+    color-mix(in srgb, var(--mcb-accent-primary) 85%, var(--modern-black)) 88%,
+    color-mix(in srgb, var(--mcb-accent-primary) 70%, var(--modern-black)) 100%
+  );
+  border: none;
+  box-shadow: 0 0 6px 0 color-mix(in srgb, var(--mcb-accent-primary) 55%, transparent);
+}
+
+/* Scale LEDs would vanish into the accent fill, so they go pale on lit keys */
+:root:not([data-keybed='ivory']) .ReactPiano__Key--active .mcb-led {
+  background: var(--mcb-accent-text-light);
+  box-shadow: none;
+}
+
+/* Disabled (soundfont loading): keys go dim */
+:root:not([data-keybed='ivory']) .ReactPiano__Key--disabled.ReactPiano__Key--natural {
+  background: color-mix(in srgb, var(--modern-white) 50%, var(--mcb-bg-input));
+}
+
+:root:not([data-keybed='ivory']) .ReactPiano__Key--disabled.ReactPiano__Key--accidental {
+  background: var(--modern-black);
+}
+
+/* Chord finder keys follow the same palette */
+:root:not([data-keybed='ivory']) .mcb-keys {
+  --keybed-ivory: var(--modern-white);
+  --keybed-black: var(--modern-black);
+  --keybed-slot: var(--modern-slot);
+}
+
 /* Mobile drag optimization styles */
 .mobile-drag-container {
   overscroll-behavior: contain;
@@ -783,7 +1027,7 @@ body {
   }
 
   .mobile-drag-item {
-    border-radius: 12px;
+    border-radius: var(--mcb-radius-control);
   }
 
   .mobile-drag-item {

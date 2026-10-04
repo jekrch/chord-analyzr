@@ -1,15 +1,16 @@
 import React, { useState, useMemo, useEffect, memo, useCallback, useRef, lazy } from 'react';
-import { PlayCircleIcon, PauseIcon, ArrowPathIcon, ChevronUpIcon, ChevronDownIcon, PlusIcon, MinusIcon } from '@heroicons/react/20/solid';
+import { ArrowPathIcon, ChevronDownIcon, PlusIcon, MinusIcon } from '@heroicons/react/20/solid';
 import { PATTERN_PRESETS, PATTERN_CATEGORIES } from '../util/Pattern';
 import debounce from 'lodash/debounce';
 import Dropdown from './Dropdown';
 import PatternPresetSelector, { PatternPreset } from './PatternPresetSelector';
 import Slider from './Slider';
-import { Button } from './Button';
 import { useMusicStore } from '../stores/musicStore';
+import { TransportButton } from './TransportButton';
 import { usePlaybackStore } from '../stores/playbackStore';
 import { usePatternStore } from '../stores/patternStore';
 import MidiRecorder from './MidiRecorder';
+import Collapse from './Collapse';
 
 // Lazy load heavy modal component
 const PatternNotationHelpModal = lazy(() => import('./PatternNotationHelpModal'));
@@ -84,7 +85,7 @@ const StepEditor = memo(({
           : isExceedingNotes
             ? 'bg-mcb-secondary border-[var(--mcb-border-subtle)] text-[var(--mcb-warning-text)]' // Different color for exceeded notes
             : 'bg-mcb-secondary border-mcb-primary text-mcb-primary hover:bg-mcb-hover'
-          } border rounded transition-all duration-200`}
+          } border rounded-sm transition-all duration-200`}
       />
     </div>
   );
@@ -153,16 +154,12 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
     };
   }, [currentChord]);
 
-  // Calculate chord note count (number of distinct notes in the chord)
+  // Number of chord tones the sequencer can address. Count every listed note,
+  // not distinct names: the scheduler voices each one (A9sus2's 9th is a B an
+  // octave above its sus2), so pattern step 5 is a real note there.
   const chordNoteCount = useMemo(() => {
     if (currentChord) {
-      // Parse the chord notes and count DISTINCT notes (ignoring octave)
-      const notes = currentChord.notes.split(',').map((note: any) => note.trim()).filter((note: any) => note);
-      const distinctNotes = new Set(notes.map((note: any) => {
-        // Remove octave numbers to get just the note name (C4 -> C, Bb3 -> Bb)
-        return note.replace(/\d+$/, '');
-      }));
-      return distinctNotes.size;
+      return currentChord.notes.split(',').map((note: any) => note.trim()).filter((note: any) => note).length;
     }
     // For global pattern, use a reasonable default
     return 4;
@@ -295,39 +292,12 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
             <div className="flex items-center space-x-3">
               <button
                 onClick={() => setIsSequencerExpanded(!isSequencerExpanded)}
-                className="h-7 flex items-center space-x-1.5 px-3 text-[0.6875rem] uppercase tracking-wider text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover border border-mcb-subtle rounded-full transition-all duration-200"
+                className="h-7 flex items-center space-x-1.5 px-3 text-[0.6875rem] uppercase tracking-wider text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover border border-mcb-subtle rounded-md transition-all duration-200"
               >
-                {isSequencerExpanded ? (
-                  <>
-                    <ChevronUpIcon className="w-3 h-3" />
-                    <span>Hide</span>
-                  </>
-                ) : (
-                  <>
-                    <ChevronDownIcon className="w-3 h-3" />
-                    <span>Show</span>
-                  </>
-                )}
+                <ChevronDownIcon className={`mcb-chevron w-3 h-3 ${isSequencerExpanded ? 'is-open' : ''}`} />
+                <span>{isSequencerExpanded ? 'Hide' : 'Show'}</span>
               </button>
-              <Button
-                onClick={togglePlayback}
-                variant="play-stop"
-                size="sm"
-                active={globalPatternState.isPlaying}
-                className="shadow-lg"
-              >
-                {globalPatternState.isPlaying ? (
-                  <>
-                    <PauseIcon className="w-6 h-6" />
-                    <span className="hidden sm:inline">Stop</span>
-                  </>
-                ) : (
-                  <>
-                    <PlayCircleIcon className="w-6 h-6" />
-                    <span className="hidden sm:inline">Play</span>
-                  </>
-                )}
-              </Button>
+              <TransportButton isPlaying={globalPatternState.isPlaying} onClick={togglePlayback} />
             </div>
           </div>
           
@@ -338,9 +308,7 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
         </div>
 
         {/* Expandable Sequencer Content */}
-        <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
-          isSequencerExpanded ? ' opacity-100' : 'max-h-0 opacity-0'
-        }`}>
+        <Collapse open={isSequencerExpanded}>
           {/* Pattern Editor Section */}
           <div className="border-t border-mcb-subtle">
             {/* Pattern Controls Bar */}
@@ -352,7 +320,7 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
                   <button
                     onClick={removeStep}
                     disabled={currentPattern.length <= 1}
-                    className="flex items-center justify-center w-7 h-7 bg-mcb-hover hover:bg-[var(--mcb-danger-primary)] disabled:opacity-50 disabled:cursor-not-allowed text-xs rounded transition-all duration-200 text-mcb-primary hover:text-white disabled:hover:bg-mcb-hover disabled:hover:text-mcb-primary"
+                    className="flex items-center justify-center w-7 h-7 bg-mcb-hover hover:bg-[var(--mcb-danger-primary)] disabled:opacity-50 disabled:cursor-not-allowed text-xs rounded-sm transition-all duration-200 text-mcb-primary hover:text-white disabled:hover:bg-mcb-hover disabled:hover:text-mcb-primary"
                     title="Remove step"
                   >
                     <MinusIcon className="w-3 h-3" />
@@ -363,7 +331,7 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
                   <button
                     onClick={addStep}
                     disabled={currentPattern.length >= 16}
-                    className="flex items-center justify-center w-7 h-7 bg-mcb-hover hover:bg-[var(--mcb-accent-secondary)] disabled:opacity-50 disabled:cursor-not-allowed text-xs rounded transition-all duration-200 text-mcb-primary hover:text-white disabled:hover:bg-mcb-hover disabled:hover:text-mcb-primary"
+                    className="flex items-center justify-center w-7 h-7 bg-mcb-hover hover:bg-[var(--mcb-accent-secondary)] disabled:opacity-50 disabled:cursor-not-allowed text-xs rounded-sm transition-all duration-200 text-mcb-primary hover:text-white disabled:hover:bg-mcb-hover disabled:hover:text-mcb-primary"
                     title="Add step"
                   >
                     <PlusIcon className="w-3 h-3" />
@@ -373,11 +341,11 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
                 {/* Right: Chord label */}
                 <div>
                   {editingContext.chordName ? (
-                    <div className="text-xs font-medium text-[var(--mcb-purple-text)] bg-[var(--mcb-purple-bg)] px-2 py-1 rounded border border-[var(--mcb-purple-border)]">
+                    <div className="text-xs font-medium text-[var(--mcb-purple-text)] bg-[var(--mcb-purple-bg)] px-2 py-1 rounded-sm border border-[var(--mcb-purple-border)]">
                       {editingContext.chordName}
                     </div>
                   ) : (
-                    <div className="text-xs text-[var(--mcb-cyan-text)] bg-[var(--mcb-cyan-bg)] px-2 py-1 rounded border border-[var(--mcb-cyan-border)]">
+                    <div className="text-xs text-[var(--mcb-cyan-text)] bg-[var(--mcb-cyan-bg)] px-2 py-1 rounded-sm border border-[var(--mcb-cyan-border)]">
                       Global Pattern
                     </div>
                   )}
@@ -390,20 +358,20 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-3">
                     <span className="text-xs text-mcb-tertiary font-medium">Pattern:</span>
-                    <div className="text-xs text-mcb-secondary font-mono bg-mcb-hover px-2 py-1 rounded">
+                    <div className="text-xs text-mcb-secondary font-mono bg-mcb-hover px-2 py-1 rounded-sm">
                       {currentPattern.length} steps
                     </div>
                   </div>
                   {editingContext.chordName && (
                     <div className="flex items-center space-x-2">
                       <span className="text-xs text-mcb-tertiary">for</span>
-                      <div className="text-xs font-medium text-[var(--mcb-purple-text)] bg-[var(--mcb-purple-bg)] px-2 py-1 rounded border border-[var(--mcb-purple-border)]">
+                      <div className="text-xs font-medium text-[var(--mcb-purple-text)] bg-[var(--mcb-purple-bg)] px-2 py-1 rounded-sm border border-[var(--mcb-purple-border)]">
                         {editingContext.chordName}
                       </div>
                     </div>
                   )}
                   {!editingContext.chordName && (
-                    <div className="text-xs text-[var(--mcb-cyan-text)] bg-[var(--mcb-cyan-bg)] px-2 py-1 rounded border border-[var(--mcb-cyan-border)]">
+                    <div className="text-xs text-[var(--mcb-cyan-text)] bg-[var(--mcb-cyan-bg)] px-2 py-1 rounded-sm border border-[var(--mcb-cyan-border)]">
                       Global Pattern
                     </div>
                   )}
@@ -416,7 +384,7 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
                     <button
                       onClick={removeStep}
                       disabled={currentPattern.length <= 1}
-                      className="flex items-center justify-center w-7 h-7 bg-mcb-hover hover:bg-[var(--mcb-danger-primary)] disabled:opacity-50 disabled:cursor-not-allowed text-xs rounded transition-all duration-200 text-mcb-primary hover:text-white disabled:hover:bg-mcb-hover disabled:hover:text-mcb-primary"
+                      className="flex items-center justify-center w-7 h-7 bg-mcb-hover hover:bg-[var(--mcb-danger-primary)] disabled:opacity-50 disabled:cursor-not-allowed text-xs rounded-sm transition-all duration-200 text-mcb-primary hover:text-white disabled:hover:bg-mcb-hover disabled:hover:text-mcb-primary"
                       title="Remove step"
                     >
                       <MinusIcon className="w-3 h-3" />
@@ -427,7 +395,7 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
                     <button
                       onClick={addStep}
                       disabled={currentPattern.length >= 16}
-                      className="flex items-center justify-center w-7 h-7 bg-mcb-hover hover:bg-[var(--mcb-accent-secondary)] disabled:opacity-50 disabled:cursor-not-allowed text-xs rounded transition-all duration-200 text-mcb-primary hover:text-white disabled:hover:bg-mcb-hover disabled:hover:text-mcb-primary"
+                      className="flex items-center justify-center w-7 h-7 bg-mcb-hover hover:bg-[var(--mcb-accent-secondary)] disabled:opacity-50 disabled:cursor-not-allowed text-xs rounded-sm transition-all duration-200 text-mcb-primary hover:text-white disabled:hover:bg-mcb-hover disabled:hover:text-mcb-primary"
                       title="Add step"
                     >
                       <PlusIcon className="w-3 h-3" />
@@ -468,8 +436,8 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
                         return (
                           <div key={`indicator-${globalIndex}`} className="flex justify-center">
                             <div className={`transition-all duration-200 ${currentStepIndex === globalIndex
-                              ? 'w-full h-1 bg-[var(--mcb-accent-text-primary)] rounded-full'
-                              : 'w-full h-1 bg-[var(--mcb-border-primary)] rounded-full'
+                              ? 'w-full h-1 bg-[var(--mcb-accent-text-primary)] rounded-[1px]'
+                              : 'w-full h-1 bg-[var(--mcb-border-primary)] rounded-[1px]'
                               }`}></div>
                           </div>
                         );
@@ -510,8 +478,8 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
                         return (
                           <div key={`indicator-${globalIndex}`} className="flex justify-center">
                             <div className={`transition-all duration-200 ${currentStepIndex === globalIndex
-                              ? 'w-full h-1 bg-[var(--mcb-accent-text-primary)] rounded-full shadow-lg shadow-[var(--mcb-accent-text-primary)]/50'
-                              : 'w-full h-1 bg-[var(--mcb-border-primary)] rounded-full'
+                              ? 'w-full h-1 bg-[var(--mcb-accent-text-primary)] rounded-[1px] shadow-[0_0_4px_var(--mcb-accent-text-primary)]'
+                              : 'w-full h-1 bg-[var(--mcb-border-primary)] rounded-[1px]'
                               }`}></div>
                           </div>
                         );
@@ -536,27 +504,16 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
                 </h3>
                 <button
                   onClick={() => setIsSettingsExpanded(!isSettingsExpanded)}
-                  className="h-7 flex items-center space-x-1.5 px-3 text-[0.6875rem] uppercase tracking-wider text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover border border-mcb-subtle rounded-full transition-all duration-200"
+                  className="h-7 flex items-center space-x-1.5 px-3 text-[0.6875rem] uppercase tracking-wider text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover border border-mcb-subtle rounded-md transition-all duration-200"
                 >
-                  {isSettingsExpanded ? (
-                    <>
-                      <ChevronUpIcon className="w-3 h-3" />
-                      <span>Hide</span>
-                    </>
-                  ) : (
-                    <>
-                      <ChevronDownIcon className="w-3 h-3" />
-                      <span>Show</span>
-                    </>
-                  )}
+                  <ChevronDownIcon className={`mcb-chevron w-3 h-3 ${isSettingsExpanded ? 'is-open' : ''}`} />
+                  <span>{isSettingsExpanded ? 'Hide' : 'Show'}</span>
                 </button>
               </div>
             </div>
 
             {/* Expandable Settings Content */}
-            <div className={`transition-all duration-300 ease-in-out overflow-hidden ${
-              isSettingsExpanded ? ' opacity-100' : 'max-h-0 opacity-0'
-            }`}>
+            <Collapse open={isSettingsExpanded}>
               <div className="p-6">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-x-8 gap-y-6">
 
@@ -638,7 +595,7 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
                       />
                       <button
                         onClick={applyCustomPattern}
-                        className="w-full px-3 py-2 bg-[var(--mcb-accent-secondary)] hover:bg-[var(--mcb-accent-tertiary)] text-white rounded text-xs font-medium transition-colors uppercase tracking-wide"
+                        className="w-full px-3 py-2 bg-[var(--mcb-accent-secondary)] hover:bg-[var(--mcb-accent-tertiary)] text-white rounded-sm text-xs font-medium transition-colors uppercase tracking-wide"
                       >
                         Apply Pattern
                       </button>
@@ -646,9 +603,9 @@ const PatternSystem: React.FC<PatternSystemProps> = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </Collapse>
           </div>
-        </div>
+        </Collapse>
       </div>
     </div>
   );

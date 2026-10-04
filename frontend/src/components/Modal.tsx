@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { XMarkIcon } from '@heroicons/react/20/solid';
-
-const ANIMATION_DURATION = 200;
+import { useExitTransition } from '../hooks/useExitTransition';
 
 interface ModalProps {
   isOpen: boolean;
@@ -24,27 +23,7 @@ const Modal: React.FC<ModalProps> = ({
   title,
   fixedHeader = false
 }) => {
-  // Keep the modal mounted while the exit animation plays.
-  const [isRendered, setIsRendered] = useState(isOpen);
-  const [isClosing, setIsClosing] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      setIsRendered(true);
-      setIsClosing(false);
-      return;
-    }
-
-    if (!isRendered) return;
-
-    setIsClosing(true);
-    const timer = window.setTimeout(() => {
-      setIsRendered(false);
-      setIsClosing(false);
-    }, ANIMATION_DURATION);
-
-    return () => window.clearTimeout(timer);
-  }, [isOpen, isRendered]);
+  const { isRendered, isClosing } = useExitTransition(isOpen);
 
   if (!isRendered) return null;
 
@@ -58,7 +37,7 @@ const Modal: React.FC<ModalProps> = ({
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className={`absolute inset-0 bg-black/50 backdrop-blur-sm ${
+        className={`absolute inset-0 bg-black/60 ${
           isClosing ? 'backdrop-fade-out' : 'backdrop-fade-in'
         }`}
         onClick={handleBackdropClick}
@@ -83,7 +62,7 @@ const Modal: React.FC<ModalProps> = ({
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="w-6 h-6 flex items-center justify-center rounded-full text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-colors ml-auto"
+                className="w-6 h-6 flex items-center justify-center rounded-md text-mcb-tertiary hover:text-[var(--mcb-text-primary)] hover:bg-[var(--mcb-bg-hover)] transition-colors ml-auto"
               >
                 <XMarkIcon className="w-4 h-4" />
               </button>

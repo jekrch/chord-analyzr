@@ -35,25 +35,25 @@ export const ControlBar: React.FC<ControlBarProps> = ({
     return (
         <div className={`${isLiveMode ? 'flex-shrink-0' : ''} max-w-7xl mx-auto px-4 ${isLiveMode ? 'pt-2 z-10' : 'pt-2'} w-full`}>
             <div className={`flex items-center justify-between ${isLiveMode ? (isCompactHeight ? 'mb-1' : 'mb-2') : 'mb-2'}`}>
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center shrink-0">
                     <TransportButton isPlaying={globalPatternState.isPlaying} onClick={onTogglePlayback} />
                 </div>
                 
-                <div className="text-center sm:w-full sm:text-left sm:mx-4">
-                    <div className="hidden sm:block mcb-label">
+                <div className="min-w-0 flex-1 mx-3 text-center sm:text-left sm:mx-4">
+                    <div className="hidden sm:block mcb-label truncate">
                         chords {isEditMode && <span className="text-[var(--mcb-accent-text-primary)]">(drag to reorder)</span>}
                     </div>
-                    <div className="block sm:hidden mcb-label">
+                    <div className="block sm:hidden mcb-label truncate">
                         chords {isEditMode && <span className="text-[var(--mcb-accent-text-primary)]">(drag)</span>}
                     </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center shrink-0 space-x-1.5 sm:space-x-2">
                     {isLiveMode && (
                         <button
                             onClick={onToggleCompactChords}
                             className={classNames(
-                                "mcb-switch mcb-switch--pill w-[9.5em] h-7",
+                                "mcb-switch mcb-switch--pill min-w-20 sm:w-[9.5em] h-7",
                                 { "mcb-switch--on": isCompactChords }
                             )}
                             title={isCompactChords ? "Show chord details" : "Smaller chord pads, more on screen"}
@@ -64,17 +64,19 @@ export const ControlBar: React.FC<ControlBarProps> = ({
                     )}
                     <button
                         onClick={onToggleLiveMode}
-                        className="w-[9em] h-7 flex items-center justify-center gap-1.5 px-2 rounded-md border border-mcb-subtle text-[0.6875rem] uppercase tracking-wider text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover transition-all duration-200"
+                        title={isLiveMode ? 'Collapse' : 'Expand'}
+                        aria-label={isLiveMode ? 'Collapse' : 'Expand'}
+                        className="w-7 sm:w-[9em] h-7 shrink-0 flex items-center justify-center gap-1.5 sm:px-2 rounded-md border border-mcb-subtle text-[0.6875rem] uppercase tracking-wider text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover transition-all duration-200"
                     >
                         {isLiveMode ? (
                             <>
                                 <ArrowsPointingInIcon className="h-3 w-3 shrink-0" />
-                                <span>Collapse</span>
+                                <span className="hidden sm:inline">Collapse</span>
                             </>
                         ) : (
                             <>
                                 <ArrowsPointingOutIcon className="h-3 w-3 shrink-0" />
-                                <span>Expand</span>
+                                <span className="hidden sm:inline">Expand</span>
                             </>
                         )}
                     </button>
@@ -86,14 +88,14 @@ export const ControlBar: React.FC<ControlBarProps> = ({
                                     if (isLiveMode) onToggleLiveMode();
                                     onClearAll();
                                 }}
-                                className="w-[5em] h-7 flex items-center justify-center px-3 rounded-md border border-mcb-subtle text-[0.6875rem] uppercase tracking-wider text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover transition-all duration-200"
+                                className="sm:w-[5em] h-7 flex items-center justify-center px-2.5 sm:px-3 rounded-md border border-mcb-subtle text-[0.6875rem] uppercase tracking-wider text-mcb-tertiary hover:text-mcb-primary hover:bg-mcb-hover transition-all duration-200"
                             >
                                 Clear
                             </button>
                             <button
                                 onClick={onToggleDeleteMode}
                                 className={classNames(
-                                    "mcb-switch mcb-switch--pill w-[8.5em] h-7",
+                                    "mcb-switch mcb-switch--pill min-w-19 sm:w-[8.5em] h-7",
                                     { "mcb-switch--danger": isDeleteMode }
                                 )}
                             >

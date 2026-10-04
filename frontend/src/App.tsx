@@ -231,6 +231,7 @@ function App() {
             {/* Main scrollable content */}
             <div 
                 ref={scrollContainerRef}
+                data-scroll-root
                 className="flex-1 overflow-y-auto flex flex-col"
                 style={{
                     WebkitOverflowScrolling: 'touch' as any,

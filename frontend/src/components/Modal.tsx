@@ -1,6 +1,8 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { XMarkIcon } from '@heroicons/react/20/solid';
 import { useExitTransition } from '../hooks/useExitTransition';
+import { useScrollLock } from '../hooks/useScrollLock';
 
 interface ModalProps {
   isOpen: boolean;
@@ -24,6 +26,7 @@ const Modal: React.FC<ModalProps> = ({
   fixedHeader = false
 }) => {
   const { isRendered, isClosing } = useExitTransition(isOpen);
+  useScrollLock(isRendered);
 
   if (!isRendered) return null;
 
@@ -33,7 +36,10 @@ const Modal: React.FC<ModalProps> = ({
     }
   };
 
-  return (
+  // Portaled to body: rendered in place, a modal opened from inside the
+  // scroll container is stuck in its stacking context on iOS and ends up
+  // under the fixed chord bar
+  return createPortal(
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
@@ -72,14 +78,15 @@ const Modal: React.FC<ModalProps> = ({
 
         {/* Content */}
         {fixedHeader ? (
-          <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
             {children}
           </div>
         ) : (
           children
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

@@ -6,6 +6,7 @@ import { staticDataService } from '../services/StaticDataService';
 import { ModeScaleChordDto, ScaleNoteDto } from '../api';
 import { noteNameToNumber } from '../util/NoteUtil';
 import { useExitTransition } from '../hooks/useExitTransition';
+import { useScrollLock } from '../hooks/useScrollLock';
 
 interface ChordFinderModalProps {
     isOpen: boolean;
@@ -273,6 +274,7 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
     }, [isOpen, currentKey, currentMode]);
 
     const { isRendered, isClosing } = useExitTransition(isOpen);
+    useScrollLock(isRendered);
 
     // Start each opening with a clean selection
     const [wasOpen, setWasOpen] = useState(isOpen);
@@ -603,7 +605,7 @@ const ChordFinderModal: React.FC<ChordFinderModalProps> = ({
                         )}
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-1.5">
+                    <div className="flex-1 overflow-y-auto overscroll-contain p-3 sm:p-4 space-y-1.5">
                         {isLoading ? (
                             <div className="text-center py-8 text-sm text-mcb-tertiary">
                                 Generating all chord combinations…

@@ -160,6 +160,7 @@ const SongSheetPage: React.FC = () => {
                     className={`mcb-sheet-overlay ${
                         overlayPhase === 'open' ? 'is-open' : overlayPhase === 'closing' ? 'is-closing' : ''
                     } fixed inset-0 z-[900] bg-mcb-app overflow-y-auto`}
+                    data-scroll-root
                     role="dialog"
                     aria-modal="true"
                     aria-label="Song sheet full screen"

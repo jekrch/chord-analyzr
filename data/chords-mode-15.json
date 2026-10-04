@@ -5,6 +5,16 @@
     "keyName": "C",
     "chordNote": 1,
     "chordNoteName": "C",
+    "chordName": "Cm",
+    "chordNotes": "1, 4, 8",
+    "chordNoteNames": "C, Eb, G"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 1,
+    "keyName": "C",
+    "chordNote": 1,
+    "chordNoteName": "C",
     "chordName": "Csus4",
     "chordNotes": "1, 6, 8",
     "chordNoteNames": "C, F, G"
@@ -15,9 +25,9 @@
     "keyName": "C",
     "chordNote": 1,
     "chordNoteName": "C",
-    "chordName": "C5",
-    "chordNotes": "1, 8",
-    "chordNoteNames": "C, G"
+    "chordName": "C7sus4",
+    "chordNotes": "1, 6, 8, 11",
+    "chordNoteNames": "C, F, G, Bb"
   },
   {
     "modeId": 15,
@@ -65,6 +75,16 @@
     "keyName": "C",
     "chordNote": 1,
     "chordNoteName": "C",
+    "chordName": "C5",
+    "chordNotes": "1, 8",
+    "chordNoteNames": "C, G"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 1,
+    "keyName": "C",
+    "chordNote": 1,
+    "chordNoteName": "C",
     "chordName": "Cm7b5",
     "chordNotes": "1, 4, 7, 11",
     "chordNoteNames": "C, Eb, Gb, Bb"
@@ -78,106 +98,6 @@
     "chordName": "Cm7",
     "chordNotes": "1, 4, 8, 11",
     "chordNoteNames": "C, Eb, G, Bb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 1,
-    "keyName": "C",
-    "chordNote": 1,
-    "chordNoteName": "C",
-    "chordName": "Cm",
-    "chordNotes": "1, 4, 8",
-    "chordNoteNames": "C, Eb, G"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 1,
-    "keyName": "C",
-    "chordNote": 1,
-    "chordNoteName": "C",
-    "chordName": "C7sus4",
-    "chordNotes": "1, 6, 8, 11",
-    "chordNoteNames": "C, F, G, Bb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 1,
-    "keyName": "C",
-    "chordNote": 4,
-    "chordNoteName": "Eb",
-    "chordName": "Ebm add(9)",
-    "chordNotes": "4, 6, 7, 11",
-    "chordNoteNames": "Eb, F, Gb, Bb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 1,
-    "keyName": "C",
-    "chordNote": 4,
-    "chordNoteName": "Eb",
-    "chordName": "Eb",
-    "chordNotes": "4, 8, 11",
-    "chordNoteNames": "Eb, G, Bb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 1,
-    "keyName": "C",
-    "chordNote": 4,
-    "chordNoteName": "Eb",
-    "chordName": "Ebm",
-    "chordNotes": "4, 7, 11",
-    "chordNoteNames": "Eb, Gb, Bb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 1,
-    "keyName": "C",
-    "chordNote": 4,
-    "chordNoteName": "Eb",
-    "chordName": "Ebm6",
-    "chordNotes": "4, 7, 11, 13",
-    "chordNoteNames": "Eb, Gb, Bb, C"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 1,
-    "keyName": "C",
-    "chordNote": 4,
-    "chordNoteName": "Eb",
-    "chordName": "Ebm6/9",
-    "chordNotes": "4, 7, 11, 13, 18",
-    "chordNoteNames": "Eb, Gb, Bb, C, F"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 1,
-    "keyName": "C",
-    "chordNote": 4,
-    "chordNoteName": "Eb",
-    "chordName": "Ebadd(9)",
-    "chordNotes": "4, 8, 11, 18",
-    "chordNoteNames": "Eb, G, Bb, F"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 1,
-    "keyName": "C",
-    "chordNote": 4,
-    "chordNoteName": "Eb",
-    "chordName": "Ebm add(2)",
-    "chordNotes": "4, 6, 7, 11",
-    "chordNoteNames": "Eb, F, Gb, Bb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 1,
-    "keyName": "C",
-    "chordNote": 4,
-    "chordNoteName": "Eb",
-    "chordName": "Ebsus2",
-    "chordNotes": "4, 6, 11",
-    "chordNoteNames": "Eb, F, Bb"
   },
   {
     "modeId": 15,
@@ -223,21 +143,81 @@
     "modeId": 15,
     "keyNote": 1,
     "keyName": "C",
-    "chordNote": 6,
-    "chordNoteName": "F",
-    "chordName": "Fsus2sus4",
-    "chordNotes": "6, 8, 11, 13",
-    "chordNoteNames": "F, G, Bb, C"
+    "chordNote": 4,
+    "chordNoteName": "Eb",
+    "chordName": "Ebadd(9)",
+    "chordNotes": "4, 8, 11, 18",
+    "chordNoteNames": "Eb, G, Bb, F"
   },
   {
     "modeId": 15,
     "keyNote": 1,
     "keyName": "C",
-    "chordNote": 6,
-    "chordNoteName": "F",
-    "chordName": "Fsus4",
-    "chordNotes": "6, 11, 13",
-    "chordNoteNames": "F, Bb, C"
+    "chordNote": 4,
+    "chordNoteName": "Eb",
+    "chordName": "Ebsus2",
+    "chordNotes": "4, 6, 11",
+    "chordNoteNames": "Eb, F, Bb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 1,
+    "keyName": "C",
+    "chordNote": 4,
+    "chordNoteName": "Eb",
+    "chordName": "Ebm",
+    "chordNotes": "4, 7, 11",
+    "chordNoteNames": "Eb, Gb, Bb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 1,
+    "keyName": "C",
+    "chordNote": 4,
+    "chordNoteName": "Eb",
+    "chordName": "Ebm6",
+    "chordNotes": "4, 7, 11, 13",
+    "chordNoteNames": "Eb, Gb, Bb, C"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 1,
+    "keyName": "C",
+    "chordNote": 4,
+    "chordNoteName": "Eb",
+    "chordName": "Ebm6/9",
+    "chordNotes": "4, 7, 11, 13, 18",
+    "chordNoteNames": "Eb, Gb, Bb, C, F"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 1,
+    "keyName": "C",
+    "chordNote": 4,
+    "chordNoteName": "Eb",
+    "chordName": "Ebm add(2)",
+    "chordNotes": "4, 6, 7, 11",
+    "chordNoteNames": "Eb, F, Gb, Bb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 1,
+    "keyName": "C",
+    "chordNote": 4,
+    "chordNoteName": "Eb",
+    "chordName": "Ebm add(9)",
+    "chordNotes": "4, 6, 7, 11",
+    "chordNoteNames": "Eb, F, Gb, Bb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 1,
+    "keyName": "C",
+    "chordNote": 4,
+    "chordNoteName": "Eb",
+    "chordName": "Eb",
+    "chordNotes": "4, 8, 11",
+    "chordNoteNames": "Eb, G, Bb"
   },
   {
     "modeId": 15,
@@ -255,9 +235,9 @@
     "keyName": "C",
     "chordNote": 6,
     "chordNoteName": "F",
-    "chordName": "F9sus4",
-    "chordNotes": "6, 11, 13, 16, 20",
-    "chordNoteNames": "F, Bb, C, Eb, G"
+    "chordName": "F7sus4",
+    "chordNotes": "6, 11, 13, 16",
+    "chordNoteNames": "F, Bb, C, Eb"
   },
   {
     "modeId": 15,
@@ -275,9 +255,9 @@
     "keyName": "C",
     "chordNote": 6,
     "chordNoteName": "F",
-    "chordName": "F7sus4",
-    "chordNotes": "6, 11, 13, 16",
-    "chordNoteNames": "F, Bb, C, Eb"
+    "chordName": "F9sus4",
+    "chordNotes": "6, 11, 13, 16, 20",
+    "chordNoteNames": "F, Bb, C, Eb, G"
   },
   {
     "modeId": 15,
@@ -288,6 +268,26 @@
     "chordName": "Fsus2",
     "chordNotes": "6, 8, 13",
     "chordNoteNames": "F, G, C"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 1,
+    "keyName": "C",
+    "chordNote": 6,
+    "chordNoteName": "F",
+    "chordName": "Fsus4",
+    "chordNotes": "6, 11, 13",
+    "chordNoteNames": "F, Bb, C"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 1,
+    "keyName": "C",
+    "chordNote": 6,
+    "chordNoteName": "F",
+    "chordName": "Fsus2sus4",
+    "chordNotes": "6, 8, 11, 13",
+    "chordNoteNames": "F, G, Bb, C"
   },
   {
     "modeId": 15,
@@ -325,9 +325,9 @@
     "keyName": "C",
     "chordNote": 11,
     "chordNoteName": "Bb",
-    "chordName": "Bbsus2",
-    "chordNotes": "11, 13, 18",
-    "chordNoteNames": "Bb, C, F"
+    "chordName": "Bb5",
+    "chordNotes": "11, 18",
+    "chordNoteNames": "Bb, F"
   },
   {
     "modeId": 15,
@@ -335,9 +335,9 @@
     "keyName": "C",
     "chordNote": 11,
     "chordNoteName": "Bb",
-    "chordName": "Bbsus2sus4",
-    "chordNotes": "11, 13, 16, 18",
-    "chordNoteNames": "Bb, C, Eb, F"
+    "chordName": "Bbsus2",
+    "chordNotes": "11, 13, 18",
+    "chordNoteNames": "Bb, C, F"
   },
   {
     "modeId": 15,
@@ -355,19 +355,39 @@
     "keyName": "C",
     "chordNote": 11,
     "chordNoteName": "Bb",
-    "chordName": "Bb5",
-    "chordNotes": "11, 18",
-    "chordNoteNames": "Bb, F"
+    "chordName": "Bbsus2sus4",
+    "chordNotes": "11, 13, 16, 18",
+    "chordNoteNames": "Bb, C, Eb, F"
   },
   {
     "modeId": 15,
     "keyNote": 2,
-    "keyName": "Db",
+    "keyName": "C#",
     "chordNote": 2,
-    "chordNoteName": "Db",
-    "chordName": "Dbm7b5",
-    "chordNotes": "2, 5, 8, 12",
-    "chordNoteNames": "Db, E, G, B"
+    "chordNoteName": "C#",
+    "chordName": "C#5",
+    "chordNotes": "2, 9",
+    "chordNoteNames": "C#, G#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 2,
+    "keyName": "C#",
+    "chordNote": 2,
+    "chordNoteName": "C#",
+    "chordName": "C#7sus4",
+    "chordNotes": "2, 7, 9, 12",
+    "chordNoteNames": "C#, F#, G#, Cb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 2,
+    "keyName": "C#",
+    "chordNote": 2,
+    "chordNoteName": "C#",
+    "chordName": "C#sus4",
+    "chordNotes": "2, 7, 9",
+    "chordNoteNames": "C#, F#, G#"
   },
   {
     "modeId": 15,
@@ -412,16 +432,6 @@
   {
     "modeId": 15,
     "keyNote": 2,
-    "keyName": "Db",
-    "chordNote": 2,
-    "chordNoteName": "Db",
-    "chordName": "Dbm",
-    "chordNotes": "2, 5, 9",
-    "chordNoteNames": "Db, E, Ab"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 2,
     "keyName": "C#",
     "chordNote": 2,
     "chordNoteName": "C#",
@@ -452,36 +462,6 @@
   {
     "modeId": 15,
     "keyNote": 2,
-    "keyName": "C#",
-    "chordNote": 2,
-    "chordNoteName": "C#",
-    "chordName": "C#5",
-    "chordNotes": "2, 9",
-    "chordNoteNames": "C#, G#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 2,
-    "keyName": "Db",
-    "chordNote": 2,
-    "chordNoteName": "Db",
-    "chordName": "Dbm7",
-    "chordNotes": "2, 5, 9, 12",
-    "chordNoteNames": "Db, E, Ab, B"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 2,
-    "keyName": "C#",
-    "chordNote": 2,
-    "chordNoteName": "C#",
-    "chordName": "C#7sus4",
-    "chordNotes": "2, 7, 9, 12",
-    "chordNoteNames": "C#, F#, G#, Cb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 2,
     "keyName": "Db",
     "chordNote": 2,
     "chordNoteName": "Db",
@@ -505,16 +485,6 @@
     "keyName": "Db",
     "chordNote": 2,
     "chordNoteName": "Db",
-    "chordName": "Dbm add(4)",
-    "chordNotes": "2, 5, 7, 9",
-    "chordNoteNames": "Db, E, Gb, Ab"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 2,
-    "keyName": "Db",
-    "chordNote": 2,
-    "chordNoteName": "Db",
     "chordName": "Dbsus4",
     "chordNotes": "2, 7, 9",
     "chordNoteNames": "Db, Gb, Ab"
@@ -525,19 +495,39 @@
     "keyName": "Db",
     "chordNote": 2,
     "chordNoteName": "Db",
-    "chordName": "Dbdim",
-    "chordNotes": "2, 5, 8",
-    "chordNoteNames": "Db, E, G"
+    "chordName": "Dbm",
+    "chordNotes": "2, 5, 9",
+    "chordNoteNames": "Db, E, Ab"
   },
   {
     "modeId": 15,
     "keyNote": 2,
-    "keyName": "C#",
+    "keyName": "Db",
     "chordNote": 2,
-    "chordNoteName": "C#",
-    "chordName": "C#sus4",
-    "chordNotes": "2, 7, 9",
-    "chordNoteNames": "C#, F#, G#"
+    "chordNoteName": "Db",
+    "chordName": "Dbm7",
+    "chordNotes": "2, 5, 9, 12",
+    "chordNoteNames": "Db, E, Ab, B"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 2,
+    "keyName": "Db",
+    "chordNote": 2,
+    "chordNoteName": "Db",
+    "chordName": "Dbm7b5",
+    "chordNotes": "2, 5, 8, 12",
+    "chordNoteNames": "Db, E, G, B"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 2,
+    "keyName": "Db",
+    "chordNote": 2,
+    "chordNoteName": "Db",
+    "chordName": "Dbm7#11",
+    "chordNotes": "2, 5, 9, 12, 20",
+    "chordNoteNames": "Db, E, Ab, B, G"
   },
   {
     "modeId": 15,
@@ -555,99 +545,19 @@
     "keyName": "Db",
     "chordNote": 2,
     "chordNoteName": "Db",
-    "chordName": "Dbm7#11",
-    "chordNotes": "2, 5, 9, 12, 20",
-    "chordNoteNames": "Db, E, Ab, B, G"
+    "chordName": "Dbm add(4)",
+    "chordNotes": "2, 5, 7, 9",
+    "chordNoteNames": "Db, E, Gb, Ab"
   },
   {
     "modeId": 15,
     "keyNote": 2,
     "keyName": "Db",
-    "chordNote": 5,
-    "chordNoteName": "E",
-    "chordName": "Em add(9)",
-    "chordNotes": "5, 7, 8, 12",
-    "chordNoteNames": "E, Gb, G, B"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 2,
-    "keyName": "Db",
-    "chordNote": 5,
-    "chordNoteName": "E",
-    "chordName": "E",
-    "chordNotes": "5, 9, 12",
-    "chordNoteNames": "E, Ab, B"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 2,
-    "keyName": "Db",
-    "chordNote": 5,
-    "chordNoteName": "E",
-    "chordName": "E6",
-    "chordNotes": "5, 9, 12, 14",
-    "chordNoteNames": "E, Ab, B, Db"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 2,
-    "keyName": "Db",
-    "chordNote": 5,
-    "chordNoteName": "E",
-    "chordName": "E5",
-    "chordNotes": "5, 12",
-    "chordNoteNames": "E, B"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 2,
-    "keyName": "Db",
-    "chordNote": 5,
-    "chordNoteName": "E",
-    "chordName": "E6/9",
-    "chordNotes": "5, 9, 12, 14, 19",
-    "chordNoteNames": "E, Ab, B, Db, Gb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 2,
-    "keyName": "Db",
-    "chordNote": 5,
-    "chordNoteName": "E",
-    "chordName": "Eadd(2)",
-    "chordNotes": "5, 7, 9, 12",
-    "chordNoteNames": "E, Gb, Ab, B"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 2,
-    "keyName": "Db",
-    "chordNote": 5,
-    "chordNoteName": "E",
-    "chordName": "Eadd(9)",
-    "chordNotes": "5, 9, 12, 19",
-    "chordNoteNames": "E, Ab, B, Gb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 2,
-    "keyName": "Db",
-    "chordNote": 5,
-    "chordNoteName": "E",
-    "chordName": "Esus2",
-    "chordNotes": "5, 7, 12",
-    "chordNoteNames": "E, Gb, B"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 2,
-    "keyName": "Db",
-    "chordNote": 5,
-    "chordNoteName": "E",
-    "chordName": "Em",
-    "chordNotes": "5, 8, 12",
-    "chordNoteNames": "E, G, B"
+    "chordNote": 2,
+    "chordNoteName": "Db",
+    "chordName": "Dbdim",
+    "chordNotes": "2, 5, 8",
+    "chordNoteNames": "Db, E, G"
   },
   {
     "modeId": 15,
@@ -658,26 +568,6 @@
     "chordName": "Em6",
     "chordNotes": "5, 8, 12, 14",
     "chordNoteNames": "E, G, B, Db"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 2,
-    "keyName": "Db",
-    "chordNote": 5,
-    "chordNoteName": "E",
-    "chordName": "Em6/9",
-    "chordNotes": "5, 8, 12, 14, 19",
-    "chordNoteNames": "E, G, B, Db, Gb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 2,
-    "keyName": "Db",
-    "chordNote": 5,
-    "chordNoteName": "E",
-    "chordName": "Em add(2)",
-    "chordNotes": "5, 7, 8, 12",
-    "chordNoteNames": "E, Gb, G, B"
   },
   {
     "modeId": 15,
@@ -803,21 +693,111 @@
     "modeId": 15,
     "keyNote": 2,
     "keyName": "Db",
-    "chordNote": 7,
-    "chordNoteName": "Gb",
-    "chordName": "Gb5",
-    "chordNotes": "7, 14",
-    "chordNoteNames": "Gb, Db"
+    "chordNote": 5,
+    "chordNoteName": "E",
+    "chordName": "E",
+    "chordNotes": "5, 9, 12",
+    "chordNoteNames": "E, Ab, B"
   },
   {
     "modeId": 15,
     "keyNote": 2,
     "keyName": "Db",
-    "chordNote": 7,
-    "chordNoteName": "Gb",
-    "chordName": "Gbsus2",
-    "chordNotes": "7, 9, 14",
-    "chordNoteNames": "Gb, Ab, Db"
+    "chordNote": 5,
+    "chordNoteName": "E",
+    "chordName": "E6",
+    "chordNotes": "5, 9, 12, 14",
+    "chordNoteNames": "E, Ab, B, Db"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 2,
+    "keyName": "Db",
+    "chordNote": 5,
+    "chordNoteName": "E",
+    "chordName": "E5",
+    "chordNotes": "5, 12",
+    "chordNoteNames": "E, B"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 2,
+    "keyName": "Db",
+    "chordNote": 5,
+    "chordNoteName": "E",
+    "chordName": "E6/9",
+    "chordNotes": "5, 9, 12, 14, 19",
+    "chordNoteNames": "E, Ab, B, Db, Gb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 2,
+    "keyName": "Db",
+    "chordNote": 5,
+    "chordNoteName": "E",
+    "chordName": "Eadd(2)",
+    "chordNotes": "5, 7, 9, 12",
+    "chordNoteNames": "E, Gb, Ab, B"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 2,
+    "keyName": "Db",
+    "chordNote": 5,
+    "chordNoteName": "E",
+    "chordName": "Eadd(9)",
+    "chordNotes": "5, 9, 12, 19",
+    "chordNoteNames": "E, Ab, B, Gb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 2,
+    "keyName": "Db",
+    "chordNote": 5,
+    "chordNoteName": "E",
+    "chordName": "Esus2",
+    "chordNotes": "5, 7, 12",
+    "chordNoteNames": "E, Gb, B"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 2,
+    "keyName": "Db",
+    "chordNote": 5,
+    "chordNoteName": "E",
+    "chordName": "Em",
+    "chordNotes": "5, 8, 12",
+    "chordNoteNames": "E, G, B"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 2,
+    "keyName": "Db",
+    "chordNote": 5,
+    "chordNoteName": "E",
+    "chordName": "Em6/9",
+    "chordNotes": "5, 8, 12, 14, 19",
+    "chordNoteNames": "E, G, B, Db, Gb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 2,
+    "keyName": "Db",
+    "chordNote": 5,
+    "chordNoteName": "E",
+    "chordName": "Em add(2)",
+    "chordNotes": "5, 7, 8, 12",
+    "chordNoteNames": "E, Gb, G, B"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 2,
+    "keyName": "Db",
+    "chordNote": 5,
+    "chordNoteName": "E",
+    "chordName": "Em add(9)",
+    "chordNotes": "5, 7, 8, 12",
+    "chordNoteNames": "E, Gb, G, B"
   },
   {
     "modeId": 15,
@@ -828,86 +808,6 @@
     "chordName": "Gbsus4",
     "chordNotes": "7, 12, 14",
     "chordNoteNames": "Gb, B, Db"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 2,
-    "keyName": "Db",
-    "chordNote": 7,
-    "chordNoteName": "Gb",
-    "chordName": "Gbsus2sus4",
-    "chordNotes": "7, 9, 12, 14",
-    "chordNoteNames": "Gb, Ab, B, Db"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 2,
-    "keyName": "Db",
-    "chordNote": 7,
-    "chordNoteName": "Gb",
-    "chordName": "Gb9sus4",
-    "chordNotes": "7, 12, 14, 17, 21",
-    "chordNoteNames": "Gb, B, Db, E, Ab"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 2,
-    "keyName": "C#",
-    "chordNote": 7,
-    "chordNoteName": "F#",
-    "chordName": "F#sus2sus4",
-    "chordNotes": "7, 9, 12, 14",
-    "chordNoteNames": "F#, G#, Cb, C#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 2,
-    "keyName": "C#",
-    "chordNote": 7,
-    "chordNoteName": "F#",
-    "chordName": "F#sus4",
-    "chordNotes": "7, 12, 14",
-    "chordNoteNames": "F#, Cb, C#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 2,
-    "keyName": "C#",
-    "chordNote": 7,
-    "chordNoteName": "F#",
-    "chordName": "F#sus2",
-    "chordNotes": "7, 9, 14",
-    "chordNoteNames": "F#, G#, C#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 2,
-    "keyName": "Db",
-    "chordNote": 7,
-    "chordNoteName": "Gb",
-    "chordName": "Gb7sus2",
-    "chordNotes": "7, 9, 14, 17",
-    "chordNoteNames": "Gb, Ab, Db, E"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 2,
-    "keyName": "C#",
-    "chordNote": 7,
-    "chordNoteName": "F#",
-    "chordName": "F#9sus4",
-    "chordNotes": "7, 12, 14, 17, 21",
-    "chordNoteNames": "F#, Cb, C#, Fb, G#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 2,
-    "keyName": "C#",
-    "chordNote": 7,
-    "chordNoteName": "F#",
-    "chordName": "F#7sus2",
-    "chordNotes": "7, 9, 14, 17",
-    "chordNoteNames": "F#, G#, C#, Fb"
   },
   {
     "modeId": 15,
@@ -925,9 +825,49 @@
     "keyName": "C#",
     "chordNote": 7,
     "chordNoteName": "F#",
-    "chordName": "F#5",
+    "chordName": "F#9sus4",
+    "chordNotes": "7, 12, 14, 17, 21",
+    "chordNoteNames": "F#, Cb, C#, Fb, G#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 2,
+    "keyName": "C#",
+    "chordNote": 7,
+    "chordNoteName": "F#",
+    "chordName": "F#sus2",
+    "chordNotes": "7, 9, 14",
+    "chordNoteNames": "F#, G#, C#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 2,
+    "keyName": "C#",
+    "chordNote": 7,
+    "chordNoteName": "F#",
+    "chordName": "F#sus4",
+    "chordNotes": "7, 12, 14",
+    "chordNoteNames": "F#, Cb, C#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 2,
+    "keyName": "C#",
+    "chordNote": 7,
+    "chordNoteName": "F#",
+    "chordName": "F#sus2sus4",
+    "chordNotes": "7, 9, 12, 14",
+    "chordNoteNames": "F#, G#, Cb, C#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 2,
+    "keyName": "Db",
+    "chordNote": 7,
+    "chordNoteName": "Gb",
+    "chordName": "Gb5",
     "chordNotes": "7, 14",
-    "chordNoteNames": "F#, C#"
+    "chordNoteNames": "Gb, Db"
   },
   {
     "modeId": 15,
@@ -942,12 +882,62 @@
   {
     "modeId": 15,
     "keyNote": 2,
+    "keyName": "Db",
+    "chordNote": 7,
+    "chordNoteName": "Gb",
+    "chordName": "Gb7sus2",
+    "chordNotes": "7, 9, 14, 17",
+    "chordNoteNames": "Gb, Ab, Db, E"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 2,
+    "keyName": "Db",
+    "chordNote": 7,
+    "chordNoteName": "Gb",
+    "chordName": "Gb9sus4",
+    "chordNotes": "7, 12, 14, 17, 21",
+    "chordNoteNames": "Gb, B, Db, E, Ab"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 2,
+    "keyName": "Db",
+    "chordNote": 7,
+    "chordNoteName": "Gb",
+    "chordName": "Gbsus2",
+    "chordNotes": "7, 9, 14",
+    "chordNoteNames": "Gb, Ab, Db"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 2,
+    "keyName": "Db",
+    "chordNote": 7,
+    "chordNoteName": "Gb",
+    "chordName": "Gbsus2sus4",
+    "chordNotes": "7, 9, 12, 14",
+    "chordNoteNames": "Gb, Ab, B, Db"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 2,
     "keyName": "C#",
-    "chordNote": 8,
-    "chordNoteName": "G",
-    "chordName": "Gmaj7b5",
-    "chordNotes": "8, 12, 14, 19",
-    "chordNoteNames": "G, Cb, C#, F#"
+    "chordNote": 7,
+    "chordNoteName": "F#",
+    "chordName": "F#7sus2",
+    "chordNotes": "7, 9, 14, 17",
+    "chordNoteNames": "F#, G#, C#, Fb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 2,
+    "keyName": "C#",
+    "chordNote": 7,
+    "chordNoteName": "F#",
+    "chordName": "F#5",
+    "chordNotes": "7, 14",
+    "chordNoteNames": "F#, C#"
   },
   {
     "modeId": 15,
@@ -962,12 +952,12 @@
   {
     "modeId": 15,
     "keyNote": 2,
-    "keyName": "Db",
+    "keyName": "C#",
     "chordNote": 8,
     "chordNoteName": "G",
-    "chordName": "Gb5",
-    "chordNotes": "8, 12, 14",
-    "chordNoteNames": "G, B, Db"
+    "chordName": "Gmaj7b5",
+    "chordNotes": "8, 12, 14, 19",
+    "chordNoteNames": "G, Cb, C#, F#"
   },
   {
     "modeId": 15,
@@ -978,6 +968,16 @@
     "chordName": "Gmaj7b5",
     "chordNotes": "8, 12, 14, 19",
     "chordNoteNames": "G, B, Db, Gb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 2,
+    "keyName": "Db",
+    "chordNote": 8,
+    "chordNoteName": "G",
+    "chordName": "Gb5",
+    "chordNotes": "8, 12, 14",
+    "chordNoteNames": "G, B, Db"
   },
   {
     "modeId": 15,
@@ -1005,29 +1005,9 @@
     "keyName": "C#",
     "chordNote": 12,
     "chordNoteName": "Cb",
-    "chordName": "Cbsus4",
-    "chordNotes": "12, 17, 19",
-    "chordNoteNames": "Cb, Fb, F#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 2,
-    "keyName": "Db",
-    "chordNote": 12,
-    "chordNoteName": "B",
-    "chordName": "Bsus4",
-    "chordNotes": "12, 17, 19",
-    "chordNoteNames": "B, E, Gb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 2,
-    "keyName": "Db",
-    "chordNote": 12,
-    "chordNoteName": "B",
-    "chordName": "Bsus2",
-    "chordNotes": "12, 14, 19",
-    "chordNoteNames": "B, Db, Gb"
+    "chordName": "Cbsus2sus4",
+    "chordNotes": "12, 14, 17, 19",
+    "chordNoteNames": "Cb, C#, Fb, F#"
   },
   {
     "modeId": 15,
@@ -1045,19 +1025,29 @@
     "keyName": "Db",
     "chordNote": 12,
     "chordNoteName": "B",
-    "chordName": "Bsus2sus4",
-    "chordNotes": "12, 14, 17, 19",
-    "chordNoteNames": "B, Db, E, Gb"
+    "chordName": "Bsus2",
+    "chordNotes": "12, 14, 19",
+    "chordNoteNames": "B, Db, Gb"
   },
   {
     "modeId": 15,
     "keyNote": 2,
-    "keyName": "C#",
+    "keyName": "Db",
     "chordNote": 12,
-    "chordNoteName": "Cb",
-    "chordName": "Cb5",
-    "chordNotes": "12, 19",
-    "chordNoteNames": "Cb, F#"
+    "chordNoteName": "B",
+    "chordName": "Bsus4",
+    "chordNotes": "12, 17, 19",
+    "chordNoteNames": "B, E, Gb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 2,
+    "keyName": "Db",
+    "chordNote": 12,
+    "chordNoteName": "B",
+    "chordName": "Bsus2sus4",
+    "chordNotes": "12, 14, 17, 19",
+    "chordNoteNames": "B, Db, E, Gb"
   },
   {
     "modeId": 15,
@@ -1075,19 +1065,19 @@
     "keyName": "C#",
     "chordNote": 12,
     "chordNoteName": "Cb",
-    "chordName": "Cbsus2sus4",
-    "chordNotes": "12, 14, 17, 19",
-    "chordNoteNames": "Cb, C#, Fb, F#"
+    "chordName": "Cbsus4",
+    "chordNotes": "12, 17, 19",
+    "chordNoteNames": "Cb, Fb, F#"
   },
   {
     "modeId": 15,
-    "keyNote": 3,
-    "keyName": "D",
-    "chordNote": 1,
-    "chordNoteName": "C",
-    "chordName": "C5",
-    "chordNotes": "1, 8",
-    "chordNoteNames": "C, G"
+    "keyNote": 2,
+    "keyName": "C#",
+    "chordNote": 12,
+    "chordNoteName": "Cb",
+    "chordName": "Cb5",
+    "chordNotes": "12, 19",
+    "chordNoteNames": "Cb, F#"
   },
   {
     "modeId": 15,
@@ -1105,6 +1095,16 @@
     "keyName": "D",
     "chordNote": 1,
     "chordNoteName": "C",
+    "chordName": "Csus4",
+    "chordNotes": "1, 6, 8",
+    "chordNoteNames": "C, F, G"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 3,
+    "keyName": "D",
+    "chordNote": 1,
+    "chordNoteName": "C",
     "chordName": "Csus2sus4",
     "chordNotes": "1, 3, 6, 8",
     "chordNoteNames": "C, D, F, G"
@@ -1115,9 +1115,9 @@
     "keyName": "D",
     "chordNote": 1,
     "chordNoteName": "C",
-    "chordName": "Csus4",
-    "chordNotes": "1, 6, 8",
-    "chordNoteNames": "C, F, G"
+    "chordName": "C5",
+    "chordNotes": "1, 8",
+    "chordNoteNames": "C, G"
   },
   {
     "modeId": 15,
@@ -1125,89 +1125,9 @@
     "keyName": "D",
     "chordNote": 3,
     "chordNoteName": "D",
-    "chordName": "Dm7 add(4)",
-    "chordNotes": "3, 6, 8, 10, 25",
-    "chordNoteNames": "D, F, G, A, C"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 3,
-    "keyName": "D",
-    "chordNote": 3,
-    "chordNoteName": "D",
-    "chordName": "Ddim",
-    "chordNotes": "3, 6, 9",
-    "chordNoteNames": "D, F, Ab"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 3,
-    "keyName": "D",
-    "chordNote": 3,
-    "chordNoteName": "D",
-    "chordName": "Dm add(4)",
-    "chordNotes": "3, 6, 8, 10",
-    "chordNoteNames": "D, F, G, A"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 3,
-    "keyName": "D",
-    "chordNote": 3,
-    "chordNoteName": "D",
-    "chordName": "Dm7/6",
-    "chordNotes": "3, 6, 10, 25",
-    "chordNoteNames": "D, F, A, C"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 3,
-    "keyName": "D",
-    "chordNote": 3,
-    "chordNoteName": "D",
-    "chordName": "Dm7#11",
-    "chordNotes": "3, 6, 10, 13, 21",
-    "chordNoteNames": "D, F, A, C, Ab"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 3,
-    "keyName": "D",
-    "chordNote": 3,
-    "chordNoteName": "D",
-    "chordName": "Dm7b5",
-    "chordNotes": "3, 6, 9, 13",
-    "chordNoteNames": "D, F, Ab, C"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 3,
-    "keyName": "D",
-    "chordNote": 3,
-    "chordNoteName": "D",
-    "chordName": "Dm7",
-    "chordNotes": "3, 6, 10, 13",
-    "chordNoteNames": "D, F, A, C"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 3,
-    "keyName": "D",
-    "chordNote": 3,
-    "chordNoteName": "D",
-    "chordName": "Dm",
-    "chordNotes": "3, 6, 10",
-    "chordNoteNames": "D, F, A"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 3,
-    "keyName": "D",
-    "chordNote": 3,
-    "chordNoteName": "D",
-    "chordName": "Dsus4",
-    "chordNotes": "3, 8, 10",
-    "chordNoteNames": "D, G, A"
+    "chordName": "D5",
+    "chordNotes": "3, 10",
+    "chordNoteNames": "D, A"
   },
   {
     "modeId": 15,
@@ -1225,99 +1145,89 @@
     "keyName": "D",
     "chordNote": 3,
     "chordNoteName": "D",
-    "chordName": "D5",
-    "chordNotes": "3, 10",
-    "chordNoteNames": "D, A"
+    "chordName": "Dsus4",
+    "chordNotes": "3, 8, 10",
+    "chordNoteNames": "D, G, A"
   },
   {
     "modeId": 15,
     "keyNote": 3,
     "keyName": "D",
-    "chordNote": 6,
-    "chordNoteName": "F",
-    "chordName": "Fm add(9)",
-    "chordNotes": "6, 8, 9, 13",
-    "chordNoteNames": "F, G, Ab, C"
+    "chordNote": 3,
+    "chordNoteName": "D",
+    "chordName": "Dm",
+    "chordNotes": "3, 6, 10",
+    "chordNoteNames": "D, F, A"
   },
   {
     "modeId": 15,
     "keyNote": 3,
     "keyName": "D",
-    "chordNote": 6,
-    "chordNoteName": "F",
-    "chordName": "F",
-    "chordNotes": "6, 10, 13",
-    "chordNoteNames": "F, A, C"
+    "chordNote": 3,
+    "chordNoteName": "D",
+    "chordName": "Dm7",
+    "chordNotes": "3, 6, 10, 13",
+    "chordNoteNames": "D, F, A, C"
   },
   {
     "modeId": 15,
     "keyNote": 3,
     "keyName": "D",
-    "chordNote": 6,
-    "chordNoteName": "F",
-    "chordName": "Fm add(2)",
-    "chordNotes": "6, 8, 9, 13",
-    "chordNoteNames": "F, G, Ab, C"
+    "chordNote": 3,
+    "chordNoteName": "D",
+    "chordName": "Dm7b5",
+    "chordNotes": "3, 6, 9, 13",
+    "chordNoteNames": "D, F, Ab, C"
   },
   {
     "modeId": 15,
     "keyNote": 3,
     "keyName": "D",
-    "chordNote": 6,
-    "chordNoteName": "F",
-    "chordName": "Fm6/9",
-    "chordNotes": "6, 9, 13, 15, 20",
-    "chordNoteNames": "F, Ab, C, D, G"
+    "chordNote": 3,
+    "chordNoteName": "D",
+    "chordName": "Dm7#11",
+    "chordNotes": "3, 6, 10, 13, 21",
+    "chordNoteNames": "D, F, A, C, Ab"
   },
   {
     "modeId": 15,
     "keyNote": 3,
     "keyName": "D",
-    "chordNote": 6,
-    "chordNoteName": "F",
-    "chordName": "Fm6",
-    "chordNotes": "6, 9, 13, 15",
-    "chordNoteNames": "F, Ab, C, D"
+    "chordNote": 3,
+    "chordNoteName": "D",
+    "chordName": "Dm7/6",
+    "chordNotes": "3, 6, 10, 25",
+    "chordNoteNames": "D, F, A, C"
   },
   {
     "modeId": 15,
     "keyNote": 3,
     "keyName": "D",
-    "chordNote": 6,
-    "chordNoteName": "F",
-    "chordName": "Fm",
-    "chordNotes": "6, 9, 13",
-    "chordNoteNames": "F, Ab, C"
+    "chordNote": 3,
+    "chordNoteName": "D",
+    "chordName": "Dm7 add(4)",
+    "chordNotes": "3, 6, 8, 10, 25",
+    "chordNoteNames": "D, F, G, A, C"
   },
   {
     "modeId": 15,
     "keyNote": 3,
     "keyName": "D",
-    "chordNote": 6,
-    "chordNoteName": "F",
-    "chordName": "Fsus2",
-    "chordNotes": "6, 8, 13",
-    "chordNoteNames": "F, G, C"
+    "chordNote": 3,
+    "chordNoteName": "D",
+    "chordName": "Dm add(4)",
+    "chordNotes": "3, 6, 8, 10",
+    "chordNoteNames": "D, F, G, A"
   },
   {
     "modeId": 15,
     "keyNote": 3,
     "keyName": "D",
-    "chordNote": 6,
-    "chordNoteName": "F",
-    "chordName": "Fadd(9)",
-    "chordNotes": "6, 10, 13, 20",
-    "chordNoteNames": "F, A, C, G"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 3,
-    "keyName": "D",
-    "chordNote": 6,
-    "chordNoteName": "F",
-    "chordName": "Fadd(2)",
-    "chordNotes": "6, 8, 10, 13",
-    "chordNoteNames": "F, G, A, C"
+    "chordNote": 3,
+    "chordNoteName": "D",
+    "chordName": "Ddim",
+    "chordNotes": "3, 6, 9",
+    "chordNoteNames": "D, F, Ab"
   },
   {
     "modeId": 15,
@@ -1335,9 +1245,9 @@
     "keyName": "D",
     "chordNote": 6,
     "chordNoteName": "F",
-    "chordName": "F5",
-    "chordNotes": "6, 13",
-    "chordNoteNames": "F, C"
+    "chordName": "F",
+    "chordNotes": "6, 10, 13",
+    "chordNoteNames": "F, A, C"
   },
   {
     "modeId": 15,
@@ -1353,11 +1263,91 @@
     "modeId": 15,
     "keyNote": 3,
     "keyName": "D",
-    "chordNote": 8,
-    "chordNoteName": "G",
-    "chordName": "G9sus4",
-    "chordNotes": "8, 13, 15, 18, 22",
-    "chordNoteNames": "G, C, D, F, A"
+    "chordNote": 6,
+    "chordNoteName": "F",
+    "chordName": "F5",
+    "chordNotes": "6, 13",
+    "chordNoteNames": "F, C"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 3,
+    "keyName": "D",
+    "chordNote": 6,
+    "chordNoteName": "F",
+    "chordName": "Fadd(2)",
+    "chordNotes": "6, 8, 10, 13",
+    "chordNoteNames": "F, G, A, C"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 3,
+    "keyName": "D",
+    "chordNote": 6,
+    "chordNoteName": "F",
+    "chordName": "Fadd(9)",
+    "chordNotes": "6, 10, 13, 20",
+    "chordNoteNames": "F, A, C, G"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 3,
+    "keyName": "D",
+    "chordNote": 6,
+    "chordNoteName": "F",
+    "chordName": "Fsus2",
+    "chordNotes": "6, 8, 13",
+    "chordNoteNames": "F, G, C"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 3,
+    "keyName": "D",
+    "chordNote": 6,
+    "chordNoteName": "F",
+    "chordName": "Fm",
+    "chordNotes": "6, 9, 13",
+    "chordNoteNames": "F, Ab, C"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 3,
+    "keyName": "D",
+    "chordNote": 6,
+    "chordNoteName": "F",
+    "chordName": "Fm6",
+    "chordNotes": "6, 9, 13, 15",
+    "chordNoteNames": "F, Ab, C, D"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 3,
+    "keyName": "D",
+    "chordNote": 6,
+    "chordNoteName": "F",
+    "chordName": "Fm6/9",
+    "chordNotes": "6, 9, 13, 15, 20",
+    "chordNoteNames": "F, Ab, C, D, G"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 3,
+    "keyName": "D",
+    "chordNote": 6,
+    "chordNoteName": "F",
+    "chordName": "Fm add(2)",
+    "chordNotes": "6, 8, 9, 13",
+    "chordNoteNames": "F, G, Ab, C"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 3,
+    "keyName": "D",
+    "chordNote": 6,
+    "chordNoteName": "F",
+    "chordName": "Fm add(9)",
+    "chordNotes": "6, 8, 9, 13",
+    "chordNoteNames": "F, G, Ab, C"
   },
   {
     "modeId": 15,
@@ -1375,9 +1365,9 @@
     "keyName": "D",
     "chordNote": 8,
     "chordNoteName": "G",
-    "chordName": "G7sus4",
-    "chordNotes": "8, 13, 15, 18",
-    "chordNoteNames": "G, C, D, F"
+    "chordName": "Gsus2sus4",
+    "chordNotes": "8, 10, 13, 15",
+    "chordNoteNames": "G, A, C, D"
   },
   {
     "modeId": 15,
@@ -1405,9 +1395,9 @@
     "keyName": "D",
     "chordNote": 8,
     "chordNoteName": "G",
-    "chordName": "Gsus4",
-    "chordNotes": "8, 13, 15",
-    "chordNoteNames": "G, C, D"
+    "chordName": "G9sus4",
+    "chordNotes": "8, 13, 15, 18, 22",
+    "chordNoteNames": "G, C, D, F, A"
   },
   {
     "modeId": 15,
@@ -1415,19 +1405,19 @@
     "keyName": "D",
     "chordNote": 8,
     "chordNoteName": "G",
-    "chordName": "Gsus2sus4",
-    "chordNotes": "8, 10, 13, 15",
-    "chordNoteNames": "G, A, C, D"
+    "chordName": "G7sus4",
+    "chordNotes": "8, 13, 15, 18",
+    "chordNoteNames": "G, C, D, F"
   },
   {
     "modeId": 15,
     "keyNote": 3,
     "keyName": "D",
-    "chordNote": 9,
-    "chordNoteName": "Ab",
-    "chordName": "Abb5",
-    "chordNotes": "9, 13, 15",
-    "chordNoteNames": "Ab, C, D"
+    "chordNote": 8,
+    "chordNoteName": "G",
+    "chordName": "Gsus4",
+    "chordNotes": "8, 13, 15",
+    "chordNoteNames": "G, C, D"
   },
   {
     "modeId": 15,
@@ -1438,6 +1428,16 @@
     "chordName": "Abmaj7b5",
     "chordNotes": "9, 13, 15, 20",
     "chordNoteNames": "Ab, C, D, G"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 3,
+    "keyName": "D",
+    "chordNote": 9,
+    "chordNoteName": "Ab",
+    "chordName": "Abb5",
+    "chordNotes": "9, 13, 15",
+    "chordNoteNames": "Ab, C, D"
   },
   {
     "modeId": 15,
@@ -1455,39 +1455,9 @@
     "keyName": "Eb",
     "chordNote": 2,
     "chordNoteName": "Db",
-    "chordName": "Dbsus4",
-    "chordNotes": "2, 7, 9",
-    "chordNoteNames": "Db, Gb, Ab"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 4,
-    "keyName": "Eb",
-    "chordNote": 2,
-    "chordNoteName": "Db",
-    "chordName": "Dbsus2sus4",
-    "chordNotes": "2, 4, 7, 9",
-    "chordNoteNames": "Db, Eb, Gb, Ab"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 4,
-    "keyName": "Eb",
-    "chordNote": 2,
-    "chordNoteName": "Db",
-    "chordName": "Dbsus2",
-    "chordNotes": "2, 4, 9",
-    "chordNoteNames": "Db, Eb, Ab"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 4,
-    "keyName": "D#",
-    "chordNote": 2,
-    "chordNoteName": "C#",
-    "chordName": "C#sus4",
-    "chordNotes": "2, 7, 9",
-    "chordNoteNames": "C#, F#, G#"
+    "chordName": "Db13#sus4",
+    "chordNotes": "2, 4, 7, 9, 23",
+    "chordNoteNames": "Db, Eb, Gb, Ab, Bb"
   },
   {
     "modeId": 15,
@@ -1522,22 +1492,12 @@
   {
     "modeId": 15,
     "keyNote": 4,
-    "keyName": "Eb",
+    "keyName": "D#",
     "chordNote": 2,
-    "chordNoteName": "Db",
-    "chordName": "Db13#sus4",
-    "chordNotes": "2, 4, 7, 9, 23",
-    "chordNoteNames": "Db, Eb, Gb, Ab, Bb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 4,
-    "keyName": "Eb",
-    "chordNote": 2,
-    "chordNoteName": "Db",
-    "chordName": "Db5",
-    "chordNotes": "2, 9",
-    "chordNoteNames": "Db, Ab"
+    "chordNoteName": "C#",
+    "chordName": "C#sus4",
+    "chordNotes": "2, 7, 9",
+    "chordNoteNames": "C#, F#, G#"
   },
   {
     "modeId": 15,
@@ -1552,52 +1512,42 @@
   {
     "modeId": 15,
     "keyNote": 4,
-    "keyName": "D#",
-    "chordNote": 4,
-    "chordNoteName": "D#",
-    "chordName": "D#dim",
-    "chordNotes": "4, 7, 10",
-    "chordNoteNames": "D#, F#, A"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 4,
-    "keyName": "D#",
-    "chordNote": 4,
-    "chordNoteName": "D#",
-    "chordName": "D#5",
-    "chordNotes": "4, 11",
-    "chordNoteNames": "D#, A#"
+    "keyName": "Eb",
+    "chordNote": 2,
+    "chordNoteName": "Db",
+    "chordName": "Db5",
+    "chordNotes": "2, 9",
+    "chordNoteNames": "Db, Ab"
   },
   {
     "modeId": 15,
     "keyNote": 4,
     "keyName": "Eb",
-    "chordNote": 4,
-    "chordNoteName": "Eb",
-    "chordName": "Ebdim",
-    "chordNotes": "4, 7, 10",
-    "chordNoteNames": "Eb, Gb, A"
+    "chordNote": 2,
+    "chordNoteName": "Db",
+    "chordName": "Dbsus2",
+    "chordNotes": "2, 4, 9",
+    "chordNoteNames": "Db, Eb, Ab"
   },
   {
     "modeId": 15,
     "keyNote": 4,
     "keyName": "Eb",
-    "chordNote": 4,
-    "chordNoteName": "Eb",
-    "chordName": "Ebm add(4)",
-    "chordNotes": "4, 7, 9, 11",
-    "chordNoteNames": "Eb, Gb, Ab, Bb"
+    "chordNote": 2,
+    "chordNoteName": "Db",
+    "chordName": "Dbsus4",
+    "chordNotes": "2, 7, 9",
+    "chordNoteNames": "Db, Gb, Ab"
   },
   {
     "modeId": 15,
     "keyNote": 4,
     "keyName": "Eb",
-    "chordNote": 4,
-    "chordNoteName": "Eb",
-    "chordName": "Ebm7 add(4)",
-    "chordNotes": "4, 7, 9, 11, 26",
-    "chordNoteNames": "Eb, Gb, Ab, Bb, Db"
+    "chordNote": 2,
+    "chordNoteName": "Db",
+    "chordName": "Dbsus2sus4",
+    "chordNotes": "2, 4, 7, 9",
+    "chordNoteNames": "Db, Eb, Gb, Ab"
   },
   {
     "modeId": 15,
@@ -1622,12 +1572,12 @@
   {
     "modeId": 15,
     "keyNote": 4,
-    "keyName": "D#",
+    "keyName": "Eb",
     "chordNote": 4,
-    "chordNoteName": "D#",
-    "chordName": "D#m7#11",
-    "chordNotes": "4, 7, 11, 14, 22",
-    "chordNoteNames": "D#, F#, A#, C#, A"
+    "chordNoteName": "Eb",
+    "chordName": "Ebm7",
+    "chordNotes": "4, 7, 11, 14",
+    "chordNoteNames": "Eb, Gb, Bb, Db"
   },
   {
     "modeId": 15,
@@ -1705,6 +1655,16 @@
     "keyName": "D#",
     "chordNote": 4,
     "chordNoteName": "D#",
+    "chordName": "D#5",
+    "chordNotes": "4, 11",
+    "chordNoteNames": "D#, A#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 4,
+    "keyName": "D#",
+    "chordNote": 4,
+    "chordNoteName": "D#",
     "chordName": "D#7sus4",
     "chordNotes": "4, 9, 11, 14",
     "chordNoteNames": "D#, G#, A#, C#"
@@ -1715,19 +1675,9 @@
     "keyName": "D#",
     "chordNote": 4,
     "chordNoteName": "D#",
-    "chordName": "D#m7b5",
-    "chordNotes": "4, 7, 10, 14",
-    "chordNoteNames": "D#, F#, A, C#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 4,
-    "keyName": "Eb",
-    "chordNote": 4,
-    "chordNoteName": "Eb",
-    "chordName": "Ebm7",
-    "chordNotes": "4, 7, 11, 14",
-    "chordNoteNames": "Eb, Gb, Bb, Db"
+    "chordName": "D#dim",
+    "chordNotes": "4, 7, 10",
+    "chordNoteNames": "D#, F#, A"
   },
   {
     "modeId": 15,
@@ -1745,6 +1695,16 @@
     "keyName": "D#",
     "chordNote": 4,
     "chordNoteName": "D#",
+    "chordName": "D#m7b5",
+    "chordNotes": "4, 7, 10, 14",
+    "chordNoteNames": "D#, F#, A, C#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 4,
+    "keyName": "D#",
+    "chordNote": 4,
+    "chordNoteName": "D#",
     "chordName": "D#m add(4)",
     "chordNotes": "4, 7, 9, 11",
     "chordNoteNames": "D#, F#, G#, A#"
@@ -1753,11 +1713,41 @@
     "modeId": 15,
     "keyNote": 4,
     "keyName": "D#",
-    "chordNote": 7,
-    "chordNoteName": "F#",
-    "chordName": "F#add(9)",
-    "chordNotes": "7, 11, 14, 21",
-    "chordNoteNames": "F#, A#, C#, G#"
+    "chordNote": 4,
+    "chordNoteName": "D#",
+    "chordName": "D#m7#11",
+    "chordNotes": "4, 7, 11, 14, 22",
+    "chordNoteNames": "D#, F#, A#, C#, A"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 4,
+    "keyName": "Eb",
+    "chordNote": 4,
+    "chordNoteName": "Eb",
+    "chordName": "Ebdim",
+    "chordNotes": "4, 7, 10",
+    "chordNoteNames": "Eb, Gb, A"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 4,
+    "keyName": "Eb",
+    "chordNote": 4,
+    "chordNoteName": "Eb",
+    "chordName": "Ebm add(4)",
+    "chordNotes": "4, 7, 9, 11",
+    "chordNoteNames": "Eb, Gb, Ab, Bb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 4,
+    "keyName": "Eb",
+    "chordNote": 4,
+    "chordNoteName": "Eb",
+    "chordName": "Ebm7 add(4)",
+    "chordNotes": "4, 7, 9, 11, 26",
+    "chordNoteNames": "Eb, Gb, Ab, Bb, Db"
   },
   {
     "modeId": 15,
@@ -1765,29 +1755,9 @@
     "keyName": "D#",
     "chordNote": 7,
     "chordNoteName": "F#",
-    "chordName": "F#6/9",
-    "chordNotes": "7, 11, 14, 16, 21",
-    "chordNoteNames": "F#, A#, C#, D#, G#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 4,
-    "keyName": "D#",
-    "chordNote": 7,
-    "chordNoteName": "F#",
-    "chordName": "F#5",
-    "chordNotes": "7, 14",
-    "chordNoteNames": "F#, C#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 4,
-    "keyName": "D#",
-    "chordNote": 7,
-    "chordNoteName": "F#",
-    "chordName": "F#6",
-    "chordNotes": "7, 11, 14, 16",
-    "chordNoteNames": "F#, A#, C#, D#"
+    "chordName": "F#m add(9)",
+    "chordNotes": "7, 9, 10, 14",
+    "chordNoteNames": "F#, G#, A, C#"
   },
   {
     "modeId": 15,
@@ -1805,7 +1775,97 @@
     "keyName": "D#",
     "chordNote": 7,
     "chordNoteName": "F#",
-    "chordName": "F#m add(9)",
+    "chordName": "F#6",
+    "chordNotes": "7, 11, 14, 16",
+    "chordNoteNames": "F#, A#, C#, D#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 4,
+    "keyName": "D#",
+    "chordNote": 7,
+    "chordNoteName": "F#",
+    "chordName": "F#5",
+    "chordNotes": "7, 14",
+    "chordNoteNames": "F#, C#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 4,
+    "keyName": "D#",
+    "chordNote": 7,
+    "chordNoteName": "F#",
+    "chordName": "F#6/9",
+    "chordNotes": "7, 11, 14, 16, 21",
+    "chordNoteNames": "F#, A#, C#, D#, G#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 4,
+    "keyName": "D#",
+    "chordNote": 7,
+    "chordNoteName": "F#",
+    "chordName": "F#add(2)",
+    "chordNotes": "7, 9, 11, 14",
+    "chordNoteNames": "F#, G#, A#, C#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 4,
+    "keyName": "D#",
+    "chordNote": 7,
+    "chordNoteName": "F#",
+    "chordName": "F#add(9)",
+    "chordNotes": "7, 11, 14, 21",
+    "chordNoteNames": "F#, A#, C#, G#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 4,
+    "keyName": "D#",
+    "chordNote": 7,
+    "chordNoteName": "F#",
+    "chordName": "F#sus2",
+    "chordNotes": "7, 9, 14",
+    "chordNoteNames": "F#, G#, C#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 4,
+    "keyName": "D#",
+    "chordNote": 7,
+    "chordNoteName": "F#",
+    "chordName": "F#m",
+    "chordNotes": "7, 10, 14",
+    "chordNoteNames": "F#, A, C#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 4,
+    "keyName": "D#",
+    "chordNote": 7,
+    "chordNoteName": "F#",
+    "chordName": "F#m6",
+    "chordNotes": "7, 10, 14, 16",
+    "chordNoteNames": "F#, A, C#, D#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 4,
+    "keyName": "D#",
+    "chordNote": 7,
+    "chordNoteName": "F#",
+    "chordName": "F#m6/9",
+    "chordNotes": "7, 10, 14, 16, 21",
+    "chordNoteNames": "F#, A, C#, D#, G#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 4,
+    "keyName": "D#",
+    "chordNote": 7,
+    "chordNoteName": "F#",
+    "chordName": "F#m add(2)",
     "chordNotes": "7, 9, 10, 14",
     "chordNoteNames": "F#, G#, A, C#"
   },
@@ -1895,9 +1955,9 @@
     "keyName": "Eb",
     "chordNote": 7,
     "chordNoteName": "Gb",
-    "chordName": "Gbm add(9)",
-    "chordNotes": "7, 9, 10, 14",
-    "chordNoteNames": "Gb, Ab, A, Db"
+    "chordName": "Gbm6",
+    "chordNotes": "7, 10, 14, 16",
+    "chordNoteNames": "Gb, A, Db, Eb"
   },
   {
     "modeId": 15,
@@ -1905,9 +1965,9 @@
     "keyName": "Eb",
     "chordNote": 7,
     "chordNoteName": "Gb",
-    "chordName": "Gbm6",
-    "chordNotes": "7, 10, 14, 16",
-    "chordNoteNames": "Gb, A, Db, Eb"
+    "chordName": "Gbm6/9",
+    "chordNotes": "7, 10, 14, 16, 21",
+    "chordNoteNames": "Gb, A, Db, Eb, Ab"
   },
   {
     "modeId": 15,
@@ -1925,159 +1985,9 @@
     "keyName": "Eb",
     "chordNote": 7,
     "chordNoteName": "Gb",
-    "chordName": "Gbm6/9",
-    "chordNotes": "7, 10, 14, 16, 21",
-    "chordNoteNames": "Gb, A, Db, Eb, Ab"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 4,
-    "keyName": "D#",
-    "chordNote": 7,
-    "chordNoteName": "F#",
-    "chordName": "F#m add(2)",
+    "chordName": "Gbm add(9)",
     "chordNotes": "7, 9, 10, 14",
-    "chordNoteNames": "F#, G#, A, C#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 4,
-    "keyName": "D#",
-    "chordNote": 7,
-    "chordNoteName": "F#",
-    "chordName": "F#m6/9",
-    "chordNotes": "7, 10, 14, 16, 21",
-    "chordNoteNames": "F#, A, C#, D#, G#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 4,
-    "keyName": "D#",
-    "chordNote": 7,
-    "chordNoteName": "F#",
-    "chordName": "F#m6",
-    "chordNotes": "7, 10, 14, 16",
-    "chordNoteNames": "F#, A, C#, D#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 4,
-    "keyName": "D#",
-    "chordNote": 7,
-    "chordNoteName": "F#",
-    "chordName": "F#m",
-    "chordNotes": "7, 10, 14",
-    "chordNoteNames": "F#, A, C#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 4,
-    "keyName": "D#",
-    "chordNote": 7,
-    "chordNoteName": "F#",
-    "chordName": "F#sus2",
-    "chordNotes": "7, 9, 14",
-    "chordNoteNames": "F#, G#, C#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 4,
-    "keyName": "D#",
-    "chordNote": 7,
-    "chordNoteName": "F#",
-    "chordName": "F#add(2)",
-    "chordNotes": "7, 9, 11, 14",
-    "chordNoteNames": "F#, G#, A#, C#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 4,
-    "keyName": "D#",
-    "chordNote": 9,
-    "chordNoteName": "G#",
-    "chordName": "G#sus4",
-    "chordNotes": "9, 14, 16",
-    "chordNoteNames": "G#, C#, D#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 4,
-    "keyName": "D#",
-    "chordNote": 9,
-    "chordNoteName": "G#",
-    "chordName": "G#sus2sus4",
-    "chordNotes": "9, 11, 14, 16",
-    "chordNoteNames": "G#, A#, C#, D#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 4,
-    "keyName": "Eb",
-    "chordNote": 9,
-    "chordNoteName": "Ab",
-    "chordName": "Absus2sus4",
-    "chordNotes": "9, 11, 14, 16",
-    "chordNoteNames": "Ab, Bb, Db, Eb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 4,
-    "keyName": "D#",
-    "chordNote": 9,
-    "chordNoteName": "G#",
-    "chordName": "G#7sus2",
-    "chordNotes": "9, 11, 16, 19",
-    "chordNoteNames": "G#, A#, D#, F#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 4,
-    "keyName": "D#",
-    "chordNote": 9,
-    "chordNoteName": "G#",
-    "chordName": "G#5",
-    "chordNotes": "9, 16",
-    "chordNoteNames": "G#, D#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 4,
-    "keyName": "D#",
-    "chordNote": 9,
-    "chordNoteName": "G#",
-    "chordName": "G#7sus4",
-    "chordNotes": "9, 14, 16, 19",
-    "chordNoteNames": "G#, C#, D#, F#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 4,
-    "keyName": "Eb",
-    "chordNote": 9,
-    "chordNoteName": "Ab",
-    "chordName": "Ab7sus2",
-    "chordNotes": "9, 11, 16, 19",
-    "chordNoteNames": "Ab, Bb, Eb, Gb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 4,
-    "keyName": "Eb",
-    "chordNote": 9,
-    "chordNoteName": "Ab",
-    "chordName": "Ab7sus4",
-    "chordNotes": "9, 14, 16, 19",
-    "chordNoteNames": "Ab, Db, Eb, Gb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 4,
-    "keyName": "Eb",
-    "chordNote": 9,
-    "chordNoteName": "Ab",
-    "chordName": "Ab9sus4",
-    "chordNotes": "9, 14, 16, 19, 23",
-    "chordNoteNames": "Ab, Db, Eb, Gb, Bb"
+    "chordNoteNames": "Gb, Ab, A, Db"
   },
   {
     "modeId": 15,
@@ -2102,12 +2012,12 @@
   {
     "modeId": 15,
     "keyNote": 4,
-    "keyName": "D#",
+    "keyName": "Eb",
     "chordNote": 9,
-    "chordNoteName": "G#",
-    "chordName": "G#sus2",
-    "chordNotes": "9, 11, 16",
-    "chordNoteNames": "G#, A#, D#"
+    "chordNoteName": "Ab",
+    "chordName": "Absus2sus4",
+    "chordNotes": "9, 11, 14, 16",
+    "chordNoteNames": "Ab, Bb, Db, Eb"
   },
   {
     "modeId": 15,
@@ -2115,9 +2025,39 @@
     "keyName": "Eb",
     "chordNote": 9,
     "chordNoteName": "Ab",
-    "chordName": "Ab5",
-    "chordNotes": "9, 16",
-    "chordNoteNames": "Ab, Eb"
+    "chordName": "Ab7sus4",
+    "chordNotes": "9, 14, 16, 19",
+    "chordNoteNames": "Ab, Db, Eb, Gb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 4,
+    "keyName": "D#",
+    "chordNote": 9,
+    "chordNoteName": "G#",
+    "chordName": "G#sus2sus4",
+    "chordNotes": "9, 11, 14, 16",
+    "chordNoteNames": "G#, A#, C#, D#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 4,
+    "keyName": "D#",
+    "chordNote": 9,
+    "chordNoteName": "G#",
+    "chordName": "G#sus4",
+    "chordNotes": "9, 14, 16",
+    "chordNoteNames": "G#, C#, D#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 4,
+    "keyName": "D#",
+    "chordNote": 9,
+    "chordNoteName": "G#",
+    "chordName": "G#sus2",
+    "chordNotes": "9, 11, 16",
+    "chordNoteNames": "G#, A#, D#"
   },
   {
     "modeId": 15,
@@ -2132,22 +2072,62 @@
   {
     "modeId": 15,
     "keyNote": 4,
-    "keyName": "Eb",
-    "chordNote": 10,
-    "chordNoteName": "A",
-    "chordName": "Ab5",
-    "chordNotes": "10, 14, 16",
-    "chordNoteNames": "A, Db, Eb"
+    "keyName": "D#",
+    "chordNote": 9,
+    "chordNoteName": "G#",
+    "chordName": "G#7sus2",
+    "chordNotes": "9, 11, 16, 19",
+    "chordNoteNames": "G#, A#, D#, F#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 4,
+    "keyName": "D#",
+    "chordNote": 9,
+    "chordNoteName": "G#",
+    "chordName": "G#7sus4",
+    "chordNotes": "9, 14, 16, 19",
+    "chordNoteNames": "G#, C#, D#, F#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 4,
+    "keyName": "D#",
+    "chordNote": 9,
+    "chordNoteName": "G#",
+    "chordName": "G#5",
+    "chordNotes": "9, 16",
+    "chordNoteNames": "G#, D#"
   },
   {
     "modeId": 15,
     "keyNote": 4,
     "keyName": "Eb",
-    "chordNote": 10,
-    "chordNoteName": "A",
-    "chordName": "Amaj7b5",
-    "chordNotes": "10, 14, 16, 21",
-    "chordNoteNames": "A, Db, Eb, Ab"
+    "chordNote": 9,
+    "chordNoteName": "Ab",
+    "chordName": "Ab7sus2",
+    "chordNotes": "9, 11, 16, 19",
+    "chordNoteNames": "Ab, Bb, Eb, Gb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 4,
+    "keyName": "Eb",
+    "chordNote": 9,
+    "chordNoteName": "Ab",
+    "chordName": "Ab9sus4",
+    "chordNotes": "9, 14, 16, 19, 23",
+    "chordNoteNames": "Ab, Db, Eb, Gb, Bb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 4,
+    "keyName": "Eb",
+    "chordNote": 9,
+    "chordNoteName": "Ab",
+    "chordName": "Ab5",
+    "chordNotes": "9, 16",
+    "chordNoteNames": "Ab, Eb"
   },
   {
     "modeId": 15,
@@ -2168,6 +2148,26 @@
     "chordName": "Amaj7b5",
     "chordNotes": "10, 14, 16, 21",
     "chordNoteNames": "A, C#, D#, G#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 4,
+    "keyName": "Eb",
+    "chordNote": 10,
+    "chordNoteName": "A",
+    "chordName": "Amaj7b5",
+    "chordNotes": "10, 14, 16, 21",
+    "chordNoteNames": "A, Db, Eb, Ab"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 4,
+    "keyName": "Eb",
+    "chordNote": 10,
+    "chordNoteName": "A",
+    "chordName": "Ab5",
+    "chordNotes": "10, 14, 16",
+    "chordNoteNames": "A, Db, Eb"
   },
   {
     "modeId": 15,
@@ -2195,29 +2195,19 @@
     "keyName": "E",
     "chordNote": 3,
     "chordNoteName": "D",
-    "chordName": "Dsus4",
-    "chordNotes": "3, 8, 10",
-    "chordNoteNames": "D, G, A"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 5,
-    "keyName": "E",
-    "chordNote": 3,
-    "chordNoteName": "D",
-    "chordName": "D5",
-    "chordNotes": "3, 10",
-    "chordNoteNames": "D, A"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 5,
-    "keyName": "E",
-    "chordNote": 3,
-    "chordNoteName": "D",
     "chordName": "Dsus2sus4",
     "chordNotes": "3, 5, 8, 10",
     "chordNoteNames": "D, E, G, A"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 5,
+    "keyName": "E",
+    "chordNote": 3,
+    "chordNoteName": "D",
+    "chordName": "Dsus4",
+    "chordNotes": "3, 8, 10",
+    "chordNoteNames": "D, G, A"
   },
   {
     "modeId": 15,
@@ -2233,11 +2223,21 @@
     "modeId": 15,
     "keyNote": 5,
     "keyName": "E",
+    "chordNote": 3,
+    "chordNoteName": "D",
+    "chordName": "D5",
+    "chordNotes": "3, 10",
+    "chordNoteNames": "D, A"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 5,
+    "keyName": "E",
     "chordNote": 5,
     "chordNoteName": "E",
-    "chordName": "Em7",
-    "chordNotes": "5, 8, 12, 15",
-    "chordNoteNames": "E, G, B, D"
+    "chordName": "Esus4",
+    "chordNotes": "5, 10, 12",
+    "chordNoteNames": "E, A, B"
   },
   {
     "modeId": 15,
@@ -2265,9 +2265,9 @@
     "keyName": "E",
     "chordNote": 5,
     "chordNoteName": "E",
-    "chordName": "Esus4",
-    "chordNotes": "5, 10, 12",
-    "chordNoteNames": "E, A, B"
+    "chordName": "Em",
+    "chordNotes": "5, 8, 12",
+    "chordNoteNames": "E, G, B"
   },
   {
     "modeId": 15,
@@ -2275,9 +2275,9 @@
     "keyName": "E",
     "chordNote": 5,
     "chordNoteName": "E",
-    "chordName": "Em",
-    "chordNotes": "5, 8, 12",
-    "chordNoteNames": "E, G, B"
+    "chordName": "Em7",
+    "chordNotes": "5, 8, 12, 15",
+    "chordNoteNames": "E, G, B, D"
   },
   {
     "modeId": 15,
@@ -2335,9 +2335,9 @@
     "keyName": "E",
     "chordNote": 8,
     "chordNoteName": "G",
-    "chordName": "Gm add(9)",
-    "chordNotes": "8, 10, 11, 15",
-    "chordNoteNames": "G, A, Bb, D"
+    "chordName": "G",
+    "chordNotes": "8, 12, 15",
+    "chordNoteNames": "G, B, D"
   },
   {
     "modeId": 15,
@@ -2345,9 +2345,39 @@
     "keyName": "E",
     "chordNote": 8,
     "chordNoteName": "G",
-    "chordName": "Gsus2",
-    "chordNotes": "8, 10, 15",
-    "chordNoteNames": "G, A, D"
+    "chordName": "G6",
+    "chordNotes": "8, 12, 15, 17",
+    "chordNoteNames": "G, B, D, E"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 5,
+    "keyName": "E",
+    "chordNote": 8,
+    "chordNoteName": "G",
+    "chordName": "G5",
+    "chordNotes": "8, 15",
+    "chordNoteNames": "G, D"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 5,
+    "keyName": "E",
+    "chordNote": 8,
+    "chordNoteName": "G",
+    "chordName": "G6/9",
+    "chordNotes": "8, 12, 15, 17, 22",
+    "chordNoteNames": "G, B, D, E, A"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 5,
+    "keyName": "E",
+    "chordNote": 8,
+    "chordNoteName": "G",
+    "chordName": "Gadd(2)",
+    "chordNotes": "8, 10, 12, 15",
+    "chordNoteNames": "G, A, B, D"
   },
   {
     "modeId": 15,
@@ -2365,19 +2395,9 @@
     "keyName": "E",
     "chordNote": 8,
     "chordNoteName": "G",
-    "chordName": "Gm add(2)",
-    "chordNotes": "8, 10, 11, 15",
-    "chordNoteNames": "G, A, Bb, D"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 5,
-    "keyName": "E",
-    "chordNote": 8,
-    "chordNoteName": "G",
-    "chordName": "Gadd(2)",
-    "chordNotes": "8, 10, 12, 15",
-    "chordNoteNames": "G, A, B, D"
+    "chordName": "Gsus2",
+    "chordNotes": "8, 10, 15",
+    "chordNoteNames": "G, A, D"
   },
   {
     "modeId": 15,
@@ -2405,26 +2425,6 @@
     "keyName": "E",
     "chordNote": 8,
     "chordNoteName": "G",
-    "chordName": "G6/9",
-    "chordNotes": "8, 12, 15, 17, 22",
-    "chordNoteNames": "G, B, D, E, A"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 5,
-    "keyName": "E",
-    "chordNote": 8,
-    "chordNoteName": "G",
-    "chordName": "G5",
-    "chordNotes": "8, 15",
-    "chordNoteNames": "G, D"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 5,
-    "keyName": "E",
-    "chordNote": 8,
-    "chordNoteName": "G",
     "chordName": "Gm6/9",
     "chordNotes": "8, 11, 15, 17, 22",
     "chordNoteNames": "G, Bb, D, E, A"
@@ -2435,9 +2435,9 @@
     "keyName": "E",
     "chordNote": 8,
     "chordNoteName": "G",
-    "chordName": "G6",
-    "chordNotes": "8, 12, 15, 17",
-    "chordNoteNames": "G, B, D, E"
+    "chordName": "Gm add(2)",
+    "chordNotes": "8, 10, 11, 15",
+    "chordNoteNames": "G, A, Bb, D"
   },
   {
     "modeId": 15,
@@ -2445,29 +2445,9 @@
     "keyName": "E",
     "chordNote": 8,
     "chordNoteName": "G",
-    "chordName": "G",
-    "chordNotes": "8, 12, 15",
-    "chordNoteNames": "G, B, D"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 5,
-    "keyName": "E",
-    "chordNote": 10,
-    "chordNoteName": "A",
-    "chordName": "Asus4",
-    "chordNotes": "10, 15, 17",
-    "chordNoteNames": "A, D, E"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 5,
-    "keyName": "E",
-    "chordNote": 10,
-    "chordNoteName": "A",
-    "chordName": "Asus2sus4",
-    "chordNotes": "10, 12, 15, 17",
-    "chordNoteNames": "A, B, D, E"
+    "chordName": "Gm add(9)",
+    "chordNotes": "8, 10, 11, 15",
+    "chordNoteNames": "G, A, Bb, D"
   },
   {
     "modeId": 15,
@@ -2523,11 +2503,21 @@
     "modeId": 15,
     "keyNote": 5,
     "keyName": "E",
-    "chordNote": 11,
-    "chordNoteName": "Bb",
-    "chordName": "Bbmaj7b5",
-    "chordNotes": "11, 15, 17, 22",
-    "chordNoteNames": "Bb, D, E, A"
+    "chordNote": 10,
+    "chordNoteName": "A",
+    "chordName": "Asus4",
+    "chordNotes": "10, 15, 17",
+    "chordNoteNames": "A, D, E"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 5,
+    "keyName": "E",
+    "chordNote": 10,
+    "chordNoteName": "A",
+    "chordName": "Asus2sus4",
+    "chordNotes": "10, 12, 15, 17",
+    "chordNoteNames": "A, B, D, E"
   },
   {
     "modeId": 15,
@@ -2538,6 +2528,16 @@
     "chordName": "Bbb5",
     "chordNotes": "11, 15, 17",
     "chordNoteNames": "Bb, D, E"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 5,
+    "keyName": "E",
+    "chordNote": 11,
+    "chordNoteName": "Bb",
+    "chordName": "Bbmaj7b5",
+    "chordNotes": "11, 15, 17, 22",
+    "chordNoteNames": "Bb, D, E, A"
   },
   {
     "modeId": 15,
@@ -2565,9 +2565,9 @@
     "keyName": "F",
     "chordNote": 4,
     "chordNoteName": "Eb",
-    "chordName": "Ebsus2sus4",
-    "chordNotes": "4, 6, 9, 11",
-    "chordNoteNames": "Eb, F, Ab, Bb"
+    "chordName": "Eb5",
+    "chordNotes": "4, 11",
+    "chordNoteNames": "Eb, Bb"
   },
   {
     "modeId": 15,
@@ -2595,9 +2595,9 @@
     "keyName": "F",
     "chordNote": 4,
     "chordNoteName": "Eb",
-    "chordName": "Eb5",
-    "chordNotes": "4, 11",
-    "chordNoteNames": "Eb, Bb"
+    "chordName": "Ebsus2sus4",
+    "chordNotes": "4, 6, 9, 11",
+    "chordNoteNames": "Eb, F, Ab, Bb"
   },
   {
     "modeId": 15,
@@ -2605,19 +2605,9 @@
     "keyName": "F",
     "chordNote": 6,
     "chordNoteName": "F",
-    "chordName": "Fdim",
-    "chordNotes": "6, 9, 12",
-    "chordNoteNames": "F, Ab, B"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 6,
-    "keyName": "F",
-    "chordNote": 6,
-    "chordNoteName": "F",
-    "chordName": "Fm7",
-    "chordNotes": "6, 9, 13, 16",
-    "chordNoteNames": "F, Ab, C, Eb"
+    "chordName": "F5",
+    "chordNotes": "6, 13",
+    "chordNoteNames": "F, C"
   },
   {
     "modeId": 15,
@@ -2655,9 +2645,9 @@
     "keyName": "F",
     "chordNote": 6,
     "chordNoteName": "F",
-    "chordName": "Fm add(4)",
-    "chordNotes": "6, 9, 11, 13",
-    "chordNoteNames": "F, Ab, Bb, C"
+    "chordName": "Fm7",
+    "chordNotes": "6, 9, 13, 16",
+    "chordNoteNames": "F, Ab, C, Eb"
   },
   {
     "modeId": 15,
@@ -2675,16 +2665,6 @@
     "keyName": "F",
     "chordNote": 6,
     "chordNoteName": "F",
-    "chordName": "Fm7 add(4)",
-    "chordNotes": "6, 9, 11, 13, 28",
-    "chordNoteNames": "F, Ab, Bb, C, Eb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 6,
-    "keyName": "F",
-    "chordNote": 6,
-    "chordNoteName": "F",
     "chordName": "Fm7#11",
     "chordNotes": "6, 9, 13, 16",
     "chordNoteNames": "F, Ab, C, Eb"
@@ -2695,19 +2675,29 @@
     "keyName": "F",
     "chordNote": 6,
     "chordNoteName": "F",
-    "chordName": "F5",
-    "chordNotes": "6, 13",
-    "chordNoteNames": "F, C"
+    "chordName": "Fm7 add(4)",
+    "chordNotes": "6, 9, 11, 13, 28",
+    "chordNoteNames": "F, Ab, Bb, C, Eb"
   },
   {
     "modeId": 15,
     "keyNote": 6,
     "keyName": "F",
-    "chordNote": 9,
-    "chordNoteName": "Ab",
-    "chordName": "Ab5",
-    "chordNotes": "9, 16",
-    "chordNoteNames": "Ab, Eb"
+    "chordNote": 6,
+    "chordNoteName": "F",
+    "chordName": "Fm add(4)",
+    "chordNotes": "6, 9, 11, 13",
+    "chordNoteNames": "F, Ab, Bb, C"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 6,
+    "keyName": "F",
+    "chordNote": 6,
+    "chordNoteName": "F",
+    "chordName": "Fdim",
+    "chordNotes": "6, 9, 12",
+    "chordNoteNames": "F, Ab, B"
   },
   {
     "modeId": 15,
@@ -2725,9 +2715,9 @@
     "keyName": "F",
     "chordNote": 9,
     "chordNoteName": "Ab",
-    "chordName": "Abm add(9)",
-    "chordNotes": "9, 11, 12, 16",
-    "chordNoteNames": "Ab, Bb, B, Eb"
+    "chordName": "Ab6",
+    "chordNotes": "9, 13, 16, 18",
+    "chordNoteNames": "Ab, C, Eb, F"
   },
   {
     "modeId": 15,
@@ -2735,69 +2725,9 @@
     "keyName": "F",
     "chordNote": 9,
     "chordNoteName": "Ab",
-    "chordName": "Abm add(2)",
-    "chordNotes": "9, 11, 12, 16",
-    "chordNoteNames": "Ab, Bb, B, Eb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 6,
-    "keyName": "F",
-    "chordNote": 9,
-    "chordNoteName": "Ab",
-    "chordName": "Abm6/9",
-    "chordNotes": "9, 12, 16, 18, 23",
-    "chordNoteNames": "Ab, B, Eb, F, Bb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 6,
-    "keyName": "F",
-    "chordNote": 9,
-    "chordNoteName": "Ab",
-    "chordName": "Abm6",
-    "chordNotes": "9, 12, 16, 18",
-    "chordNoteNames": "Ab, B, Eb, F"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 6,
-    "keyName": "F",
-    "chordNote": 9,
-    "chordNoteName": "Ab",
-    "chordName": "Abm",
-    "chordNotes": "9, 12, 16",
-    "chordNoteNames": "Ab, B, Eb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 6,
-    "keyName": "F",
-    "chordNote": 9,
-    "chordNoteName": "Ab",
-    "chordName": "Absus2",
-    "chordNotes": "9, 11, 16",
-    "chordNoteNames": "Ab, Bb, Eb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 6,
-    "keyName": "F",
-    "chordNote": 9,
-    "chordNoteName": "Ab",
-    "chordName": "Abadd(9)",
-    "chordNotes": "9, 13, 16, 23",
-    "chordNoteNames": "Ab, C, Eb, Bb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 6,
-    "keyName": "F",
-    "chordNote": 9,
-    "chordNoteName": "Ab",
-    "chordName": "Abadd(2)",
-    "chordNotes": "9, 11, 13, 16",
-    "chordNoteNames": "Ab, Bb, C, Eb"
+    "chordName": "Ab5",
+    "chordNotes": "9, 16",
+    "chordNoteNames": "Ab, Eb"
   },
   {
     "modeId": 15,
@@ -2815,39 +2745,79 @@
     "keyName": "F",
     "chordNote": 9,
     "chordNoteName": "Ab",
-    "chordName": "Ab6",
-    "chordNotes": "9, 13, 16, 18",
-    "chordNoteNames": "Ab, C, Eb, F"
+    "chordName": "Abadd(2)",
+    "chordNotes": "9, 11, 13, 16",
+    "chordNoteNames": "Ab, Bb, C, Eb"
   },
   {
     "modeId": 15,
     "keyNote": 6,
     "keyName": "F",
-    "chordNote": 11,
-    "chordNoteName": "Bb",
-    "chordName": "Bbsus2",
-    "chordNotes": "11, 13, 18",
-    "chordNoteNames": "Bb, C, F"
+    "chordNote": 9,
+    "chordNoteName": "Ab",
+    "chordName": "Abadd(9)",
+    "chordNotes": "9, 13, 16, 23",
+    "chordNoteNames": "Ab, C, Eb, Bb"
   },
   {
     "modeId": 15,
     "keyNote": 6,
     "keyName": "F",
-    "chordNote": 11,
-    "chordNoteName": "Bb",
-    "chordName": "Bb7sus2",
-    "chordNotes": "11, 13, 18, 21",
-    "chordNoteNames": "Bb, C, F, Ab"
+    "chordNote": 9,
+    "chordNoteName": "Ab",
+    "chordName": "Absus2",
+    "chordNotes": "9, 11, 16",
+    "chordNoteNames": "Ab, Bb, Eb"
   },
   {
     "modeId": 15,
     "keyNote": 6,
     "keyName": "F",
-    "chordNote": 11,
-    "chordNoteName": "Bb",
-    "chordName": "Bb7sus4",
-    "chordNotes": "11, 16, 18, 21",
-    "chordNoteNames": "Bb, Eb, F, Ab"
+    "chordNote": 9,
+    "chordNoteName": "Ab",
+    "chordName": "Abm",
+    "chordNotes": "9, 12, 16",
+    "chordNoteNames": "Ab, B, Eb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 6,
+    "keyName": "F",
+    "chordNote": 9,
+    "chordNoteName": "Ab",
+    "chordName": "Abm6",
+    "chordNotes": "9, 12, 16, 18",
+    "chordNoteNames": "Ab, B, Eb, F"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 6,
+    "keyName": "F",
+    "chordNote": 9,
+    "chordNoteName": "Ab",
+    "chordName": "Abm6/9",
+    "chordNotes": "9, 12, 16, 18, 23",
+    "chordNoteNames": "Ab, B, Eb, F, Bb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 6,
+    "keyName": "F",
+    "chordNote": 9,
+    "chordNoteName": "Ab",
+    "chordName": "Abm add(2)",
+    "chordNotes": "9, 11, 12, 16",
+    "chordNoteNames": "Ab, Bb, B, Eb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 6,
+    "keyName": "F",
+    "chordNote": 9,
+    "chordNoteName": "Ab",
+    "chordName": "Abm add(9)",
+    "chordNotes": "9, 11, 12, 16",
+    "chordNoteNames": "Ab, Bb, B, Eb"
   },
   {
     "modeId": 15,
@@ -2865,9 +2835,39 @@
     "keyName": "F",
     "chordNote": 11,
     "chordNoteName": "Bb",
-    "chordName": "Bbsus2sus4",
-    "chordNotes": "11, 13, 16, 18",
-    "chordNoteNames": "Bb, C, Eb, F"
+    "chordName": "Bb7sus4",
+    "chordNotes": "11, 16, 18, 21",
+    "chordNoteNames": "Bb, Eb, F, Ab"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 6,
+    "keyName": "F",
+    "chordNote": 11,
+    "chordNoteName": "Bb",
+    "chordName": "Bb7sus2",
+    "chordNotes": "11, 13, 18, 21",
+    "chordNoteNames": "Bb, C, F, Ab"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 6,
+    "keyName": "F",
+    "chordNote": 11,
+    "chordNoteName": "Bb",
+    "chordName": "Bb9sus4",
+    "chordNotes": "11, 16, 18, 21, 25",
+    "chordNoteNames": "Bb, Eb, F, Ab, C"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 6,
+    "keyName": "F",
+    "chordNote": 11,
+    "chordNoteName": "Bb",
+    "chordName": "Bbsus2",
+    "chordNotes": "11, 13, 18",
+    "chordNoteNames": "Bb, C, F"
   },
   {
     "modeId": 15,
@@ -2885,19 +2885,9 @@
     "keyName": "F",
     "chordNote": 11,
     "chordNoteName": "Bb",
-    "chordName": "Bb9sus4",
-    "chordNotes": "11, 16, 18, 21, 25",
-    "chordNoteNames": "Bb, Eb, F, Ab, C"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 6,
-    "keyName": "F",
-    "chordNote": 12,
-    "chordNoteName": "B",
-    "chordName": "Bmaj7b5",
-    "chordNotes": "12, 16, 18, 23",
-    "chordNoteNames": "B, Eb, F, Bb"
+    "chordName": "Bbsus2sus4",
+    "chordNotes": "11, 13, 16, 18",
+    "chordNoteNames": "Bb, C, Eb, F"
   },
   {
     "modeId": 15,
@@ -2911,23 +2901,13 @@
   },
   {
     "modeId": 15,
-    "keyNote": 7,
-    "keyName": "F#",
-    "chordNote": 1,
-    "chordNoteName": "B#",
-    "chordName": "B#b5",
-    "chordNotes": "1, 5, 7",
-    "chordNoteNames": "B#, Fb, F#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 7,
-    "keyName": "Gb",
-    "chordNote": 1,
-    "chordNoteName": "C",
-    "chordName": "Cb5",
-    "chordNotes": "1, 5, 7",
-    "chordNoteNames": "C, E, Gb"
+    "keyNote": 6,
+    "keyName": "F",
+    "chordNote": 12,
+    "chordNoteName": "B",
+    "chordName": "Bmaj7b5",
+    "chordNotes": "12, 16, 18, 23",
+    "chordNoteNames": "B, Eb, F, Bb"
   },
   {
     "modeId": 15,
@@ -2953,11 +2933,21 @@
     "modeId": 15,
     "keyNote": 7,
     "keyName": "Gb",
-    "chordNote": 2,
-    "chordNoteName": "Db",
-    "chordName": "Dbm7#5",
-    "chordNotes": "2, 5, 10, 12",
-    "chordNoteNames": "Db, E, A, B"
+    "chordNote": 1,
+    "chordNoteName": "C",
+    "chordName": "Cb5",
+    "chordNotes": "1, 5, 7",
+    "chordNoteNames": "C, E, Gb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 7,
+    "keyName": "F#",
+    "chordNote": 1,
+    "chordNoteName": "B#",
+    "chordName": "B#b5",
+    "chordNotes": "1, 5, 7",
+    "chordNoteNames": "B#, Fb, F#"
   },
   {
     "modeId": 15,
@@ -2968,6 +2958,16 @@
     "chordName": "C#m7#5",
     "chordNotes": "2, 5, 10, 12",
     "chordNoteNames": "C#, Fb, A, Cb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 7,
+    "keyName": "Gb",
+    "chordNote": 2,
+    "chordNoteName": "Db",
+    "chordName": "Dbm7#5",
+    "chordNotes": "2, 5, 10, 12",
+    "chordNoteNames": "Db, E, A, B"
   },
   {
     "modeId": 15,
@@ -2985,29 +2985,9 @@
     "keyName": "Gb",
     "chordNote": 5,
     "chordNoteName": "E",
-    "chordName": "Esus2sus4",
-    "chordNotes": "5, 7, 10, 12",
-    "chordNoteNames": "E, Gb, A, B"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 7,
-    "keyName": "F#",
-    "chordNote": 5,
-    "chordNoteName": "Fb",
-    "chordName": "Fbsus4",
-    "chordNotes": "5, 10, 12",
-    "chordNoteNames": "Fb, A, Cb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 7,
-    "keyName": "F#",
-    "chordNote": 5,
-    "chordNoteName": "Fb",
-    "chordName": "Fbsus2",
+    "chordName": "Esus2",
     "chordNotes": "5, 7, 12",
-    "chordNoteNames": "Fb, F#, Cb"
+    "chordNoteNames": "E, Gb, B"
   },
   {
     "modeId": 15,
@@ -3025,9 +3005,29 @@
     "keyName": "F#",
     "chordNote": 5,
     "chordNoteName": "Fb",
+    "chordName": "Fbsus2",
+    "chordNotes": "5, 7, 12",
+    "chordNoteNames": "Fb, F#, Cb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 7,
+    "keyName": "F#",
+    "chordNote": 5,
+    "chordNoteName": "Fb",
     "chordName": "Fbsus2sus4",
     "chordNotes": "5, 7, 10, 12",
     "chordNoteNames": "Fb, F#, A, Cb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 7,
+    "keyName": "F#",
+    "chordNote": 5,
+    "chordNoteName": "Fb",
+    "chordName": "Fbsus4",
+    "chordNotes": "5, 10, 12",
+    "chordNoteNames": "Fb, A, Cb"
   },
   {
     "modeId": 15,
@@ -3045,9 +3045,9 @@
     "keyName": "Gb",
     "chordNote": 5,
     "chordNoteName": "E",
-    "chordName": "Esus2",
-    "chordNotes": "5, 7, 12",
-    "chordNoteNames": "E, Gb, B"
+    "chordName": "Esus2sus4",
+    "chordNotes": "5, 7, 10, 12",
+    "chordNoteNames": "E, Gb, A, B"
   },
   {
     "modeId": 15,
@@ -3055,9 +3055,9 @@
     "keyName": "Gb",
     "chordNote": 7,
     "chordNoteName": "Gb",
-    "chordName": "Gbm add(4)",
-    "chordNotes": "7, 10, 12, 14",
-    "chordNoteNames": "Gb, A, B, Db"
+    "chordName": "Gbsus4",
+    "chordNotes": "7, 12, 14",
+    "chordNoteNames": "Gb, B, Db"
   },
   {
     "modeId": 15,
@@ -3075,9 +3075,9 @@
     "keyName": "F#",
     "chordNote": 7,
     "chordNoteName": "F#",
-    "chordName": "F#m7b5",
-    "chordNotes": "7, 10, 13, 17",
-    "chordNoteNames": "F#, A, B#, Fb"
+    "chordName": "F#m7 add(4)",
+    "chordNotes": "7, 10, 12, 14, 29",
+    "chordNoteNames": "F#, A, Cb, C#, Fb"
   },
   {
     "modeId": 15,
@@ -3085,9 +3085,9 @@
     "keyName": "F#",
     "chordNote": 7,
     "chordNoteName": "F#",
-    "chordName": "F#5",
-    "chordNotes": "7, 14",
-    "chordNoteNames": "F#, C#"
+    "chordName": "F#m add(4)",
+    "chordNotes": "7, 10, 12, 14",
+    "chordNoteNames": "F#, A, Cb, C#"
   },
   {
     "modeId": 15,
@@ -3105,9 +3105,9 @@
     "keyName": "F#",
     "chordNote": 7,
     "chordNoteName": "F#",
-    "chordName": "F#m add(4)",
-    "chordNotes": "7, 10, 12, 14",
-    "chordNoteNames": "F#, A, Cb, C#"
+    "chordName": "F#5",
+    "chordNotes": "7, 14",
+    "chordNoteNames": "F#, C#"
   },
   {
     "modeId": 15,
@@ -3152,6 +3152,16 @@
   {
     "modeId": 15,
     "keyNote": 7,
+    "keyName": "F#",
+    "chordNote": 7,
+    "chordNoteName": "F#",
+    "chordName": "F#m7b5",
+    "chordNotes": "7, 10, 13, 17",
+    "chordNoteNames": "F#, A, B#, Fb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 7,
     "keyName": "Gb",
     "chordNote": 7,
     "chordNoteName": "Gb",
@@ -3168,16 +3178,6 @@
     "chordName": "Gb7sus4",
     "chordNotes": "7, 12, 14, 17",
     "chordNoteNames": "Gb, B, Db, E"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 7,
-    "keyName": "Gb",
-    "chordNote": 7,
-    "chordNoteName": "Gb",
-    "chordName": "Gbsus4",
-    "chordNotes": "7, 12, 14",
-    "chordNoteNames": "Gb, B, Db"
   },
   {
     "modeId": 15,
@@ -3232,12 +3232,12 @@
   {
     "modeId": 15,
     "keyNote": 7,
-    "keyName": "F#",
+    "keyName": "Gb",
     "chordNote": 7,
-    "chordNoteName": "F#",
-    "chordName": "F#m7 add(4)",
-    "chordNotes": "7, 10, 12, 14, 29",
-    "chordNoteNames": "F#, A, Cb, C#, Fb"
+    "chordNoteName": "Gb",
+    "chordName": "Gbm add(4)",
+    "chordNotes": "7, 10, 12, 14",
+    "chordNoteNames": "Gb, A, B, Db"
   },
   {
     "modeId": 15,
@@ -3255,9 +3255,139 @@
     "keyName": "F#",
     "chordNote": 10,
     "chordNoteName": "A",
+    "chordName": "A6",
+    "chordNotes": "10, 14, 17, 19",
+    "chordNoteNames": "A, C#, Fb, F#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 7,
+    "keyName": "Gb",
+    "chordNote": 10,
+    "chordNoteName": "A",
+    "chordName": "A",
+    "chordNotes": "10, 14, 17",
+    "chordNoteNames": "A, Db, E"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 7,
+    "keyName": "F#",
+    "chordNote": 10,
+    "chordNoteName": "A",
+    "chordName": "A",
+    "chordNotes": "10, 14, 17",
+    "chordNoteNames": "A, C#, Fb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 7,
+    "keyName": "Gb",
+    "chordNote": 10,
+    "chordNoteName": "A",
+    "chordName": "Am add(9)",
+    "chordNotes": "10, 12, 13, 17",
+    "chordNoteNames": "A, B, C, E"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 7,
+    "keyName": "Gb",
+    "chordNote": 10,
+    "chordNoteName": "A",
+    "chordName": "Am add(2)",
+    "chordNotes": "10, 12, 13, 17",
+    "chordNoteNames": "A, B, C, E"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 7,
+    "keyName": "Gb",
+    "chordNote": 10,
+    "chordNoteName": "A",
+    "chordName": "Am6/9",
+    "chordNotes": "10, 13, 17, 19",
+    "chordNoteNames": "A, C, E, Gb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 7,
+    "keyName": "Gb",
+    "chordNote": 10,
+    "chordNoteName": "A",
+    "chordName": "Am6",
+    "chordNotes": "10, 13, 17, 19",
+    "chordNoteNames": "A, C, E, Gb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 7,
+    "keyName": "Gb",
+    "chordNote": 10,
+    "chordNoteName": "A",
+    "chordName": "Am",
+    "chordNotes": "10, 13, 17",
+    "chordNoteNames": "A, C, E"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 7,
+    "keyName": "Gb",
+    "chordNote": 10,
+    "chordNoteName": "A",
+    "chordName": "Asus2",
+    "chordNotes": "10, 12, 17",
+    "chordNoteNames": "A, B, E"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 7,
+    "keyName": "F#",
+    "chordNote": 10,
+    "chordNoteName": "A",
+    "chordName": "A5",
+    "chordNotes": "10, 17",
+    "chordNoteNames": "A, Fb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 7,
+    "keyName": "F#",
+    "chordNote": 10,
+    "chordNoteName": "A",
+    "chordName": "A6/9",
+    "chordNotes": "10, 14, 17, 19",
+    "chordNoteNames": "A, C#, Fb, F#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 7,
+    "keyName": "F#",
+    "chordNote": 10,
+    "chordNoteName": "A",
+    "chordName": "Aadd(2)",
+    "chordNotes": "10, 12, 14, 17",
+    "chordNoteNames": "A, Cb, C#, Fb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 7,
+    "keyName": "F#",
+    "chordNote": 10,
+    "chordNoteName": "A",
     "chordName": "Aadd(9)",
     "chordNotes": "10, 14, 17",
     "chordNoteNames": "A, C#, Fb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 7,
+    "keyName": "F#",
+    "chordNote": 10,
+    "chordNoteName": "A",
+    "chordName": "Asus2",
+    "chordNotes": "10, 12, 17",
+    "chordNoteNames": "A, Cb, Fb"
   },
   {
     "modeId": 15,
@@ -3305,149 +3435,19 @@
     "keyName": "F#",
     "chordNote": 10,
     "chordNoteName": "A",
-    "chordName": "Aadd(2)",
-    "chordNotes": "10, 12, 14, 17",
-    "chordNoteNames": "A, Cb, C#, Fb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 7,
-    "keyName": "F#",
-    "chordNote": 10,
-    "chordNoteName": "A",
-    "chordName": "A6/9",
-    "chordNotes": "10, 14, 17, 19",
-    "chordNoteNames": "A, C#, Fb, F#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 7,
-    "keyName": "Gb",
-    "chordNote": 10,
-    "chordNoteName": "A",
     "chordName": "Am add(9)",
     "chordNotes": "10, 12, 13, 17",
-    "chordNoteNames": "A, B, C, E"
+    "chordNoteNames": "A, Cb, B#, Fb"
   },
   {
     "modeId": 15,
     "keyNote": 7,
     "keyName": "Gb",
-    "chordNote": 10,
-    "chordNoteName": "A",
-    "chordName": "Am add(2)",
-    "chordNotes": "10, 12, 13, 17",
-    "chordNoteNames": "A, B, C, E"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 7,
-    "keyName": "Gb",
-    "chordNote": 10,
-    "chordNoteName": "A",
-    "chordName": "Am6/9",
-    "chordNotes": "10, 13, 17, 19",
-    "chordNoteNames": "A, C, E, Gb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 7,
-    "keyName": "Gb",
-    "chordNote": 10,
-    "chordNoteName": "A",
-    "chordName": "Am6",
-    "chordNotes": "10, 13, 17, 19",
-    "chordNoteNames": "A, C, E, Gb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 7,
-    "keyName": "F#",
-    "chordNote": 10,
-    "chordNoteName": "A",
-    "chordName": "A5",
-    "chordNotes": "10, 17",
-    "chordNoteNames": "A, Fb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 7,
-    "keyName": "F#",
     "chordNote": 10,
     "chordNoteName": "A",
     "chordName": "A6",
     "chordNotes": "10, 14, 17, 19",
-    "chordNoteNames": "A, C#, Fb, F#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 7,
-    "keyName": "F#",
-    "chordNote": 10,
-    "chordNoteName": "A",
-    "chordName": "A",
-    "chordNotes": "10, 14, 17",
-    "chordNoteNames": "A, C#, Fb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 7,
-    "keyName": "Gb",
-    "chordNote": 10,
-    "chordNoteName": "A",
-    "chordName": "Am",
-    "chordNotes": "10, 13, 17",
-    "chordNoteNames": "A, C, E"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 7,
-    "keyName": "Gb",
-    "chordNote": 10,
-    "chordNoteName": "A",
-    "chordName": "Asus2",
-    "chordNotes": "10, 12, 17",
-    "chordNoteNames": "A, B, E"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 7,
-    "keyName": "Gb",
-    "chordNote": 10,
-    "chordNoteName": "A",
-    "chordName": "Aadd(9)",
-    "chordNotes": "10, 14, 17",
-    "chordNoteNames": "A, Db, E"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 7,
-    "keyName": "Gb",
-    "chordNote": 10,
-    "chordNoteName": "A",
-    "chordName": "Aadd(2)",
-    "chordNotes": "10, 12, 14, 17",
-    "chordNoteNames": "A, B, Db, E"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 7,
-    "keyName": "Gb",
-    "chordNote": 10,
-    "chordNoteName": "A",
-    "chordName": "A6/9",
-    "chordNotes": "10, 14, 17, 19",
     "chordNoteNames": "A, Db, E, Gb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 7,
-    "keyName": "F#",
-    "chordNote": 10,
-    "chordNoteName": "A",
-    "chordName": "Asus2",
-    "chordNotes": "10, 12, 17",
-    "chordNoteNames": "A, Cb, Fb"
   },
   {
     "modeId": 15,
@@ -3465,19 +3465,9 @@
     "keyName": "Gb",
     "chordNote": 10,
     "chordNoteName": "A",
-    "chordName": "A6",
-    "chordNotes": "10, 14, 17, 19",
-    "chordNoteNames": "A, Db, E, Gb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 7,
-    "keyName": "F#",
-    "chordNote": 10,
-    "chordNoteName": "A",
-    "chordName": "Am add(9)",
-    "chordNotes": "10, 12, 13, 17",
-    "chordNoteNames": "A, Cb, B#, Fb"
+    "chordName": "Aadd(9)",
+    "chordNotes": "10, 14, 17",
+    "chordNoteNames": "A, Db, E"
   },
   {
     "modeId": 15,
@@ -3485,9 +3475,79 @@
     "keyName": "Gb",
     "chordNote": 10,
     "chordNoteName": "A",
-    "chordName": "A",
-    "chordNotes": "10, 14, 17",
-    "chordNoteNames": "A, Db, E"
+    "chordName": "A6/9",
+    "chordNotes": "10, 14, 17, 19",
+    "chordNoteNames": "A, Db, E, Gb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 7,
+    "keyName": "Gb",
+    "chordNote": 10,
+    "chordNoteName": "A",
+    "chordName": "Aadd(2)",
+    "chordNotes": "10, 12, 14, 17",
+    "chordNoteNames": "A, B, Db, E"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 7,
+    "keyName": "F#",
+    "chordNote": 12,
+    "chordNoteName": "Cb",
+    "chordName": "Cbsus4",
+    "chordNotes": "12, 17, 19",
+    "chordNoteNames": "Cb, Fb, F#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 7,
+    "keyName": "F#",
+    "chordNote": 12,
+    "chordNoteName": "Cb",
+    "chordName": "Cb5",
+    "chordNotes": "12, 19",
+    "chordNoteNames": "Cb, F#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 7,
+    "keyName": "F#",
+    "chordNote": 12,
+    "chordNoteName": "Cb",
+    "chordName": "Cb7sus4",
+    "chordNotes": "12, 17, 19, 22",
+    "chordNoteNames": "Cb, Fb, F#, A"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 7,
+    "keyName": "F#",
+    "chordNote": 12,
+    "chordNoteName": "Cb",
+    "chordName": "Cb7sus2",
+    "chordNotes": "12, 14, 19, 22",
+    "chordNoteNames": "Cb, C#, F#, A"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 7,
+    "keyName": "F#",
+    "chordNote": 12,
+    "chordNoteName": "Cb",
+    "chordName": "Cb9sus4",
+    "chordNotes": "12, 17, 19, 22, 26",
+    "chordNoteNames": "Cb, Fb, F#, A, C#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 7,
+    "keyName": "F#",
+    "chordNote": 12,
+    "chordNoteName": "Cb",
+    "chordName": "Cbsus2",
+    "chordNotes": "12, 14, 19",
+    "chordNoteNames": "Cb, C#, F#"
   },
   {
     "modeId": 15,
@@ -3502,12 +3562,32 @@
   {
     "modeId": 15,
     "keyNote": 7,
-    "keyName": "F#",
+    "keyName": "Gb",
     "chordNote": 12,
-    "chordNoteName": "Cb",
-    "chordName": "Cb9sus4",
-    "chordNotes": "12, 17, 19, 22, 26",
-    "chordNoteNames": "Cb, Fb, F#, A, C#"
+    "chordNoteName": "B",
+    "chordName": "B5",
+    "chordNotes": "12, 19",
+    "chordNoteNames": "B, Gb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 7,
+    "keyName": "Gb",
+    "chordNote": 12,
+    "chordNoteName": "B",
+    "chordName": "B7sus4",
+    "chordNotes": "12, 17, 19, 22",
+    "chordNoteNames": "B, E, Gb, A"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 7,
+    "keyName": "Gb",
+    "chordNote": 12,
+    "chordNoteName": "B",
+    "chordName": "B7sus2",
+    "chordNotes": "12, 14, 19, 22",
+    "chordNoteNames": "B, Db, Gb, A"
   },
   {
     "modeId": 15,
@@ -3551,106 +3631,6 @@
   },
   {
     "modeId": 15,
-    "keyNote": 7,
-    "keyName": "Gb",
-    "chordNote": 12,
-    "chordNoteName": "B",
-    "chordName": "B7sus2",
-    "chordNotes": "12, 14, 19, 22",
-    "chordNoteNames": "B, Db, Gb, A"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 7,
-    "keyName": "F#",
-    "chordNote": 12,
-    "chordNoteName": "Cb",
-    "chordName": "Cb5",
-    "chordNotes": "12, 19",
-    "chordNoteNames": "Cb, F#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 7,
-    "keyName": "F#",
-    "chordNote": 12,
-    "chordNoteName": "Cb",
-    "chordName": "Cb7sus4",
-    "chordNotes": "12, 17, 19, 22",
-    "chordNoteNames": "Cb, Fb, F#, A"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 7,
-    "keyName": "Gb",
-    "chordNote": 12,
-    "chordNoteName": "B",
-    "chordName": "B7sus4",
-    "chordNotes": "12, 17, 19, 22",
-    "chordNoteNames": "B, E, Gb, A"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 7,
-    "keyName": "Gb",
-    "chordNote": 12,
-    "chordNoteName": "B",
-    "chordName": "B5",
-    "chordNotes": "12, 19",
-    "chordNoteNames": "B, Gb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 7,
-    "keyName": "F#",
-    "chordNote": 12,
-    "chordNoteName": "Cb",
-    "chordName": "Cb7sus2",
-    "chordNotes": "12, 14, 19, 22",
-    "chordNoteNames": "Cb, C#, F#, A"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 7,
-    "keyName": "F#",
-    "chordNote": 12,
-    "chordNoteName": "Cb",
-    "chordName": "Cbsus4",
-    "chordNotes": "12, 17, 19",
-    "chordNoteNames": "Cb, Fb, F#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 7,
-    "keyName": "F#",
-    "chordNote": 12,
-    "chordNoteName": "Cb",
-    "chordName": "Cbsus2",
-    "chordNotes": "12, 14, 19",
-    "chordNoteNames": "Cb, C#, F#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 8,
-    "keyName": "G",
-    "chordNote": 1,
-    "chordNoteName": "C",
-    "chordName": "Csus2",
-    "chordNotes": "1, 3, 8",
-    "chordNoteNames": "C, D, G"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 8,
-    "keyName": "G",
-    "chordNote": 1,
-    "chordNoteName": "C",
-    "chordName": "Csus4",
-    "chordNotes": "1, 6, 8",
-    "chordNoteNames": "C, F, G"
-  },
-  {
-    "modeId": 15,
     "keyNote": 8,
     "keyName": "G",
     "chordNote": 1,
@@ -3688,6 +3668,26 @@
     "chordName": "C9sus4",
     "chordNotes": "1, 6, 8, 11, 15",
     "chordNoteNames": "C, F, G, Bb, D"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 8,
+    "keyName": "G",
+    "chordNote": 1,
+    "chordNoteName": "C",
+    "chordName": "Csus2",
+    "chordNotes": "1, 3, 8",
+    "chordNoteNames": "C, D, G"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 8,
+    "keyName": "G",
+    "chordNote": 1,
+    "chordNoteName": "C",
+    "chordName": "Csus4",
+    "chordNotes": "1, 6, 8",
+    "chordNoteNames": "C, F, G"
   },
   {
     "modeId": 15,
@@ -3775,9 +3775,69 @@
     "keyName": "G",
     "chordNote": 8,
     "chordNoteName": "G",
+    "chordName": "G5",
+    "chordNotes": "8, 15",
+    "chordNoteNames": "G, D"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 8,
+    "keyName": "G",
+    "chordNote": 8,
+    "chordNoteName": "G",
     "chordName": "G7sus4",
     "chordNotes": "8, 13, 15, 18",
     "chordNoteNames": "G, C, D, F"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 8,
+    "keyName": "G",
+    "chordNote": 8,
+    "chordNoteName": "G",
+    "chordName": "Gsus4",
+    "chordNotes": "8, 13, 15",
+    "chordNoteNames": "G, C, D"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 8,
+    "keyName": "G",
+    "chordNote": 8,
+    "chordNoteName": "G",
+    "chordName": "Gm",
+    "chordNotes": "8, 11, 15",
+    "chordNoteNames": "G, Bb, D"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 8,
+    "keyName": "G",
+    "chordNote": 8,
+    "chordNoteName": "G",
+    "chordName": "Gm7",
+    "chordNotes": "8, 11, 15, 18",
+    "chordNoteNames": "G, Bb, D, F"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 8,
+    "keyName": "G",
+    "chordNote": 8,
+    "chordNoteName": "G",
+    "chordName": "Gm7b5",
+    "chordNotes": "8, 11, 14, 18",
+    "chordNoteNames": "G, Bb, Db, F"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 8,
+    "keyName": "G",
+    "chordNote": 8,
+    "chordNoteName": "G",
+    "chordName": "Gm7#11",
+    "chordNotes": "8, 11, 15, 18, 26",
+    "chordNoteNames": "G, Bb, D, F, Db"
   },
   {
     "modeId": 15,
@@ -3805,69 +3865,9 @@
     "keyName": "G",
     "chordNote": 8,
     "chordNoteName": "G",
-    "chordName": "Gm7b5",
-    "chordNotes": "8, 11, 14, 18",
-    "chordNoteNames": "G, Bb, Db, F"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 8,
-    "keyName": "G",
-    "chordNote": 8,
-    "chordNoteName": "G",
-    "chordName": "G5",
-    "chordNotes": "8, 15",
-    "chordNoteNames": "G, D"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 8,
-    "keyName": "G",
-    "chordNote": 8,
-    "chordNoteName": "G",
     "chordName": "Gdim",
     "chordNotes": "8, 11, 14",
     "chordNoteNames": "G, Bb, Db"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 8,
-    "keyName": "G",
-    "chordNote": 8,
-    "chordNoteName": "G",
-    "chordName": "Gm7",
-    "chordNotes": "8, 11, 15, 18",
-    "chordNoteNames": "G, Bb, D, F"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 8,
-    "keyName": "G",
-    "chordNote": 8,
-    "chordNoteName": "G",
-    "chordName": "Gm",
-    "chordNotes": "8, 11, 15",
-    "chordNoteNames": "G, Bb, D"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 8,
-    "keyName": "G",
-    "chordNote": 8,
-    "chordNoteName": "G",
-    "chordName": "Gsus4",
-    "chordNotes": "8, 13, 15",
-    "chordNoteNames": "G, C, D"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 8,
-    "keyName": "G",
-    "chordNote": 8,
-    "chordNoteName": "G",
-    "chordName": "Gm7#11",
-    "chordNotes": "8, 11, 15, 18, 26",
-    "chordNoteNames": "G, Bb, D, F, Db"
   },
   {
     "modeId": 15,
@@ -3885,9 +3885,9 @@
     "keyName": "G",
     "chordNote": 11,
     "chordNoteName": "Bb",
-    "chordName": "Bb6/9",
-    "chordNotes": "11, 15, 18, 20, 25",
-    "chordNoteNames": "Bb, D, F, G, C"
+    "chordName": "Bb6",
+    "chordNotes": "11, 15, 18, 20",
+    "chordNoteNames": "Bb, D, F, G"
   },
   {
     "modeId": 15,
@@ -3898,6 +3898,16 @@
     "chordName": "Bb5",
     "chordNotes": "11, 18",
     "chordNoteNames": "Bb, F"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 8,
+    "keyName": "G",
+    "chordNote": 11,
+    "chordNoteName": "Bb",
+    "chordName": "Bb6/9",
+    "chordNotes": "11, 15, 18, 20, 25",
+    "chordNoteNames": "Bb, D, F, G, C"
   },
   {
     "modeId": 15,
@@ -3945,19 +3955,9 @@
     "keyName": "G",
     "chordNote": 11,
     "chordNoteName": "Bb",
-    "chordName": "Bbm add(9)",
-    "chordNotes": "11, 13, 14, 18",
-    "chordNoteNames": "Bb, C, Db, F"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 8,
-    "keyName": "G",
-    "chordNote": 11,
-    "chordNoteName": "Bb",
-    "chordName": "Bbm add(2)",
-    "chordNotes": "11, 13, 14, 18",
-    "chordNoteNames": "Bb, C, Db, F"
+    "chordName": "Bbm6",
+    "chordNotes": "11, 14, 18, 20",
+    "chordNoteNames": "Bb, Db, F, G"
   },
   {
     "modeId": 15,
@@ -3975,9 +3975,9 @@
     "keyName": "G",
     "chordNote": 11,
     "chordNoteName": "Bb",
-    "chordName": "Bbm6",
-    "chordNotes": "11, 14, 18, 20",
-    "chordNoteNames": "Bb, Db, F, G"
+    "chordName": "Bbm add(2)",
+    "chordNotes": "11, 13, 14, 18",
+    "chordNoteNames": "Bb, C, Db, F"
   },
   {
     "modeId": 15,
@@ -3985,109 +3985,9 @@
     "keyName": "G",
     "chordNote": 11,
     "chordNoteName": "Bb",
-    "chordName": "Bb6",
-    "chordNotes": "11, 15, 18, 20",
-    "chordNoteNames": "Bb, D, F, G"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "Ab",
-    "chordNote": 2,
-    "chordNoteName": "Db",
-    "chordName": "Db7sus4",
-    "chordNotes": "2, 7, 9, 12",
-    "chordNoteNames": "Db, Gb, Ab, B"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "G#",
-    "chordNote": 2,
-    "chordNoteName": "C#",
-    "chordName": "C#5",
-    "chordNotes": "2, 9",
-    "chordNoteNames": "C#, G#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "G#",
-    "chordNote": 2,
-    "chordNoteName": "C#",
-    "chordName": "C#7sus4",
-    "chordNotes": "2, 7, 9, 12",
-    "chordNoteNames": "C#, F#, G#, Cb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "Ab",
-    "chordNote": 2,
-    "chordNoteName": "Db",
-    "chordName": "Dbsus2sus4",
-    "chordNotes": "2, 4, 7, 9",
-    "chordNoteNames": "Db, Eb, Gb, Ab"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "G#",
-    "chordNote": 2,
-    "chordNoteName": "C#",
-    "chordName": "C#7sus2",
-    "chordNotes": "2, 4, 9, 12",
-    "chordNoteNames": "C#, D#, G#, Cb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "G#",
-    "chordNote": 2,
-    "chordNoteName": "C#",
-    "chordName": "C#9sus4",
-    "chordNotes": "2, 7, 9, 12, 16",
-    "chordNoteNames": "C#, F#, G#, Cb, D#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "G#",
-    "chordNote": 2,
-    "chordNoteName": "C#",
-    "chordName": "C#sus2",
-    "chordNotes": "2, 4, 9",
-    "chordNoteNames": "C#, D#, G#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "G#",
-    "chordNote": 2,
-    "chordNoteName": "C#",
-    "chordName": "C#sus4",
-    "chordNotes": "2, 7, 9",
-    "chordNoteNames": "C#, F#, G#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "G#",
-    "chordNote": 2,
-    "chordNoteName": "C#",
-    "chordName": "C#sus2sus4",
-    "chordNotes": "2, 4, 7, 9",
-    "chordNoteNames": "C#, D#, F#, G#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "Ab",
-    "chordNote": 2,
-    "chordNoteName": "Db",
-    "chordName": "Db7sus2",
-    "chordNotes": "2, 4, 9, 12",
-    "chordNoteNames": "Db, Eb, Ab, B"
+    "chordName": "Bbm add(9)",
+    "chordNotes": "11, 13, 14, 18",
+    "chordNoteNames": "Bb, C, Db, F"
   },
   {
     "modeId": 15,
@@ -4105,9 +4005,19 @@
     "keyName": "Ab",
     "chordNote": 2,
     "chordNoteName": "Db",
-    "chordName": "Dbsus2",
-    "chordNotes": "2, 4, 9",
-    "chordNoteNames": "Db, Eb, Ab"
+    "chordName": "Db7sus4",
+    "chordNotes": "2, 7, 9, 12",
+    "chordNoteNames": "Db, Gb, Ab, B"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "Ab",
+    "chordNote": 2,
+    "chordNoteName": "Db",
+    "chordName": "Db7sus2",
+    "chordNotes": "2, 4, 9, 12",
+    "chordNoteNames": "Db, Eb, Ab, B"
   },
   {
     "modeId": 15,
@@ -4125,9 +4035,99 @@
     "keyName": "Ab",
     "chordNote": 2,
     "chordNoteName": "Db",
+    "chordName": "Dbsus2",
+    "chordNotes": "2, 4, 9",
+    "chordNoteNames": "Db, Eb, Ab"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "Ab",
+    "chordNote": 2,
+    "chordNoteName": "Db",
     "chordName": "Dbsus4",
     "chordNotes": "2, 7, 9",
     "chordNoteNames": "Db, Gb, Ab"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "Ab",
+    "chordNote": 2,
+    "chordNoteName": "Db",
+    "chordName": "Dbsus2sus4",
+    "chordNotes": "2, 4, 7, 9",
+    "chordNoteNames": "Db, Eb, Gb, Ab"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "G#",
+    "chordNote": 2,
+    "chordNoteName": "C#",
+    "chordName": "C#7sus4",
+    "chordNotes": "2, 7, 9, 12",
+    "chordNoteNames": "C#, F#, G#, Cb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "G#",
+    "chordNote": 2,
+    "chordNoteName": "C#",
+    "chordName": "C#5",
+    "chordNotes": "2, 9",
+    "chordNoteNames": "C#, G#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "G#",
+    "chordNote": 2,
+    "chordNoteName": "C#",
+    "chordName": "C#sus2sus4",
+    "chordNotes": "2, 4, 7, 9",
+    "chordNoteNames": "C#, D#, F#, G#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "G#",
+    "chordNote": 2,
+    "chordNoteName": "C#",
+    "chordName": "C#sus4",
+    "chordNotes": "2, 7, 9",
+    "chordNoteNames": "C#, F#, G#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "G#",
+    "chordNote": 2,
+    "chordNoteName": "C#",
+    "chordName": "C#sus2",
+    "chordNotes": "2, 4, 9",
+    "chordNoteNames": "C#, D#, G#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "G#",
+    "chordNote": 2,
+    "chordNoteName": "C#",
+    "chordName": "C#9sus4",
+    "chordNotes": "2, 7, 9, 12, 16",
+    "chordNoteNames": "C#, F#, G#, Cb, D#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "G#",
+    "chordNote": 2,
+    "chordNoteName": "C#",
+    "chordName": "C#7sus2",
+    "chordNotes": "2, 4, 9, 12",
+    "chordNoteNames": "C#, D#, G#, Cb"
   },
   {
     "modeId": 15,
@@ -4192,16 +4192,6 @@
   {
     "modeId": 15,
     "keyNote": 9,
-    "keyName": "G#",
-    "chordNote": 7,
-    "chordNoteName": "F#",
-    "chordName": "F#sus2sus4",
-    "chordNotes": "7, 9, 12, 14",
-    "chordNoteNames": "F#, G#, Cb, C#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
     "keyName": "Ab",
     "chordNote": 7,
     "chordNoteName": "Gb",
@@ -4245,9 +4235,19 @@
     "keyName": "G#",
     "chordNote": 7,
     "chordNoteName": "F#",
-    "chordName": "F#5",
-    "chordNotes": "7, 14",
-    "chordNoteNames": "F#, C#"
+    "chordName": "F#sus2sus4",
+    "chordNotes": "7, 9, 12, 14",
+    "chordNoteNames": "F#, G#, Cb, C#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "G#",
+    "chordNote": 7,
+    "chordNoteName": "F#",
+    "chordName": "F#sus4",
+    "chordNotes": "7, 12, 14",
+    "chordNoteNames": "F#, Cb, C#"
   },
   {
     "modeId": 15,
@@ -4265,49 +4265,9 @@
     "keyName": "G#",
     "chordNote": 7,
     "chordNoteName": "F#",
-    "chordName": "F#sus4",
-    "chordNotes": "7, 12, 14",
-    "chordNoteNames": "F#, Cb, C#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "G#",
-    "chordNote": 9,
-    "chordNoteName": "G#",
-    "chordName": "G#m",
-    "chordNotes": "9, 12, 16",
-    "chordNoteNames": "G#, Cb, D#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "G#",
-    "chordNote": 9,
-    "chordNoteName": "G#",
-    "chordName": "G#dim",
-    "chordNotes": "9, 12, 15",
-    "chordNoteNames": "G#, Cb, D"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "G#",
-    "chordNote": 9,
-    "chordNoteName": "G#",
-    "chordName": "G#sus4",
-    "chordNotes": "9, 14, 16",
-    "chordNoteNames": "G#, C#, D#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "G#",
-    "chordNote": 9,
-    "chordNoteName": "G#",
-    "chordName": "G#7sus4",
-    "chordNotes": "9, 14, 16, 19",
-    "chordNoteNames": "G#, C#, D#, F#"
+    "chordName": "F#5",
+    "chordNotes": "7, 14",
+    "chordNoteNames": "F#, C#"
   },
   {
     "modeId": 15,
@@ -4315,19 +4275,9 @@
     "keyName": "Ab",
     "chordNote": 9,
     "chordNoteName": "Ab",
-    "chordName": "Abm7 add(4)",
-    "chordNotes": "9, 12, 14, 16, 31",
-    "chordNoteNames": "Ab, B, Db, Eb, Gb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "G#",
-    "chordNote": 9,
-    "chordNoteName": "G#",
-    "chordName": "G#5",
-    "chordNotes": "9, 16",
-    "chordNoteNames": "G#, D#"
+    "chordName": "Abm7b5",
+    "chordNotes": "9, 12, 15, 19",
+    "chordNoteNames": "Ab, B, D, Gb"
   },
   {
     "modeId": 15,
@@ -4345,59 +4295,9 @@
     "keyName": "Ab",
     "chordNote": 9,
     "chordNoteName": "Ab",
-    "chordName": "Abm7b5",
-    "chordNotes": "9, 12, 15, 19",
-    "chordNoteNames": "Ab, B, D, Gb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "G#",
-    "chordNote": 9,
-    "chordNoteName": "G#",
-    "chordName": "G#m7#11",
-    "chordNotes": "9, 12, 16, 19, 27",
-    "chordNoteNames": "G#, Cb, D#, F#, D"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "Ab",
-    "chordNote": 9,
-    "chordNoteName": "Ab",
-    "chordName": "Ab5",
-    "chordNotes": "9, 16",
-    "chordNoteNames": "Ab, Eb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "Ab",
-    "chordNote": 9,
-    "chordNoteName": "Ab",
-    "chordName": "Ab7sus4",
-    "chordNotes": "9, 14, 16, 19",
-    "chordNoteNames": "Ab, Db, Eb, Gb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "Ab",
-    "chordNote": 9,
-    "chordNoteName": "Ab",
-    "chordName": "Absus4",
-    "chordNotes": "9, 14, 16",
-    "chordNoteNames": "Ab, Db, Eb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "Ab",
-    "chordNote": 9,
-    "chordNoteName": "Ab",
-    "chordName": "Abm",
-    "chordNotes": "9, 12, 16",
-    "chordNoteNames": "Ab, B, Eb"
+    "chordName": "Abm7 add(4)",
+    "chordNotes": "9, 12, 14, 16, 31",
+    "chordNoteNames": "Ab, B, Db, Eb, Gb"
   },
   {
     "modeId": 15,
@@ -4412,32 +4312,12 @@
   {
     "modeId": 15,
     "keyNote": 9,
-    "keyName": "G#",
+    "keyName": "Ab",
     "chordNote": 9,
-    "chordNoteName": "G#",
-    "chordName": "G#m7b5",
-    "chordNotes": "9, 12, 15, 19",
-    "chordNoteNames": "G#, Cb, D, F#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "G#",
-    "chordNote": 9,
-    "chordNoteName": "G#",
-    "chordName": "G#m7",
-    "chordNotes": "9, 12, 16, 19",
-    "chordNoteNames": "G#, Cb, D#, F#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "G#",
-    "chordNote": 9,
-    "chordNoteName": "G#",
-    "chordName": "G#m7 add(4)",
-    "chordNotes": "9, 12, 14, 16, 31",
-    "chordNoteNames": "G#, Cb, C#, D#, F#"
+    "chordNoteName": "Ab",
+    "chordName": "Abm add(4)",
+    "chordNotes": "9, 12, 14, 16",
+    "chordNoteNames": "Ab, B, Db, Eb"
   },
   {
     "modeId": 15,
@@ -4455,9 +4335,119 @@
     "keyName": "Ab",
     "chordNote": 9,
     "chordNoteName": "Ab",
-    "chordName": "Abm add(4)",
-    "chordNotes": "9, 12, 14, 16",
-    "chordNoteNames": "Ab, B, Db, Eb"
+    "chordName": "Ab7sus4",
+    "chordNotes": "9, 14, 16, 19",
+    "chordNoteNames": "Ab, Db, Eb, Gb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "Ab",
+    "chordNote": 9,
+    "chordNoteName": "Ab",
+    "chordName": "Ab5",
+    "chordNotes": "9, 16",
+    "chordNoteNames": "Ab, Eb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "Ab",
+    "chordNote": 9,
+    "chordNoteName": "Ab",
+    "chordName": "Abm",
+    "chordNotes": "9, 12, 16",
+    "chordNoteNames": "Ab, B, Eb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "Ab",
+    "chordNote": 9,
+    "chordNoteName": "Ab",
+    "chordName": "Absus4",
+    "chordNotes": "9, 14, 16",
+    "chordNoteNames": "Ab, Db, Eb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "G#",
+    "chordNote": 9,
+    "chordNoteName": "G#",
+    "chordName": "G#5",
+    "chordNotes": "9, 16",
+    "chordNoteNames": "G#, D#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "G#",
+    "chordNote": 9,
+    "chordNoteName": "G#",
+    "chordName": "G#7sus4",
+    "chordNotes": "9, 14, 16, 19",
+    "chordNoteNames": "G#, C#, D#, F#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "G#",
+    "chordNote": 9,
+    "chordNoteName": "G#",
+    "chordName": "G#sus4",
+    "chordNotes": "9, 14, 16",
+    "chordNoteNames": "G#, C#, D#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "G#",
+    "chordNote": 9,
+    "chordNoteName": "G#",
+    "chordName": "G#m",
+    "chordNotes": "9, 12, 16",
+    "chordNoteNames": "G#, Cb, D#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "G#",
+    "chordNote": 9,
+    "chordNoteName": "G#",
+    "chordName": "G#m7",
+    "chordNotes": "9, 12, 16, 19",
+    "chordNoteNames": "G#, Cb, D#, F#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "G#",
+    "chordNote": 9,
+    "chordNoteName": "G#",
+    "chordName": "G#m7b5",
+    "chordNotes": "9, 12, 15, 19",
+    "chordNoteNames": "G#, Cb, D, F#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "G#",
+    "chordNote": 9,
+    "chordNoteName": "G#",
+    "chordName": "G#m7#11",
+    "chordNotes": "9, 12, 16, 19, 27",
+    "chordNoteNames": "G#, Cb, D#, F#, D"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "G#",
+    "chordNote": 9,
+    "chordNoteName": "G#",
+    "chordName": "G#m7 add(4)",
+    "chordNotes": "9, 12, 14, 16, 31",
+    "chordNoteNames": "G#, Cb, C#, D#, F#"
   },
   {
     "modeId": 15,
@@ -4473,121 +4463,11 @@
     "modeId": 15,
     "keyNote": 9,
     "keyName": "G#",
-    "chordNote": 12,
-    "chordNoteName": "Cb",
-    "chordName": "Cb6/9",
-    "chordNotes": "12, 16, 19, 21, 26",
-    "chordNoteNames": "Cb, D#, F#, G#, C#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "Ab",
-    "chordNote": 12,
-    "chordNoteName": "B",
-    "chordName": "B5",
-    "chordNotes": "12, 19",
-    "chordNoteNames": "B, Gb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "Ab",
-    "chordNote": 12,
-    "chordNoteName": "B",
-    "chordName": "B6/9",
-    "chordNotes": "12, 16, 19, 21, 26",
-    "chordNoteNames": "B, Eb, Gb, Ab, Db"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "Ab",
-    "chordNote": 12,
-    "chordNoteName": "B",
-    "chordName": "Badd(2)",
-    "chordNotes": "12, 14, 16, 19",
-    "chordNoteNames": "B, Db, Eb, Gb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "Ab",
-    "chordNote": 12,
-    "chordNoteName": "B",
-    "chordName": "Badd(9)",
-    "chordNotes": "12, 16, 19, 26",
-    "chordNoteNames": "B, Eb, Gb, Db"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "G#",
-    "chordNote": 12,
-    "chordNoteName": "Cb",
-    "chordName": "Cbadd(9)",
-    "chordNotes": "12, 16, 19, 26",
-    "chordNoteNames": "Cb, D#, F#, C#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "Ab",
-    "chordNote": 12,
-    "chordNoteName": "B",
-    "chordName": "Bsus2",
-    "chordNotes": "12, 14, 19",
-    "chordNoteNames": "B, Db, Gb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "Ab",
-    "chordNote": 12,
-    "chordNoteName": "B",
-    "chordName": "Bm",
-    "chordNotes": "12, 15, 19",
-    "chordNoteNames": "B, D, Gb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "Ab",
-    "chordNote": 12,
-    "chordNoteName": "B",
-    "chordName": "Bm6",
-    "chordNotes": "12, 15, 19, 21",
-    "chordNoteNames": "B, D, Gb, Ab"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "Ab",
-    "chordNote": 12,
-    "chordNoteName": "B",
-    "chordName": "Bm6/9",
-    "chordNotes": "12, 15, 19, 21, 26",
-    "chordNoteNames": "B, D, Gb, Ab, Db"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "Ab",
-    "chordNote": 12,
-    "chordNoteName": "B",
-    "chordName": "Bm add(2)",
-    "chordNotes": "12, 14, 15, 19",
-    "chordNoteNames": "B, Db, D, Gb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "Ab",
-    "chordNote": 12,
-    "chordNoteName": "B",
-    "chordName": "Bm add(9)",
-    "chordNotes": "12, 14, 15, 19",
-    "chordNoteNames": "B, Db, D, Gb"
+    "chordNote": 9,
+    "chordNoteName": "G#",
+    "chordName": "G#dim",
+    "chordNotes": "9, 12, 15",
+    "chordNoteNames": "G#, Cb, D"
   },
   {
     "modeId": 15,
@@ -4602,42 +4482,12 @@
   {
     "modeId": 15,
     "keyNote": 9,
-    "keyName": "G#",
+    "keyName": "Ab",
     "chordNote": 12,
-    "chordNoteName": "Cb",
-    "chordName": "Cbm add(9)",
-    "chordNotes": "12, 14, 15, 19",
-    "chordNoteNames": "Cb, C#, D, F#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "G#",
-    "chordNote": 12,
-    "chordNoteName": "Cb",
-    "chordName": "Cbm add(2)",
-    "chordNotes": "12, 14, 15, 19",
-    "chordNoteNames": "Cb, C#, D, F#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "G#",
-    "chordNote": 12,
-    "chordNoteName": "Cb",
-    "chordName": "Cbm6/9",
-    "chordNotes": "12, 15, 19, 21, 26",
-    "chordNoteNames": "Cb, D, F#, G#, C#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "G#",
-    "chordNote": 12,
-    "chordNoteName": "Cb",
-    "chordName": "Cbm6",
-    "chordNotes": "12, 15, 19, 21",
-    "chordNoteNames": "Cb, D, F#, G#"
+    "chordNoteName": "B",
+    "chordName": "B",
+    "chordNotes": "12, 16, 19",
+    "chordNoteNames": "B, Eb, Gb"
   },
   {
     "modeId": 15,
@@ -4648,26 +4498,6 @@
     "chordName": "Cb",
     "chordNotes": "12, 16, 19",
     "chordNoteNames": "Cb, D#, F#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "G#",
-    "chordNote": 12,
-    "chordNoteName": "Cb",
-    "chordName": "Cbm",
-    "chordNotes": "12, 15, 19",
-    "chordNoteNames": "Cb, D, F#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 9,
-    "keyName": "G#",
-    "chordNote": 12,
-    "chordNoteName": "Cb",
-    "chordName": "Cbsus2",
-    "chordNotes": "12, 14, 19",
-    "chordNoteNames": "Cb, C#, F#"
   },
   {
     "modeId": 15,
@@ -4695,6 +4525,16 @@
     "keyName": "G#",
     "chordNote": 12,
     "chordNoteName": "Cb",
+    "chordName": "Cb6/9",
+    "chordNotes": "12, 16, 19, 21, 26",
+    "chordNoteNames": "Cb, D#, F#, G#, C#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "G#",
+    "chordNote": 12,
+    "chordNoteName": "Cb",
     "chordName": "Cbadd(2)",
     "chordNotes": "12, 14, 16, 19",
     "chordNoteNames": "Cb, C#, D#, F#"
@@ -4702,12 +4542,172 @@
   {
     "modeId": 15,
     "keyNote": 9,
+    "keyName": "G#",
+    "chordNote": 12,
+    "chordNoteName": "Cb",
+    "chordName": "Cbadd(9)",
+    "chordNotes": "12, 16, 19, 26",
+    "chordNoteNames": "Cb, D#, F#, C#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "G#",
+    "chordNote": 12,
+    "chordNoteName": "Cb",
+    "chordName": "Cbsus2",
+    "chordNotes": "12, 14, 19",
+    "chordNoteNames": "Cb, C#, F#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "G#",
+    "chordNote": 12,
+    "chordNoteName": "Cb",
+    "chordName": "Cbm",
+    "chordNotes": "12, 15, 19",
+    "chordNoteNames": "Cb, D, F#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "G#",
+    "chordNote": 12,
+    "chordNoteName": "Cb",
+    "chordName": "Cbm6",
+    "chordNotes": "12, 15, 19, 21",
+    "chordNoteNames": "Cb, D, F#, G#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "G#",
+    "chordNote": 12,
+    "chordNoteName": "Cb",
+    "chordName": "Cbm6/9",
+    "chordNotes": "12, 15, 19, 21, 26",
+    "chordNoteNames": "Cb, D, F#, G#, C#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "G#",
+    "chordNote": 12,
+    "chordNoteName": "Cb",
+    "chordName": "Cbm add(2)",
+    "chordNotes": "12, 14, 15, 19",
+    "chordNoteNames": "Cb, C#, D, F#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "G#",
+    "chordNote": 12,
+    "chordNoteName": "Cb",
+    "chordName": "Cbm add(9)",
+    "chordNotes": "12, 14, 15, 19",
+    "chordNoteNames": "Cb, C#, D, F#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
     "keyName": "Ab",
     "chordNote": 12,
     "chordNoteName": "B",
-    "chordName": "B",
-    "chordNotes": "12, 16, 19",
-    "chordNoteNames": "B, Eb, Gb"
+    "chordName": "Bm add(2)",
+    "chordNotes": "12, 14, 15, 19",
+    "chordNoteNames": "B, Db, D, Gb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "Ab",
+    "chordNote": 12,
+    "chordNoteName": "B",
+    "chordName": "Bm add(9)",
+    "chordNotes": "12, 14, 15, 19",
+    "chordNoteNames": "B, Db, D, Gb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "Ab",
+    "chordNote": 12,
+    "chordNoteName": "B",
+    "chordName": "Bm6/9",
+    "chordNotes": "12, 15, 19, 21, 26",
+    "chordNoteNames": "B, D, Gb, Ab, Db"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "Ab",
+    "chordNote": 12,
+    "chordNoteName": "B",
+    "chordName": "Bm6",
+    "chordNotes": "12, 15, 19, 21",
+    "chordNoteNames": "B, D, Gb, Ab"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "Ab",
+    "chordNote": 12,
+    "chordNoteName": "B",
+    "chordName": "Bm",
+    "chordNotes": "12, 15, 19",
+    "chordNoteNames": "B, D, Gb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "Ab",
+    "chordNote": 12,
+    "chordNoteName": "B",
+    "chordName": "Bsus2",
+    "chordNotes": "12, 14, 19",
+    "chordNoteNames": "B, Db, Gb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "Ab",
+    "chordNote": 12,
+    "chordNoteName": "B",
+    "chordName": "Badd(9)",
+    "chordNotes": "12, 16, 19, 26",
+    "chordNoteNames": "B, Eb, Gb, Db"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "Ab",
+    "chordNote": 12,
+    "chordNoteName": "B",
+    "chordName": "Badd(2)",
+    "chordNotes": "12, 14, 16, 19",
+    "chordNoteNames": "B, Db, Eb, Gb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "Ab",
+    "chordNote": 12,
+    "chordNoteName": "B",
+    "chordName": "B6/9",
+    "chordNotes": "12, 16, 19, 21, 26",
+    "chordNoteNames": "B, Eb, Gb, Ab, Db"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 9,
+    "keyName": "Ab",
+    "chordNote": 12,
+    "chordNoteName": "B",
+    "chordName": "B5",
+    "chordNotes": "12, 19",
+    "chordNoteNames": "B, Gb"
   },
   {
     "modeId": 15,
@@ -4715,9 +4715,9 @@
     "keyName": "A",
     "chordNote": 1,
     "chordNoteName": "C",
-    "chordName": "Cm add(9)",
-    "chordNotes": "1, 3, 4, 8",
-    "chordNoteNames": "C, D, Eb, G"
+    "chordName": "Cm6",
+    "chordNotes": "1, 4, 8, 10",
+    "chordNoteNames": "C, Eb, G, A"
   },
   {
     "modeId": 15,
@@ -4725,59 +4725,9 @@
     "keyName": "A",
     "chordNote": 1,
     "chordNoteName": "C",
-    "chordName": "Cm add(2)",
-    "chordNotes": "1, 3, 4, 8",
-    "chordNoteNames": "C, D, Eb, G"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 10,
-    "keyName": "A",
-    "chordNote": 1,
-    "chordNoteName": "C",
-    "chordName": "Cmaj6/7",
-    "chordNotes": "1, 5, 8, 22",
-    "chordNoteNames": "C, E, G, A"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 10,
-    "keyName": "A",
-    "chordNote": 1,
-    "chordNoteName": "C",
-    "chordName": "Cm6/9",
-    "chordNotes": "1, 4, 8, 10, 15",
-    "chordNoteNames": "C, Eb, G, A, D"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 10,
-    "keyName": "A",
-    "chordNote": 1,
-    "chordNoteName": "C",
-    "chordName": "Cadd(2)",
-    "chordNotes": "1, 3, 5, 8",
-    "chordNoteNames": "C, D, E, G"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 10,
-    "keyName": "A",
-    "chordNote": 1,
-    "chordNoteName": "C",
-    "chordName": "Cadd(9)",
-    "chordNotes": "1, 5, 8, 15",
-    "chordNoteNames": "C, E, G, D"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 10,
-    "keyName": "A",
-    "chordNote": 1,
-    "chordNoteName": "C",
-    "chordName": "C",
-    "chordNotes": "1, 5, 8",
-    "chordNoteNames": "C, E, G"
+    "chordName": "Cm",
+    "chordNotes": "1, 4, 8",
+    "chordNoteNames": "C, Eb, G"
   },
   {
     "modeId": 15,
@@ -4795,9 +4745,29 @@
     "keyName": "A",
     "chordNote": 1,
     "chordNoteName": "C",
-    "chordName": "Cm",
-    "chordNotes": "1, 4, 8",
-    "chordNoteNames": "C, Eb, G"
+    "chordName": "Cadd(9)",
+    "chordNotes": "1, 5, 8, 15",
+    "chordNoteNames": "C, E, G, D"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 10,
+    "keyName": "A",
+    "chordNote": 1,
+    "chordNoteName": "C",
+    "chordName": "Cmaj6/7",
+    "chordNotes": "1, 5, 8, 22",
+    "chordNoteNames": "C, E, G, A"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 10,
+    "keyName": "A",
+    "chordNote": 1,
+    "chordNoteName": "C",
+    "chordName": "Cadd(2)",
+    "chordNotes": "1, 3, 5, 8",
+    "chordNoteNames": "C, D, E, G"
   },
   {
     "modeId": 15,
@@ -4825,9 +4795,9 @@
     "keyName": "A",
     "chordNote": 1,
     "chordNoteName": "C",
-    "chordName": "Cm6",
-    "chordNotes": "1, 4, 8, 10",
-    "chordNoteNames": "C, Eb, G, A"
+    "chordName": "C6/9",
+    "chordNotes": "1, 5, 8, 10, 15",
+    "chordNoteNames": "C, E, G, A, D"
   },
   {
     "modeId": 15,
@@ -4835,9 +4805,49 @@
     "keyName": "A",
     "chordNote": 1,
     "chordNoteName": "C",
-    "chordName": "C6/9",
-    "chordNotes": "1, 5, 8, 10, 15",
-    "chordNoteNames": "C, E, G, A, D"
+    "chordName": "C",
+    "chordNotes": "1, 5, 8",
+    "chordNoteNames": "C, E, G"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 10,
+    "keyName": "A",
+    "chordNote": 1,
+    "chordNoteName": "C",
+    "chordName": "Cm add(9)",
+    "chordNotes": "1, 3, 4, 8",
+    "chordNoteNames": "C, D, Eb, G"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 10,
+    "keyName": "A",
+    "chordNote": 1,
+    "chordNoteName": "C",
+    "chordName": "Cm add(2)",
+    "chordNotes": "1, 3, 4, 8",
+    "chordNoteNames": "C, D, Eb, G"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 10,
+    "keyName": "A",
+    "chordNote": 1,
+    "chordNoteName": "C",
+    "chordName": "Cm6/9",
+    "chordNotes": "1, 4, 8, 10, 15",
+    "chordNoteNames": "C, Eb, G, A, D"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 10,
+    "keyName": "A",
+    "chordNote": 3,
+    "chordNoteName": "D",
+    "chordName": "D7sus2",
+    "chordNotes": "3, 5, 10, 13",
+    "chordNoteNames": "D, E, A, C"
   },
   {
     "modeId": 15,
@@ -4855,9 +4865,9 @@
     "keyName": "A",
     "chordNote": 3,
     "chordNoteName": "D",
-    "chordName": "D13#sus4",
-    "chordNotes": "3, 5, 8, 10, 25",
-    "chordNoteNames": "D, E, G, A, C"
+    "chordName": "Dsus4",
+    "chordNotes": "3, 8, 10",
+    "chordNoteNames": "D, G, A"
   },
   {
     "modeId": 15,
@@ -4885,9 +4895,9 @@
     "keyName": "A",
     "chordNote": 3,
     "chordNoteName": "D",
-    "chordName": "D7sus4",
-    "chordNotes": "3, 8, 10, 13",
-    "chordNoteNames": "D, G, A, C"
+    "chordName": "D13#sus4",
+    "chordNotes": "3, 5, 8, 10, 25",
+    "chordNoteNames": "D, E, G, A, C"
   },
   {
     "modeId": 15,
@@ -4905,19 +4915,9 @@
     "keyName": "A",
     "chordNote": 3,
     "chordNoteName": "D",
-    "chordName": "D7sus2",
-    "chordNotes": "3, 5, 10, 13",
-    "chordNoteNames": "D, E, A, C"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 10,
-    "keyName": "A",
-    "chordNote": 3,
-    "chordNoteName": "D",
-    "chordName": "Dsus4",
-    "chordNotes": "3, 8, 10",
-    "chordNoteNames": "D, G, A"
+    "chordName": "D7sus4",
+    "chordNotes": "3, 8, 10, 13",
+    "chordNoteNames": "D, G, A, C"
   },
   {
     "modeId": 15,
@@ -4975,16 +4975,6 @@
     "keyName": "A",
     "chordNote": 8,
     "chordNoteName": "G",
-    "chordName": "Gsus2",
-    "chordNotes": "8, 10, 15",
-    "chordNoteNames": "G, A, D"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 10,
-    "keyName": "A",
-    "chordNote": 8,
-    "chordNoteName": "G",
     "chordName": "Gsus4",
     "chordNotes": "8, 13, 15",
     "chordNoteNames": "G, C, D"
@@ -4993,11 +4983,91 @@
     "modeId": 15,
     "keyNote": 10,
     "keyName": "A",
+    "chordNote": 8,
+    "chordNoteName": "G",
+    "chordName": "Gsus2",
+    "chordNotes": "8, 10, 15",
+    "chordNoteNames": "G, A, D"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 10,
+    "keyName": "A",
     "chordNote": 10,
     "chordNoteName": "A",
-    "chordName": "Am11",
-    "chordNotes": "10, 13, 17, 20, 27",
-    "chordNoteNames": "A, C, E, G, D"
+    "chordName": "Asus4",
+    "chordNotes": "10, 15, 17",
+    "chordNoteNames": "A, D, E"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 10,
+    "keyName": "A",
+    "chordNote": 10,
+    "chordNoteName": "A",
+    "chordName": "A5",
+    "chordNotes": "10, 17",
+    "chordNoteNames": "A, E"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 10,
+    "keyName": "A",
+    "chordNote": 10,
+    "chordNoteName": "A",
+    "chordName": "A7sus4",
+    "chordNotes": "10, 15, 17, 20",
+    "chordNoteNames": "A, D, E, G"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 10,
+    "keyName": "A",
+    "chordNote": 10,
+    "chordNoteName": "A",
+    "chordName": "A9sus4",
+    "chordNotes": "10, 15, 17, 20",
+    "chordNoteNames": "A, D, E, G"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 10,
+    "keyName": "A",
+    "chordNote": 10,
+    "chordNoteName": "A",
+    "chordName": "Am",
+    "chordNotes": "10, 13, 17",
+    "chordNoteNames": "A, C, E"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 10,
+    "keyName": "A",
+    "chordNote": 10,
+    "chordNoteName": "A",
+    "chordName": "Am7",
+    "chordNotes": "10, 13, 17, 20",
+    "chordNoteNames": "A, C, E, G"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 10,
+    "keyName": "A",
+    "chordNote": 10,
+    "chordNoteName": "A",
+    "chordName": "Am7b5",
+    "chordNotes": "10, 13, 16, 20",
+    "chordNoteNames": "A, C, Eb, G"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 10,
+    "keyName": "A",
+    "chordNote": 10,
+    "chordNoteName": "A",
+    "chordName": "Am7#11",
+    "chordNotes": "10, 13, 17, 20, 28",
+    "chordNoteNames": "A, C, E, G, Eb"
   },
   {
     "modeId": 15,
@@ -5025,6 +5095,16 @@
     "keyName": "A",
     "chordNote": 10,
     "chordNoteName": "A",
+    "chordName": "Am11",
+    "chordNotes": "10, 13, 17, 20, 27",
+    "chordNoteNames": "A, C, E, G, D"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 10,
+    "keyName": "A",
+    "chordNote": 10,
+    "chordNoteName": "A",
     "chordName": "Am add(4)",
     "chordNotes": "10, 13, 15, 17",
     "chordNoteNames": "A, C, D, E"
@@ -5038,86 +5118,6 @@
     "chordName": "Adim",
     "chordNotes": "10, 13, 16",
     "chordNoteNames": "A, C, Eb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 10,
-    "keyName": "A",
-    "chordNote": 10,
-    "chordNoteName": "A",
-    "chordName": "Am7#11",
-    "chordNotes": "10, 13, 17, 20, 28",
-    "chordNoteNames": "A, C, E, G, Eb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 10,
-    "keyName": "A",
-    "chordNote": 10,
-    "chordNoteName": "A",
-    "chordName": "Am7b5",
-    "chordNotes": "10, 13, 16, 20",
-    "chordNoteNames": "A, C, Eb, G"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 10,
-    "keyName": "A",
-    "chordNote": 10,
-    "chordNoteName": "A",
-    "chordName": "Am7",
-    "chordNotes": "10, 13, 17, 20",
-    "chordNoteNames": "A, C, E, G"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 10,
-    "keyName": "A",
-    "chordNote": 10,
-    "chordNoteName": "A",
-    "chordName": "Am",
-    "chordNotes": "10, 13, 17",
-    "chordNoteNames": "A, C, E"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 10,
-    "keyName": "A",
-    "chordNote": 10,
-    "chordNoteName": "A",
-    "chordName": "Asus4",
-    "chordNotes": "10, 15, 17",
-    "chordNoteNames": "A, D, E"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 10,
-    "keyName": "A",
-    "chordNote": 10,
-    "chordNoteName": "A",
-    "chordName": "A9sus4",
-    "chordNotes": "10, 15, 17, 20",
-    "chordNoteNames": "A, D, E, G"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 10,
-    "keyName": "A",
-    "chordNote": 10,
-    "chordNoteName": "A",
-    "chordName": "A7sus4",
-    "chordNotes": "10, 15, 17, 20",
-    "chordNoteNames": "A, D, E, G"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 10,
-    "keyName": "A",
-    "chordNote": 10,
-    "chordNoteName": "A",
-    "chordName": "A5",
-    "chordNotes": "10, 17",
-    "chordNoteNames": "A, E"
   },
   {
     "modeId": 15,
@@ -5135,59 +5135,9 @@
     "keyName": "A#",
     "chordNote": 2,
     "chordNoteName": "C#",
-    "chordName": "C#m7/6",
-    "chordNotes": "2, 5, 9, 23",
-    "chordNoteNames": "C#, Fb, G#, A#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 11,
-    "keyName": "A#",
-    "chordNote": 2,
-    "chordNoteName": "C#",
-    "chordName": "C#add(9)",
-    "chordNotes": "2, 6, 9, 16",
-    "chordNoteNames": "C#, E#, G#, D#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 11,
-    "keyName": "A#",
-    "chordNote": 2,
-    "chordNoteName": "C#",
-    "chordName": "C#add(2)",
-    "chordNotes": "2, 4, 6, 9",
-    "chordNoteNames": "C#, D#, E#, G#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 11,
-    "keyName": "A#",
-    "chordNote": 2,
-    "chordNoteName": "C#",
-    "chordName": "C#m add(2)",
-    "chordNotes": "2, 4, 5, 9",
-    "chordNoteNames": "C#, D#, Fb, G#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 11,
-    "keyName": "A#",
-    "chordNote": 2,
-    "chordNoteName": "C#",
-    "chordName": "C#m6/9",
-    "chordNotes": "2, 5, 9, 11, 16",
-    "chordNoteNames": "C#, Fb, G#, A#, D#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 11,
-    "keyName": "A#",
-    "chordNote": 2,
-    "chordNoteName": "C#",
-    "chordName": "C#m add(9)",
-    "chordNotes": "2, 4, 5, 9",
-    "chordNoteNames": "C#, D#, Fb, G#"
+    "chordName": "C#6",
+    "chordNotes": "2, 6, 9, 11",
+    "chordNoteNames": "C#, E#, G#, A#"
   },
   {
     "modeId": 15,
@@ -5205,16 +5155,6 @@
     "keyName": "A#",
     "chordNote": 2,
     "chordNoteName": "C#",
-    "chordName": "C#6/9",
-    "chordNotes": "2, 6, 9, 11, 16",
-    "chordNoteNames": "C#, E#, G#, A#, D#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 11,
-    "keyName": "A#",
-    "chordNote": 2,
-    "chordNoteName": "C#",
     "chordName": "C#7/6",
     "chordNotes": "2, 6, 9, 23",
     "chordNoteNames": "C#, E#, G#, A#"
@@ -5225,9 +5165,29 @@
     "keyName": "A#",
     "chordNote": 2,
     "chordNoteName": "C#",
-    "chordName": "C#m",
-    "chordNotes": "2, 5, 9",
-    "chordNoteNames": "C#, Fb, G#"
+    "chordName": "C#6/9",
+    "chordNotes": "2, 6, 9, 11, 16",
+    "chordNoteNames": "C#, E#, G#, A#, D#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 11,
+    "keyName": "A#",
+    "chordNote": 2,
+    "chordNoteName": "C#",
+    "chordName": "C#add(2)",
+    "chordNotes": "2, 4, 6, 9",
+    "chordNoteNames": "C#, D#, E#, G#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 11,
+    "keyName": "A#",
+    "chordNote": 2,
+    "chordNoteName": "C#",
+    "chordName": "C#add(9)",
+    "chordNotes": "2, 6, 9, 16",
+    "chordNoteNames": "C#, E#, G#, D#"
   },
   {
     "modeId": 15,
@@ -5245,9 +5205,9 @@
     "keyName": "A#",
     "chordNote": 2,
     "chordNoteName": "C#",
-    "chordName": "C#6",
-    "chordNotes": "2, 6, 9, 11",
-    "chordNoteNames": "C#, E#, G#, A#"
+    "chordName": "C#m",
+    "chordNotes": "2, 5, 9",
+    "chordNoteNames": "C#, Fb, G#"
   },
   {
     "modeId": 15,
@@ -5263,11 +5223,51 @@
     "modeId": 15,
     "keyNote": 11,
     "keyName": "A#",
+    "chordNote": 2,
+    "chordNoteName": "C#",
+    "chordName": "C#m6/9",
+    "chordNotes": "2, 5, 9, 11, 16",
+    "chordNoteNames": "C#, Fb, G#, A#, D#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 11,
+    "keyName": "A#",
+    "chordNote": 2,
+    "chordNoteName": "C#",
+    "chordName": "C#m7/6",
+    "chordNotes": "2, 5, 9, 23",
+    "chordNoteNames": "C#, Fb, G#, A#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 11,
+    "keyName": "A#",
+    "chordNote": 2,
+    "chordNoteName": "C#",
+    "chordName": "C#m add(2)",
+    "chordNotes": "2, 4, 5, 9",
+    "chordNoteNames": "C#, D#, Fb, G#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 11,
+    "keyName": "A#",
+    "chordNote": 2,
+    "chordNoteName": "C#",
+    "chordName": "C#m add(9)",
+    "chordNotes": "2, 4, 5, 9",
+    "chordNoteNames": "C#, D#, Fb, G#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 11,
+    "keyName": "A#",
     "chordNote": 4,
     "chordNoteName": "D#",
-    "chordName": "D#sus2sus4",
-    "chordNotes": "4, 6, 9, 11",
-    "chordNoteNames": "D#, E#, G#, A#"
+    "chordName": "D#5",
+    "chordNotes": "4, 11",
+    "chordNoteNames": "D#, A#"
   },
   {
     "modeId": 15,
@@ -5315,16 +5315,6 @@
     "keyName": "A#",
     "chordNote": 4,
     "chordNoteName": "D#",
-    "chordName": "D#5",
-    "chordNotes": "4, 11",
-    "chordNoteNames": "D#, A#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 11,
-    "keyName": "A#",
-    "chordNote": 4,
-    "chordNoteName": "D#",
     "chordName": "D#sus4",
     "chordNotes": "4, 9, 11",
     "chordNoteNames": "D#, G#, A#"
@@ -5333,11 +5323,11 @@
     "modeId": 15,
     "keyNote": 11,
     "keyName": "A#",
-    "chordNote": 5,
-    "chordNoteName": "Fb",
-    "chordName": "Fbmaj7b5",
-    "chordNotes": "5, 9, 11, 16",
-    "chordNoteNames": "Fb, G#, A#, D#"
+    "chordNote": 4,
+    "chordNoteName": "D#",
+    "chordName": "D#sus2sus4",
+    "chordNotes": "4, 6, 9, 11",
+    "chordNoteNames": "D#, E#, G#, A#"
   },
   {
     "modeId": 15,
@@ -5348,6 +5338,16 @@
     "chordName": "Fbb5",
     "chordNotes": "5, 9, 11",
     "chordNoteNames": "Fb, G#, A#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 11,
+    "keyName": "A#",
+    "chordNote": 5,
+    "chordNoteName": "Fb",
+    "chordName": "Fbmaj7b5",
+    "chordNotes": "5, 9, 11, 16",
+    "chordNoteNames": "Fb, G#, A#, D#"
   },
   {
     "modeId": 15,
@@ -5365,29 +5365,9 @@
     "keyName": "A#",
     "chordNote": 9,
     "chordNoteName": "G#",
-    "chordName": "G#sus4",
-    "chordNotes": "9, 14, 16",
-    "chordNoteNames": "G#, C#, D#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 11,
-    "keyName": "A#",
-    "chordNote": 9,
-    "chordNoteName": "G#",
     "chordName": "G#5",
     "chordNotes": "9, 16",
     "chordNoteNames": "G#, D#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 11,
-    "keyName": "A#",
-    "chordNote": 9,
-    "chordNoteName": "G#",
-    "chordName": "G#sus2sus4",
-    "chordNotes": "9, 11, 14, 16",
-    "chordNoteNames": "G#, A#, C#, D#"
   },
   {
     "modeId": 15,
@@ -5403,11 +5383,21 @@
     "modeId": 15,
     "keyNote": 11,
     "keyName": "A#",
-    "chordNote": 11,
-    "chordNoteName": "A#",
-    "chordName": "A#m7#11",
-    "chordNotes": "11, 14, 18, 21, 29",
-    "chordNoteNames": "A#, C#, E#, G#, Fb"
+    "chordNote": 9,
+    "chordNoteName": "G#",
+    "chordName": "G#sus4",
+    "chordNotes": "9, 14, 16",
+    "chordNoteNames": "G#, C#, D#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 11,
+    "keyName": "A#",
+    "chordNote": 9,
+    "chordNoteName": "G#",
+    "chordName": "G#sus2sus4",
+    "chordNotes": "9, 11, 14, 16",
+    "chordNoteNames": "G#, A#, C#, D#"
   },
   {
     "modeId": 15,
@@ -5425,9 +5415,9 @@
     "keyName": "A#",
     "chordNote": 11,
     "chordNoteName": "A#",
-    "chordName": "A#m7b9",
-    "chordNotes": "11, 14, 18, 21",
-    "chordNoteNames": "A#, C#, E#, G#"
+    "chordName": "A#7sus4",
+    "chordNotes": "11, 16, 18, 21",
+    "chordNoteNames": "A#, D#, E#, G#"
   },
   {
     "modeId": 15,
@@ -5435,9 +5425,9 @@
     "keyName": "A#",
     "chordNote": 11,
     "chordNoteName": "A#",
-    "chordName": "A#m7",
-    "chordNotes": "11, 14, 18, 21",
-    "chordNoteNames": "A#, C#, E#, G#"
+    "chordName": "A#sus4",
+    "chordNotes": "11, 16, 18",
+    "chordNoteNames": "A#, D#, E#"
   },
   {
     "modeId": 15,
@@ -5455,9 +5445,9 @@
     "keyName": "A#",
     "chordNote": 11,
     "chordNoteName": "A#",
-    "chordName": "A#m7 add(4)",
-    "chordNotes": "11, 14, 16, 18, 33",
-    "chordNoteNames": "A#, C#, D#, E#, G#"
+    "chordName": "A#m7",
+    "chordNotes": "11, 14, 18, 21",
+    "chordNoteNames": "A#, C#, E#, G#"
   },
   {
     "modeId": 15,
@@ -5465,9 +5455,39 @@
     "keyName": "A#",
     "chordNote": 11,
     "chordNoteName": "A#",
-    "chordName": "A#7sus4",
-    "chordNotes": "11, 16, 18, 21",
-    "chordNoteNames": "A#, D#, E#, G#"
+    "chordName": "A#m7b5",
+    "chordNotes": "11, 14, 17, 21",
+    "chordNoteNames": "A#, C#, Fb, G#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 11,
+    "keyName": "A#",
+    "chordNote": 11,
+    "chordNoteName": "A#",
+    "chordName": "A#m7b9",
+    "chordNotes": "11, 14, 18, 21",
+    "chordNoteNames": "A#, C#, E#, G#"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 11,
+    "keyName": "A#",
+    "chordNote": 11,
+    "chordNoteName": "A#",
+    "chordName": "A#m7#11",
+    "chordNotes": "11, 14, 18, 21, 29",
+    "chordNoteNames": "A#, C#, E#, G#, Fb"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 11,
+    "keyName": "A#",
+    "chordNote": 11,
+    "chordNoteName": "A#",
+    "chordName": "A#m7 add(4)",
+    "chordNotes": "11, 14, 16, 18, 33",
+    "chordNoteNames": "A#, C#, D#, E#, G#"
   },
   {
     "modeId": 15,
@@ -5491,23 +5511,13 @@
   },
   {
     "modeId": 15,
-    "keyNote": 11,
-    "keyName": "A#",
-    "chordNote": 11,
-    "chordNoteName": "A#",
-    "chordName": "A#sus4",
-    "chordNotes": "11, 16, 18",
-    "chordNoteNames": "A#, D#, E#"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 11,
-    "keyName": "A#",
-    "chordNote": 11,
-    "chordNoteName": "A#",
-    "chordName": "A#m7b5",
-    "chordNotes": "11, 14, 17, 21",
-    "chordNoteNames": "A#, C#, Fb, G#"
+    "keyNote": 12,
+    "keyName": "B",
+    "chordNote": 3,
+    "chordNoteName": "D",
+    "chordName": "D",
+    "chordNotes": "3, 7, 10",
+    "chordNoteNames": "D, Gb, A"
   },
   {
     "modeId": 15,
@@ -5525,79 +5535,9 @@
     "keyName": "B",
     "chordNote": 3,
     "chordNoteName": "D",
-    "chordName": "Dm add(9)",
-    "chordNotes": "3, 5, 6, 10",
-    "chordNoteNames": "D, E, F, A"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 12,
-    "keyName": "B",
-    "chordNote": 3,
-    "chordNoteName": "D",
-    "chordName": "Dm add(2)",
-    "chordNotes": "3, 5, 6, 10",
-    "chordNoteNames": "D, E, F, A"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 12,
-    "keyName": "B",
-    "chordNote": 3,
-    "chordNoteName": "D",
-    "chordName": "Dm6/9",
-    "chordNotes": "3, 6, 10, 12, 17",
-    "chordNoteNames": "D, F, A, B, E"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 12,
-    "keyName": "B",
-    "chordNote": 3,
-    "chordNoteName": "D",
-    "chordName": "Dm6",
-    "chordNotes": "3, 6, 10, 12",
-    "chordNoteNames": "D, F, A, B"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 12,
-    "keyName": "B",
-    "chordNote": 3,
-    "chordNoteName": "D",
-    "chordName": "Dm",
-    "chordNotes": "3, 6, 10",
-    "chordNoteNames": "D, F, A"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 12,
-    "keyName": "B",
-    "chordNote": 3,
-    "chordNoteName": "D",
-    "chordName": "Dsus2",
-    "chordNotes": "3, 5, 10",
-    "chordNoteNames": "D, E, A"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 12,
-    "keyName": "B",
-    "chordNote": 3,
-    "chordNoteName": "D",
-    "chordName": "Dadd(9)",
-    "chordNotes": "3, 7, 10, 17",
-    "chordNoteNames": "D, Gb, A, E"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 12,
-    "keyName": "B",
-    "chordNote": 3,
-    "chordNoteName": "D",
-    "chordName": "Dadd(2)",
-    "chordNotes": "3, 5, 7, 10",
-    "chordNoteNames": "D, E, Gb, A"
+    "chordName": "D5",
+    "chordNotes": "3, 10",
+    "chordNoteNames": "D, A"
   },
   {
     "modeId": 15,
@@ -5615,9 +5555,9 @@
     "keyName": "B",
     "chordNote": 3,
     "chordNoteName": "D",
-    "chordName": "D5",
-    "chordNotes": "3, 10",
-    "chordNoteNames": "D, A"
+    "chordName": "Dadd(2)",
+    "chordNotes": "3, 5, 7, 10",
+    "chordNoteNames": "D, E, Gb, A"
   },
   {
     "modeId": 15,
@@ -5625,39 +5565,69 @@
     "keyName": "B",
     "chordNote": 3,
     "chordNoteName": "D",
-    "chordName": "D",
-    "chordNotes": "3, 7, 10",
-    "chordNoteNames": "D, Gb, A"
+    "chordName": "Dadd(9)",
+    "chordNotes": "3, 7, 10, 17",
+    "chordNoteNames": "D, Gb, A, E"
   },
   {
     "modeId": 15,
     "keyNote": 12,
     "keyName": "B",
-    "chordNote": 5,
-    "chordNoteName": "E",
-    "chordName": "Esus2",
-    "chordNotes": "5, 7, 12",
-    "chordNoteNames": "E, Gb, B"
+    "chordNote": 3,
+    "chordNoteName": "D",
+    "chordName": "Dsus2",
+    "chordNotes": "3, 5, 10",
+    "chordNoteNames": "D, E, A"
   },
   {
     "modeId": 15,
     "keyNote": 12,
     "keyName": "B",
-    "chordNote": 5,
-    "chordNoteName": "E",
-    "chordName": "E7sus4",
-    "chordNotes": "5, 10, 12, 15",
-    "chordNoteNames": "E, A, B, D"
+    "chordNote": 3,
+    "chordNoteName": "D",
+    "chordName": "Dm",
+    "chordNotes": "3, 6, 10",
+    "chordNoteNames": "D, F, A"
   },
   {
     "modeId": 15,
     "keyNote": 12,
     "keyName": "B",
-    "chordNote": 5,
-    "chordNoteName": "E",
-    "chordName": "Esus4",
-    "chordNotes": "5, 10, 12",
-    "chordNoteNames": "E, A, B"
+    "chordNote": 3,
+    "chordNoteName": "D",
+    "chordName": "Dm6",
+    "chordNotes": "3, 6, 10, 12",
+    "chordNoteNames": "D, F, A, B"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 12,
+    "keyName": "B",
+    "chordNote": 3,
+    "chordNoteName": "D",
+    "chordName": "Dm6/9",
+    "chordNotes": "3, 6, 10, 12, 17",
+    "chordNoteNames": "D, F, A, B, E"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 12,
+    "keyName": "B",
+    "chordNote": 3,
+    "chordNoteName": "D",
+    "chordName": "Dm add(2)",
+    "chordNotes": "3, 5, 6, 10",
+    "chordNoteNames": "D, E, F, A"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 12,
+    "keyName": "B",
+    "chordNote": 3,
+    "chordNoteName": "D",
+    "chordName": "Dm add(9)",
+    "chordNotes": "3, 5, 6, 10",
+    "chordNoteNames": "D, E, F, A"
   },
   {
     "modeId": 15,
@@ -5675,9 +5645,9 @@
     "keyName": "B",
     "chordNote": 5,
     "chordNoteName": "E",
-    "chordName": "Esus2sus4",
-    "chordNotes": "5, 7, 10, 12",
-    "chordNoteNames": "E, Gb, A, B"
+    "chordName": "E7sus4",
+    "chordNotes": "5, 10, 12, 15",
+    "chordNoteNames": "E, A, B, D"
   },
   {
     "modeId": 15,
@@ -5703,11 +5673,31 @@
     "modeId": 15,
     "keyNote": 12,
     "keyName": "B",
-    "chordNote": 6,
-    "chordNoteName": "F",
-    "chordName": "Fmaj7b5",
-    "chordNotes": "6, 10, 12, 17",
-    "chordNoteNames": "F, A, B, E"
+    "chordNote": 5,
+    "chordNoteName": "E",
+    "chordName": "Esus2",
+    "chordNotes": "5, 7, 12",
+    "chordNoteNames": "E, Gb, B"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 12,
+    "keyName": "B",
+    "chordNote": 5,
+    "chordNoteName": "E",
+    "chordName": "Esus4",
+    "chordNotes": "5, 10, 12",
+    "chordNoteNames": "E, A, B"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 12,
+    "keyName": "B",
+    "chordNote": 5,
+    "chordNoteName": "E",
+    "chordName": "Esus2sus4",
+    "chordNotes": "5, 7, 10, 12",
+    "chordNoteNames": "E, Gb, A, B"
   },
   {
     "modeId": 15,
@@ -5723,21 +5713,21 @@
     "modeId": 15,
     "keyNote": 12,
     "keyName": "B",
-    "chordNote": 7,
-    "chordNoteName": "Gb",
-    "chordName": "Gbm7#5",
-    "chordNotes": "7, 10, 15, 17",
-    "chordNoteNames": "Gb, A, D, E"
+    "chordNote": 6,
+    "chordNoteName": "F",
+    "chordName": "Fmaj7b5",
+    "chordNotes": "6, 10, 12, 17",
+    "chordNoteNames": "F, A, B, E"
   },
   {
     "modeId": 15,
     "keyNote": 12,
     "keyName": "B",
-    "chordNote": 10,
-    "chordNoteName": "A",
-    "chordName": "Asus4",
-    "chordNotes": "10, 15, 17",
-    "chordNoteNames": "A, D, E"
+    "chordNote": 7,
+    "chordNoteName": "Gb",
+    "chordName": "Gbm7#5",
+    "chordNotes": "7, 10, 15, 17",
+    "chordNoteNames": "Gb, A, D, E"
   },
   {
     "modeId": 15,
@@ -5765,9 +5755,29 @@
     "keyName": "B",
     "chordNote": 10,
     "chordNoteName": "A",
+    "chordName": "Asus4",
+    "chordNotes": "10, 15, 17",
+    "chordNoteNames": "A, D, E"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 12,
+    "keyName": "B",
+    "chordNote": 10,
+    "chordNoteName": "A",
     "chordName": "Asus2sus4",
     "chordNotes": "10, 12, 15, 17",
     "chordNoteNames": "A, B, D, E"
+  },
+  {
+    "modeId": 15,
+    "keyNote": 12,
+    "keyName": "B",
+    "chordNote": 12,
+    "chordNoteName": "B",
+    "chordName": "B5",
+    "chordNotes": "12, 19",
+    "chordNoteNames": "B, Gb"
   },
   {
     "modeId": 15,
@@ -5845,16 +5855,6 @@
     "keyName": "B",
     "chordNote": 12,
     "chordNoteName": "B",
-    "chordName": "Bm add(4)",
-    "chordNotes": "12, 15, 17, 19",
-    "chordNoteNames": "B, D, E, Gb"
-  },
-  {
-    "modeId": 15,
-    "keyNote": 12,
-    "keyName": "B",
-    "chordNote": 12,
-    "chordNoteName": "B",
     "chordName": "Bdim",
     "chordNotes": "12, 15, 18",
     "chordNoteNames": "B, D, F"
@@ -5865,8 +5865,8 @@
     "keyName": "B",
     "chordNote": 12,
     "chordNoteName": "B",
-    "chordName": "B5",
-    "chordNotes": "12, 19",
-    "chordNoteNames": "B, Gb"
+    "chordName": "Bm add(4)",
+    "chordNotes": "12, 15, 17, 19",
+    "chordNoteNames": "B, D, E, Gb"
   }
 ]

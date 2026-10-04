@@ -8,8 +8,11 @@ import { spellChordForStaff } from '../util/NoteUtil';
 const STAVE_Y = 0;
 const MIN_TOP = 20;
 const MIN_BOTTOM = 100;
-// Room after the key signature for accidentals plus the whole-note chord
+// Minimum room after the key signature so typical chords line up; wider
+// chords (stacked accidentals, seconds) stretch the staff to fit
 const NOTE_ROOM = 60;
+// Staff that runs on past the right edge of the chord
+const RIGHT_PAD = 14;
 // Display size relative to VexFlow's default 10px line spacing
 const SCALE = 0.75;
 
@@ -40,28 +43,35 @@ const ChordStaff: React.FC<ChordStaffProps> = ({ notes, className = '' }) => {
 
         const stave = new Stave(0, STAVE_Y, 400);
         stave.addClef('treble').addKeySignature(keySignature);
-        const width = Math.ceil(stave.getNoteStartX()) + NOTE_ROOM;
-        stave.setWidth(width - 1);
 
         const renderer = new Renderer(host, Renderer.Backends.SVG);
-        renderer.resize(width, MIN_BOTTOM);
+        renderer.resize(400, MIN_BOTTOM);
         const context = renderer.getContext();
         context.setFillStyle('currentColor');
         context.setStrokeStyle('currentColor');
-        stave.setStyle({ fillStyle: 'currentColor', strokeStyle: 'currentColor' });
-        stave.setContext(context).draw();
 
+        // Draw the chord first so its real extent can be measured, then size
+        // the staff to it
         const chord = new StaveNote({ keys, duration: 'w' });
         const voice = new Voice({ num_beats: 4, beat_value: 4 }).setStrict(false);
         voice.addTickables([chord]);
         Accidental.applyAccidentals([voice], keySignature);
         new Formatter().joinVoices([voice]).format([voice], NOTE_ROOM - 10);
-        voice.draw(context, stave);
+        voice.setStave(stave).draw(context, stave);
+
+        const svg = host.querySelector('svg');
+        if (!svg) return;
+        const noteBox = svg.getBBox();
+        const width = Math.max(
+            Math.ceil(stave.getNoteStartX()) + NOTE_ROOM,
+            Math.ceil(noteBox.x + noteBox.width) + RIGHT_PAD
+        );
+        stave.setWidth(width - 1);
+        stave.setStyle({ fillStyle: 'currentColor', strokeStyle: 'currentColor' });
+        stave.setContext(context).draw();
 
         // Grow the window for chords that run past the usual ledger lines,
         // then let the SVG scale down to fit narrow pads
-        const svg = host.querySelector('svg');
-        if (!svg) return;
         const box = svg.getBBox();
         const top = Math.min(MIN_TOP, Math.floor(box.y) - 2);
         const bottom = Math.max(MIN_BOTTOM, Math.ceil(box.y + box.height) + 2);

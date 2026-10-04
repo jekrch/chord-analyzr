@@ -31,7 +31,8 @@ const HeaderNav: React.FC = () => {
                     <div className="flex h-12 items-center justify-between px-4">
                         {/* Left side - App Name with Geometric Logo */}
                         <div className="flex items-center space-x-3 select-none">
-                            <Logo size={30}/>
+                            {/* small nudge so it sits level with the lowercase wordmark */}
+                            <Logo size={30} className="translate-y-0.5" />
 
                             {/* App Name */}
                             <div className="flex items-baseline space-x-2">

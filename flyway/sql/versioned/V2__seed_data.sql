@@ -8,6 +8,17 @@ INSERT INTO public.note_type(id, name)
 	(5, 'double flat');
 
 
+INSERT INTO letter(letter, letter_ordinal)
+  VALUES
+	('A', 1),
+	('B', 2),
+	('C', 3),
+	('D', 4),
+	('E', 5),
+	('F', 6),
+	('G', 7);
+
+
 INSERT INTO note(letter, name, note, note_type_id)
   VALUES 
    ('C', 'Cb', 12, 2),
@@ -49,19 +60,8 @@ INSERT INTO note(letter, name, note, note_type_id)
 	('G', 'Gbb', 6, 5),
 	('A', 'Abb', 8, 5),
 	('B', 'Bbb', 10, 5);
-	
-	
-INSERT INTO letter(letter, letter_ordinal)
-  VALUES
-	('A', 1), 
-	('B', 2),
-	('C', 3),
-	('D', 4),
-	('E', 5),
-	('F', 6),
-	('G', 7);	
 
--- Insert chord types via function 
+-- Insert chord types via function
 
 -- If the provided chord type name doesn't exist, create it and 
 -- insert provided notes in chord_type_note

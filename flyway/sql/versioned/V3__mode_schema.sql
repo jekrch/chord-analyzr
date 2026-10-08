@@ -6,16 +6,12 @@ CREATE TABLE IF NOT EXISTS public.mode
     PRIMARY KEY (id)
 );
 
-CREATE INDEX IF NOT EXISTS mode_name_idx ON mode(name);
-CREATE INDEX IF NOT EXISTS mode_name_complete_idx ON mode(name, complete);
+CREATE UNIQUE INDEX IF NOT EXISTS mode_name_uidx ON mode(name);
 
 CREATE TABLE IF NOT EXISTS public.mode_note
 (
     id bigserial,
-    mode_id bigint NOT NULL,
-		CONSTRAINT fk_mode_note_mode_id
-			FOREIGN KEY(mode_id)
-			REFERENCES mode,
+    mode_id bigint NOT NULL REFERENCES mode,
 	note integer NOT NULL,
 	note_ordinal integer NOT NULL,
     PRIMARY KEY (id)
